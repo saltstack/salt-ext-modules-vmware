@@ -9,15 +9,9 @@ from salt.utils.decorators import depends, ignores_kwargs
 log = logging.getLogger(__name__)
 
 from saltext.vmware.config.schemas.esxi import (
-    VmfsDatastoreSchema,
-)
-
 try:
-    # pylint: disable=no-name-in-module
-    from pyVmomi import (
         vim,
         vmodl,
-        pbm,
         VmomiSupport,
     )
 
