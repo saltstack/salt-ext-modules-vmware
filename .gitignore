@@ -26,7 +26,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-**/*/version.py
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -137,9 +136,6 @@ artifacts/
 
 # Just a dir for local whatever
 local/
-<<<<<<< HEAD
-=======
 
 # version.py is automagically created, do not track
 **/*/version.py
->>>>>>> fa01b1c8f25b3b0082f4cfc67505454552cd2861
