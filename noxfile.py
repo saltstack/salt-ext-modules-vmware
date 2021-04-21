@@ -96,13 +96,7 @@ def _install_requirements(
             )
 
         if install_test_requirements:
-            requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "tests.txt"
-            install_command = [
-                "--progress-bar=off",
-                "-r",
-                str(requirements_file.relative_to(REPO_ROOT)),
-            ]
-            session.install(*install_command, silent=PIP_INSTALL_SILENT)
+            session.install("-e", ".[tests]", silent=PIP_INSTALL_SILENT)
 
         if EXTRA_REQUIREMENTS_INSTALL:
             session.log(
