@@ -1,4 +1,3 @@
-import json
 
 
 def get_lun_ids(*, service_instance):
