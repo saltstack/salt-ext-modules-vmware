@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 def get_vm_facts(*, service_instance):
     """
     Return basic facts about a vSphere VM guest

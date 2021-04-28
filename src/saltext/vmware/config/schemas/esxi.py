@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
     :codeauthor: :email:`Alexandru Bleotu (alexandru.bleotu@morganstanley.com)`
 

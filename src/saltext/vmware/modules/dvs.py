@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 def list_dvs(host, username, password, protocol=None, port=None, verify_ssl=True):
     """
     Returns a list of distributed virtual switches for the specified host.

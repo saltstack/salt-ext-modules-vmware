@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # pylint: disable=C0302
 """
 Manage VMware vCenter servers and ESXi hosts.
