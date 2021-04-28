@@ -46,7 +46,24 @@ be executed:
 This will run tests against the build artifact. If all tests pass the build
 may be released.
 
-Tagging
--------
+Versions, Tagging, and Changelog
+--------------------------------
 
-For dev/nightly builds, no tags will be used.
+This project uses `CalVer<https://calver.org/>_` for versions. In order to
+communicate breaking changes, this project keeps a
+`changelog<https://keepachangelog.com/en/1.0.0/>_`.
+
+For dev/nightly builds, no tags will be used, and packages will not be uploaded
+to PyPI.
+
+Release candidate builds will be tagged with the **expected** release date with
+``rcN`` modifier. Typically there will only be one RC build - though if bugs
+are found, especially severe bugs, new RC versions will be built, tagged, and
+released.
+
+Final releases will be tagged, signed, and annotated with the changelog for
+that particular version. While the source code should not change between RC
+versions and final releases, the final release *will* be a new artifact, and
+will go through the same build/test/upload process as non-final versions. Once
+the release artifact it successfully tested and uploaded to PyPI, the annotated
+tag will be pushed to the repo.
