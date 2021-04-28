@@ -22,7 +22,7 @@ def get_capabilities(*, service_instance):
     for host in hosts:
         capability = host.capability
         host_id = host.summary.hardware.uuid
-        capabilities[host_id] = capability
+        capabilities[host_id] = dict(capability.__dict__)
 
     return capabilities
 
