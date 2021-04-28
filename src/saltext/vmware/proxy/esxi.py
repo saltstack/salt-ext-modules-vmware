@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 Proxy Minion interface module for managing VMware ESXi hosts.
 

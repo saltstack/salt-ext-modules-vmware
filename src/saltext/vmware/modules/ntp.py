@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 def set_ntp_config(
     host,
     username,

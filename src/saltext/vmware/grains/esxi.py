@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 Generate baseline proxy minion grains for ESXi hosts.
 

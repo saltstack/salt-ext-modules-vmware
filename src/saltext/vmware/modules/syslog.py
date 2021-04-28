@@ -1,4 +1,4 @@
-import logging
+# SPDX-License-Identifier: Apache-2.0
 import sys
 
 import saltext.vmware.utils.vmware
