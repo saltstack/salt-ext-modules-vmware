@@ -2,8 +2,8 @@ import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +25,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -41,8 +39,6 @@ def __virtual__():
     return __virtualname__
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def list_datacenters():
     """
     Returns a list of datacenters for the specified host.
@@ -54,7 +50,7 @@ def list_datacenters():
 
     return saltext.vmware.utils.vmware.list_datacenters(service_instance)
 
-@depends(HAS_PYVMOMI)
+
 def create_datacenter(datacenter_name):
     """
     Creates a datacenter.
@@ -80,4 +76,3 @@ def create_datacenter(datacenter_name):
 
     saltext.vmware.utils.vmware.create_datacenter(service_instance, datacenter_name)
     return {"create_datacenter": True}
-

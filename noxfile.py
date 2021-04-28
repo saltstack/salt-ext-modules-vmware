@@ -91,9 +91,7 @@ def _install_requirements(
             )
 
         if install_salt:
-            session.install(
-                "--progress-bar=off", SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT
-            )
+            session.install("--progress-bar=off", SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
         if install_test_requirements:
             session.install("-e", ".[tests]", silent=PIP_INSTALL_SILENT)
@@ -202,16 +200,13 @@ def tests(session):
             "--include=tests/*",
         )
         try:
-            session.run(
-                "coverage", "report", "--show-missing",
-                "--include=src/saltext/vmware/*"
-            )
+            session.run("coverage", "report", "--show-missing", "--include=src/saltext/vmware/*")
             # If you also want to display the code coverage report on the CLI
             # for the tests, comment the call above and uncomment the line below
-            #session.run(
+            # session.run(
             #    "coverage", "report", "--show-missing",
             #    "--include=src/saltext/vmware/*,tests/*"
-            #)
+            # )
         finally:
             # Move the coverage DB to artifacts/coverage in order for it to be archived by CI
             if COVERAGE_REPORT_DB.exists():
@@ -448,7 +443,6 @@ def docs_crosslink_info(session):
         "python", "-m", "sphinx.ext.intersphinx", mapping_entry[0].rstrip("/") + "/objects.inv"
     )
     os.chdir(str(REPO_ROOT))
-
 
 
 @nox.session(name="gen-api-docs", python="3")

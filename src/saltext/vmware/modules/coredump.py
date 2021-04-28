@@ -2,8 +2,8 @@ import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +25,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -71,7 +69,6 @@ def _format_coredump_stdout(cmd_ret):
     return ret_dict
 
 
-@depends(HAS_ESX_CLI)
 def get_coredump_network_config(
     host, username, password, protocol=None, port=None, esxi_hosts=None, credstore=None
 ):
@@ -140,9 +137,7 @@ def get_coredump_network_config(
                 ret.update({esxi_host: {"Error": response.get("stdout")}})
             else:
                 # format the response stdout into something useful
-                ret.update(
-                    {esxi_host: {"Coredump Config": _format_coredump_stdout(response)}}
-                )
+                ret.update({esxi_host: {"Coredump Config": _format_coredump_stdout(response)}})
     else:
         # Handles a single host or a vCenter connection when no esxi_hosts are provided.
         response = saltext.vmware.utils.vmware.esxcli(
@@ -164,7 +159,6 @@ def get_coredump_network_config(
     return ret
 
 
-@depends(HAS_ESX_CLI)
 def coredump_network_enable(
     host,
     username,
@@ -264,7 +258,6 @@ def coredump_network_enable(
     return ret
 
 
-@depends(HAS_ESX_CLI)
 def set_coredump_network_config(
     host,
     username,
@@ -330,9 +323,7 @@ def set_coredump_network_config(
         salt '*' vsphere.set_coredump_network_config my.vcenter.location root bad-password 'dump_ip.host.com' \
             esxi_hosts='[esxi-1.host.com, esxi-2.host.com]'
     """
-    cmd = "system coredump network set -v {} -i {} -o {}".format(
-        host_vnic, dump_ip, dump_port
-    )
+    cmd = "system coredump network set -v {} -i {} -o {}".format(host_vnic, dump_ip, dump_port)
     ret = {}
     if esxi_hosts:
         if not isinstance(esxi_hosts, list):

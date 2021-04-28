@@ -2,8 +2,8 @@ import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +25,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -185,7 +183,6 @@ def _format_syslog_config(cmd_ret):
     return ret_dict
 
 
-@depends(HAS_ESX_CLI)
 def syslog_service_reload(
     host, username, password, protocol=None, port=None, esxi_hosts=None, credstore=None
 ):
@@ -265,7 +262,6 @@ def syslog_service_reload(
     return ret
 
 
-@depends(HAS_ESX_CLI)
 def set_syslog_config(
     host,
     username,
@@ -450,7 +446,6 @@ def set_syslog_config(
     return ret
 
 
-@depends(HAS_ESX_CLI)
 def get_syslog_config(
     host, username, password, protocol=None, port=None, esxi_hosts=None, credstore=None
 ):
@@ -532,7 +527,6 @@ def get_syslog_config(
     return ret
 
 
-@depends(HAS_ESX_CLI)
 def reset_syslog_config(
     host,
     username,
@@ -652,4 +646,3 @@ def reset_syslog_config(
         ret.update({host: response_dict})
 
     return ret
-

@@ -3,21 +3,15 @@ import sys
 
 import salt.utils.platform
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
-from saltext.vmware.config.schemas.esxi import (
-    VmfsDatastoreSchema,
-)
-
 try:
-    # pylint: disable=no-name-in-module
-    from pyVmomi import (
+    from saltext.vmware.config.schemas.esxi import (
         vim,
         vmodl,
-        pbm,
         VmomiSupport,
     )
 
@@ -30,9 +24,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -54,8 +46,6 @@ def __virtual__():
     return __virtualname__
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def list_datastore_clusters(
     host=None, vcenter=None, username=None, password=None, protocol=None, port=None, verify_ssl=True
 ):
@@ -106,8 +96,6 @@ def list_datastore_clusters(
     return saltext.vmware.utils.vmware.list_datastore_clusters(service_instance)
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def list_datastores(
     host=None, vcenter=None, username=None, password=None, protocol=None, port=None, verify_ssl=True
 ):
@@ -157,10 +145,7 @@ def list_datastores(
     return saltext.vmware.utils.vmware.list_datastores(service_instance)
 
 
-@depends(HAS_PYVMOMI)
-def assign_default_storage_policy_to_datastore(
-    policy, datastore, service_instance=None
-):
+def assign_default_storage_policy_to_datastore(policy, datastore, service_instance=None):
     """
     Assigns a storage policy as the default policy to a datastore.
 
@@ -194,17 +179,12 @@ def assign_default_storage_policy_to_datastore(
         service_instance, target_ref, datastore_names=[datastore]
     )
     if not ds_refs:
-        raise VMwareObjectRetrievalError(
-            "Datastore '{}' was not " "found".format(datastore)
-        )
+        raise VMwareObjectRetrievalError("Datastore '{}' was not " "found".format(datastore))
     ds_ref = ds_refs[0]
-    salt.utils.pbm.assign_default_storage_policy_to_datastore(
-        profile_manager, policy_ref, ds_ref
-    )
+    salt.utils.pbm.assign_default_storage_policy_to_datastore(profile_manager, policy_ref, ds_ref)
     return True
 
 
-@depends(HAS_PYVMOMI)
 def list_datacenters_via_proxy(datacenter_names=None, service_instance=None):
     """
     Returns a list of dict representations of VMware datacenters.
@@ -231,20 +211,13 @@ def list_datacenters_via_proxy(datacenter_names=None, service_instance=None):
         salt '*' vsphere.list_datacenters_via_proxy datacenter_names=[dc1, dc2]
     """
     if not datacenter_names:
-        dc_refs = salt.utils.vmware.get_datacenters(
-            service_instance, get_all_datacenters=True
-        )
+        dc_refs = salt.utils.vmware.get_datacenters(service_instance, get_all_datacenters=True)
     else:
         dc_refs = salt.utils.vmware.get_datacenters(service_instance, datacenter_names)
 
-    return [
-        {"name": salt.utils.vmware.get_managed_object_name(dc_ref)}
-        for dc_ref in dc_refs
-    ]
+    return [{"name": salt.utils.vmware.get_managed_object_name(dc_ref)} for dc_ref in dc_refs]
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
 def create_vmfs_datastore(
     datastore_name,
     disk_id,
@@ -307,7 +280,6 @@ def create_vmfs_datastore(
     return True
 
 
-@depends(HAS_PYVMOMI)
 def rename_datastore(datastore_name, new_datastore_name, service_instance=None):
     """
     Renames a datastore. The datastore needs to be visible to the proxy.
@@ -327,23 +299,18 @@ def rename_datastore(datastore_name, new_datastore_name, service_instance=None):
         salt '*' vsphere.rename_datastore old_name new_name
     """
     # Argument validation
-    log.trace(
-        "Renaming datastore {} to {}" "".format(datastore_name, new_datastore_name)
-    )
+    log.trace("Renaming datastore {} to {}" "".format(datastore_name, new_datastore_name))
     target = _get_proxy_target(service_instance)
     datastores = salt.utils.vmware.get_datastores(
         service_instance, target, datastore_names=[datastore_name]
     )
     if not datastores:
-        raise VMwareObjectRetrievalError(
-            "Datastore '{}' was not found" "".format(datastore_name)
-        )
+        raise VMwareObjectRetrievalError("Datastore '{}' was not found" "".format(datastore_name))
     ds = datastores[0]
     salt.utils.vmware.rename_datastore(ds, new_datastore_name)
     return True
 
 
-@depends(HAS_PYVMOMI)
 def remove_datastore(datastore, service_instance=None):
     """
     Removes a datastore. If multiple datastores an error is raised.
@@ -365,18 +332,13 @@ def remove_datastore(datastore, service_instance=None):
         service_instance, reference=target, datastore_names=[datastore]
     )
     if not datastores:
-        raise VMwareObjectRetrievalError(
-            "Datastore '{}' was not found".format(datastore)
-        )
+        raise VMwareObjectRetrievalError("Datastore '{}' was not found".format(datastore))
     if len(datastores) > 1:
-        raise VMwareObjectRetrievalError(
-            "Multiple datastores '{}' were found".format(datastore)
-        )
+        raise VMwareObjectRetrievalError("Multiple datastores '{}' were found".format(datastore))
     salt.utils.vmware.remove_datastore(service_instance, datastores[0])
     return True
 
 
-@depends(HAS_PYVMOMI)
 def list_storage_policies(policy_names=None, service_instance=None):
     """
     Returns a list of storage policies.
@@ -403,15 +365,16 @@ def list_storage_policies(policy_names=None, service_instance=None):
     return [_get_policy_dict(p) for p in policies]
 
 
-@depends(HAS_PYVMOMI)
-def list_default_storage_policy_of_datastore(datastore,
-                                             host=None,
-                                             vcenter=None,
-                                             username=None,
-                                             password=None,
-                                             protocol=None,
-                                             port=None,
-                                             verify_ssl=True):
+def list_default_storage_policy_of_datastore(
+    datastore,
+    host=None,
+    vcenter=None,
+    username=None,
+    password=None,
+    protocol=None,
+    port=None,
+    verify_ssl=True,
+):
     """
     Returns a list of datastores assign the storage policies.
 
@@ -428,9 +391,7 @@ def list_default_storage_policy_of_datastore(datastore,
 
         salt '*' vsphere.list_default_storage_policy_of_datastore datastore=ds1
     """
-    log.trace(
-        "Listing the default storage policy of datastore '{}'" "".format(datastore)
-    )
+    log.trace("Listing the default storage policy of datastore '{}'" "".format(datastore))
     if salt.utils.platform.is_proxy():
         details = __salt__["vmware_info.get_proxy_connection_details"]()
     else:
@@ -452,13 +413,9 @@ def list_default_storage_policy_of_datastore(datastore,
         service_instance, target_ref, datastore_names=[datastore]
     )
     if not ds_refs:
-        raise VMwareObjectRetrievalError(
-            "Datastore '{}' was not " "found".format(datastore)
-        )
+        raise VMwareObjectRetrievalError("Datastore '{}' was not " "found".format(datastore))
     profile_manager = salt.utils.pbm.get_profile_manager(service_instance)
-    policy = salt.utils.pbm.get_default_storage_policy_of_datastore(
-        profile_manager, ds_refs[0]
-    )
+    policy = salt.utils.pbm.get_default_storage_policy_of_datastore(profile_manager, ds_refs[0])
     return saltext.vmware.utils.get_policy_dict(policy)
 
 
@@ -510,7 +467,6 @@ def _apply_policy_config(policy_spec, policy_dict):
     return policy_spec
 
 
-@depends(HAS_PYVMOMI)
 def create_storage_policy(policy_name, policy_dict, service_instance=None):
     """
     Creates a storage policy.
@@ -550,7 +506,6 @@ def create_storage_policy(policy_name, policy_dict, service_instance=None):
     return {"create_storage_policy": True}
 
 
-@depends(HAS_PYVMOMI)
 def update_storage_policy(policy, policy_dict, service_instance=None):
     """
     Updates a storage policy.

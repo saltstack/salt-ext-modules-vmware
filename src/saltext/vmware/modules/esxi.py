@@ -1,4 +1,35 @@
-# -*- coding: utf-8 -*-
+def get_lun_ids(*, service_instance):
+    """
+    Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
+    """
+
+    # TODO: Might be better to use that other recursive view thing? Not sure
+    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    ids = []
+    for host in hosts:
+        for datastore in host.datastore:
+            for extent in datastore.info.vmfs.extent:
+                ids.append(extent.diskName)
+    return ids
+
+
+def get_capabilities(*, service_instance):
+    """
+    Return ESXi host's capability information.
+    """
+    capabilities = {}
+    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    for host in hosts:
+        capability = host.capability
+        host_id = host.summary.hardware.uuid
+        capabilities[host_id] = dict(capability.__dict__)
+
+    return capabilities
+
+
+# # TODO: remove/rehash code below here -W. Werner, 2021-04-28
+
+
 """
 Glues the VMware vSphere Execution Module to the VMware ESXi Proxy Minions to the
 :mod:`esxi proxymodule <salt.proxy.esxi>`.
@@ -27,12 +58,8 @@ type manor.
 
 """
 
-# Import Python libs
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 
-# Import Salt libs
 import salt.utils.platform
 
 log = logging.getLogger(__name__)
@@ -200,8 +227,6 @@ def get_ssh_key(host, username, password, protocol=None, port=None, certificate_
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def update_host_password(
     host, username, password, new_password, protocol=None, port=None, verify_ssl=True
 ):
@@ -272,10 +297,6 @@ def update_host_password(
     return True
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def configure_host_cache(enabled, datastore=None, swap_size_MiB=None, service_instance=None):
     """
     Configures the host cache on the selected host.
@@ -334,9 +355,6 @@ def configure_host_cache(enabled, datastore=None, swap_size_MiB=None, service_in
     return True
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def get_host_cache(service_instance=None):
     """
     Returns the host cache configuration on the proxy host.
