@@ -136,6 +136,3 @@ artifacts/
 
 # Just a dir for local whatever
 local/
-
-# version.py is automagically created, do not track
-**/*/version.py
