@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Generate baseline proxy minion grains for ESXi hosts.
 
 .. versionadded:: 2015.8.4
 
 """
-
-# Import Python Libs
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 
 import salt.utils.proxy
@@ -22,9 +17,7 @@ log = logging.getLogger(__file__)
 
 GRAINS_CACHE = {}
 
-__salt__ = {
-    "vmware_info.system_info": saltext.vmware.modules.vmware_info.system_info
-}
+__salt__ = {"vmware_info.system_info": saltext.vmware.modules.vmware_info.system_info}
 
 
 def __virtual__():
@@ -73,7 +66,7 @@ def _find_credentials(host):
     Cycle through all the possible credentials and return the first one that
     works.
     """
-    log.debug('=== in _find_credentials ===')
+    log.debug("=== in _find_credentials ===")
     user_names = [__pillar__["proxy"].get("username", "root")]
     passwords = __pillar__["proxy"]["passwords"]
     verify_ssl = __pillar__["proxy"].get("verify_ssl")
@@ -91,9 +84,7 @@ def _find_credentials(host):
             if ret:
                 return user, password
     # We've reached the end of the list without successfully authenticating.
-    raise SaltSystemExit(
-        "Cannot complete login due to an incorrect user name or password."
-    )
+    raise SaltSystemExit("Cannot complete login due to an incorrect user name or password.")
 
 
 def _grains():
