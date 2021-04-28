@@ -2,8 +2,8 @@ import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +25,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -48,8 +46,6 @@ def _get_service_manager(host_reference):
     return host_reference.configManager.serviceSystem
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def service_start(
     host,
     username,
@@ -157,11 +153,7 @@ def service_start(
         # If we don't have a valid service, return. The service will be invalid for all hosts.
         if service_name not in valid_services:
             ret.update(
-                {
-                    host_name: {
-                        "Error": "{} is not a valid service name.".format(service_name)
-                    }
-                }
+                {host_name: {"Error": "{} is not a valid service name.".format(service_name)}}
             )
             return ret
 
@@ -173,9 +165,7 @@ def service_start(
         try:
             service_manager.StartService(id=temp_service_name)
         except vim.fault.HostConfigFault as err:
-            msg = "'vsphere.service_start' failed for host {}: {}".format(
-                host_name, err
-            )
+            msg = "'vsphere.service_start' failed for host {}: {}".format(host_name, err)
             log.debug(msg)
             ret.update({host_name: {"Error": msg}})
             continue
@@ -190,8 +180,6 @@ def service_start(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def service_stop(
     host,
     username,
@@ -299,11 +287,7 @@ def service_stop(
         # If we don't have a valid service, return. The service will be invalid for all hosts.
         if service_name not in valid_services:
             ret.update(
-                {
-                    host_name: {
-                        "Error": "{} is not a valid service name.".format(service_name)
-                    }
-                }
+                {host_name: {"Error": "{} is not a valid service name.".format(service_name)}}
             )
             return ret
 
@@ -330,8 +314,6 @@ def service_stop(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def service_restart(
     host,
     username,
@@ -439,11 +421,7 @@ def service_restart(
         # If we don't have a valid service, return. The service will be invalid for all hosts.
         if service_name not in valid_services:
             ret.update(
-                {
-                    host_name: {
-                        "Error": "{} is not a valid service name.".format(service_name)
-                    }
-                }
+                {host_name: {"Error": "{} is not a valid service name.".format(service_name)}}
             )
             return ret
 
@@ -455,9 +433,7 @@ def service_restart(
         try:
             service_manager.RestartService(id=temp_service_name)
         except vim.fault.HostConfigFault as err:
-            msg = "'vsphere.service_restart' failed for host {}: {}".format(
-                host_name, err
-            )
+            msg = "'vsphere.service_restart' failed for host {}: {}".format(host_name, err)
             log.debug(msg)
             ret.update({host_name: {"Error": msg}})
             continue
@@ -472,8 +448,6 @@ def service_restart(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def set_service_policy(
     host,
     username,
@@ -579,11 +553,7 @@ def set_service_policy(
         # If we don't have a valid service, return. The service will be invalid for all hosts.
         if service_name not in valid_services:
             ret.update(
-                {
-                    host_name: {
-                        "Error": "{} is not a valid service name.".format(service_name)
-                    }
-                }
+                {host_name: {"Error": "{} is not a valid service name.".format(service_name)}}
             )
             return ret
 
@@ -606,9 +576,7 @@ def set_service_policy(
             # If we have a service_key, we've found a match. Update the policy.
             if service_key:
                 try:
-                    service_manager.UpdateServicePolicy(
-                        id=service_key, policy=service_policy
-                    )
+                    service_manager.UpdateServicePolicy(id=service_key, policy=service_policy)
                 except vim.fault.NotFound:
                     msg = "The service name '{}' was not found.".format(service_name)
                     log.debug(msg)
@@ -627,16 +595,13 @@ def set_service_policy(
 
             # If we made it this far, something else has gone wrong.
             if ret.get(host_name) is None:
-                msg = "Could not find service '{}' for host '{}'.".format(
-                    service_name, host_name
-                )
+                msg = "Could not find service '{}' for host '{}'.".format(service_name, host_name)
                 log.debug(msg)
                 ret.update({host_name: {"Error": msg}})
 
     return ret
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
+
 def get_service_policy(
     host,
     username,
@@ -738,11 +703,7 @@ def get_service_policy(
         # If we don't have a valid service, return. The service will be invalid for all hosts.
         if service_name not in valid_services:
             ret.update(
-                {
-                    host_name: {
-                        "Error": "{} is not a valid service name.".format(service_name)
-                    }
-                }
+                {host_name: {"Error": "{} is not a valid service name.".format(service_name)}}
             )
             return ret
 
@@ -763,9 +724,7 @@ def get_service_policy(
                 # Updated host_name value with an error message.
                 break
             else:
-                msg = "Could not find service '{}' for host '{}'.".format(
-                    service_name, host_name
-                )
+                msg = "Could not find service '{}' for host '{}'.".format(service_name, host_name)
                 ret.update({host_name: {"Error": msg}})
 
         # If we made it this far, something else has gone wrong.
@@ -777,8 +736,6 @@ def get_service_policy(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def get_service_running(
     host,
     username,
@@ -880,11 +837,7 @@ def get_service_running(
         # If we don't have a valid service, return. The service will be invalid for all hosts.
         if service_name not in valid_services:
             ret.update(
-                {
-                    host_name: {
-                        "Error": "{} is not a valid service name.".format(service_name)
-                    }
-                }
+                {host_name: {"Error": "{} is not a valid service name.".format(service_name)}}
             )
             return ret
 
@@ -905,9 +858,7 @@ def get_service_running(
                 # Updated host_name value with an error message.
                 break
             else:
-                msg = "Could not find service '{}' for host '{}'.".format(
-                    service_name, host_name
-                )
+                msg = "Could not find service '{}' for host '{}'.".format(service_name, host_name)
                 ret.update({host_name: {"Error": msg}})
 
         # If we made it this far, something else has gone wrong.

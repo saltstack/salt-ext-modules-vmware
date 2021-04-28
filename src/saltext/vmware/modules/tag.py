@@ -2,8 +2,8 @@ import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +25,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -100,9 +98,6 @@ def _get_client(server, username, password, verify_ssl=None, ca_bundle=None):
     return client
 
 
-@depends(HAS_PYVMOMI, HAS_VSPHERE_SDK)
-@_supports_proxies("vcenter")
-@_gets_service_instance_via_proxy
 def list_tag_categories(
     server=None,
     username=None,
@@ -136,18 +131,13 @@ def list_tag_categories(
         list of str
     """
     categories = None
-    client = _get_client(
-        server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle
-    )
+    client = _get_client(server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle)
 
     if client:
         categories = client.tagging.Category.list()
     return {"Categories": categories}
 
 
-@depends(HAS_PYVMOMI, HAS_VSPHERE_SDK)
-@_supports_proxies("vcenter")
-@_gets_service_instance_via_proxy
 def list_tags(
     server=None,
     username=None,
@@ -181,18 +171,13 @@ def list_tags(
         list of str
     """
     tags = None
-    client = _get_client(
-        server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle
-    )
+    client = _get_client(server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle)
 
     if client:
         tags = client.tagging.Tag.list()
     return {"Tags": tags}
 
 
-@depends(HAS_PYVMOMI, HAS_VSPHERE_SDK)
-@_supports_proxies("vcenter")
-@_gets_service_instance_via_proxy
 def attach_tag(
     object_id,
     tag_id,
@@ -250,9 +235,7 @@ def attach_tag(
         if the user can not be authenticated.
     """
     tag_attached = None
-    client = _get_client(
-        server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle
-    )
+    client = _get_client(server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle)
 
     if client:
         # Create dynamic id object associated with a type and an id.
@@ -264,20 +247,14 @@ def attach_tag(
         # resource for use by virtual machines.
         dynamic_id = DynamicID(type=managed_obj, id=object_id)
         try:
-            tag_attached = client.tagging.TagAssociation.attach(
-                tag_id=tag_id, object_id=dynamic_id
-            )
+            tag_attached = client.tagging.TagAssociation.attach(tag_id=tag_id, object_id=dynamic_id)
         except vsphere_errors:
             log.warning(
-                "Unable to attach tag. Check user privileges and"
-                " object_id (must be a string)."
+                "Unable to attach tag. Check user privileges and" " object_id (must be a string)."
             )
     return {"Tag attached": tag_attached}
 
 
-@depends(HAS_PYVMOMI, HAS_VSPHERE_SDK)
-@_supports_proxies("vcenter")
-@_gets_service_instance_via_proxy
 def list_attached_tags(
     object_id,
     managed_obj="ClusterComputeResource",
@@ -324,9 +301,7 @@ def list_attached_tags(
         if the user can not be authenticated.
     """
     attached_tags = None
-    client = _get_client(
-        server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle
-    )
+    client = _get_client(server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle)
 
     if client:
         # Create dynamic id object associated with a type and an id.
@@ -347,9 +322,6 @@ def list_attached_tags(
     return {"Attached tags": attached_tags}
 
 
-@depends(HAS_PYVMOMI, HAS_VSPHERE_SDK)
-@_supports_proxies("vcenter")
-@_gets_service_instance_via_proxy
 def create_tag_category(
     name,
     description,
@@ -399,9 +371,7 @@ def create_tag_category(
         if you do not have the privilege to create a category.
     """
     category_created = None
-    client = _get_client(
-        server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle
-    )
+    client = _get_client(server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle)
 
     if client:
         if cardinality == "SINGLE":
@@ -422,15 +392,11 @@ def create_tag_category(
             category_created = client.tagging.Category.create(create_spec)
         except vsphere_errors:
             log.warning(
-                "Unable to create tag category. Check user privilege"
-                " and see if category exists."
+                "Unable to create tag category. Check user privilege" " and see if category exists."
             )
     return {"Category created": category_created}
 
 
-@depends(HAS_PYVMOMI, HAS_VSPHERE_SDK)
-@_supports_proxies("vcenter")
-@_gets_service_instance_via_proxy
 def delete_tag_category(
     category_id,
     server=None,
@@ -471,24 +437,18 @@ def delete_tag_category(
         if the user can not be authenticated.
     """
     category_deleted = None
-    client = _get_client(
-        server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle
-    )
+    client = _get_client(server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle)
 
     if client:
         try:
             category_deleted = client.tagging.Category.delete(category_id)
         except vsphere_errors:
             log.warning(
-                "Unable to delete tag category. Check user privilege"
-                " and see if category exists."
+                "Unable to delete tag category. Check user privilege" " and see if category exists."
             )
     return {"Category deleted": category_deleted}
 
 
-@depends(HAS_PYVMOMI, HAS_VSPHERE_SDK)
-@_supports_proxies("vcenter")
-@_gets_service_instance_via_proxy
 def create_tag(
     name,
     description,
@@ -541,9 +501,7 @@ def create_tag(
         if you do not have the privilege to create tag.
     """
     tag_created = None
-    client = _get_client(
-        server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle
-    )
+    client = _get_client(server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle)
 
     if client:
         create_spec = client.tagging.Tag.CreateSpec()
@@ -553,16 +511,10 @@ def create_tag(
         try:
             tag_created = client.tagging.Tag.create(create_spec)
         except vsphere_errors:
-            log.warning(
-                "Unable to create tag. Check user privilege and see"
-                " if category exists."
-            )
+            log.warning("Unable to create tag. Check user privilege and see" " if category exists.")
     return {"Tag created": tag_created}
 
 
-@depends(HAS_PYVMOMI, HAS_VSPHERE_SDK)
-@_supports_proxies("vcenter")
-@_gets_service_instance_via_proxy
 def delete_tag(
     tag_id,
     server=None,
@@ -604,16 +556,13 @@ def delete_tag(
         if you do not have the privilege to create a category.
     """
     tag_deleted = None
-    client = _get_client(
-        server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle
-    )
+    client = _get_client(server, username, password, verify_ssl=verify_ssl, ca_bundle=ca_bundle)
 
     if client:
         try:
             tag_deleted = client.tagging.Tag.delete(tag_id)
         except vsphere_errors:
             log.warning(
-                "Unable to delete category. Check user privileges"
-                " and that category exists."
+                "Unable to delete category. Check user privileges" " and that category exists."
             )
     return {"Tag deleted": tag_deleted}

@@ -2,8 +2,8 @@ import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +25,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -41,8 +39,6 @@ def __virtual__():
     return __virtualname__
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def get_vmotion_enabled(
     host,
     username,
@@ -117,8 +113,6 @@ def get_vmotion_enabled(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def vmotion_disable(
     host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True
 ):
@@ -193,8 +187,6 @@ def vmotion_disable(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def vmotion_enable(
     host,
     username,

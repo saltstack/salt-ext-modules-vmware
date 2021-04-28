@@ -1,5 +1,3 @@
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def set_ntp_config(
     host,
     username,
@@ -93,8 +91,6 @@ def set_ntp_config(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def update_host_datetime(
     host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True
 ):
@@ -168,8 +164,6 @@ def update_host_datetime(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def get_ntp_config(
     host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True
 ):
@@ -232,4 +226,3 @@ def get_ntp_config(
         ret.update({host_name: ntp_config})
 
     return ret
-
