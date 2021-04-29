@@ -7,37 +7,23 @@ def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integratio
     assert actual_ids == expected_lun_ids
 
 
-def test_esxi_host_capability_should_have_accel3dSupported(service_instance):
+def test_esxi_host_capability_shutdownSupported(service_instance, integration_test_config):
+    expected_value = integration_test_config['esxi_hosts_capability']["shutdownSupported"]
+    expected_value = True if expected_value == 'True' else False
     capabilities = esxi.get_capabilities(service_instance=service_instance)
     for host_id in capabilities:
-        assert hasattr(capabilities[host_id], 'accel3dSupported')
+        assert capabilities[host_id]['shutdownSupported'] == expected_value
 
 
-def test_esxi_host_capability_should_have_backgroundSnapshotsSupported(service_instance):
+def test_esxi_host_capability_maxSupportedVcpus(service_instance, integration_test_config):
+    expected_value = int(integration_test_config['esxi_hosts_capability']["maxSupportedVcpus"])
     capabilities = esxi.get_capabilities(service_instance=service_instance)
     for host_id in capabilities:
-        assert hasattr(capabilities[host_id], 'backgroundSnapshotsSupported')
+        assert capabilities[host_id]['maxSupportedVcpus'] == expected_value
 
 
-# def test_esxi_host_capability_should_have_checkpointFtCompatibilityIssues(service_instance):
-#     capabilities = esxi.get_capabilities(service_instance=service_instance)
-#     for host_id in capabilities:
-#         assert hasattr(capabilities[host_id], 'checkpointFtCompatibilityIssues')
-
-
-# def test_esxi_host_capability_should_have_checkpointFtSupported(service_instance):
-#     capabilities = esxi.get_capabilities(service_instance=service_instance)
-#     for host_id in capabilities:
-#         assert hasattr(capabilities[host_id], 'checkpointFtSupported')
-
-
-def test_esxi_host_capability_should_have_cloneFromSnapshotSupported(service_instance):
+def test_esxi_host_capability_maxRegisteredVMs(service_instance, integration_test_config):
+    expected_value = int(integration_test_config['esxi_hosts_capability']["maxRegisteredVMs"])
     capabilities = esxi.get_capabilities(service_instance=service_instance)
     for host_id in capabilities:
-        assert hasattr(capabilities[host_id], 'cloneFromSnapshotSupported')
-
-
-def test_esxi_host_capability_should_have_cpuHwMmuSupported(service_instance):
-    capabilities = esxi.get_capabilities(service_instance=service_instance)
-    for host_id in capabilities:
-        assert hasattr(capabilities[host_id], 'cpuHwMmuSupported')
+        assert capabilities[host_id]['maxRegisteredVMs'] == expected_value

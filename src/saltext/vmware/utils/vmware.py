@@ -4074,3 +4074,16 @@ def _get_policy_dict(policy):
             subprofile_dicts.append(subprofile_dict)
     profile_dict["subprofiles"] = subprofile_dicts
     return profile_dict
+
+def _get_datacenter(node):
+    """Return a datacenter"""
+    dc = None
+    while True:
+        if isinstance(node, vim.Datacenter):
+            dc = node
+            break
+        try:
+            node = node.parent
+        except:
+            break
+    return dc
