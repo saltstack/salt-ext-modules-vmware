@@ -164,41 +164,6 @@ import logging
 import sys
 
 import salt.utils.platform
-from salt.utils.decorators import depends, ignores_kwargs
-
-try:
-    import jsonschema
-
-    HAS_JSONSCHEMA = True
-except ImportError:
-    HAS_JSONSCHEMA = False
-
-try:
-    # pylint: disable=no-name-in-module
-    from pyVmomi import (
-        vim,
-        vmodl,
-        pbm,
-        VmomiSupport,
-    )
-
-    # pylint: enable=no-name-in-module
-
-    # We check the supported vim versions to infer the pyVmomi version
-    if (
-        "vim25/6.0" in VmomiSupport.versionMap
-        and sys.version_info > (2, 7)
-        and sys.version_info < (2, 7, 9)
-    ):
-
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
-        raise ImportError()
-    HAS_PYVMOMI = True
-except ImportError:
-    HAS_PYVMOMI = False
-
 
 log = logging.getLogger(__name__)
 
