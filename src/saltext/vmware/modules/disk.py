@@ -1,9 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
 import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +26,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -41,9 +40,6 @@ def __virtual__():
     return __virtualname__
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def list_disks(disk_ids=None, scsi_addresses=None, service_instance=None):
     """
     Returns a list of dict representations of the disks in an ESXi host.
@@ -96,9 +92,6 @@ def list_disks(disk_ids=None, scsi_addresses=None, service_instance=None):
     return ret_list
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def erase_disk_partitions(disk_id=None, scsi_address=None, service_instance=None):
     """
     Erases the partitions on a disk.
@@ -126,9 +119,7 @@ def erase_disk_partitions(disk_id=None, scsi_address=None, service_instance=None
         salt '*' vsphere.erase_disk_partitions disk_id='naa.000000000000001'
     """
     if not disk_id and not scsi_address:
-        raise ArgumentValueError(
-            "Either 'disk_id' or 'scsi_address' " "needs to be specified"
-        )
+        raise ArgumentValueError("Either 'disk_id' or 'scsi_address' " "needs to be specified")
     host_ref = _get_proxy_target(service_instance)
     hostname = __proxy__["esxi.get_details"]()["esxi_host"]
     if not disk_id:
@@ -140,24 +131,16 @@ def erase_disk_partitions(disk_id=None, scsi_address=None, service_instance=None
             )
         disk_id = scsi_address_to_lun[scsi_address].canonicalName
         log.trace(
-            "[{}] Got disk id '{}' for scsi address '{}'"
-            "".format(hostname, disk_id, scsi_address)
+            "[{}] Got disk id '{}' for scsi address '{}'" "".format(hostname, disk_id, scsi_address)
         )
-    log.trace(
-        "Erasing disk partitions on disk '{}' in host '{}'" "".format(disk_id, hostname)
-    )
+    log.trace("Erasing disk partitions on disk '{}' in host '{}'" "".format(disk_id, hostname))
     saltext.vmware.utils.vmware.erase_disk_partitions(
         service_instance, host_ref, disk_id, hostname=hostname
     )
-    log.info(
-        "Erased disk partitions on disk '{}' on host '{}'" "".format(disk_id, hostname)
-    )
+    log.info("Erased disk partitions on disk '{}' on host '{}'" "".format(disk_id, hostname))
     return True
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def list_disk_partitions(disk_id=None, scsi_address=None, service_instance=None):
     """
     Lists the partitions on a disk.
@@ -185,9 +168,7 @@ def list_disk_partitions(disk_id=None, scsi_address=None, service_instance=None)
         salt '*' vsphere.list_disk_partitions disk_id='naa.000000000000001'
     """
     if not disk_id and not scsi_address:
-        raise ArgumentValueError(
-            "Either 'disk_id' or 'scsi_address' " "needs to be specified"
-        )
+        raise ArgumentValueError("Either 'disk_id' or 'scsi_address' " "needs to be specified")
     host_ref = _get_proxy_target(service_instance)
     hostname = __proxy__["esxi.get_details"]()["esxi_host"]
     if not disk_id:
@@ -199,21 +180,16 @@ def list_disk_partitions(disk_id=None, scsi_address=None, service_instance=None)
             )
         disk_id = scsi_address_to_lun[scsi_address].canonicalName
         log.trace(
-            "[{}] Got disk id '{}' for scsi address '{}'"
-            "".format(hostname, disk_id, scsi_address)
+            "[{}] Got disk id '{}' for scsi address '{}'" "".format(hostname, disk_id, scsi_address)
         )
-    log.trace(
-        "Listing disk partitions on disk '{}' in host '{}'" "".format(disk_id, hostname)
-    )
+    log.trace("Listing disk partitions on disk '{}' in host '{}'" "".format(disk_id, hostname))
     partition_info = saltext.vmware.utils.vmware.get_disk_partition_info(host_ref, disk_id)
     ret_list = []
     # NOTE: 1. The layout view has an extra 'None' partition for free space
     #       2. The orders in the layout/partition views are not the same
     for part_spec in partition_info.spec.partition:
         part_layout = [
-            p
-            for p in partition_info.layout.partition
-            if p.partition == part_spec.partition
+            p for p in partition_info.layout.partition if p.partition == part_spec.partition
         ][0]
         part_dict = {
             "hostname": hostname,
@@ -230,9 +206,6 @@ def list_disk_partitions(disk_id=None, scsi_address=None, service_instance=None)
     return ret_list
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def list_diskgroups(cache_disk_ids=None, service_instance=None):
     """
     Returns a list of disk group dict representation on an ESXi host.
@@ -274,13 +247,7 @@ def list_diskgroups(cache_disk_ids=None, service_instance=None):
     return ret_list
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
-def create_diskgroup(
-    cache_disk_id, capacity_disk_ids, safety_checks=True, service_instance=None
-):
+def create_diskgroup(cache_disk_id, capacity_disk_ids, safety_checks=True, service_instance=None):
     """
     Creates disk group on an ESXi host with the specified cache and
     capacity disks.
@@ -310,11 +277,7 @@ def create_diskgroup(
     schema = DiskGroupsDiskIdSchema.serialize()
     try:
         jsonschema.validate(
-            {
-                "diskgroups": [
-                    {"cache_id": cache_disk_id, "capacity_ids": capacity_disk_ids}
-                ]
-            },
+            {"diskgroups": [{"cache_id": cache_disk_id, "capacity_ids": capacity_disk_ids}]},
             schema,
         )
     except jsonschema.exceptions.ValidationError as exc:
@@ -334,24 +297,17 @@ def create_diskgroup(
     for id in disk_ids:
         if not [d for d in disks if d.canonicalName == id]:
             raise VMwareObjectRetrievalError(
-                "No disk with id '{}' was found in ESXi host '{}'"
-                "".format(id, hostname)
+                "No disk with id '{}' was found in ESXi host '{}'" "".format(id, hostname)
             )
     cache_disk = [d for d in disks if d.canonicalName == cache_disk_id][0]
     capacity_disks = [d for d in disks if d.canonicalName in capacity_disk_ids]
-    vsan_disk_mgmt_system = salt.utils.vsan.get_vsan_disk_management_system(
-        service_instance
-    )
+    vsan_disk_mgmt_system = salt.utils.vsan.get_vsan_disk_management_system(service_instance)
     dg = salt.utils.vsan.create_diskgroup(
         service_instance, vsan_disk_mgmt_system, host_ref, cache_disk, capacity_disks
     )
     return True
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def add_capacity_to_diskgroup(
     cache_disk_id, capacity_disk_ids, safety_checks=True, service_instance=None
 ):
@@ -382,11 +338,7 @@ def add_capacity_to_diskgroup(
     schema = DiskGroupsDiskIdSchema.serialize()
     try:
         jsonschema.validate(
-            {
-                "diskgroups": [
-                    {"cache_id": cache_disk_id, "capacity_ids": capacity_disk_ids}
-                ]
-            },
+            {"diskgroups": [{"cache_id": cache_disk_id, "capacity_ids": capacity_disk_ids}]},
             schema,
         )
     except jsonschema.exceptions.ValidationError as exc:
@@ -398,8 +350,7 @@ def add_capacity_to_diskgroup(
         for id in capacity_disk_ids:
             if not [d for d in disks if d.canonicalName == id]:
                 raise VMwareObjectRetrievalError(
-                    "No disk with id '{}' was found in ESXi host '{}'"
-                    "".format(id, hostname)
+                    "No disk with id '{}' was found in ESXi host '{}'" "".format(id, hostname)
                 )
     diskgroups = saltext.vmware.utils.vmware.get_diskgroups(
         host_ref, cache_disk_ids=[cache_disk_id]
@@ -409,19 +360,13 @@ def add_capacity_to_diskgroup(
             "No diskgroup with cache disk id '{}' was found in ESXi "
             "host '{}'".format(cache_disk_id, hostname)
         )
-    vsan_disk_mgmt_system = salt.utils.vsan.get_vsan_disk_management_system(
-        service_instance
-    )
+    vsan_disk_mgmt_system = salt.utils.vsan.get_vsan_disk_management_system(service_instance)
     salt.utils.vsan.add_capacity_to_diskgroup(
         service_instance, vsan_disk_mgmt_system, host_ref, diskgroups[0], disks
     )
     return True
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def remove_capacity_from_diskgroup(
     cache_disk_id,
     capacity_disk_ids,
@@ -460,11 +405,7 @@ def remove_capacity_from_diskgroup(
     schema = DiskGroupsDiskIdSchema.serialize()
     try:
         jsonschema.validate(
-            {
-                "diskgroups": [
-                    {"cache_id": cache_disk_id, "capacity_ids": capacity_disk_ids}
-                ]
-            },
+            {"diskgroups": [{"cache_id": cache_disk_id, "capacity_ids": capacity_disk_ids}]},
             schema,
         )
     except jsonschema.exceptions.ValidationError as exc:
@@ -476,8 +417,7 @@ def remove_capacity_from_diskgroup(
         for id in capacity_disk_ids:
             if not [d for d in disks if d.canonicalName == id]:
                 raise VMwareObjectRetrievalError(
-                    "No disk with id '{}' was found in ESXi host '{}'"
-                    "".format(id, hostname)
+                    "No disk with id '{}' was found in ESXi host '{}'" "".format(id, hostname)
                 )
     diskgroups = saltext.vmware.utils.vmware.get_diskgroups(
         host_ref, cache_disk_ids=[cache_disk_id]
@@ -498,10 +438,6 @@ def remove_capacity_from_diskgroup(
     return True
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
-@_supports_proxies("esxi")
-@_gets_service_instance_via_proxy
 def remove_diskgroup(cache_disk_id, data_accessibility=True, service_instance=None):
     """
     Remove the diskgroup with the specified cache disk.

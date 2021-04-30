@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: Apache-2.0
 """
 Module used to access the vcenter proxy connection methods
 """
-from __future__ import absolute_import, print_function, unicode_literals
-
-# Import python libs
 import logging
 
 import salt.utils.platform
@@ -42,9 +39,6 @@ def _get_capability_definition_dict(cap_metadata):
     }
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxdatacenter", "vcenter")
-@_gets_service_instance_via_proxy
 def list_capability_definitions(service_instance=None):
     """
     Returns a list of the metadata of all capabilities in the vCenter.

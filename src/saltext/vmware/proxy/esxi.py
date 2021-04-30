@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: Apache-2.0
 """
 Proxy Minion interface module for managing VMware ESXi hosts.
 
@@ -269,15 +269,13 @@ to find an example structure for Pillar as well as an example ``.sls`` file
 for standing up an ESXi host from scratch.
 
 """
-
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 import os
 
-from saltext.vmware.config.schemas.esxi import EsxiProxySchema
-from salt.exceptions import InvalidConfigError, SaltSystemExit
+from salt.exceptions import InvalidConfigError
+from salt.exceptions import SaltSystemExit
 from salt.utils.dictupdate import merge
+from saltext.vmware.config.schemas.esxi import EsxiProxySchema
 
 # This must be present or the Salt loader won't load this module.
 __proxyenabled__ = ["esxi"]
@@ -332,9 +330,7 @@ def init(opts):
 
     DETAILS["proxytype"] = proxy_conf["proxytype"]
     if ("host" not in proxy_conf) and ("vcenter" not in proxy_conf):
-        log.critical(
-            "Neither 'host' nor 'vcenter' keys found in pillar " "for this proxy."
-        )
+        log.critical("Neither 'host' nor 'vcenter' keys found in pillar " "for this proxy.")
         return False
     if "host" in proxy_conf:
         # We have started the proxy by connecting directly to the host
@@ -410,8 +406,7 @@ def init(opts):
         if mechanism == "userpass":
             # Get the correct login details
             log.debug(
-                "Retrieving credentials and testing vCenter connection"
-                " for mehchanism 'userpass'"
+                "Retrieving credentials and testing vCenter connection" " for mehchanism 'userpass'"
             )
             try:
                 username, password = find_credentials(DETAILS["vcenter"])
@@ -533,10 +528,7 @@ def find_credentials(host):
             try:
                 # Try to authenticate with the given user/password combination
                 ret = __salt__["vmware_info.system_info"](
-                    host=host,
-                    username=user,
-                    password=password,
-                    verify_ssl=verify_ssl
+                    host=host, username=user, password=password, verify_ssl=verify_ssl
                 )
             except SaltSystemExit:
                 # If we can't authenticate, continue on to try the next password.
@@ -547,9 +539,7 @@ def find_credentials(host):
                 DETAILS["password"] = password
                 return user, password
     # We've reached the end of the list without successfully authenticating.
-    raise SaltSystemExit(
-        "Cannot complete login due to an incorrect user name or password."
-    )
+    raise SaltSystemExit("Cannot complete login due to an incorrect user name or password.")
 
 
 def _grains(host, protocol=None, port=None, verify_ssl=None):
@@ -565,7 +555,7 @@ def _grains(host, protocol=None, port=None, verify_ssl=None):
         password=password,
         protocol=protocol,
         port=port,
-        verify_ssl=verify_ssl
+        verify_ssl=verify_ssl,
     )
     GRAINS_CACHE.update(ret)
     return GRAINS_CACHE

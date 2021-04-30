@@ -1,9 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
 import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +26,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -60,7 +59,6 @@ def _format_firewall_stdout(cmd_ret):
     return ret_dict
 
 
-@depends(HAS_ESX_CLI)
 def get_firewall_status(
     host, username, password, protocol=None, port=None, esxi_hosts=None, credstore=None
 ):
@@ -166,7 +164,6 @@ def get_firewall_status(
     return ret
 
 
-@depends(HAS_ESX_CLI)
 def enable_firewall_ruleset(
     host,
     username,

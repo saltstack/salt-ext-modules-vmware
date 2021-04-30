@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # pylint: disable=C0302
 """
 Manage VMware vCenter servers and ESXi hosts.
@@ -231,9 +232,6 @@ def __virtual__():
     return __virtualname__
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxi", "esxcluster", "esxdatacenter", "vcenter", "esxvm")
-@_gets_service_instance_via_proxy
 def test_vcenter_connection(service_instance=None):
     """
     Checks if a connection is to a vCenter

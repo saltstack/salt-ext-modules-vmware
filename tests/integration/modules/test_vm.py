@@ -1,10 +1,11 @@
+# Copyright 2021 VMware, Inc.
+# SPDX-License-Identifier: Apache-2.0
 import saltext.vmware.modules.vm as vm
 
-def test_vm_get_basic_facts(service_instance):
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    # for host in hosts:
-    #     for d in host.vm:
-    #         print(d.config.macAddress)
+
+def test_vm_get_basic_facts(service_instance, integration_test_config):
+    expected_value = integration_test_config["vm_facts"]["datacenter"]
     vm_facts = vm.get_vm_facts(service_instance=service_instance)
-    print(vm_facts)
-    assert True
+    for host_id in vm_facts:
+        for vm_name in vm_facts[host_id]:
+            assert vm_facts[host_id][vm_name]["datacenter"] == expected_value

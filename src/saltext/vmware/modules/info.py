@@ -1,17 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
 import logging
 import sys
 
 import salt.config
-
 import salt.modules.pillar
-
 import salt.utils.dictupdate as dictupdate
-
 import salt.utils.platform
-
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -33,9 +30,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -84,6 +79,7 @@ def _get_host_disks(host_reference):
 
     return {"SSDs": ssds, "Non-SSDs": non_ssds}
 
+
 def get_proxy_type():
     """
     Returns the proxy type retrieved either from the pillar of from the proxy
@@ -126,7 +122,7 @@ def get_proxy_connection_details():
         "password": details.get("password"),
         "protocol": details.get("protocol"),
         "port": details.get("port"),
-        "mechanism": details.get("mechanism", "userpass"), 
+        "mechanism": details.get("mechanism", "userpass"),
         "principal": details.get("principal"),
         "domain": details.get("domain"),
         "verify_ssl": details.get("verify_ssl", True),
@@ -140,16 +136,18 @@ def get_proxy_connection_details():
     return proxy_details
 
 
-def get_connection_details(host=None,
-                           vcenter=None,
-                           username=None,
-                           password=None,
-                           protocol=None,
-                           port=None,
-                           mechanism=None,
-                           principal=None,
-                           domain=None,
-                           verify_ssl=None):
+def get_connection_details(
+    host=None,
+    vcenter=None,
+    username=None,
+    password=None,
+    protocol=None,
+    port=None,
+    mechanism=None,
+    principal=None,
+    domain=None,
+    verify_ssl=None,
+):
     """
     Returns the connection details of the following proxies: esxi
     """
@@ -237,7 +235,7 @@ def get_connection_details(host=None,
         "password": password,
         "protocol": protocol,
         "port": port,
-        "mechanism": mechanism, 
+        "mechanism": mechanism,
         "principal": principal,
         "domain": domain,
         "verify_ssl": verify_ssl,
@@ -246,12 +244,11 @@ def get_connection_details(host=None,
         proxy_details["vcenter"] = vcenter
 
     if host:
-        proxy_details["host"] = host 
+        proxy_details["host"] = host
 
     return proxy_details
 
 
-@depends(HAS_PYVMOMI)
 def system_info(
     host=None,
     vcenter=None,
@@ -305,13 +302,15 @@ def system_info(
             details["port"] = port
             details["verify_ssl"] = verify_ssl
     else:
-        details = get_connection_details(host=host,
-                                         vcenter=vcenter,
-                                         username=username,
-                                         password=password,
-                                         protocol=protocol,
-                                         port=port,
-                                         verify_ssl=verify_ssl)
+        details = get_connection_details(
+            host=host,
+            vcenter=vcenter,
+            username=username,
+            password=password,
+            protocol=protocol,
+            port=port,
+            verify_ssl=verify_ssl,
+        )
     service_instance = saltext.vmware.utils.vmware.get_service_instance(**details)
 
     ret = saltext.vmware.utils.vmware.get_inventory(service_instance).about.__dict__
@@ -323,8 +322,6 @@ def system_info(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def get_host_datetime(
     host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True
 ):
@@ -390,8 +387,6 @@ def get_host_datetime(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def list_hosts(host, username, password, protocol=None, port=None, verify_ssl=True):
     """
     Returns a list of hosts for the specified VMware environment.
@@ -433,7 +428,6 @@ def list_hosts(host, username, password, protocol=None, port=None, verify_ssl=Tr
     return salt.utils.vmware.list_hosts(service_instance)
 
 
-@depends(HAS_PYVMOMI)
 def list_hosts_via_proxy(hostnames=None, datacenter=None, cluster=None, service_instance=None):
     """
     Returns a list of hosts for the specified VMware environment. The list
@@ -483,7 +477,6 @@ def list_hosts_via_proxy(hostnames=None, datacenter=None, cluster=None, service_
     return [salt.utils.vmware.get_managed_object_name(h) for h in hosts]
 
 
-@depends(HAS_PYVMOMI)
 def list_resourcepools(host, username, password, protocol=None, port=None, verify_ssl=True):
     """
     Returns a list of resource pools for the specified host.
@@ -525,7 +518,6 @@ def list_resourcepools(host, username, password, protocol=None, port=None, verif
     return salt.utils.vmware.list_resourcepools(service_instance)
 
 
-@depends(HAS_PYVMOMI)
 def list_networks(host, username, password, protocol=None, port=None, verify_ssl=True):
     """
     Returns a list of networks for the specified host.
@@ -567,7 +559,6 @@ def list_networks(host, username, password, protocol=None, port=None, verify_ssl
     return salt.utils.vmware.list_networks(service_instance)
 
 
-@depends(HAS_PYVMOMI)
 def list_folders(host, username, password, protocol=None, port=None, verify_ssl=True):
     """
     Returns a list of folders for the specified host.
@@ -609,7 +600,6 @@ def list_folders(host, username, password, protocol=None, port=None, verify_ssl=
     return salt.utils.vmware.list_folders(service_instance)
 
 
-@depends(HAS_PYVMOMI)
 def list_vapps(host, username, password, protocol=None, port=None, verify_ssl=True):
     """
     Returns a list of vApps for the specified host.
@@ -652,7 +642,6 @@ def list_vapps(host, username, password, protocol=None, port=None, verify_ssl=Tr
     return salt.utils.vmware.list_vapps(service_instance)
 
 
-@depends(HAS_PYVMOMI)
 def list_ssds(host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True):
     """
     Returns a list of SSDs for the given host or list of host_names.
@@ -718,7 +707,6 @@ def list_ssds(host, username, password, protocol=None, port=None, host_names=Non
     return ret
 
 
-@depends(HAS_PYVMOMI)
 def list_non_ssds(
     host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True
 ):
@@ -849,7 +837,9 @@ def get_proxy_target(service_instance):
             raise InvalidEntityError(
                 "Proxies connected directly to ESXi " "hosts are not supported"
             )
-        references = saltext.vmware.utils.vmware.get_hosts(service_instance, host_names=details["esxi_host"])
+        references = saltext.vmware.utils.vmware.get_hosts(
+            service_instance, host_names=details["esxi_host"]
+        )
         if not references:
             raise VMwareObjectRetrievalError(
                 "ESXi host '{}' was not found".format(details["esxi_host"])

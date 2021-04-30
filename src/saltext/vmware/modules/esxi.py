@@ -1,4 +1,136 @@
-# -*- coding: utf-8 -*-
+# Copyright 2021 VMware, Inc.
+# SPDX-License: Apache-2.0
+
+def get_lun_ids(*, service_instance):
+    '''
+    Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
+    '''
+
+    # TODO: Might be better to use that other recursive view thing? Not sure
+    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    ids = []
+    for host in hosts:
+        for datastore in host.datastore:
+            for extent in datastore.info.vmfs.extent:
+                ids.append(extent.diskName)
+    return ids
+
+def get_capabilities(*, service_instance):
+    '''
+    Return ESXi host's capability information.
+    '''
+    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    capabilities = {}
+    for host in hosts:
+        capability = host.capability
+        capabilities[host.name] = {}
+        capabilities[host.name]["motionSupported"] = capability.vmotionSupported
+        capabilities[host.name]["standbySupported"] = capability.standbySupported
+        capabilities[host.name]["ipmiSupported"] = capability.ipmiSupported
+        capabilities[host.name]["maxSupportedVMs"] = capability.maxSupportedVMs
+        capabilities[host.name]["mrecursiveResourcePoolsSupported"] = capability.recursiveResourcePoolsSupported
+        capabilities[host.name]["cpuMemoryResourceConfigurationSupported"] = capability.cpuMemoryResourceConfigurationSupported
+        capabilities[host.name]["rebootSupported"] = capability.rebootSupported
+        capabilities[host.name]["shutdownSupported"] = capability.shutdownSupported
+        capabilities[host.name]["vaxRunningVMs"] = capability.maxRunningVMs
+        capabilities[host.name]["maxSupportedVcpus"] = capability.maxSupportedVcpus
+        capabilities[host.name]["maxRegisteredVMs"] = capability.maxRegisteredVMs
+        capabilities[host.name]["datastorePrincipalSupported"] = capability.datastorePrincipalSupported
+        capabilities[host.name]["sanSupported"] = capability.sanSupported
+        capabilities[host.name]["nfsSupported"] = capability.nfsSupported
+        capabilities[host.name]["iscsiSupported"] = capability.iscsiSupported
+        capabilities[host.name]["vlanTaggingSupported"] = capability.vlanTaggingSupported
+        capabilities[host.name]["nicTeamingSupported"] = capability.nicTeamingSupported
+        capabilities[host.name]["highGuestMemSupported"] = capability.highGuestMemSupported
+        capabilities[host.name]["maintenanceModeSupported"] = capability.maintenanceModeSupported
+        capabilities[host.name]["suspendedRelocateSupported"] = capability.suspendedRelocateSupported
+        capabilities[host.name]["restrictedSnapshotRelocateSupported"] = capability.restrictedSnapshotRelocateSupported
+        capabilities[host.name]["perVmSwapFiles"] = capability.perVmSwapFiles
+        capabilities[host.name]["localSwapDatastoreSupported"] = capability.localSwapDatastoreSupported
+        capabilities[host.name]["unsharedSwapVMotionSupported"] = capability.unsharedSwapVMotionSupported
+        capabilities[host.name]["backgroundSnapshotsSupported"] = capability.backgroundSnapshotsSupported
+        capabilities[host.name]["preAssignedPCIUnitNumbersSupported"] = capability.preAssignedPCIUnitNumbersSupported
+        capabilities[host.name]["screenshotSupported"] = capability.screenshotSupported
+        capabilities[host.name]["scaledScreenshotSupported"] = capability.scaledScreenshotSupported
+        capabilities[host.name]["storageVMotionSupported"] = capability.storageVMotionSupported
+        capabilities[host.name]["vmotionWithStorageVMotionSupported"] = capability.vmotionWithStorageVMotionSupported
+        capabilities[host.name]["vmotionAcrossNetworkSupported"] = capability.vmotionAcrossNetworkSupported
+        capabilities[host.name]["maxNumDisksSVMotion"] = capability.maxNumDisksSVMotion
+        capabilities[host.name]["hbrNicSelectionSupported"] = capability.hbrNicSelectionSupported
+        capabilities[host.name]["vrNfcNicSelectionSupported"] = capability.vrNfcNicSelectionSupported
+        capabilities[host.name]["recordReplaySupported"] = capability.recordReplaySupported
+        capabilities[host.name]["ftSupported"] = capability.ftSupported
+        capabilities[host.name]["replayUnsupportedReason"] = capability.replayUnsupportedReason
+        capabilities[host.name]["smpFtSupported"] = capability.smpFtSupported
+        capabilities[host.name]["maxVcpusPerFtVm"] = capability.maxVcpusPerFtVm
+        capabilities[host.name]["loginBySSLThumbprintSupported"] = capability.loginBySSLThumbprintSupported
+        capabilities[host.name]["cloneFromSnapshotSupported"] = capability.cloneFromSnapshotSupported
+        capabilities[host.name]["deltaDiskBackingsSupported"] = capability.deltaDiskBackingsSupported
+        capabilities[host.name]["perVMNetworkTrafficShapingSupported"] = capability.perVMNetworkTrafficShapingSupported
+        capabilities[host.name]["tpmSupported"] = capability.tpmSupported
+        capabilities[host.name]["virtualExecUsageSupported"] = capability.virtualExecUsageSupported
+        capabilities[host.name]["storageIORMSupported"] = capability.storageIORMSupported
+        capabilities[host.name]["vmDirectPathGen2Supported"] = capability.vmDirectPathGen2Supported
+        capabilities[host.name]["vmDirectPathGen2UnsupportedReasonExtended"] = capability.vmDirectPathGen2UnsupportedReasonExtended
+        capabilities[host.name]["vStorageCapable"] = capability.vStorageCapable
+        capabilities[host.name]["snapshotRelayoutSupported"] = capability.snapshotRelayoutSupported
+        capabilities[host.name]["firewallIpRulesSupported"] = capability.firewallIpRulesSupported
+        capabilities[host.name]["servicePackageInfoSupported"] = capability.servicePackageInfoSupported
+        capabilities[host.name]["maxHostRunningVms"] = capability.maxHostRunningVms
+        capabilities[host.name]["maxHostSupportedVcpus"] = capability.maxHostSupportedVcpus
+        capabilities[host.name]["vmfsDatastoreMountCapable"] = capability.vmfsDatastoreMountCapable
+        capabilities[host.name]["eightPlusHostVmfsSharedAccessSupported"] = capability.eightPlusHostVmfsSharedAccessSupported
+        capabilities[host.name]["nestedHVSupported"] = capability.nestedHVSupported
+        capabilities[host.name]["vPMCSupported"] = capability.vPMCSupported
+        capabilities[host.name]["interVMCommunicationThroughVMCISupported"] = capability.interVMCommunicationThroughVMCISupported
+        capabilities[host.name]["scheduledHardwareUpgradeSupported"] = capability.scheduledHardwareUpgradeSupported
+        capabilities[host.name]["featureCapabilitiesSupported"] = capability.featureCapabilitiesSupported
+        capabilities[host.name]["latencySensitivitySupported"] = capability.latencySensitivitySupported
+        capabilities[host.name]["storagePolicySupported"] = capability.storagePolicySupported
+        capabilities[host.name]["accel3dSupported"] = capability.accel3dSupported
+        capabilities[host.name]["reliableMemoryAware"] = capability.reliableMemoryAware
+        capabilities[host.name]["multipleNetworkStackInstanceSupported"] = capability.multipleNetworkStackInstanceSupported
+        capabilities[host.name]["messageBusProxySupported"] = capability.messageBusProxySupported
+        capabilities[host.name]["vsanSupported"] = capability.vsanSupported
+        capabilities[host.name]["vFlashSupported"] = capability.vFlashSupported
+        capabilities[host.name]["hostAccessManagerSupported"] = capability.hostAccessManagerSupported
+        capabilities[host.name]["provisioningNicSelectionSupported"] = capability.provisioningNicSelectionSupported
+        capabilities[host.name]["nfs41Supported"] = capability.nfs41Supported
+        capabilities[host.name]["nfs41Krb5iSupported"] = capability.nfs41Krb5iSupported
+        capabilities[host.name]["turnDiskLocatorLedSupported"] = capability.turnDiskLocatorLedSupported
+        capabilities[host.name]["virtualVolumeDatastoreSupported"] = capability.virtualVolumeDatastoreSupported
+        capabilities[host.name]["markAsSsdSupported"] = capability.markAsSsdSupported
+        capabilities[host.name]["markAsLocalSupported"] = capability.markAsLocalSupported
+        capabilities[host.name]["smartCardAuthenticationSupported"] = capability.smartCardAuthenticationSupported
+        capabilities[host.name]["cryptoSupported"] = capability.cryptoSupported
+        capabilities[host.name]["oneKVolumeAPIsSupported"] = capability.oneKVolumeAPIsSupported
+        capabilities[host.name]["gatewayOnNicSupported"] = capability.gatewayOnNicSupported
+        capabilities[host.name]["upitSupported"] = capability.upitSupported
+        capabilities[host.name]["cpuHwMmuSupported"] = capability.cpuHwMmuSupported
+        capabilities[host.name]["encryptedVMotionSupported"] = capability.encryptedVMotionSupported
+        capabilities[host.name]["encryptionChangeOnAddRemoveSupported"] = capability.encryptionChangeOnAddRemoveSupported
+        capabilities[host.name]["encryptionHotOperationSupported"] = capability.encryptionHotOperationSupported
+        capabilities[host.name]["encryptionWithSnapshotsSupported"] = capability.encryptionWithSnapshotsSupported
+        capabilities[host.name]["encryptionFaultToleranceSupported"] = capability.encryptionFaultToleranceSupported
+        capabilities[host.name]["encryptionMemorySaveSupported"] = capability.encryptionMemorySaveSupported
+        capabilities[host.name]["encryptionRDMSupported"] = capability.encryptionRDMSupported
+        capabilities[host.name]["encryptionVFlashSupported"] = capability.encryptionVFlashSupported
+        capabilities[host.name]["encryptionCBRCSupported"] = capability.encryptionCBRCSupported
+        capabilities[host.name]["encryptionHBRSupported"] = capability.encryptionHBRSupported
+        capabilities[host.name]["supportedVmfsMajorVersion"] = list(capability.supportedVmfsMajorVersion)
+        capabilities[host.name]["vmDirectPathGen2UnsupportedReason"] = list(capability.vmDirectPathGen2UnsupportedReason)
+        capabilities[host.name]["ftCompatibilityIssues"] = list(capability.ftCompatibilityIssues)
+        capabilities[host.name]["smpFtCompatibilityIssues"] = list(capability.smpFtCompatibilityIssues)
+        capabilities[host.name]["replayCompatibilityIssues"] = list(capability.replayCompatibilityIssues)
+        capabilities[host.name]['checkpointFtSupported'] = capabilities[host.name]['smpFtSupported']
+        capabilities[host.name]['checkpointFtCompatibilityIssues'] = capabilities[host.name]['smpFtCompatibilityIssues']
+
+    return capabilities
+
+
+# # TODO: remove/rehash code below here -W. Werner, 2021-04-28
+
+
 """
 Glues the VMware vSphere Execution Module to the VMware ESXi Proxy Minions to the
 :mod:`esxi proxymodule <salt.proxy.esxi>`.
@@ -27,13 +159,9 @@ type manor.
 
 """
 
-# Import Python libs
-from __future__ import absolute_import, print_function, unicode_literals
-
-import sys
 import logging
+import sys
 
-# Import Salt libs
 import salt.utils.platform
 from salt.utils.decorators import depends, ignores_kwargs
 
@@ -236,8 +364,6 @@ def get_ssh_key(host, username, password, protocol=None, port=None, certificate_
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def update_host_password(
     host, username, password, new_password, protocol=None, port=None, verify_ssl=True
 ):
@@ -308,10 +434,6 @@ def update_host_password(
     return True
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
-# @_supports_proxies("esxi")
-# @_gets_service_instance_via_proxy
 def configure_host_cache(enabled, datastore=None, swap_size_MiB=None, service_instance=None):
     """
     Configures the host cache on the selected host.
@@ -370,9 +492,6 @@ def configure_host_cache(enabled, datastore=None, swap_size_MiB=None, service_in
     return True
 
 
-@depends(HAS_PYVMOMI)
-# @_supports_proxies("esxi")
-# @_gets_service_instance_via_proxy
 def get_host_cache(service_instance=None):
     """
     Returns the host cache configuration on the proxy host.
@@ -401,130 +520,3 @@ def get_host_cache(service_instance=None):
         "datastore": {"name": hci.key.name},
         "swap_size": "{}MiB".format(hci.swapSize),
     }
-
-
-def get_lun_ids(*, service_instance):
-    '''
-    Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
-    '''
-
-    # TODO: Might be better to use that other recursive view thing? Not sure
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    ids = []
-    for host in hosts:
-        for datastore in host.datastore:
-            for extent in datastore.info.vmfs.extent:
-                ids.append(extent.diskName)
-    return ids
-
-def get_capabilities(*, service_instance):
-    '''
-    Return ESXi host's capability information.
-    '''
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    capabilities = {}
-    for host in hosts:
-        capability = host.capability
-        capabilities[host.name] = {}
-        capabilities[host.name]["motionSupported"] = capability.vmotionSupported
-        capabilities[host.name]["standbySupported"] = capability.standbySupported
-        capabilities[host.name]["ipmiSupported"] = capability.ipmiSupported
-        capabilities[host.name]["maxSupportedVMs"] = capability.maxSupportedVMs
-        capabilities[host.name]["mrecursiveResourcePoolsSupported"] = capability.recursiveResourcePoolsSupported
-        capabilities[host.name]["cpuMemoryResourceConfigurationSupported"] = capability.cpuMemoryResourceConfigurationSupported
-        capabilities[host.name]["rebootSupported"] = capability.rebootSupported
-        capabilities[host.name]["shutdownSupported"] = capability.shutdownSupported
-        capabilities[host.name]["vaxRunningVMs"] = capability.maxRunningVMs
-        capabilities[host.name]["maxSupportedVcpus"] = capability.maxSupportedVcpus
-        capabilities[host.name]["maxRegisteredVMs"] = capability.maxRegisteredVMs
-        capabilities[host.name]["datastorePrincipalSupported"] = capability.datastorePrincipalSupported
-        capabilities[host.name]["sanSupported"] = capability.sanSupported
-        capabilities[host.name]["nfsSupported"] = capability.nfsSupported
-        capabilities[host.name]["iscsiSupported"] = capability.iscsiSupported
-        capabilities[host.name]["vlanTaggingSupported"] = capability.vlanTaggingSupported
-        capabilities[host.name]["nicTeamingSupported"] = capability.nicTeamingSupported
-        capabilities[host.name]["highGuestMemSupported"] = capability.highGuestMemSupported
-        capabilities[host.name]["maintenanceModeSupported"] = capability.maintenanceModeSupported
-        capabilities[host.name]["suspendedRelocateSupported"] = capability.suspendedRelocateSupported
-        capabilities[host.name]["restrictedSnapshotRelocateSupported"] = capability.restrictedSnapshotRelocateSupported
-        capabilities[host.name]["perVmSwapFiles"] = capability.perVmSwapFiles
-        capabilities[host.name]["localSwapDatastoreSupported"] = capability.localSwapDatastoreSupported
-        capabilities[host.name]["unsharedSwapVMotionSupported"] = capability.unsharedSwapVMotionSupported
-        capabilities[host.name]["backgroundSnapshotsSupported"] = capability.backgroundSnapshotsSupported
-        capabilities[host.name]["preAssignedPCIUnitNumbersSupported"] = capability.preAssignedPCIUnitNumbersSupported
-        capabilities[host.name]["screenshotSupported"] = capability.screenshotSupported
-        capabilities[host.name]["scaledScreenshotSupported"] = capability.scaledScreenshotSupported
-        capabilities[host.name]["storageVMotionSupported"] = capability.storageVMotionSupported
-        capabilities[host.name]["vmotionWithStorageVMotionSupported"] = capability.vmotionWithStorageVMotionSupported
-        capabilities[host.name]["vmotionAcrossNetworkSupported"] = capability.vmotionAcrossNetworkSupported
-        capabilities[host.name]["maxNumDisksSVMotion"] = capability.maxNumDisksSVMotion
-        capabilities[host.name]["hbrNicSelectionSupported"] = capability.hbrNicSelectionSupported
-        capabilities[host.name]["vrNfcNicSelectionSupported"] = capability.vrNfcNicSelectionSupported
-        capabilities[host.name]["recordReplaySupported"] = capability.recordReplaySupported
-        capabilities[host.name]["ftSupported"] = capability.ftSupported
-        capabilities[host.name]["replayUnsupportedReason"] = capability.replayUnsupportedReason
-        capabilities[host.name]["smpFtSupported"] = capability.smpFtSupported
-        capabilities[host.name]["maxVcpusPerFtVm"] = capability.maxVcpusPerFtVm
-        capabilities[host.name]["loginBySSLThumbprintSupported"] = capability.loginBySSLThumbprintSupported
-        capabilities[host.name]["cloneFromSnapshotSupported"] = capability.cloneFromSnapshotSupported
-        capabilities[host.name]["deltaDiskBackingsSupported"] = capability.deltaDiskBackingsSupported
-        capabilities[host.name]["perVMNetworkTrafficShapingSupported"] = capability.perVMNetworkTrafficShapingSupported
-        capabilities[host.name]["tpmSupported"] = capability.tpmSupported
-        capabilities[host.name]["virtualExecUsageSupported"] = capability.virtualExecUsageSupported
-        capabilities[host.name]["storageIORMSupported"] = capability.storageIORMSupported
-        capabilities[host.name]["vmDirectPathGen2Supported"] = capability.vmDirectPathGen2Supported
-        capabilities[host.name]["vmDirectPathGen2UnsupportedReasonExtended"] = capability.vmDirectPathGen2UnsupportedReasonExtended
-        capabilities[host.name]["vStorageCapable"] = capability.vStorageCapable
-        capabilities[host.name]["snapshotRelayoutSupported"] = capability.snapshotRelayoutSupported
-        capabilities[host.name]["firewallIpRulesSupported"] = capability.firewallIpRulesSupported
-        capabilities[host.name]["servicePackageInfoSupported"] = capability.servicePackageInfoSupported
-        capabilities[host.name]["maxHostRunningVms"] = capability.maxHostRunningVms
-        capabilities[host.name]["maxHostSupportedVcpus"] = capability.maxHostSupportedVcpus
-        capabilities[host.name]["vmfsDatastoreMountCapable"] = capability.vmfsDatastoreMountCapable
-        capabilities[host.name]["eightPlusHostVmfsSharedAccessSupported"] = capability.eightPlusHostVmfsSharedAccessSupported
-        capabilities[host.name]["nestedHVSupported"] = capability.nestedHVSupported
-        capabilities[host.name]["vPMCSupported"] = capability.vPMCSupported
-        capabilities[host.name]["interVMCommunicationThroughVMCISupported"] = capability.interVMCommunicationThroughVMCISupported
-        capabilities[host.name]["scheduledHardwareUpgradeSupported"] = capability.scheduledHardwareUpgradeSupported
-        capabilities[host.name]["featureCapabilitiesSupported"] = capability.featureCapabilitiesSupported
-        capabilities[host.name]["latencySensitivitySupported"] = capability.latencySensitivitySupported
-        capabilities[host.name]["storagePolicySupported"] = capability.storagePolicySupported
-        capabilities[host.name]["accel3dSupported"] = capability.accel3dSupported
-        capabilities[host.name]["reliableMemoryAware"] = capability.reliableMemoryAware
-        capabilities[host.name]["multipleNetworkStackInstanceSupported"] = capability.multipleNetworkStackInstanceSupported
-        capabilities[host.name]["messageBusProxySupported"] = capability.messageBusProxySupported
-        capabilities[host.name]["vsanSupported"] = capability.vsanSupported
-        capabilities[host.name]["vFlashSupported"] = capability.vFlashSupported
-        capabilities[host.name]["hostAccessManagerSupported"] = capability.hostAccessManagerSupported
-        capabilities[host.name]["provisioningNicSelectionSupported"] = capability.provisioningNicSelectionSupported
-        capabilities[host.name]["nfs41Supported"] = capability.nfs41Supported
-        capabilities[host.name]["nfs41Krb5iSupported"] = capability.nfs41Krb5iSupported
-        capabilities[host.name]["turnDiskLocatorLedSupported"] = capability.turnDiskLocatorLedSupported
-        capabilities[host.name]["virtualVolumeDatastoreSupported"] = capability.virtualVolumeDatastoreSupported
-        capabilities[host.name]["markAsSsdSupported"] = capability.markAsSsdSupported
-        capabilities[host.name]["markAsLocalSupported"] = capability.markAsLocalSupported
-        capabilities[host.name]["smartCardAuthenticationSupported"] = capability.smartCardAuthenticationSupported
-        capabilities[host.name]["cryptoSupported"] = capability.cryptoSupported
-        capabilities[host.name]["oneKVolumeAPIsSupported"] = capability.oneKVolumeAPIsSupported
-        capabilities[host.name]["gatewayOnNicSupported"] = capability.gatewayOnNicSupported
-        capabilities[host.name]["upitSupported"] = capability.upitSupported
-        capabilities[host.name]["cpuHwMmuSupported"] = capability.cpuHwMmuSupported
-        capabilities[host.name]["encryptedVMotionSupported"] = capability.encryptedVMotionSupported
-        capabilities[host.name]["encryptionChangeOnAddRemoveSupported"] = capability.encryptionChangeOnAddRemoveSupported
-        capabilities[host.name]["encryptionHotOperationSupported"] = capability.encryptionHotOperationSupported
-        capabilities[host.name]["encryptionWithSnapshotsSupported"] = capability.encryptionWithSnapshotsSupported
-        capabilities[host.name]["encryptionFaultToleranceSupported"] = capability.encryptionFaultToleranceSupported
-        capabilities[host.name]["encryptionMemorySaveSupported"] = capability.encryptionMemorySaveSupported
-        capabilities[host.name]["encryptionRDMSupported"] = capability.encryptionRDMSupported
-        capabilities[host.name]["encryptionVFlashSupported"] = capability.encryptionVFlashSupported
-        capabilities[host.name]["encryptionCBRCSupported"] = capability.encryptionCBRCSupported
-        capabilities[host.name]["encryptionHBRSupported"] = capability.encryptionHBRSupported
-        capabilities[host.name]["supportedVmfsMajorVersion"] = list(capability.supportedVmfsMajorVersion)
-        capabilities[host.name]["vmDirectPathGen2UnsupportedReason"] = list(capability.vmDirectPathGen2UnsupportedReason)
-        capabilities[host.name]["ftCompatibilityIssues"] = list(capability.ftCompatibilityIssues)
-        capabilities[host.name]["smpFtCompatibilityIssues"] = list(capability.smpFtCompatibilityIssues)
-        capabilities[host.name]["replayCompatibilityIssues"] = list(capability.replayCompatibilityIssues)
-        capabilities[host.name]['checkpointFtSupported'] = capabilities[host.name]['smpFtSupported']
-        capabilities[host.name]['checkpointFtCompatibilityIssues'] = capabilities[host.name]['smpFtCompatibilityIssues']
-
-    return capabilities

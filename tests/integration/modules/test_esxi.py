@@ -1,8 +1,10 @@
+# Copyright 2021 VMware, Inc.
+# SPDX-License-Identifier: Apache-2.0
 import saltext.vmware.modules.esxi as esxi
 
 
 def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integration_test_config):
-    expected_lun_ids = integration_test_config['esxi_datastore_disk_names']
+    expected_lun_ids = integration_test_config["esxi_datastore_disk_names"]
     actual_ids = esxi.get_lun_ids(service_instance=service_instance)
     assert actual_ids == expected_lun_ids
 

@@ -1,9 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
 import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +26,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -96,9 +95,6 @@ def _validate_entity(entity):
         raise InvalidEntityError(exc)
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxcluster", "esxdatacenter")
-@_gets_service_instance_via_proxy
 def list_licenses(service_instance=None):
     """
     Lists all licenses on a vCenter.
@@ -127,9 +123,6 @@ def list_licenses(service_instance=None):
     return ret_dict
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxcluster", "esxdatacenter")
-@_gets_service_instance_via_proxy
 def add_license(key, description, safety_checks=True, service_instance=None):
     """
     Adds a license to the vCenter or ESXi host
@@ -157,13 +150,7 @@ def add_license(key, description, safety_checks=True, service_instance=None):
     return True
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
-@_supports_proxies("esxcluster", "esxdatacenter")
-@_gets_service_instance_via_proxy
-def list_assigned_licenses(
-    entity, entity_display_name, license_keys=None, service_instance=None
-):
+def list_assigned_licenses(entity, entity_display_name, license_keys=None, service_instance=None):
     """
     Lists the licenses assigned to an entity
 
@@ -209,10 +196,6 @@ def list_assigned_licenses(
     ]
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
-@_supports_proxies("esxcluster", "esxdatacenter")
-@_gets_service_instance_via_proxy
 def assign_license(
     license_key,
     license_name,
@@ -255,9 +238,7 @@ def assign_license(
     if safety_checks:
         licenses = saltext.vmware.utils.vmware.get_licenses(service_instance)
         if not [l for l in licenses if l.licenseKey == license_key]:
-            raise VMwareObjectRetrievalError(
-                "License '{}' wasn't found" "".format(license_name)
-            )
+            raise VMwareObjectRetrievalError("License '{}' wasn't found" "".format(license_name))
     saltext.vmware.utils.vmware.assign_license(
         service_instance,
         license_key,

@@ -1,3 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+def get_vm_facts(*, service_instance):
+    '''
+    Return basic facts about a vSphere VM guest
+    '''
+    vms = {}
+    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    for host in hosts:
+        virtual_machines = host.vm
+        host_id = host.name
+        vms[host_id] = {}
+        for vm in virtual_machines:
+            dc = utils._get_datacenter(vm)
+            vms[host_id][vm.summary.config.name] = {}
+            vms[host_id][vm.summary.config.name]['cluster'] = vm.summary.runtime.host.parent.name
+            vms[host_id][vm.summary.config.name]['esxi_hostname'] = vm.summary.runtime.host.summary.config.name
+            vms[host_id][vm.summary.config.name]['guest_name'] = vm.summary.config.name
+            vms[host_id][vm.summary.config.name]['guest_fullname'] = vm.summary.guest.guestFullName
+            vms[host_id][vm.summary.config.name]['ip_address'] = vm.summary.guest.ipAddress
+            # TODO get mac address
+            vms[host_id][vm.summary.config.name]['mac_address'] = None
+            vms[host_id][vm.summary.config.name]['power_state'] = vm.summary.runtime.powerState
+            vms[host_id][vm.summary.config.name]['uuid'] = vm.summary.config.uuid
+            # TODO get network
+            vms[host_id][vm.summary.config.name]['vm_network'] = {}
+            vms[host_id][vm.summary.config.name]['datacenter'] = dc.name
+            # TODO get attributes, tags, folder, moid
+    return vms
+
+
 # pylint: disable=C0302
 """
 Manage VMware vCenter servers and ESXi hosts.
@@ -325,7 +355,9 @@ def _create_network_backing(network_name, switch_type, parent_ref):
     backing = {}
     if network_name:
         if switch_type == "standard":
-            networks = saltext.vmware.utils.vmware.get_networks(parent_ref, network_names=[network_name])
+            networks = saltext.vmware.utils.vmware.get_networks(
+                parent_ref, network_names=[network_name]
+            )
             if not networks:
                 raise salt.exceptions.VMwareObjectRetrievalError(
                     "The network '{}' could not be " "retrieved.".format(network_name)
@@ -1557,7 +1589,6 @@ def _delete_device(device):
     return device_spec
 
 
-@depends(HAS_PYVMOMI)
 def power_on_vm(
     name,
     datacenter=None,
@@ -1639,7 +1670,6 @@ def power_on_vm(
     return result
 
 
-@depends(HAS_PYVMOMI)
 def power_off_vm(
     name,
     datacenter=None,
@@ -1721,7 +1751,6 @@ def power_off_vm(
     return result
 
 
-@depends(HAS_PYVMOMI)
 def list_vms(
     host=None, vcenter=None, username=None, password=None, protocol=None, port=None, verify_ssl=True
 ):
@@ -1774,7 +1803,6 @@ def list_vms(
     return saltext.vmware.utils.vmware.list_vms(service_instance)
 
 
-@depends(HAS_PYVMOMI)
 def delete_vm(
     name,
     datacenter,
@@ -1859,7 +1887,6 @@ def delete_vm(
     return results
 
 
-@depends(HAS_PYVMOMI)
 def create_vm(
     vm_name,
     cpu,
@@ -2115,7 +2142,6 @@ def create_vm(
     return {"create_vm": True}
 
 
-@depends(HAS_PYVMOMI)
 def update_vm(
     vm_name,
     cpu=None,
@@ -2357,7 +2383,6 @@ def update_vm(
     return changes
 
 
-@depends(HAS_PYVMOMI)
 def register_vm(
     name,
     datacenter,
@@ -2523,7 +2548,6 @@ def _remove_vm(name, datacenter, service_instance, placement=None, power_off=Non
     return results, vm_ref
 
 
-@depends(HAS_PYVMOMI)
 def unregister_vm(
     name,
     datacenter,
@@ -2608,7 +2632,6 @@ def unregister_vm(
     return results
 
 
-@depends(HAS_PYVMOMI)
 def get_vm(
     name,
     datacenter=None,
@@ -2686,7 +2709,6 @@ def get_vm(
     return virtual_machine
 
 
-@depends(HAS_PYVMOMI)
 def get_vm_config_file(
     name,
     datacenter,
@@ -3052,7 +3074,9 @@ def _convert_units(devices):
     if devices:
         for device in devices:
             if "unit" in device and "size" in device:
-                device.update(saltext.vmware.utils.vmware.convert_to_kb(device["unit"], device["size"]))
+                device.update(
+                    saltext.vmware.utils.vmware.convert_to_kb(device["unit"], device["size"])
+                )
     else:
         return False
     return True
@@ -3151,7 +3175,6 @@ def compare_vm_configs(new_config, current_config):
     return diffs
 
 
-@depends(HAS_PYVMOMI)
 def get_advanced_configs(vm_name, datacenter, service_instance=None):
     """
     Returns extra config parameters from a virtual machine advanced config list
@@ -3171,7 +3194,6 @@ def get_advanced_configs(vm_name, datacenter, service_instance=None):
     return current_config["advanced_configs"]
 
 
-@depends(HAS_PYVMOMI)
 def set_advanced_configs(vm_name, datacenter, advanced_configs, service_instance=None):
     """
     Appends extra config parameters to a virtual machine advanced config list
@@ -3241,7 +3263,6 @@ def _delete_advanced_config(config_spec, advanced_config, vm_extra_config):
     return removed_configs
 
 
-@depends(HAS_PYVMOMI)
 def delete_advanced_configs(vm_name, datacenter, advanced_configs, service_instance=None):
     """
     Removes extra config parameters from a virtual machine
@@ -3273,32 +3294,3 @@ def delete_advanced_configs(vm_name, datacenter, advanced_configs, service_insta
     if removed_configs:
         salt.utils.vmware.update_vm(vm_ref, config_spec)
     return {"removed_configs": removed_configs}
-
-
-def get_vm_facts(*, service_instance):
-    '''
-    Return basic facts about a vSphere VM guest
-    '''
-    vms = {}
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    for host in hosts:
-        virtual_machines = host.vm
-        host_id = host.name
-        vms[host_id] = {}
-        for vm in virtual_machines:
-            dc = utils._get_datacenter(vm)
-            vms[host_id][vm.summary.config.name] = {}
-            vms[host_id][vm.summary.config.name]['cluster'] = vm.summary.runtime.host.parent.name
-            vms[host_id][vm.summary.config.name]['esxi_hostname'] = vm.summary.runtime.host.summary.config.name
-            vms[host_id][vm.summary.config.name]['guest_name'] = vm.summary.config.name
-            vms[host_id][vm.summary.config.name]['guest_fullname'] = vm.summary.guest.guestFullName
-            vms[host_id][vm.summary.config.name]['ip_address'] = vm.summary.guest.ipAddress
-            # TODO get mac address
-            vms[host_id][vm.summary.config.name]['mac_address'] = None
-            vms[host_id][vm.summary.config.name]['power_state'] = vm.summary.runtime.powerState
-            vms[host_id][vm.summary.config.name]['uuid'] = vm.summary.config.uuid
-            # TODO get network
-            vms[host_id][vm.summary.config.name]['vm_network'] = {}
-            vms[host_id][vm.summary.config.name]['datacenter'] = dc.name
-            # TODO get attributes, tags, folder, moid
-    return vms

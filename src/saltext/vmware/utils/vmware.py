@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 Connection library for VMware
 
@@ -71,7 +72,6 @@ If the connection was successful, ESXCLI was successfully installed on your syst
 You should see output related to the ESXi host's syslog configuration.
 
 """
-
 import atexit
 import errno
 import logging
@@ -125,9 +125,7 @@ def __virtual__():
     return False, "Missing dependency: The salt.utils.vmware module requires pyVmomi."
 
 
-def get_vsphere_client(
-    server, username, password, session=None, verify_ssl=True, ca_bundle=None
-):
+def get_vsphere_client(server, username, password, session=None, verify_ssl=True, ca_bundle=None):
     """
     Internal helper method to create an instance of the vSphere API client.
     Please provide username and password to authenticate.
@@ -205,12 +203,12 @@ def _get_service_instance(
             )
             raise salt.exceptions.CommandExecutionError(err_msg)
     else:
-        raise salt.exceptions.CommandExecutionError(
-            "Unsupported mechanism: '{}'".format(mechanism)
-        )
+        raise salt.exceptions.CommandExecutionError("Unsupported mechanism: '{}'".format(mechanism))
 
     log.trace(
-        "Connecting using the '%s' mechanism, with username '%s'", mechanism, username,
+        "Connecting using the '%s' mechanism, with username '%s'",
+        mechanism,
+        username,
     )
     default_msg = (
         "Could not connect to host '{}'. "
@@ -230,9 +228,7 @@ def _get_service_instance(
             )
     except TypeError as exc:
         if "unexpected keyword argument" in exc.message:
-            log.error(
-                "Initial connect to the VMware endpoint failed with %s", exc.message
-            )
+            log.error("Initial connect to the VMware endpoint failed with %s", exc.message)
             log.error(
                 "This may mean that a version of PyVmomi EARLIER than 6.0.0.2016.6 is installed."
             )
@@ -330,9 +326,7 @@ def get_mor_using_container_view(si, obj_type, obj_name):
 
     """
     inventory = get_inventory(si)
-    container = inventory.viewManager.CreateContainerView(
-        inventory.rootFolder, [obj_type], True
-    )
+    container = inventory.viewManager.CreateContainerView(inventory.rootFolder, [obj_type], True)
     for item in container.view:
         if item.name == obj_name:
             return item
@@ -686,9 +680,7 @@ def get_gssapi_token(principal, host, domain):
             raise salt.exceptions.CommandExecutionError(
                 "Can't receive token, no response from server"
             )
-    raise salt.exceptions.CommandExecutionError(
-        "Context established, but didn't receive token"
-    )
+    raise salt.exceptions.CommandExecutionError("Context established, but didn't receive token")
 
 
 def get_hardware_grains(service_instance):
@@ -726,9 +718,7 @@ def get_hardware_grains(service_instance):
             )
             hw_grain_data["cpu_model"] = view.view[0].hardware.cpuPkg[0].description
             hw_grain_data["kernel"] = view.view[0].summary.config.product.productLineId
-            hw_grain_data["num_cpu_sockets"] = view.view[
-                0
-            ].hardware.cpuInfo.numCpuPackages
+            hw_grain_data["num_cpu_sockets"] = view.view[0].hardware.cpuInfo.numCpuPackages
             hw_grain_data["num_cpu_cores"] = view.view[0].hardware.cpuInfo.numCpuCores
             hw_grain_data["num_cpus"] = (
                 hw_grain_data["num_cpu_sockets"] * hw_grain_data["num_cpu_cores"]
@@ -742,30 +732,18 @@ def get_hardware_grains(service_instance):
                 hw_grain_data["ip4_interfaces"][_vnic.device] = []
                 hw_grain_data["ip6_interfaces"][_vnic.device] = []
 
-                hw_grain_data["ip_interfaces"][_vnic.device].append(
-                    _vnic.spec.ip.ipAddress
-                )
-                hw_grain_data["ip4_interfaces"][_vnic.device].append(
-                    _vnic.spec.ip.ipAddress
-                )
+                hw_grain_data["ip_interfaces"][_vnic.device].append(_vnic.spec.ip.ipAddress)
+                hw_grain_data["ip4_interfaces"][_vnic.device].append(_vnic.spec.ip.ipAddress)
                 if _vnic.spec.ip.ipV6Config:
                     hw_grain_data["ip6_interfaces"][_vnic.device].append(
                         _vnic.spec.ip.ipV6Config.ipV6Address
                     )
                 hw_grain_data["hwaddr_interfaces"][_vnic.device] = _vnic.spec.mac
-            hw_grain_data["host"] = view.view[
-                0
-            ].configManager.networkSystem.dnsConfig.hostName
-            hw_grain_data["domain"] = view.view[
-                0
-            ].configManager.networkSystem.dnsConfig.domainName
+            hw_grain_data["host"] = view.view[0].configManager.networkSystem.dnsConfig.hostName
+            hw_grain_data["domain"] = view.view[0].configManager.networkSystem.dnsConfig.domainName
             hw_grain_data["fqdn"] = "{}{}{}".format(
                 view.view[0].configManager.networkSystem.dnsConfig.hostName,
-                (
-                    "."
-                    if view.view[0].configManager.networkSystem.dnsConfig.domainName
-                    else ""
-                ),
+                ("." if view.view[0].configManager.networkSystem.dnsConfig.domainName else ""),
                 view.view[0].configManager.networkSystem.dnsConfig.domainName,
             )
 
@@ -867,8 +845,7 @@ def get_content(
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.VimFault as exc:
             log.exception(exc)
@@ -907,9 +884,7 @@ def get_content(
 
     # Retrieve the contents
     try:
-        content = service_instance.content.propertyCollector.RetrieveContents(
-            [filter_spec]
-        )
+        content = service_instance.content.propertyCollector.RetrieveContents([filter_spec])
     except vim.fault.NoPermission as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
@@ -929,8 +904,7 @@ def get_content(
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.VimFault as exc:
             log.exception(exc)
@@ -1333,8 +1307,7 @@ def get_dvportgroups(parent_ref, portgroup_names=None, get_all_portgroups=False)
         )
     parent_name = get_managed_object_name(parent_ref)
     log.trace(
-        "Retrieving portgroup in %s '%s', portgroups_names='%s', "
-        "get_all_portgroups=%s",
+        "Retrieving portgroup in %s '%s', portgroups_names='%s', " "get_all_portgroups=%s",
         type(parent_ref).__name__,
         parent_name,
         ",".join(portgroup_names) if portgroup_names else None,
@@ -1598,9 +1571,7 @@ def get_license_assignment_manager(service_instance):
 
     log.debug("Retrieving license assignment manager")
     try:
-        lic_assignment_manager = (
-            service_instance.content.licenseManager.licenseAssignmentManager
-        )
+        lic_assignment_manager = service_instance.content.licenseManager.licenseAssignmentManager
     except vim.fault.NoPermission as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
@@ -1730,8 +1701,7 @@ def get_assigned_licenses(
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.VimFault as exc:
             log.exception(exc)
@@ -1758,9 +1728,7 @@ def get_assigned_licenses(
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
 
     if entity_type == "uuid" and len(assignments) > 1:
-        log.trace(
-            "Unexpectectedly retrieved more than one" " VCenter license assignment."
-        )
+        log.trace("Unexpectectedly retrieved more than one" " VCenter license assignment.")
         raise salt.exceptions.VMwareObjectRetrievalError(
             "Unexpected return. Expect only a single assignment"
         )
@@ -1824,8 +1792,7 @@ def assign_license(
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.VimFault as exc:
             raise salt.exceptions.VMwareApiError(exc.msg)
@@ -1882,9 +1849,7 @@ def get_datacenters(service_instance, datacenter_names=None, get_all_datacenters
     """
     items = [
         i["object"]
-        for i in get_mors_with_properties(
-            service_instance, vim.Datacenter, property_list=["name"]
-        )
+        for i in get_mors_with_properties(service_instance, vim.Datacenter, property_list=["name"])
         if get_all_datacenters or (datacenter_names and i["name"] in datacenter_names)
     ]
     return items
@@ -2069,9 +2034,7 @@ def list_datastores(service_instance):
     return list_objects(service_instance, vim.Datastore)
 
 
-def get_datastore_files(
-    service_instance, directory, datastores, container_object, browser_spec
-):
+def get_datastore_files(service_instance, directory, datastores, container_object, browser_spec):
     """
     Get the files with a given browser specification from the datastore.
 
@@ -2107,8 +2070,7 @@ def get_datastore_files(
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.VimFault as exc:
             log.exception(exc)
@@ -2118,9 +2080,7 @@ def get_datastore_files(
             raise salt.exceptions.VMwareRuntimeError(exc.msg)
         try:
             files.append(
-                salt.utils.vmware.wait_for_task(
-                    task, directory, "query virtual machine files"
-                )
+                salt.utils.vmware.wait_for_task(task, directory, "query virtual machine files")
             )
         except salt.exceptions.VMwareFileNotFoundError:
             pass
@@ -2162,8 +2122,7 @@ def get_datastores(
         log.trace("Retrieving all datastores visible to '%s'", obj_name)
     else:
         log.trace(
-            "Retrieving datastores visible to '%s': names = (%s); "
-            "backing disk ids = (%s)",
+            "Retrieving datastores visible to '%s': names = (%s); " "backing disk ids = (%s)",
             obj_name,
             datastore_names,
             backing_disk_ids,
@@ -2184,9 +2143,7 @@ def get_datastores(
         mount_infos = props.get("fileSystemVolumeInfo.mountInfo", [])
         disk_datastores = []
         # Non vmfs volumes aren't backed by a disk
-        for vol in [
-            i.volume for i in mount_infos if isinstance(i.volume, vim.HostVmfsVolume)
-        ]:
+        for vol in [i.volume for i in mount_infos if isinstance(i.volume, vim.HostVmfsVolume)]:
 
             if not [e for e in vol.extent if e.diskName in backing_disk_ids]:
                 # Skip volume if it doesn't contain an extent with a
@@ -2248,10 +2205,7 @@ def get_datastores(
             skip=False,
             type=vim.StoragePod,
         )
-    elif (
-        isinstance(reference, vim.Folder)
-        and get_managed_object_name(reference) == "Datacenters"
-    ):
+    elif isinstance(reference, vim.Folder) and get_managed_object_name(reference) == "Datacenters":
         # Traversal of root folder (doesn't support multiple levels of Folders)
         traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
             path="childEntity",
@@ -2340,9 +2294,7 @@ def _get_partition_info(storage_system, device_path):
     vim.HostDiskPartitionInfo
     """
     try:
-        partition_infos = storage_system.RetrieveDiskPartitionInfo(
-            devicePath=[device_path]
-        )
+        partition_infos = storage_system.RetrieveDiskPartitionInfo(devicePath=[device_path])
     except vim.fault.NoPermission as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
@@ -2365,16 +2317,14 @@ def _get_new_computed_partition_spec(storage_system, device_path, partition_info
     (new_partition_number, vim.HostDiskPartitionSpec
     """
     log.trace(
-        "Adding a partition at the end of the disk and getting the new "
-        "computed partition spec"
+        "Adding a partition at the end of the disk and getting the new " "computed partition spec"
     )
     # TODO implement support for multiple partitions
     # We support adding a partition add the end of the disk with partitions
     free_partitions = [p for p in partition_info.layout.partition if p.type == "none"]
     if not free_partitions:
         raise salt.exceptions.VMwareObjectNotFoundError(
-            "Free partition was not found on device '{}'"
-            "".format(partition_info.deviceName)
+            "Free partition was not found on device '{}'" "".format(partition_info.deviceName)
         )
     free_partition = free_partitions[0]
 
@@ -2469,9 +2419,7 @@ def create_vmfs_datastore(
         vmfs=vim.HostVmfsSpec(
             majorVersion=vmfs_major_version,
             volumeName=datastore_name,
-            extent=vim.HostScsiDiskPartition(
-                diskName=disk_id, partition=new_partition_number
-            ),
+            extent=vim.HostScsiDiskPartition(diskName=disk_id, partition=new_partition_number),
         ),
         diskUuid=target_disk.uuid,
         partition=partition_spec,
@@ -2541,8 +2489,7 @@ def remove_datastore(service_instance, datastore_ref):
     ds_hosts = ds_props.get("host")
     if not ds_hosts:
         raise salt.exceptions.VMwareApiError(
-            "Datastore '{}' can't be removed. No "
-            "attached hosts found".format(ds_name)
+            "Datastore '{}' can't be removed. No " "attached hosts found".format(ds_name)
         )
     hostname = get_managed_object_name(ds_hosts[0].key)
     host_ds_system = get_host_datastore_system(ds_hosts[0].key, hostname=hostname)
@@ -2692,9 +2639,7 @@ def _get_scsi_address_to_lun_key_map(
         # The vmware scsi_address may have multiple comma separated values
         # The first one is the actual scsi address
         lun_key_by_scsi_addr.update({p.name.split(",")[0]: l.lun for p in l.path})
-    log.trace(
-        "Scsi address to lun id map on host '%s': %s", hostname, lun_key_by_scsi_addr
-    )
+    log.trace("Scsi address to lun id map on host '%s': %s", hostname, lun_key_by_scsi_addr)
     return lun_key_by_scsi_addr
 
 
@@ -2774,9 +2719,7 @@ def get_scsi_address_to_lun_map(host_ref, storage_system=None, hostname=None):
     lun_ids_to_scsi_addr_map = _get_scsi_address_to_lun_key_map(
         si, host_ref, storage_system, hostname
     )
-    luns_to_key_map = {
-        d.key: d for d in get_all_luns(host_ref, storage_system, hostname)
-    }
+    luns_to_key_map = {d.key: d for d in get_all_luns(host_ref, storage_system, hostname)}
     return {
         scsi_addr: luns_to_key_map[lun_key]
         for scsi_addr, lun_key in lun_ids_to_scsi_addr_map.items()
@@ -2825,9 +2768,7 @@ def get_disks(host_ref, disk_ids=None, scsi_addresses=None, get_all_disks=False)
             si, host_ref, storage_system, hostname
         )
         disk_keys = [
-            key
-            for scsi_addr, key in lun_key_by_scsi_addr.items()
-            if scsi_addr in scsi_addresses
+            key for scsi_addr, key in lun_key_by_scsi_addr.items() if scsi_addr in scsi_addresses
         ]
         log.trace("disk_keys based on scsi_addresses = %s", disk_keys)
 
@@ -2872,9 +2813,7 @@ def get_disk_partition_info(host_ref, disk_id, storage_system=None):
     if not storage_system:
         storage_system = get_storage_system(service_instance, host_ref, hostname)
 
-    props = get_properties_of_managed_object(
-        storage_system, ["storageDeviceInfo.scsiLun"]
-    )
+    props = get_properties_of_managed_object(storage_system, ["storageDeviceInfo.scsiLun"])
     if not props.get("storageDeviceInfo.scsiLun"):
         raise salt.exceptions.VMwareObjectRetrievalError(
             "No devices were retrieved in host '{}'".format(hostname)
@@ -2905,9 +2844,7 @@ def get_disk_partition_info(host_ref, disk_id, storage_system=None):
     return partition_info
 
 
-def erase_disk_partitions(
-    service_instance, host_ref, disk_id, hostname=None, storage_system=None
-):
+def erase_disk_partitions(service_instance, host_ref, disk_id, hostname=None, storage_system=None):
     """
     Erases all partitions on a disk
 
@@ -2952,9 +2889,7 @@ def erase_disk_partitions(
         "[%s] Retrieved %s devices: %s",
         hostname,
         len(results[0].get("storageDeviceInfo.scsiLun", [])),
-        ", ".join(
-            [l.canonicalName for l in results[0].get("storageDeviceInfo.scsiLun", [])]
-        ),
+        ", ".join([l.canonicalName for l in results[0].get("storageDeviceInfo.scsiLun", [])]),
     )
     disks = [
         l
@@ -2968,9 +2903,7 @@ def erase_disk_partitions(
     log.trace("[%s] device_path = %s", hostname, disks[0].devicePath)
     # Erase the partitions by setting an empty partition spec
     try:
-        storage_system.UpdateDiskPartitions(
-            disks[0].devicePath, vim.HostDiskPartitionSpec()
-        )
+        storage_system.UpdateDiskPartitions(disks[0].devicePath, vim.HostDiskPartitionSpec())
     except vim.fault.NoPermission as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
@@ -3109,9 +3042,7 @@ def get_host_cache(host_ref, host_cache_manager=None):
             return None
         return results[0]["cacheConfigurationInfo"][0]
     else:
-        results = get_properties_of_managed_object(
-            host_cache_manager, ["cacheConfigurationInfo"]
-        )
+        results = get_properties_of_managed_object(host_cache_manager, ["cacheConfigurationInfo"])
         if not results:
             log.trace("Host '%s' has no host cache", hostname)
             return None
@@ -3119,9 +3050,7 @@ def get_host_cache(host_ref, host_cache_manager=None):
 
 
 # TODO Support host caches on multiple datastores
-def configure_host_cache(
-    host_ref, datastore_ref, swap_size_MiB, host_cache_manager=None
-):
+def configure_host_cache(host_ref, datastore_ref, swap_size_MiB, host_cache_manager=None):
     """
     Configures the host cahe of the specified host
 
@@ -3158,9 +3087,7 @@ def configure_host_cache(
         swap_size_MiB,
     )
 
-    spec = vim.HostCacheConfigurationSpec(
-        datastore=datastore_ref, swapSize=swap_size_MiB
-    )
+    spec = vim.HostCacheConfigurationSpec(datastore=datastore_ref, swapSize=swap_size_MiB)
     log.trace("host_cache_spec=%s", spec)
     try:
         task = host_cache_manager.ConfigureHostCache_Task(spec)
@@ -3237,9 +3164,7 @@ def get_resource_pools(
     if not selected_pools:
         raise salt.exceptions.VMwareObjectRetrievalError(
             "The resource pools with properties "
-            "names={} get_all={} could not be found".format(
-                selected_pools, get_all_resource_pools
-            )
+            "names={} get_all={} could not be found".format(selected_pools, get_all_resource_pools)
         )
 
     return selected_pools
@@ -3372,8 +3297,7 @@ def wait_for_task(task, instance_name, task_type, sleep_seconds=1, log_level="de
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.FileNotFound as exc:
             log.exception(exc)
@@ -3401,8 +3325,7 @@ def wait_for_task(task, instance_name, task_type, sleep_seconds=1, log_level="de
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.FileNotFound as exc:
             log.exception(exc)
@@ -3479,9 +3402,7 @@ def get_vm_by_property(
     )
     vm_formatted = [vm for vm in vm_list if vm["name"] == name]
     if not vm_formatted:
-        raise salt.exceptions.VMwareObjectRetrievalError(
-            "The virtual machine was not found."
-        )
+        raise salt.exceptions.VMwareObjectRetrievalError("The virtual machine was not found.")
     elif len(vm_formatted) > 1:
         raise salt.exceptions.VMwareMultipleObjectsError(
             " ".join(
@@ -3512,9 +3433,7 @@ def get_folder(service_instance, datacenter, placement, base_vm_name=None):
     """
     log.trace("Retrieving folder information")
     if base_vm_name:
-        vm_object = get_vm_by_property(
-            service_instance, base_vm_name, vm_properties=["name"]
-        )
+        vm_object = get_vm_by_property(service_instance, base_vm_name, vm_properties=["name"])
         vm_props = salt.utils.vmware.get_properties_of_managed_object(
             vm_object, properties=["parent"]
         )
@@ -3539,9 +3458,7 @@ def get_folder(service_instance, datacenter, placement, base_vm_name=None):
             )
         folder_object = folder_objects[0]
     elif datacenter:
-        datacenter_object = salt.utils.vmware.get_datacenter(
-            service_instance, datacenter
-        )
+        datacenter_object = salt.utils.vmware.get_datacenter(service_instance, datacenter)
         dc_props = salt.utils.vmware.get_properties_of_managed_object(
             datacenter_object, properties=["vmFolder"]
         )
@@ -3609,9 +3526,7 @@ def get_placement(service_instance, datacenter, placement=None):
                 resourcepool_object = resourcepools[0]["object"]
             else:
                 raise salt.exceptions.VMwareObjectRetrievalError(
-                    "The resource pool of host {} cannot be found.".format(
-                        placement["host"]
-                    )
+                    "The resource pool of host {} cannot be found.".format(placement["host"])
                 )
         placement_object = host_objects[0]
     elif "resourcepool" in placement:
@@ -3628,9 +3543,7 @@ def get_placement(service_instance, datacenter, placement=None):
                 )
             )
         resourcepool_object = resourcepool_objects[0]
-        res_props = get_properties_of_managed_object(
-            resourcepool_object, properties=["parent"]
-        )
+        res_props = get_properties_of_managed_object(resourcepool_object, properties=["parent"])
         if "parent" in res_props:
             placement_object = res_props["parent"]
         else:
@@ -3640,9 +3553,7 @@ def get_placement(service_instance, datacenter, placement=None):
     elif "cluster" in placement:
         datacenter_object = get_datacenter(service_instance, datacenter)
         cluster_object = get_cluster(datacenter_object, placement["cluster"])
-        clus_props = get_properties_of_managed_object(
-            cluster_object, properties=["resourcePool"]
-        )
+        clus_props = get_properties_of_managed_object(cluster_object, properties=["resourcePool"])
         if "resourcePool" in clus_props:
             resourcepool_object = clus_props["resourcePool"]
         else:
@@ -3652,9 +3563,7 @@ def get_placement(service_instance, datacenter, placement=None):
         placement_object = cluster_object
     else:
         # We are checking the schema for this object, this exception should never be raised
-        raise salt.exceptions.VMwareObjectRetrievalError(
-            " ".join(["Placement is not defined."])
-        )
+        raise salt.exceptions.VMwareObjectRetrievalError(" ".join(["Placement is not defined."]))
     return (resourcepool_object, placement_object)
 
 
@@ -3696,8 +3605,7 @@ def power_cycle_vm(virtual_machine, action="on"):
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.VimFault as exc:
             log.exception(exc)
@@ -3712,8 +3620,7 @@ def power_cycle_vm(virtual_machine, action="on"):
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: "
-                "{}".format(exc.privilegeId)
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
             )
         except vim.fault.VimFault as exc:
             log.exception(exc)
@@ -3737,9 +3644,7 @@ def power_cycle_vm(virtual_machine, action="on"):
     return virtual_machine
 
 
-def create_vm(
-    vm_name, vm_config_spec, folder_object, resourcepool_object, host_object=None
-):
+def create_vm(vm_name, vm_config_spec, folder_object, resourcepool_object, host_object=None):
     """
     Creates virtual machine from config spec
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 # pylint: disable=C0302
 """
 Manage VMware vCenter servers and ESXi hosts.
@@ -434,14 +435,9 @@ def _apply_cluster_dict(cluster_spec, cluster_dict, vsan_spec=None, vsan_61=True
     log.trace("cluster_spec = {}".format(cluster_spec))
 
 
-@depends(HAS_PYVMOMI)
-def list_clusters(host=None,
-                  vcenter=None,
-                  username=None,
-                  password=None,
-                  protocol=None,
-                  port=None,
-                  verify_ssl=True):
+def list_clusters(
+    host=None, vcenter=None, username=None, password=None, protocol=None, port=None, verify_ssl=True
+):
     """
     Returns a list of clusters for the specified host.
 
@@ -491,16 +487,17 @@ def list_clusters(host=None,
     return saltext.vmware.utils.vmware.list_clusters(service_instance)
 
 
-@depends(HAS_PYVMOMI)
-def list_cluster(datacenter=None,
-                 cluster=None,
-                 host=None,
-                 vcenter=None,
-                 username=None,
-                 password=None,
-                 protocol=None,
-                 port=None,
-                 verify_ssl=None):
+def list_cluster(
+    datacenter=None,
+    cluster=None,
+    host=None,
+    vcenter=None,
+    username=None,
+    password=None,
+    protocol=None,
+    port=None,
+    verify_ssl=None,
+):
 
     """
     Returns a dict representation of an ESX cluster.
@@ -572,15 +569,10 @@ def list_cluster(datacenter=None,
     elif proxy_type == "esxcluster":
         cluster_ref = _get_proxy_target(service_instance)
         cluster = __salt__["esxcluster.get_details"]()["cluster"]
-    log.trace(
-        "Retrieving representation of cluster '%s' in a "
-        "%s proxy",cluster, proxy_type
-    )
+    log.trace("Retrieving representation of cluster '%s' in a " "%s proxy", cluster, proxy_type)
     return _get_cluster_dict(cluster, cluster_ref)
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
 def create_cluster(cluster_dict, datacenter=None, cluster=None, service_instance=None):
     """
     Creates a cluster.
@@ -630,9 +622,7 @@ def create_cluster(cluster_dict, datacenter=None, cluster=None, service_instance
         dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, datacenter)
         cluster = __salt__["esxcluster.get_details"]()["cluster"]
 
-    if cluster_dict.get("vsan") and not salt.utils.vsan.vsan_supported(
-        service_instance
-    ):
+    if cluster_dict.get("vsan") and not salt.utils.vsan.vsan_supported(service_instance):
 
         raise VMwareApiError("VSAN operations are not supported")
     si = service_instance
@@ -644,9 +634,7 @@ def create_cluster(cluster_dict, datacenter=None, cluster=None, service_instance
         # XXX The correct way of retrieving the VSAN data (on the if branch)
         #  is not supported before 60u2 vcenter
         vcenter_info = saltext.vmware.utils.vmware.get_service_info(si)
-        if (
-            float(vcenter_info.apiVersion) >= 6.0 and int(vcenter_info.build) >= 3634794
-        ):  # 60u2
+        if float(vcenter_info.apiVersion) >= 6.0 and int(vcenter_info.build) >= 3634794:  # 60u2
             vsan_spec = vim.vsan.ReconfigSpec(modify=True)
             vsan_61 = False
             # We need to keep HA disabled and enable it afterwards
@@ -674,8 +662,6 @@ def create_cluster(cluster_dict, datacenter=None, cluster=None, service_instance
     return {"create_cluster": True}
 
 
-@depends(HAS_PYVMOMI)
-@depends(HAS_JSONSCHEMA)
 def update_cluster(cluster_dict, datacenter=None, cluster=None, service_instance=None):
     """
     Updates a cluster.
@@ -724,9 +710,7 @@ def update_cluster(cluster_dict, datacenter=None, cluster=None, service_instance
         dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, datacenter)
         cluster = __salt__["esxcluster.get_details"]()["cluster"]
 
-    if cluster_dict.get("vsan") and not salt.utils.vsan.vsan_supported(
-        service_instance
-    ):
+    if cluster_dict.get("vsan") and not salt.utils.vsan.vsan_supported(service_instance):
 
         raise VMwareApiError("VSAN operations are not supported")
 
@@ -746,9 +730,7 @@ def update_cluster(cluster_dict, datacenter=None, cluster=None, service_instance
         # XXX The correct way of retrieving the VSAN data (on the if branch)
         #  is not supported before 60u2 vcenter
         vcenter_info = saltext.vmware.utils.vmware.get_service_info(service_instance)
-        if (
-            float(vcenter_info.apiVersion) >= 6.0 and int(vcenter_info.build) >= 3634794
-        ):  # 60u2
+        if float(vcenter_info.apiVersion) >= 6.0 and int(vcenter_info.build) >= 3634794:  # 60u2
             vsan_61 = False
             vsan_info = salt.utils.vsan.get_cluster_vsan_info(cluster_ref)
             vsan_spec = vim.vsan.ReconfigSpec(modify=True)

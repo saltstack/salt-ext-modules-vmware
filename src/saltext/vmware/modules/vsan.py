@@ -1,9 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
 import logging
 import sys
 
 import saltext.vmware.utils.vmware
-
-from salt.utils.decorators import depends, ignores_kwargs
+from salt.utils.decorators import depends
+from salt.utils.decorators import ignores_kwargs
 
 log = logging.getLogger(__name__)
 
@@ -25,9 +26,7 @@ try:
         and sys.version_info < (2, 7, 9)
     ):
 
-        log.debug(
-            "pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537."
-        )
+        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
         raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
@@ -98,8 +97,6 @@ def _get_vsan_eligible_disks(service_instance, host, host_names):
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def vsan_add_disks(
     host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True
 ):
@@ -188,17 +185,13 @@ def vsan_add_disks(
                     ret.update({host_name: {"Error": err.msg}})
                     continue
                 except Exception as err:  # pylint: disable=broad-except
-                    msg = "'vsphere.vsan_add_disks' failed for host {}: {}".format(
-                        host_name, err
-                    )
+                    msg = "'vsphere.vsan_add_disks' failed for host {}: {}".format(host_name, err)
                     log.debug(msg)
                     ret.update({host_name: {"Error": msg}})
                     continue
 
                 log.debug(
-                    "Successfully added disks to the VSAN system for host '{}'.".format(
-                        host_name
-                    )
+                    "Successfully added disks to the VSAN system for host '{}'.".format(host_name)
                 )
                 # We need to return ONLY the disk names, otherwise Message Pack can't deserialize the disk objects.
                 disk_names = []
@@ -216,18 +209,12 @@ def vsan_add_disks(
                 # If we made it this far, we somehow have eligible disks, but they didn't
                 # match the disk list and just got an empty list of matching disks.
                 ret.update(
-                    {
-                        host_name: {
-                            "Disks Added": "No new VSAN-eligible disks were found to add."
-                        }
-                    }
+                    {host_name: {"Disks Added": "No new VSAN-eligible disks were found to add."}}
                 )
 
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def vsan_disable(
     host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True
 ):
@@ -313,9 +300,7 @@ def vsan_disable(
                 ret.update({host_name: {"Error": err.msg}})
                 continue
             except Exception as err:  # pylint: disable=broad-except
-                msg = "'vsphere.vsan_disable' failed for host {}: {}".format(
-                    host_name, err
-                )
+                msg = "'vsphere.vsan_disable' failed for host {}: {}".format(host_name, err)
                 log.debug(msg)
                 ret.update({host_name: {"Error": msg}})
                 continue
@@ -325,8 +310,6 @@ def vsan_disable(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def vsan_enable(
     host, username, password, protocol=None, port=None, host_names=None, verify_ssl=True
 ):
@@ -412,9 +395,7 @@ def vsan_enable(
                 ret.update({host_name: {"Error": err.msg}})
                 continue
             except vim.fault.VsanFault as err:
-                msg = "'vsphere.vsan_enable' failed for host {}: {}".format(
-                    host_name, err
-                )
+                msg = "'vsphere.vsan_enable' failed for host {}: {}".format(host_name, err)
                 log.debug(msg)
                 ret.update({host_name: {"Error": msg}})
                 continue
@@ -424,8 +405,6 @@ def vsan_enable(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def get_vsan_enabled(
     host,
     username,
@@ -505,8 +484,6 @@ def get_vsan_enabled(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@ignores_kwargs("credstore")
 def get_vsan_eligible_disks(
     host,
     username,
@@ -594,9 +571,6 @@ def get_vsan_eligible_disks(
     return ret
 
 
-@depends(HAS_PYVMOMI)
-@_supports_proxies("esxdatacenter", "vcenter")
-@_gets_service_instance_via_proxy
 def list_default_vsan_policy(service_instance=None):
     """
     Returns the default vsan storage policy.
