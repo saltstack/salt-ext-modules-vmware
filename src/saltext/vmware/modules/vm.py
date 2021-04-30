@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 def get_vm_facts(*, service_instance):
-    '''
+    """
     Return basic facts about a vSphere VM guest
-    '''
+    """
     vms = {}
     hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     for host in hosts:
