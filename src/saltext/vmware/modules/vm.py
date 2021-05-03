@@ -11,21 +11,21 @@ def get_vm_facts(*, service_instance):
         vms[host_id] = {}
         for vm in virtual_machines:
             dc = utils._get_datacenter(vm)
-            vms[host_id][vm.summary.config.name] = {}
-            current_vm = vms[host_id][vm.summary.config.name]
-            current_vm['cluster'] = vm.summary.runtime.host.parent.name
-            current_vm['esxi_hostname'] = vm.summary.runtime.host.summary.config.name
-            current_vm['guest_name'] = vm.summary.config.name
-            current_vm['guest_fullname'] = vm.summary.guest.guestFullName
-            current_vm['ip_address'] = vm.summary.guest.ipAddress
-            # TODO get mac address
-            current_vm['mac_address'] = None
-            current_vm['power_state'] = vm.summary.runtime.powerState
-            current_vm['uuid'] = vm.summary.config.uuid
-            # TODO get network
-            current_vm['vm_network'] = {}
-            current_vm['datacenter'] = dc.name
-            # TODO get attributes, tags, folder, moid
+            vms[host_id][vm.summary.config.name] = {
+                "cluster": vm.summary.runtime.host.parent.name,
+                "esxi_hostname": vm.summary.runtime.host.summary.config.name,
+                "guest_name": vm.summary.config.name,
+                "guest_fullname": vm.summary.guest.guestFullName,
+                "ip_address": vm.summary.guest.ipAddress,
+                # TODO get mac address
+                "mac_address": None,
+                "power_state": vm.summary.runtime.powerState,
+                "uuid": vm.summary.config.uuid,
+                # TODO get network
+                "vm_network": {},
+                "datacenter": dc.name
+                # TODO get attributes, tags, folder, moid
+            }
     return vms
 
 
