@@ -15,9 +15,7 @@ def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integratio
 )
 def test_esxi_host_capability_params(service_instance, integration_test_config, arg_name):
     expected_value = integration_test_config['esxi_hosts_capability'][arg_name]
-    if expected_value == 'True' or expected_value == 'False':
-        expected_value = True if expected_value == 'True' else False
-    elif expected_value.isdecimal():
+    if isinstance(expected_value, str) and expected_value.isdecimal():
         expected_value = int(expected_value)
     capabilities = esxi.get_capabilities(service_instance=service_instance)
     for host_id in capabilities:
