@@ -3989,6 +3989,6 @@ def _get_datacenter(node):
             break
         try:
             node = node.parent
-        except:
+        except AttributeError:
             break
     return dc
