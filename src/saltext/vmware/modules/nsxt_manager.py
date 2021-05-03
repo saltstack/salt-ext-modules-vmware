@@ -12,7 +12,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError, SSLError, RequestException
 
-from saltext.nsxt.modules.ssl_adapter import HostHeaderSSLAdapter
+from saltext.vmware.modules.ssl_adapter import HostHeaderSSLAdapter
 
 log = logging.getLogger(__name__)
 

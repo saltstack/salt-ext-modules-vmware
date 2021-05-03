@@ -7,7 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
-from saltext.nsxt.utils import nsxt_request
+from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
 
