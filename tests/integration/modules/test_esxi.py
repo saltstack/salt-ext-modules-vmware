@@ -1,6 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import saltext.vmware.modules.esxi as esxi
+import pytest
 
 
 def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integration_test_config):
@@ -9,23 +10,15 @@ def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integratio
     assert actual_ids == expected_lun_ids
 
 
-def test_esxi_host_capability_shutdownSupported(service_instance, integration_test_config):
-    expected_value = integration_test_config['esxi_hosts_capability']["shutdownSupported"]
-    expected_value = True if expected_value == 'True' else False
+@pytest.mark.parametrize(
+    'arg_name', ['shutdownSupported', 'maxSupportedVcpus', 'maxRegisteredVMs'],
+)
+def test_esxi_host_capability_params(service_instance, integration_test_config, arg_name):
+    expected_value = integration_test_config['esxi_hosts_capability'][arg_name]
+    if expected_value == 'True' or expected_value == 'False':
+        expected_value = True if expected_value == 'True' else False
+    elif expected_value.isdecimal():
+        expected_value = int(expected_value)
     capabilities = esxi.get_capabilities(service_instance=service_instance)
     for host_id in capabilities:
-        assert capabilities[host_id]['shutdownSupported'] == expected_value
-
-
-def test_esxi_host_capability_maxSupportedVcpus(service_instance, integration_test_config):
-    expected_value = int(integration_test_config['esxi_hosts_capability']["maxSupportedVcpus"])
-    capabilities = esxi.get_capabilities(service_instance=service_instance)
-    for host_id in capabilities:
-        assert capabilities[host_id]['maxSupportedVcpus'] == expected_value
-
-
-def test_esxi_host_capability_maxRegisteredVMs(service_instance, integration_test_config):
-    expected_value = int(integration_test_config['esxi_hosts_capability']["maxRegisteredVMs"])
-    capabilities = esxi.get_capabilities(service_instance=service_instance)
-    for host_id in capabilities:
-        assert capabilities[host_id]['maxRegisteredVMs'] == expected_value
+        assert capabilities[host_id][arg_name] == expected_value
