@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Salt State file to create/update/delete an IP Address Block
 
@@ -23,8 +22,6 @@ Example:
               scope: <tag-value-2>
           cidr: <cidr>
 """
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 
 log = logging.getLogger(__name__)
@@ -34,7 +31,7 @@ __virtual_name__ = "nsxt_ip_blocks"
 
 def __virtual__():
     """
-        Only load if the nsxt_ip_blocks module is available in __salt__
+    Only load if the nsxt_ip_blocks module is available in __salt__
     """
     return (
         __virtual_name__ if "nsxt_ip_blocks.get" in __salt__ else False,
@@ -42,15 +39,7 @@ def __virtual__():
     )
 
 
-def present(
-        name,
-        display_name,
-        cidr,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def present(name, display_name, cidr, hostname, username, password, **kwargs):
     """
     Creates/Updates(if present with the same name) an IP Address Block
 
@@ -119,8 +108,9 @@ def present(
     """
 
     log.info("Checking if IP Block with name %s is present", display_name)
-    get_ip_blocks_response = __salt__["nsxt_ip_blocks.get_by_display_name"](hostname, username, password, display_name,
-                                                                            **kwargs)
+    get_ip_blocks_response = __salt__["nsxt_ip_blocks.get_by_display_name"](
+        hostname, username, password, display_name, **kwargs
+    )
 
     if get_ip_blocks_response and "error" in get_ip_blocks_response:
         return _create_state_response(name, None, None, False, get_ip_blocks_response["error"])
@@ -129,19 +119,34 @@ def present(
 
     if ip_blocks.__len__() > 1:
         log.info("Multiple instances found for the provided display name %s", display_name)
-        return _create_state_response(name, None, None, False,
-                                      "Multiple IP Blocks found for the provided display name {}".format(display_name))
+        return _create_state_response(
+            name,
+            None,
+            None,
+            False,
+            "Multiple IP Blocks found for the provided display name {}".format(display_name),
+        )
 
     existing_ip_block = ip_blocks[0] if ip_blocks.__len__() > 0 else None
 
     if __opts__.get("test"):
         log.info("present is called with test option")
         if existing_ip_block:
-            return _create_state_response(name, None, None, None,
-                                          "State present will update IP Block with name {}".format(display_name))
+            return _create_state_response(
+                name,
+                None,
+                None,
+                None,
+                "State present will update IP Block with name {}".format(display_name),
+            )
         else:
-            return _create_state_response(name, None, None, None,
-                                          "State present will create IP Block with name {}".format(display_name))
+            return _create_state_response(
+                name,
+                None,
+                None,
+                None,
+                "State present will create IP Block with name {}".format(display_name),
+            )
     if existing_ip_block:
         is_update_required = _check_for_updates(existing_ip_block, cidr=cidr, **kwargs)
 
@@ -149,41 +154,45 @@ def present(
             _fill_kwargs_with_existing_info(existing_ip_block, kwargs, cidr)
 
             log.info("IP Block found with name %s", display_name)
-            updated_ip_block = __salt__["nsxt_ip_blocks.update"](ip_block_id=existing_ip_block["id"],
-                                                                 revision=existing_ip_block["_revision"],
-                                                                 hostname=hostname,
-                                                                 username=username,
-                                                                 password=password,
-                                                                 **kwargs)
+            updated_ip_block = __salt__["nsxt_ip_blocks.update"](
+                ip_block_id=existing_ip_block["id"],
+                revision=existing_ip_block["_revision"],
+                hostname=hostname,
+                username=username,
+                password=password,
+                **kwargs
+            )
 
             if updated_ip_block and "error" in updated_ip_block:
                 return _create_state_response(name, None, None, False, updated_ip_block["error"])
 
-            return _create_state_response(name, existing_ip_block, updated_ip_block, True,
-                                          "Updated IP Block {}".format(display_name))
+            return _create_state_response(
+                name,
+                existing_ip_block,
+                updated_ip_block,
+                True,
+                "Updated IP Block {}".format(display_name),
+            )
         else:
             log.info("All fields are same as existing IP Address Block %s", display_name)
-            return _create_state_response(name, None, None, True,
-                                          "IP Address Block exists already, no action to perform")
+            return _create_state_response(
+                name, None, None, True, "IP Address Block exists already, no action to perform"
+            )
     else:
         log.info("No IP Block found with name %s", display_name)
-        created_ip_block = __salt__["nsxt_ip_blocks.create"](cidr, hostname, username, password,
-                                                             display_name=display_name, **kwargs)
+        created_ip_block = __salt__["nsxt_ip_blocks.create"](
+            cidr, hostname, username, password, display_name=display_name, **kwargs
+        )
 
         if created_ip_block and "error" in created_ip_block:
             return _create_state_response(name, None, None, False, created_ip_block["error"])
 
-        return _create_state_response(name, None, created_ip_block, True, "Created IP Block {}".format(display_name))
+        return _create_state_response(
+            name, None, created_ip_block, True, "Created IP Block {}".format(display_name)
+        )
 
 
-def absent(
-        name,
-        display_name,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def absent(name, display_name, hostname, username, password, **kwargs):
     """
     Deletes an IP Address Block of provided name (if present)
 
@@ -231,8 +240,9 @@ def absent(
 
     log.info("Checking if IP Address Block with name %s is present", display_name)
 
-    get_ip_blocks_response = __salt__["nsxt_ip_blocks.get_by_display_name"](hostname, username, password, display_name,
-                                                                            **kwargs)
+    get_ip_blocks_response = __salt__["nsxt_ip_blocks.get_by_display_name"](
+        hostname, username, password, display_name, **kwargs
+    )
 
     if get_ip_blocks_response and "error" in get_ip_blocks_response:
         return _create_state_response(name, None, None, False, get_ip_blocks_response["error"])
@@ -241,34 +251,54 @@ def absent(
 
     if ip_blocks.__len__() > 1:
         log.info("Multiple instances found for the provided display name %s", display_name)
-        return _create_state_response(name, None, None, False,
-                                      "Multiple IP Blocks found for the provided display name {}".format(display_name))
+        return _create_state_response(
+            name,
+            None,
+            None,
+            False,
+            "Multiple IP Blocks found for the provided display name {}".format(display_name),
+        )
 
     existing_ip_block = ip_blocks[0] if ip_blocks.__len__() > 0 else None
 
     if __opts__.get("test"):
         log.info("absent is called with test option")
         if existing_ip_block:
-            return _create_state_response(name, None, None, None,
-                                          "State absent will delete IP Block with name {}".format(display_name))
+            return _create_state_response(
+                name,
+                None,
+                None,
+                None,
+                "State absent will delete IP Block with name {}".format(display_name),
+            )
         else:
-            return _create_state_response(name, None, None, None,
-                                          "State absent will do nothing as no IP Block found with name {}".format(
-                                              display_name))
+            return _create_state_response(
+                name,
+                None,
+                None,
+                None,
+                "State absent will do nothing as no IP Block found with name {}".format(
+                    display_name
+                ),
+            )
 
     if existing_ip_block:
         log.info("IP Address Block found with name %s", display_name)
-        deleted_response = __salt__["nsxt_ip_blocks.delete"](existing_ip_block["id"], hostname, username, password,
-                                                             **kwargs)
+        deleted_response = __salt__["nsxt_ip_blocks.delete"](
+            existing_ip_block["id"], hostname, username, password, **kwargs
+        )
 
         if deleted_response and "error" in deleted_response:
             return _create_state_response(name, None, None, False, deleted_response["error"])
 
-        return _create_state_response(name, existing_ip_block, None, True, "Deleted IP Block {}".format(display_name))
+        return _create_state_response(
+            name, existing_ip_block, None, True, "Deleted IP Block {}".format(display_name)
+        )
     else:
         log.info("No IP Address Block found with name %s", display_name)
-        return _create_state_response(name, None, None, True,
-                                      "No IP Address Block found with name {}".format(display_name))
+        return _create_state_response(
+            name, None, None, True, "No IP Address Block found with name {}".format(display_name)
+        )
 
 
 def _create_state_response(name, old_state, new_state, result, comment):
@@ -293,7 +323,11 @@ def _check_for_updates(existing_ip_block, **kwargs):
     for key in updatable_keys:
         if not existing_ip_block.__contains__(key) and kwargs.__contains__(key):
             is_updatable = True
-        if existing_ip_block.__contains__(key) and kwargs.__contains__(key) and existing_ip_block[key] != kwargs[key]:
+        if (
+            existing_ip_block.__contains__(key)
+            and kwargs.__contains__(key)
+            and existing_ip_block[key] != kwargs[key]
+        ):
             is_updatable = True
 
     return is_updatable

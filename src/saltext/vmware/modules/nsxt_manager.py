@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
 """
 Salt Module to manage VMware NSX-T configuration
 
 """
-from __future__ import absolute_import, print_function, unicode_literals
-
 import json
 import logging
+
 import requests
-
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import HTTPError, SSLError, RequestException
-
+from requests.exceptions import HTTPError
+from requests.exceptions import RequestException
+from requests.exceptions import SSLError
 from saltext.vmware.modules.ssl_adapter import HostHeaderSSLAdapter
 
 log = logging.getLogger(__name__)
@@ -27,14 +25,7 @@ def _get_base_url():
     return "https://{}/api/v1/configs/management"
 
 
-def set_manager_config(
-        hostname,
-        publish_fqdns,
-        revision,
-        username,
-        password,
-        **kwargs
-):
+def set_manager_config(hostname, publish_fqdns, revision, username, password, **kwargs):
     """
     Set NSX-T Manager's config
 
@@ -73,10 +64,7 @@ def set_manager_config(
 
     log.info("Configuration's current Revision: %s", revision)
 
-    req_data = {
-        "publish_fqdns": publish_fqdns,
-        "_revision": revision
-    }
+    req_data = {"publish_fqdns": publish_fqdns, "_revision": revision}
 
     msg = "Setting value of publish_fqdns to {}".format(publish_fqdns)
     log.debug(msg)
@@ -89,60 +77,66 @@ def set_manager_config(
 
     if cert_common_name and verify_ssl:
         session.mount("https://", HostHeaderSSLAdapter())
-        headers['Host'] = cert_common_name
+        headers["Host"] = cert_common_name
 
     url = _get_base_url().format(hostname)
 
     try:
         if verify_ssl and not cert:
-            return {"error": "No certificate path specified. Please specify certificate path in cert parameter"}
+            return {
+                "error": "No certificate path specified. Please specify certificate path in cert parameter"
+            }
         elif not verify_ssl:
             cert = False
 
-        response = session.put(url=url,
-                               data=json.dumps(req_data),
-                               headers=headers,
-                               auth=HTTPBasicAuth(username, password),
-                               verify=cert)
+        response = session.put(
+            url=url,
+            data=json.dumps(req_data),
+            headers=headers,
+            auth=HTTPBasicAuth(username, password),
+            verify=cert,
+        )
 
         # raise error for any client/server HTTP Error codes
         response.raise_for_status()
 
     except HTTPError as e:
         log.error(e)
-        result = {"error": "Error occurred while updating the NSX-T configuration. Please check logs for more details."}
+        result = {
+            "error": "Error occurred while updating the NSX-T configuration. Please check logs for more details."
+        }
         # if response contains json, extract error message from it
         if e.response.text:
             log.error("Response from NSX-T Manager {}".format(e.response.text))
             try:
                 error_json = e.response.json()
-                if error_json['error_message']:
-                    result["error"] = e.response.json()['error_message']
+                if error_json["error_message"]:
+                    result["error"] = e.response.json()["error_message"]
             except ValueError:
-                log.error("Couldn't parse the response as json. Returning response text as error message")
+                log.error(
+                    "Couldn't parse the response as json. Returning response text as error message"
+                )
                 result["error"] = e.response.text
         return result
     except SSLError as se:
         log.error(se)
         result = {
             "error": "SSL Error occurred while updating the NSX-T configuration."
-                     "Please check if the certificate is valid and hostname matches certificate common name."}
+            "Please check if the certificate is valid and hostname matches certificate common name."
+        }
         return result
     except RequestException as re:
         log.error(re)
-        result = {"error": "Error occurred while updating the NSX-T configuration. Please check logs for more details."}
+        result = {
+            "error": "Error occurred while updating the NSX-T configuration. Please check logs for more details."
+        }
         return result
 
     log.info("Response status code: {}".format(response.status_code))
     return response.json()
 
 
-def get_manager_config(
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def get_manager_config(hostname, username, password, **kwargs):
     """
     Get NSX-T Manager's config
 
@@ -190,18 +184,19 @@ def get_manager_config(
 
     if cert_common_name and verify_ssl:
         session.mount("https://", HostHeaderSSLAdapter())
-        headers['Host'] = cert_common_name
+        headers["Host"] = cert_common_name
 
     try:
         if verify_ssl and not cert:
-            return {"error": "No certificate path specified. Please specify certificate path in cert parameter"}
+            return {
+                "error": "No certificate path specified. Please specify certificate path in cert parameter"
+            }
         elif not verify_ssl:
             cert = False
 
-        response = session.get(url=url,
-                               headers=headers,
-                               auth=HTTPBasicAuth(username, password),
-                               verify=cert)
+        response = session.get(
+            url=url, headers=headers, auth=HTTPBasicAuth(username, password), verify=cert
+        )
 
         log.debug("Response status code: {}".format(response.status_code))
         response.raise_for_status()
@@ -209,16 +204,19 @@ def get_manager_config(
     except HTTPError as e:
         log.error(e)
         result = {
-            "error": "Error occurred while retrieving the NSX-T configuration. Please check logs for more details."}
+            "error": "Error occurred while retrieving the NSX-T configuration. Please check logs for more details."
+        }
         # if response contains json, extract error message from it
         if e.response.text:
             log.error("Response from NSX-T Manager {}".format(e.response.text))
             try:
                 error_json = e.response.json()
-                if error_json['error_message']:
-                    result["error"] = e.response.json()['error_message']
+                if error_json["error_message"]:
+                    result["error"] = e.response.json()["error_message"]
             except ValueError:
-                log.error("Couldn't parse the response as json. Returning response text as error message")
+                log.error(
+                    "Couldn't parse the response as json. Returning response text as error message"
+                )
                 result["error"] = e.response.text
         return result
 
@@ -226,12 +224,14 @@ def get_manager_config(
         log.error(se)
         result = {
             "error": "SSL Error occurred while retrieving the NSX-T configuration."
-                     "Please check if the certificate is valid and hostname matches certificate common name."}
+            "Please check if the certificate is valid and hostname matches certificate common name."
+        }
         return result
     except RequestException as re:
         log.error(re)
         result = {
-            "error": "Error occurred while retrieving the NSX-T configuration. Please check logs for more details."}
+            "error": "Error occurred while retrieving the NSX-T configuration. Please check logs for more details."
+        }
         return result
 
     log.info("Response status code: {}".format(response.status_code))

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 NSX-T Datacenter Configuration Management state module
 ================================================
@@ -25,8 +24,6 @@ Example usage:
     files.
 
 """
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 
 log = logging.getLogger(__name__)
@@ -36,7 +33,7 @@ __virtual_name__ = "nsxt_manager"
 
 def __virtual__():
     """
-        Only load if the nsxt_manager module is available in __salt__
+    Only load if the nsxt_manager module is available in __salt__
     """
     return (
         __virtual_name__ if "nsxt_manager.get_manager_config" in __salt__ else False,
@@ -44,13 +41,7 @@ def __virtual__():
     )
 
 
-def publish_fqdns_enabled(
-        name,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def publish_fqdns_enabled(name, hostname, username, password, **kwargs):
     """
     Check the value for publish_fqdns, if it is true then do nothing else set it to true
 
@@ -97,41 +88,53 @@ def publish_fqdns_enabled(
     cert_common_name = kwargs.get("cert_common_name")
     cert = kwargs.get("cert")
 
-    get_current_config = _get_publish_fqdns_revision_from_nsxt(hostname, username, password, **kwargs)
+    get_current_config = _get_publish_fqdns_revision_from_nsxt(
+        hostname, username, password, **kwargs
+    )
     if "error" in get_current_config:
         return _create_state_response(name, None, None, False, get_current_config["error"])
 
-    current_publish_fqdns, current_revision = _get_publish_fqdns_revision_from_response(get_current_config)
+    current_publish_fqdns, current_revision = _get_publish_fqdns_revision_from_response(
+        get_current_config
+    )
 
     if __opts__.get("test"):
         log.info("publish_fqdns_enabled is called with test option")
-        return _create_state_response(name, None, None, None,
-                                   "State publish_fqdns_enabled will execute with params {0}, {1}, {2}, {3}, {4}"
-                                   .format(name, hostname, username, password, kwargs.get("verify_ssl", True)))
+        return _create_state_response(
+            name,
+            None,
+            None,
+            None,
+            "State publish_fqdns_enabled will execute with params {}, {}, {}, {}, {}".format(
+                name, hostname, username, password, kwargs.get("verify_ssl", True)
+            ),
+        )
 
     if bool(current_publish_fqdns):
-        return _create_state_response(name, None, None, True, "publish_fqdns is already set to True")
+        return _create_state_response(
+            name, None, None, True, "publish_fqdns is already set to True"
+        )
 
     publish_fqdns = True
 
     log.info("Updating the NSX-T manager's config")
-    updated_config_response = _set_publish_fqdns_in_nsxt(publish_fqdns, current_revision, hostname, username, password,
-                                                         **kwargs)
+    updated_config_response = _set_publish_fqdns_in_nsxt(
+        publish_fqdns, current_revision, hostname, username, password, **kwargs
+    )
 
     if "error" in updated_config_response:
         return _create_state_response(name, None, None, False, updated_config_response["error"])
 
-    return _create_state_response(name, get_current_config, updated_config_response, True,
-                               "publish_fqdns has been set to True")
-
-
-def publish_fqdns_disabled(
+    return _create_state_response(
         name,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+        get_current_config,
+        updated_config_response,
+        True,
+        "publish_fqdns has been set to True",
+    )
+
+
+def publish_fqdns_disabled(name, hostname, username, password, **kwargs):
     """
     Check the value for publish_fqdns, if it is false then do nothing else set it to false
 
@@ -177,49 +180,68 @@ def publish_fqdns_disabled(
     cert = kwargs.get("cert")
 
     log.info("Getting the manager's config")
-    get_current_config = _get_publish_fqdns_revision_from_nsxt(hostname, username, password, **kwargs)
+    get_current_config = _get_publish_fqdns_revision_from_nsxt(
+        hostname, username, password, **kwargs
+    )
     if "error" in get_current_config:
         return _create_state_response(name, None, None, False, get_current_config["error"])
 
-    current_publish_fqdns, current_revision = _get_publish_fqdns_revision_from_response(get_current_config)
+    current_publish_fqdns, current_revision = _get_publish_fqdns_revision_from_response(
+        get_current_config
+    )
 
     if __opts__.get("test"):
         log.info("publish_fqdns_disabled is called with test option")
-        return _create_state_response(name, None, None, None,
-                                   "State publish_fqdns_disabled will execute with params {0}, {1}, {2}, {3}, {4}"
-                                   .format(name, hostname, username, password, kwargs.get("verify_ssl", True)))
+        return _create_state_response(
+            name,
+            None,
+            None,
+            None,
+            "State publish_fqdns_disabled will execute with params {}, {}, {}, {}, {}".format(
+                name, hostname, username, password, kwargs.get("verify_ssl", True)
+            ),
+        )
 
     if not bool(current_publish_fqdns):
-        return _create_state_response(name, None, None, True, "publish_fqdns is already set to False")
+        return _create_state_response(
+            name, None, None, True, "publish_fqdns is already set to False"
+        )
 
     publish_fqdns = False
 
     log.info("Updating the manager's config")
-    updated_config_response = _set_publish_fqdns_in_nsxt(publish_fqdns, current_revision, hostname, username, password,
-                                                         **kwargs)
+    updated_config_response = _set_publish_fqdns_in_nsxt(
+        publish_fqdns, current_revision, hostname, username, password, **kwargs
+    )
 
     if "error" in updated_config_response:
         return _create_state_response(name, None, None, False, updated_config_response["error"])
 
-    return _create_state_response(name, get_current_config, updated_config_response, True,
-                               "publish_fqdns has been set to False")
+    return _create_state_response(
+        name,
+        get_current_config,
+        updated_config_response,
+        True,
+        "publish_fqdns has been set to False",
+    )
 
 
 def _set_publish_fqdns_in_nsxt(publish_fqdns, revision, hostname, username, password, **kwargs):
-    out = __salt__["nsxt_manager.set_manager_config"](hostname=hostname,
-                                                      username=username,
-                                                      password=password,
-                                                      revision=revision,
-                                                      publish_fqdns=publish_fqdns,
-                                                      **kwargs)
+    out = __salt__["nsxt_manager.set_manager_config"](
+        hostname=hostname,
+        username=username,
+        password=password,
+        revision=revision,
+        publish_fqdns=publish_fqdns,
+        **kwargs
+    )
     return out
 
 
 def _get_publish_fqdns_revision_from_nsxt(hostname, username, password, **kwargs):
-    out = __salt__["nsxt_manager.get_manager_config"](hostname=hostname,
-                                                      username=username,
-                                                      password=password,
-                                                      **kwargs)
+    out = __salt__["nsxt_manager.get_manager_config"](
+        hostname=hostname, username=username, password=password, **kwargs
+    )
     return out
 
 

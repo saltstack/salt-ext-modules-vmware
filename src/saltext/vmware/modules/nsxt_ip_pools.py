@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Salt Module to perform CRUD operations for NSX-T's IP Address Pools
 """
-
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 
 from saltext.vmware.utils import nsxt_request
@@ -22,12 +18,7 @@ def _get_base_url():
     return "https://{0}/api/v1/pools/ip-pools"
 
 
-def get(
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def get(hostname, username, password, **kwargs):
     """
     Lists all IP Address pools present in the NSX-T Manager
 
@@ -82,14 +73,16 @@ def get(
 
     params = _create_query_params(**kwargs)
 
-    return nsxt_request.call_api(method="get",
-                                 url=url,
-                                 username=username,
-                                 password=password,
-                                 cert_common_name=kwargs.get("cert_common_name"),
-                                 verify_ssl=kwargs.get("verify_ssl", True),
-                                 cert=kwargs.get("cert"),
-                                 params=params)
+    return nsxt_request.call_api(
+        method="get",
+        url=url,
+        username=username,
+        password=password,
+        cert_common_name=kwargs.get("cert_common_name"),
+        verify_ssl=kwargs.get("verify_ssl", True),
+        cert=kwargs.get("cert"),
+        params=params,
+    )
 
 
 def _create_query_params(**kwargs):
@@ -103,13 +96,7 @@ def _create_query_params(**kwargs):
     return query_params
 
 
-def get_by_display_name(
-        hostname,
-        username,
-        password,
-        display_name,
-        **kwargs
-):
+def get_by_display_name(hostname, username, password, display_name, **kwargs):
     """
     Gets IP Address pool present in the NSX-T Manager with given name.
 
@@ -161,24 +148,19 @@ def get_by_display_name(
 
         # add all the ip pools from paginated response with given display name to list
         for ip_pool in ip_pools_paginated["results"]:
-            if ip_pool.get('display_name') and ip_pool['display_name'] == display_name:
+            if ip_pool.get("display_name") and ip_pool["display_name"] == display_name:
                 ip_pools.append(ip_pool)
 
         # if cursor is not present then we are on the last page, end loop
         if "cursor" not in ip_pools_paginated:
-            break;
+            break
         # updated query parameter with cursor
         page_cursor = ip_pools_paginated["cursor"]
 
     return {"results": ip_pools}
 
 
-def create(
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def create(hostname, username, password, **kwargs):
     """
     Creates an IP Address pool with given specifications
 
@@ -260,14 +242,16 @@ def create(
 
     req_data = _create_payload_for_create(**kwargs)
 
-    return nsxt_request.call_api(method="post",
-                                 url=url,
-                                 username=username,
-                                 password=password,
-                                 cert_common_name=kwargs.get("cert_common_name"),
-                                 verify_ssl=kwargs.get("verify_ssl", True),
-                                 cert=kwargs.get("cert"),
-                                 data=req_data)
+    return nsxt_request.call_api(
+        method="post",
+        url=url,
+        username=username,
+        password=password,
+        cert_common_name=kwargs.get("cert_common_name"),
+        verify_ssl=kwargs.get("verify_ssl", True),
+        cert=kwargs.get("cert"),
+        data=req_data,
+    )
 
 
 def _create_payload_for_create(**kwargs):
@@ -281,15 +265,7 @@ def _create_payload_for_create(**kwargs):
     return ip_pool_to_create
 
 
-def update(
-        ip_pool_id,
-        display_name,
-        revision,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def update(ip_pool_id, display_name, revision, hostname, username, password, **kwargs):
     """
     Updates an IP Address pool of display name with given specifications, All the fields for which no value is
     provided will be set to null
@@ -373,18 +349,20 @@ def update(
     """
 
     log.info("Updating IP Address Pool %s", display_name)
-    url = _get_base_url().format(hostname) + "/{0}".format(ip_pool_id)
+    url = _get_base_url().format(hostname) + "/{}".format(ip_pool_id)
 
     req_data = _create_payload_for_update(ip_pool_id, revision, display_name, **kwargs)
 
-    return nsxt_request.call_api(method="put",
-                                 url=url,
-                                 username=username,
-                                 password=password,
-                                 cert_common_name=kwargs.get("cert_common_name"),
-                                 verify_ssl=kwargs.get("verify_ssl", True),
-                                 cert=kwargs.get("cert"),
-                                 data=req_data)
+    return nsxt_request.call_api(
+        method="put",
+        url=url,
+        username=username,
+        password=password,
+        cert_common_name=kwargs.get("cert_common_name"),
+        verify_ssl=kwargs.get("verify_ssl", True),
+        cert=kwargs.get("cert"),
+        data=req_data,
+    )
 
 
 def _create_payload_for_update(ip_pool_id, revision, display_name, **kwargs):
@@ -402,13 +380,7 @@ def _create_payload_for_update(ip_pool_id, revision, display_name, **kwargs):
     return ip_pool_to_update
 
 
-def delete(
-        ip_pool_id,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def delete(ip_pool_id, hostname, username, password, **kwargs):
     """
     Deletes an IP Address pool with given id
 
@@ -448,14 +420,16 @@ def delete(
 
     log.info("Deleting IP Address Pool %s", ip_pool_id)
 
-    url = _get_base_url().format(hostname) + "/{0}".format(ip_pool_id)
+    url = _get_base_url().format(hostname) + "/{}".format(ip_pool_id)
 
-    response = nsxt_request.call_api(method="delete",
-                                     url=url,
-                                     username=username,
-                                     password=password,
-                                     cert_common_name=kwargs.get("cert_common_name"),
-                                     verify_ssl=kwargs.get("verify_ssl", True),
-                                     cert=kwargs.get("cert"))
+    response = nsxt_request.call_api(
+        method="delete",
+        url=url,
+        username=username,
+        password=password,
+        cert_common_name=kwargs.get("cert_common_name"),
+        verify_ssl=kwargs.get("verify_ssl", True),
+        cert=kwargs.get("cert"),
+    )
 
     return response if response else "IP Pool deleted successfully"

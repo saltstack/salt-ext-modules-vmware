@@ -1,26 +1,22 @@
 import json
+from unittest import mock
 
-import mock
 from requests.exceptions import HTTPError
 
 
-def _mock_http_success_response(
-        status=200,
-        json_data=None):
+def _mock_http_success_response(status=200, json_data=None):
     mock_resp = mock.Mock()
     mock_resp.raise_for_status = mock.Mock()
 
     mock_resp.status_code = status
     # add json data if provided
     if json_data:
-        mock_resp.json = mock.Mock(
-            return_value=json_data
-        )
+        mock_resp.json = mock.Mock(return_value=json_data)
     return mock_resp
 
 
 def _mock_http_error_response(
-        json_data=None,
+    json_data=None,
 ):
     mock_resp = mock.Mock()
     mock_resp.raise_for_status = mock.Mock()

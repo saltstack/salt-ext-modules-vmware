@@ -24,9 +24,6 @@ Example usage :
 
 """
 
-# Import Python libs
-from __future__ import absolute_import, print_function, unicode_literals
-
 
 def __virtual__():
     """
@@ -46,7 +43,7 @@ def present(
     license_key,
     verify_ssl=True,
     cert=None,
-    cert_common_name=None
+    cert_common_name=None,
 ):
     """
     Ensure a given license exists on given NSX-T Manager
@@ -85,18 +82,20 @@ def present(
         password=password,
         verify_ssl=verify_ssl,
         cert=cert,
-        cert_common_name=cert_common_name
+        cert_common_name=cert_common_name,
     )
 
     if "error" in get_licenses_result:
         ret["result"] = False
-        ret["comment"] = "Failed to get current licenses from NSX-T Manager : {}".format(get_licenses_result["error"])
+        ret["comment"] = "Failed to get current licenses from NSX-T Manager : {}".format(
+            get_licenses_result["error"]
+        )
         return ret
 
-    if get_licenses_result['result_count'] != 0:
-        results = get_licenses_result['results']
+    if get_licenses_result["result_count"] != 0:
+        results = get_licenses_result["results"]
         for result in results:
-            if result['license_key'] == license_key:
+            if result["license_key"] == license_key:
                 ret["result"] = True
                 ret["comment"] = "License key is already present"
                 return ret
@@ -113,12 +112,14 @@ def present(
         license_key=license_key,
         verify_ssl=verify_ssl,
         cert=cert,
-        cert_common_name=cert_common_name
+        cert_common_name=cert_common_name,
     )
 
     if "error" in apply_license_result:
         ret["result"] = False
-        ret["comment"] = "Failed to apply license to NSX-T Manager : {}".format(apply_license_result["error"])
+        ret["comment"] = "Failed to apply license to NSX-T Manager : {}".format(
+            apply_license_result["error"]
+        )
         return ret
 
     get_licenses_result_after_apply = __salt__["nsxt_license.get_licenses"](
@@ -127,13 +128,16 @@ def present(
         password=password,
         verify_ssl=verify_ssl,
         cert=cert,
-        cert_common_name=cert_common_name
+        cert_common_name=cert_common_name,
     )
 
     if "error" in get_licenses_result_after_apply:
         ret["result"] = False
-        ret["comment"] = "Failed to retrieve licenses after applying current license from NSX-T Manager : {}".format(
-            get_licenses_result_after_apply["error"])
+        ret[
+            "comment"
+        ] = "Failed to retrieve licenses after applying current license from NSX-T Manager : {}".format(
+            get_licenses_result_after_apply["error"]
+        )
         return ret
 
     ret["comment"] = "License added successfully"
@@ -145,43 +149,43 @@ def present(
 
 
 def absent(
-        name,
-        hostname,
-        username,
-        password,
-        license_key,
-        verify_ssl=True,
-        cert=None,
-        cert_common_name=None
+    name,
+    hostname,
+    username,
+    password,
+    license_key,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
 ):
     """
-        Ensure a given license does not exist on given NSX-T Manager
+    Ensure a given license does not exist on given NSX-T Manager
 
-        hostname
-            The host name of NSX-T manager
+    hostname
+        The host name of NSX-T manager
 
-        username
-            Username to connect to NSX-T manager
+    username
+        Username to connect to NSX-T manager
 
-        password
-            Password to connect to NSX-T manager
+    password
+        Password to connect to NSX-T manager
 
-        verify_ssl
-            Option to enable/disable SSL verification. Enabled by default.
-            If set to False, the certificate validation is skipped.
+    verify_ssl
+        Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
 
-        license_key
-            The license key to be removed from NSX-T Manager
+    license_key
+        The license key to be removed from NSX-T Manager
 
-        cert
-            Path to the SSL client certificate file to connect to NSX-T manager.
-            The certificate can be retrieved from browser.
+    cert
+        Path to the SSL client certificate file to connect to NSX-T manager.
+        The certificate can be retrieved from browser.
 
-        cert_common_name
-            (Optional) By default, the hostname parameter and the common name in certificate is compared for host name verification.
-            If the client certificate common name and hostname do not match (in case of self-signed certificates),
-            specify the certificate common name as part of this parameter. This value is then used to compare against
-            certificate common name.
+    cert_common_name
+        (Optional) By default, the hostname parameter and the common name in certificate is compared for host name verification.
+        If the client certificate common name and hostname do not match (in case of self-signed certificates),
+        specify the certificate common name as part of this parameter. This value is then used to compare against
+        certificate common name.
     """
     ret = {"name": name, "changes": {}, "result": None, "comment": ""}
 
@@ -191,18 +195,20 @@ def absent(
         password=password,
         verify_ssl=verify_ssl,
         cert=cert,
-        cert_common_name=cert_common_name
+        cert_common_name=cert_common_name,
     )
 
     if "error" in get_licenses_result:
         ret["result"] = False
-        ret["comment"] = "Failed to get current licenses from NSX-T Manager : {}".format(get_licenses_result["error"])
+        ret["comment"] = "Failed to get current licenses from NSX-T Manager : {}".format(
+            get_licenses_result["error"]
+        )
         return ret
 
-    if get_licenses_result['result_count'] != 0:
-        results = get_licenses_result['results']
+    if get_licenses_result["result_count"] != 0:
+        results = get_licenses_result["results"]
         for result in results:
-            if result['license_key'] == license_key:
+            if result["license_key"] == license_key:
                 if __opts__["test"]:
                     ret["result"] = None
                     ret["comment"] = "License would be removed from NSX-T Manager"
@@ -215,13 +221,14 @@ def absent(
                     license_key=license_key,
                     verify_ssl=verify_ssl,
                     cert=cert,
-                    cert_common_name=cert_common_name
+                    cert_common_name=cert_common_name,
                 )
 
                 if "error" in delete_license_result:
                     ret["result"] = False
                     ret["comment"] = "Failed to delete license from NSX-T Manager : {}".format(
-                        delete_license_result["error"])
+                        delete_license_result["error"]
+                    )
                     return ret
 
                 get_licenses_result_after_delete = __salt__["nsxt_license.get_licenses"](
@@ -230,15 +237,17 @@ def absent(
                     password=password,
                     verify_ssl=verify_ssl,
                     cert=cert,
-                    cert_common_name=cert_common_name
+                    cert_common_name=cert_common_name,
                 )
 
                 if "error" in get_licenses_result_after_delete:
                     ret["result"] = False
-                    ret[
-                        "comment"] = "Failed to retrieve licenses " \
-                                     "after deleting current license from NSX-T Manager : {}".format(
-                        get_licenses_result_after_delete["error"])
+                    ret["comment"] = (
+                        "Failed to retrieve licenses "
+                        "after deleting current license from NSX-T Manager : {}".format(
+                            get_licenses_result_after_delete["error"]
+                        )
+                    )
                     return ret
 
                 ret["comment"] = "License removed successfully"

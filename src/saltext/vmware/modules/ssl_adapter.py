@@ -32,4 +32,4 @@ class HostHeaderSSLAdapter(HTTPAdapter):
             # an assert_hostname from a previous request may have been left
             connection_pool_kwargs.pop("assert_hostname", None)
 
-        return super(HostHeaderSSLAdapter, self).send(request, **kwargs)
+        return super().send(request, **kwargs)

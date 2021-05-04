@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Salt Module to perform CRUD operations for NSX-T's IP Address Blocks
 """
-
-from __future__ import absolute_import, division, print_function
-
 import logging
 
 from saltext.vmware.utils import nsxt_request
@@ -22,12 +18,7 @@ def _get_base_url():
     return "https://{0}/api/v1/pools/ip-blocks"
 
 
-def get(
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def get(hostname, username, password, **kwargs):
     """
     Lists IP Address blocks present in the NSX-T Manager for given query params
 
@@ -82,14 +73,16 @@ def get(
 
     params = _create_query_params(**kwargs)
 
-    return nsxt_request.call_api(method="get",
-                                 url=url,
-                                 username=username,
-                                 password=password,
-                                 cert_common_name=kwargs.get("cert_common_name"),
-                                 verify_ssl=kwargs.get("verify_ssl", True),
-                                 cert=kwargs.get("cert"),
-                                 params=params)
+    return nsxt_request.call_api(
+        method="get",
+        url=url,
+        username=username,
+        password=password,
+        cert_common_name=kwargs.get("cert_common_name"),
+        verify_ssl=kwargs.get("verify_ssl", True),
+        cert=kwargs.get("cert"),
+        params=params,
+    )
 
 
 def _create_query_params(**kwargs):
@@ -103,13 +96,7 @@ def _create_query_params(**kwargs):
     return query_params
 
 
-def get_by_display_name(
-        hostname,
-        username,
-        password,
-        display_name,
-        **kwargs
-):
+def get_by_display_name(hostname, username, password, display_name, **kwargs):
     """
     Gets IP Address block present in the NSX-T Manager with given name.
 
@@ -161,25 +148,19 @@ def get_by_display_name(
 
         # add all the ip blocks from paginated response with given display name to list
         for ip_block in ip_blocks_paginated["results"]:
-            if ip_block.get('display_name') and ip_block['display_name'] == display_name:
+            if ip_block.get("display_name") and ip_block["display_name"] == display_name:
                 ip_blocks.append(ip_block)
 
         # if cursor is not present then we are on the last page, end loop
         if "cursor" not in ip_blocks_paginated:
-            break;
+            break
         # updated query parameter with cursor
         page_cursor = ip_blocks_paginated["cursor"]
 
     return {"results": ip_blocks}
 
 
-def create(
-        cidr,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def create(cidr, hostname, username, password, **kwargs):
     """
     Creates an IP Address block with given specifications
 
@@ -242,14 +223,16 @@ def create(
 
     req_data = _create_payload_for_create(cidr, **kwargs)
 
-    return nsxt_request.call_api(method="post",
-                                 url=url,
-                                 username=username,
-                                 password=password,
-                                 cert_common_name=kwargs.get("cert_common_name"),
-                                 verify_ssl=kwargs.get("verify_ssl", True),
-                                 cert=kwargs.get("cert"),
-                                 data=req_data)
+    return nsxt_request.call_api(
+        method="post",
+        url=url,
+        username=username,
+        password=password,
+        cert_common_name=kwargs.get("cert_common_name"),
+        verify_ssl=kwargs.get("verify_ssl", True),
+        cert=kwargs.get("cert"),
+        data=req_data,
+    )
 
 
 def _create_payload_for_create(cidr, **kwargs):
@@ -265,16 +248,7 @@ def _create_payload_for_create(cidr, **kwargs):
     return ip_block_to_create
 
 
-def update(
-        ip_block_id,
-        cidr,
-        display_name,
-        revision,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def update(ip_block_id, cidr, display_name, revision, hostname, username, password, **kwargs):
     """
     Updates an IP Address block of display name with given specifications. All the fields for which no value is
     provided will be set to null
@@ -338,18 +312,20 @@ def update(
     """
 
     log.info("Updating IP Address block %s", display_name)
-    url = _get_base_url().format(hostname) + "/{0}".format(ip_block_id)
+    url = _get_base_url().format(hostname) + "/{}".format(ip_block_id)
 
     req_data = _create_payload_for_update(ip_block_id, revision, display_name, cidr, **kwargs)
 
-    return nsxt_request.call_api(method="put",
-                                 url=url,
-                                 username=username,
-                                 password=password,
-                                 cert_common_name=kwargs.get("cert_common_name"),
-                                 verify_ssl=kwargs.get("verify_ssl", True),
-                                 cert=kwargs.get("cert"),
-                                 data=req_data)
+    return nsxt_request.call_api(
+        method="put",
+        url=url,
+        username=username,
+        password=password,
+        cert_common_name=kwargs.get("cert_common_name"),
+        verify_ssl=kwargs.get("verify_ssl", True),
+        cert=kwargs.get("cert"),
+        data=req_data,
+    )
 
 
 def _create_payload_for_update(ip_block_id, revision, display_name, cidr, **kwargs):
@@ -368,13 +344,7 @@ def _create_payload_for_update(ip_block_id, revision, display_name, cidr, **kwar
     return ip_block_to_update
 
 
-def delete(
-        ip_block_id,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def delete(ip_block_id, hostname, username, password, **kwargs):
     """
     Deletes an IP Address block with given id
 
@@ -414,14 +384,16 @@ def delete(
 
     log.info("Deleting IP Address Block %s", ip_block_id)
 
-    url = _get_base_url().format(hostname) + "/{0}".format(ip_block_id)
+    url = _get_base_url().format(hostname) + "/{}".format(ip_block_id)
 
-    response = nsxt_request.call_api(method="delete",
-                                     url=url,
-                                     username=username,
-                                     password=password,
-                                     cert_common_name=kwargs.get("cert_common_name"),
-                                     verify_ssl=kwargs.get("verify_ssl", True),
-                                     cert=kwargs.get("cert"))
+    response = nsxt_request.call_api(
+        method="delete",
+        url=url,
+        username=username,
+        password=password,
+        cert_common_name=kwargs.get("cert_common_name"),
+        verify_ssl=kwargs.get("verify_ssl", True),
+        cert=kwargs.get("cert"),
+    )
 
     return response if response else "IP Block deleted successfully"

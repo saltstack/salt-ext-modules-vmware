@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Salt State file to create/update/delete an IP Address Pool
 
@@ -32,8 +31,6 @@ Example:
                   "end": <IP-Address-Range-end-1>
           ip_release_delay: <delay in milliseconds>
 """
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 
 log = logging.getLogger(__name__)
@@ -43,7 +40,7 @@ __virtual_name__ = "nsxt_ip_pools"
 
 def __virtual__():
     """
-        Only load if the nsxt_ip_pools module is available in __salt__
+    Only load if the nsxt_ip_pools module is available in __salt__
     """
     return (
         __virtual_name__ if "nsxt_ip_pools.get" in __salt__ else False,
@@ -51,14 +48,7 @@ def __virtual__():
     )
 
 
-def present(
-        name,
-        display_name,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def present(name, display_name, hostname, username, password, **kwargs):
     """
     Creates/Updates(if present with the same name) an IP Address Pool
 
@@ -149,8 +139,9 @@ def present(
     """
 
     log.info("Checking if IP Pool with name %s is present", display_name)
-    get_ip_pools_response = __salt__["nsxt_ip_pools.get_by_display_name"](hostname, username, password, display_name,
-                                                                          **kwargs)
+    get_ip_pools_response = __salt__["nsxt_ip_pools.get_by_display_name"](
+        hostname, username, password, display_name, **kwargs
+    )
 
     if get_ip_pools_response and "error" in get_ip_pools_response:
         return _create_state_response(name, None, None, False, get_ip_pools_response["error"])
@@ -159,19 +150,34 @@ def present(
 
     if ip_pools.__len__() > 1:
         log.info("Multiple instances found for the provided display name %s", display_name)
-        return _create_state_response(name, None, None, False,
-                                      "Multiple IP Pools found for the provided display name {}".format(display_name))
+        return _create_state_response(
+            name,
+            None,
+            None,
+            False,
+            "Multiple IP Pools found for the provided display name {}".format(display_name),
+        )
 
     existing_ip_pool = ip_pools[0] if ip_pools.__len__() > 0 else None
 
     if __opts__.get("test"):
         log.info("present is called with test option")
         if existing_ip_pool:
-            return _create_state_response(name, None, None, None,
-                                          "State present will update IP Pool with name {}".format(display_name))
+            return _create_state_response(
+                name,
+                None,
+                None,
+                None,
+                "State present will update IP Pool with name {}".format(display_name),
+            )
         else:
-            return _create_state_response(name, None, None, None,
-                                          "State present will create IP Pool with name {}".format(display_name))
+            return _create_state_response(
+                name,
+                None,
+                None,
+                None,
+                "State present will create IP Pool with name {}".format(display_name),
+            )
     if existing_ip_pool:
         is_update_required = _check_for_updates(existing_ip_pool, **kwargs)
 
@@ -179,41 +185,45 @@ def present(
             _fill_kwargs_with_existing_info(existing_ip_pool, kwargs)
 
             log.info("IP Pool found with name %s", display_name)
-            updated_ip_pool = __salt__["nsxt_ip_pools.update"](ip_pool_id=existing_ip_pool["id"],
-                                                               revision=existing_ip_pool["_revision"],
-                                                               hostname=hostname,
-                                                               username=username,
-                                                               password=password,
-                                                               **kwargs)
+            updated_ip_pool = __salt__["nsxt_ip_pools.update"](
+                ip_pool_id=existing_ip_pool["id"],
+                revision=existing_ip_pool["_revision"],
+                hostname=hostname,
+                username=username,
+                password=password,
+                **kwargs
+            )
 
             if updated_ip_pool and "error" in updated_ip_pool:
                 return _create_state_response(name, None, None, False, updated_ip_pool["error"])
 
-            return _create_state_response(name, existing_ip_pool, updated_ip_pool, True,
-                                          "Updated IP Pool {}".format(display_name))
+            return _create_state_response(
+                name,
+                existing_ip_pool,
+                updated_ip_pool,
+                True,
+                "Updated IP Pool {}".format(display_name),
+            )
         else:
             log.info("All fields are same as existing IP Address Pool %s", display_name)
-            return _create_state_response(name, None, None, True,
-                                          "IP Address Pool exists already, no action to perform")
+            return _create_state_response(
+                name, None, None, True, "IP Address Pool exists already, no action to perform"
+            )
     else:
         log.info("No IP Pool found with name %s", display_name)
-        created_ip_pool = __salt__["nsxt_ip_pools.create"](hostname, username, password, display_name=display_name,
-                                                           **kwargs)
+        created_ip_pool = __salt__["nsxt_ip_pools.create"](
+            hostname, username, password, display_name=display_name, **kwargs
+        )
 
         if created_ip_pool and "error" in created_ip_pool:
             return _create_state_response(name, None, None, False, created_ip_pool["error"])
 
-        return _create_state_response(name, None, created_ip_pool, True, "Created IP Pool {}".format(display_name))
+        return _create_state_response(
+            name, None, created_ip_pool, True, "Created IP Pool {}".format(display_name)
+        )
 
 
-def absent(
-        name,
-        display_name,
-        hostname,
-        username,
-        password,
-        **kwargs
-):
+def absent(name, display_name, hostname, username, password, **kwargs):
     """
     Deletes an IP Address Pool of provided name (if present)
 
@@ -261,8 +271,9 @@ def absent(
 
     log.info("Checking if IP Address Pool with name %s is present", display_name)
 
-    get_ip_pools_response = __salt__["nsxt_ip_pools.get_by_display_name"](hostname, username, password, display_name,
-                                                                          **kwargs)
+    get_ip_pools_response = __salt__["nsxt_ip_pools.get_by_display_name"](
+        hostname, username, password, display_name, **kwargs
+    )
 
     if get_ip_pools_response and "error" in get_ip_pools_response:
         return _create_state_response(name, None, None, False, get_ip_pools_response["error"])
@@ -271,34 +282,54 @@ def absent(
 
     if ip_pools.__len__() > 1:
         log.info("Multiple instances found for the provided display name %s", display_name)
-        return _create_state_response(name, None, None, False,
-                                      "Multiple IP Pools found for the provided display name {}".format(display_name))
+        return _create_state_response(
+            name,
+            None,
+            None,
+            False,
+            "Multiple IP Pools found for the provided display name {}".format(display_name),
+        )
 
     existing_ip_pool = ip_pools[0] if ip_pools.__len__() > 0 else None
 
     if __opts__.get("test"):
         log.info("absent is called with test option")
         if existing_ip_pool:
-            return _create_state_response(name, None, None, None,
-                                          "State absent will delete IP Pool with name {}".format(display_name))
+            return _create_state_response(
+                name,
+                None,
+                None,
+                None,
+                "State absent will delete IP Pool with name {}".format(display_name),
+            )
         else:
-            return _create_state_response(name, None, None, None,
-                                          "State absent will do nothing as no IP Pool found with name {}".format(
-                                              display_name))
+            return _create_state_response(
+                name,
+                None,
+                None,
+                None,
+                "State absent will do nothing as no IP Pool found with name {}".format(
+                    display_name
+                ),
+            )
 
     if existing_ip_pool:
         log.info("IP Address Pool found with name %s", display_name)
-        deleted_response = __salt__["nsxt_ip_pools.delete"](existing_ip_pool["id"], hostname, username, password,
-                                                            **kwargs)
+        deleted_response = __salt__["nsxt_ip_pools.delete"](
+            existing_ip_pool["id"], hostname, username, password, **kwargs
+        )
 
         if deleted_response and "error" in deleted_response:
             return _create_state_response(name, None, None, False, deleted_response["error"])
 
-        return _create_state_response(name, existing_ip_pool, None, True, "Deleted IP Pool {}".format(display_name))
+        return _create_state_response(
+            name, existing_ip_pool, None, True, "Deleted IP Pool {}".format(display_name)
+        )
     else:
         log.info("No IP Address Pool found with name %s", display_name)
-        return _create_state_response(name, None, None, True,
-                                      "No IP Address Pool found with name {}".format(display_name))
+        return _create_state_response(
+            name, None, None, True, "No IP Address Pool found with name {}".format(display_name)
+        )
 
 
 def _create_state_response(name, old_state, new_state, result, comment):
@@ -323,7 +354,11 @@ def _check_for_updates(existing_ip_pool, **kwargs):
     for key in updatable_keys:
         if not existing_ip_pool.__contains__(key) and kwargs.__contains__(key):
             is_updatable = True
-        if existing_ip_pool.__contains__(key) and kwargs.__contains__(key) and existing_ip_pool[key] != kwargs[key]:
+        if (
+            existing_ip_pool.__contains__(key)
+            and kwargs.__contains__(key)
+            and existing_ip_pool[key] != kwargs[key]
+        ):
             is_updatable = True
 
     return is_updatable
