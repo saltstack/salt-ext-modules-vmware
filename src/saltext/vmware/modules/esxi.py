@@ -25,15 +25,15 @@ def get_capabilities(*, service_instance):
     for host in hosts:
         capability = host.capability
         capabilities[host.name] = {
-            "motionSupported": capability.vmotionSupported,
+            "vmotionSupported": capability.vmotionSupported,
             "standbySupported": capability.standbySupported,
             "ipmiSupported": capability.ipmiSupported,
             "maxSupportedVMs": capability.maxSupportedVMs,
-            "mrecursiveResourcePoolsSupported": capability.recursiveResourcePoolsSupported,
+            "recursiveResourcePoolsSupported": capability.recursiveResourcePoolsSupported,
             "cpuMemoryResourceConfigurationSupported": capability.cpuMemoryResourceConfigurationSupported,
             "rebootSupported": capability.rebootSupported,
             "shutdownSupported": capability.shutdownSupported,
-            "vaxRunningVMs": capability.maxRunningVMs,
+            "maxRunningVMs": capability.maxRunningVMs,
             "maxSupportedVcpus": capability.maxSupportedVcpus,
             "maxRegisteredVMs": capability.maxRegisteredVMs,
             "datastorePrincipalSupported": capability.datastorePrincipalSupported,
