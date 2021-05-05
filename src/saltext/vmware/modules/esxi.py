@@ -1,5 +1,6 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
+
 def get_lun_ids(*, service_instance):
     """
     Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
@@ -19,12 +20,112 @@ def get_capabilities(*, service_instance):
     """
     Return ESXi host's capability information.
     """
-    capabilities = {}
     hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    capabilities = {}
     for host in hosts:
         capability = host.capability
-        host_id = host.summary.hardware.uuid
-        capabilities[host_id] = dict(capability.__dict__)
+        capabilities[host.name] = {
+            "accel3dSupported": capability.accel3dSupported,
+            "backgroundSnapshotsSupported": capability.backgroundSnapshotsSupported,
+            "checkpointFtCompatibilityIssues": list(capability.smpFtCompatibilityIssues),
+            "checkpointFtSupported": capability.smpFtSupported,
+            "cloneFromSnapshotSupported": capability.cloneFromSnapshotSupported,
+            "cpuHwMmuSupported": capability.cpuHwMmuSupported,
+            "cpuMemoryResourceConfigurationSupported": capability.cpuMemoryResourceConfigurationSupported,
+            "cryptoSupported": capability.cryptoSupported,
+            "datastorePrincipalSupported": capability.datastorePrincipalSupported,
+            "deltaDiskBackingsSupported": capability.deltaDiskBackingsSupported,
+            "eightPlusHostVmfsSharedAccessSupported": capability.eightPlusHostVmfsSharedAccessSupported,
+            "encryptedVMotionSupported": capability.encryptedVMotionSupported,
+            "encryptionCBRCSupported": capability.encryptionCBRCSupported,
+            "encryptionChangeOnAddRemoveSupported": capability.encryptionChangeOnAddRemoveSupported,
+            "encryptionFaultToleranceSupported": capability.encryptionFaultToleranceSupported,
+            "encryptionHBRSupported": capability.encryptionHBRSupported,
+            "encryptionHotOperationSupported": capability.encryptionHotOperationSupported,
+            "encryptionMemorySaveSupported": capability.encryptionMemorySaveSupported,
+            "encryptionRDMSupported": capability.encryptionRDMSupported,
+            "encryptionVFlashSupported": capability.encryptionVFlashSupported,
+            "encryptionWithSnapshotsSupported": capability.encryptionWithSnapshotsSupported,
+            "featureCapabilitiesSupported": capability.featureCapabilitiesSupported,
+            "firewallIpRulesSupported": capability.firewallIpRulesSupported,
+            "ftCompatibilityIssues": list(capability.ftCompatibilityIssues),
+            "ftSupported": capability.ftSupported,
+            "gatewayOnNicSupported": capability.gatewayOnNicSupported,
+            "hbrNicSelectionSupported": capability.hbrNicSelectionSupported,
+            "highGuestMemSupported": capability.highGuestMemSupported,
+            "hostAccessManagerSupported": capability.hostAccessManagerSupported,
+            "interVMCommunicationThroughVMCISupported": capability.interVMCommunicationThroughVMCISupported,
+            "ipmiSupported": capability.ipmiSupported,
+            "iscsiSupported": capability.iscsiSupported,
+            "latencySensitivitySupported": capability.latencySensitivitySupported,
+            "localSwapDatastoreSupported": capability.localSwapDatastoreSupported,
+            "loginBySSLThumbprintSupported": capability.loginBySSLThumbprintSupported,
+            "maintenanceModeSupported": capability.maintenanceModeSupported,
+            "markAsLocalSupported": capability.markAsLocalSupported,
+            "markAsSsdSupported": capability.markAsSsdSupported,
+            "maxHostRunningVms": capability.maxHostRunningVms,
+            "maxHostSupportedVcpus": capability.maxHostSupportedVcpus,
+            "maxNumDisksSVMotion": capability.maxNumDisksSVMotion,
+            "maxRegisteredVMs": capability.maxRegisteredVMs,
+            "maxRunningVMs": capability.maxRunningVMs,
+            "maxSupportedVMs": capability.maxSupportedVMs,
+            "maxSupportedVcpus": capability.maxSupportedVcpus,
+            "maxVcpusPerFtVm": capability.maxVcpusPerFtVm,
+            "messageBusProxySupported": capability.messageBusProxySupported,
+            "multipleNetworkStackInstanceSupported": capability.multipleNetworkStackInstanceSupported,
+            "nestedHVSupported": capability.nestedHVSupported,
+            "nfs41Krb5iSupported": capability.nfs41Krb5iSupported,
+            "nfs41Supported": capability.nfs41Supported,
+            "nfsSupported": capability.nfsSupported,
+            "nicTeamingSupported": capability.nicTeamingSupported,
+            "oneKVolumeAPIsSupported": capability.oneKVolumeAPIsSupported,
+            "perVMNetworkTrafficShapingSupported": capability.perVMNetworkTrafficShapingSupported,
+            "perVmSwapFiles": capability.perVmSwapFiles,
+            "preAssignedPCIUnitNumbersSupported": capability.preAssignedPCIUnitNumbersSupported,
+            "provisioningNicSelectionSupported": capability.provisioningNicSelectionSupported,
+            "rebootSupported": capability.rebootSupported,
+            "recordReplaySupported": capability.recordReplaySupported,
+            "recursiveResourcePoolsSupported": capability.recursiveResourcePoolsSupported,
+            "reliableMemoryAware": capability.reliableMemoryAware,
+            "replayCompatibilityIssues": list(capability.replayCompatibilityIssues),
+            "replayUnsupportedReason": capability.replayUnsupportedReason,
+            "restrictedSnapshotRelocateSupported": capability.restrictedSnapshotRelocateSupported,
+            "sanSupported": capability.sanSupported,
+            "scaledScreenshotSupported": capability.scaledScreenshotSupported,
+            "scheduledHardwareUpgradeSupported": capability.scheduledHardwareUpgradeSupported,
+            "screenshotSupported": capability.screenshotSupported,
+            "servicePackageInfoSupported": capability.servicePackageInfoSupported,
+            "shutdownSupported": capability.shutdownSupported,
+            "smartCardAuthenticationSupported": capability.smartCardAuthenticationSupported,
+            "smpFtCompatibilityIssues": list(capability.smpFtCompatibilityIssues),
+            "smpFtSupported": capability.smpFtSupported,
+            "snapshotRelayoutSupported": capability.snapshotRelayoutSupported,
+            "standbySupported": capability.standbySupported,
+            "storageIORMSupported": capability.storageIORMSupported,
+            "storagePolicySupported": capability.storagePolicySupported,
+            "storageVMotionSupported": capability.storageVMotionSupported,
+            "supportedVmfsMajorVersion": list(capability.supportedVmfsMajorVersion),
+            "suspendedRelocateSupported": capability.suspendedRelocateSupported,
+            "tpmSupported": capability.tpmSupported,
+            "turnDiskLocatorLedSupported": capability.turnDiskLocatorLedSupported,
+            "unsharedSwapVMotionSupported": capability.unsharedSwapVMotionSupported,
+            "upitSupported": capability.upitSupported,
+            "vFlashSupported": capability.vFlashSupported,
+            "vPMCSupported": capability.vPMCSupported,
+            "vStorageCapable": capability.vStorageCapable,
+            "virtualExecUsageSupported": capability.virtualExecUsageSupported,
+            "virtualVolumeDatastoreSupported": capability.virtualVolumeDatastoreSupported,
+            "vlanTaggingSupported": capability.vlanTaggingSupported,
+            "vmDirectPathGen2Supported": capability.vmDirectPathGen2Supported,
+            "vmDirectPathGen2UnsupportedReason": list(capability.vmDirectPathGen2UnsupportedReason),
+            "vmDirectPathGen2UnsupportedReasonExtended": capability.vmDirectPathGen2UnsupportedReasonExtended,
+            "vmfsDatastoreMountCapable": capability.vmfsDatastoreMountCapable,
+            "vmotionAcrossNetworkSupported": capability.vmotionAcrossNetworkSupported,
+            "vmotionSupported": capability.vmotionSupported,
+            "vmotionWithStorageVMotionSupported": capability.vmotionWithStorageVMotionSupported,
+            "vrNfcNicSelectionSupported": capability.vrNfcNicSelectionSupported,
+            "vsanSupported": capability.vsanSupported
+        }
 
     return capabilities
 
@@ -61,6 +162,7 @@ type manor.
 """
 
 import logging
+import sys
 
 import salt.utils.platform
 

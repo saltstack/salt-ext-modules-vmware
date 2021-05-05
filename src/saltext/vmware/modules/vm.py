@@ -7,21 +7,25 @@ def get_vm_facts(*, service_instance):
     hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     for host in hosts:
         virtual_machines = host.vm
-        host_id = host.summary.hardware.uuid
+        host_id = host.name
         vms[host_id] = {}
         for vm in virtual_machines:
-            vms[host_id][vm.summary.config.name] = {}
-            # TODO get cluster
-            vms[host_id][vm.summary.config.name]["cluster"] = None
-            # TODO get esxi hostname
-            vms[host_id][vm.summary.config.name]["esxi_hostname"] = None
-            vms[host_id][vm.summary.config.name]["guest_fullname"] = vm.summary.guest.guestFullName
-            vms[host_id][vm.summary.config.name]["ip_address"] = vm.summary.config.vmPathName
-            # TODO get mac address
-            vms[host_id][vm.summary.config.name]["mac_address"] = None
-            vms[host_id][vm.summary.config.name]["power_state"] = vm.summary.runtime.powerState
-            vms[host_id][vm.summary.config.name]["uuid"] = vm.summary.config.uuid
-            vms[host_id][vm.summary.config.name]["vm_network"] = {}
+            dc = utils._get_datacenter(vm)
+            vms[host_id][vm.summary.config.name] = {
+                "cluster": vm.summary.runtime.host.parent.name,
+                "datacenter": dc.name,
+                "esxi_hostname": vm.summary.runtime.host.summary.config.name,
+                "guest_fullname": vm.summary.guest.guestFullName,
+                "guest_name": vm.summary.config.name,
+                "ip_address": vm.summary.guest.ipAddress,
+                # TODO get mac address
+                "mac_address": None,
+                "power_state": vm.summary.runtime.powerState,
+                "uuid": vm.summary.config.uuid,
+                # TODO get network
+                "vm_network": {}
+                # TODO get attributes, tags, folder, moid
+            }
     return vms
 
 
@@ -212,7 +216,7 @@ import logging
 import sys
 
 import salt.utils.platform
-import saltext.vmware.utils.vmware
+import saltext.vmware.utils.vmware as utils
 from salt.exceptions import InvalidConfigError
 from salt.utils.decorators import depends
 from salt.utils.dictdiffer import recursive_diff
