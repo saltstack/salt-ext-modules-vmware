@@ -5,17 +5,21 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    'arg_name', [
+    "arg_name", [
         "cluster",
         "esxi_hostname",
-        "guest_name",
         "guest_fullname",
+        "guest_name",
         "ip_address",
         "power_state",
-        "uuid"
+        "uuid",
     ]
 )
 def test_vm_get_basic_facts(service_instance, integration_test_config, arg_name):
+    """
+    Test we are returning the same values from get_vm_facts
+    as our connected vcenter instance.
+    """
     vm_facts = vm.get_vm_facts(service_instance=service_instance)
     for host_id in vm_facts:
         for vm_name in vm_facts[host_id]:

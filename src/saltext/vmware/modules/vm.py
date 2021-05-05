@@ -13,17 +13,17 @@ def get_vm_facts(*, service_instance):
             dc = utils._get_datacenter(vm)
             vms[host_id][vm.summary.config.name] = {
                 "cluster": vm.summary.runtime.host.parent.name,
+                "datacenter": dc.name,
                 "esxi_hostname": vm.summary.runtime.host.summary.config.name,
-                "guest_name": vm.summary.config.name,
                 "guest_fullname": vm.summary.guest.guestFullName,
+                "guest_name": vm.summary.config.name,
                 "ip_address": vm.summary.guest.ipAddress,
                 # TODO get mac address
                 "mac_address": None,
                 "power_state": vm.summary.runtime.powerState,
                 "uuid": vm.summary.config.uuid,
                 # TODO get network
-                "vm_network": {},
-                "datacenter": dc.name
+                "vm_network": {}
                 # TODO get attributes, tags, folder, moid
             }
     return vms
