@@ -48,7 +48,58 @@ def __virtual__():
     )
 
 
-def present(name, display_name, hostname, username, password, **kwargs):
+def _create_state_response(name, old_state, new_state, result, comment):
+    state_response = dict()
+    state_response["name"] = name
+    state_response["result"] = result
+    state_response["comment"] = comment
+    state_response["changes"] = dict()
+    if new_state or old_state:
+        state_response["changes"]["old"] = old_state
+        state_response["changes"]["new"] = new_state
+
+    return state_response
+
+
+def _check_for_updates(existing_ip_pool, input_dict):
+    updatable_keys = ["subnets", "description", "tags", "ip_release_delay"]
+
+    is_updatable = False
+
+    # check if any updatable field has different value from the existing one
+    for key in updatable_keys:
+        if key not in existing_ip_pool and input_dict.get(key):
+            is_updatable = True
+        if (
+            key in existing_ip_pool
+            and existing_ip_pool[key]
+            and existing_ip_pool[key] != input_dict.get(key)
+        ):
+            is_updatable = True
+
+    return is_updatable
+
+
+def _fill_input_dict_with_existing_info(existing_ip_pool, input_dict):
+    for key in dict(existing_ip_pool).keys():
+        if key not in input_dict:
+            input_dict[key] = existing_ip_pool[key]
+
+
+def present(
+    name,
+    display_name,
+    hostname,
+    username,
+    password,
+    cert=None,
+    verify_ssl=True,
+    cert_common_name=None,
+    description=None,
+    tags=None,
+    subnets=None,
+    ip_release_delay=None,
+):
     """
     Creates/Updates(if present with the same name) an IP Address Pool
 
@@ -60,7 +111,7 @@ def present(name, display_name, hostname, username, password, **kwargs):
           hostname: <hostname>
           username: <username>
           password: <password>
-          certificate: <certificate>
+          cert: <certificate>
           verify_ssl: <False/True>
           display_name: <ip pool name>
           description: <ip pool description>
@@ -93,11 +144,11 @@ def present(name, display_name, hostname, username, password, **kwargs):
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -137,18 +188,31 @@ def present(name, display_name, hostname, username, password, **kwargs):
     ip_release_delay
         (Optional) Delay in milliseconds, while releasing allocated IP address from IP pool (Default is 2 mins).
     """
+    input_dict = {
+        "display_name": display_name,
+        "description": description,
+        "tags": tags,
+        "subnets": subnets,
+        "ip_release_delay": ip_release_delay,
+    }
 
     log.info("Checking if IP Pool with name %s is present", display_name)
     get_ip_pools_response = __salt__["nsxt_ip_pools.get_by_display_name"](
-        hostname, username, password, display_name, **kwargs
+        hostname,
+        username,
+        password,
+        display_name,
+        cert=cert,
+        verify_ssl=verify_ssl,
+        cert_common_name=cert_common_name,
     )
 
-    if get_ip_pools_response and "error" in get_ip_pools_response:
+    if "error" in get_ip_pools_response:
         return _create_state_response(name, None, None, False, get_ip_pools_response["error"])
 
     ip_pools = get_ip_pools_response["results"]
 
-    if ip_pools.__len__() > 1:
+    if len(ip_pools) > 1:
         log.info("Multiple instances found for the provided display name %s", display_name)
         return _create_state_response(
             name,
@@ -158,7 +222,7 @@ def present(name, display_name, hostname, username, password, **kwargs):
             "Multiple IP Pools found for the provided display name {}".format(display_name),
         )
 
-    existing_ip_pool = ip_pools[0] if ip_pools.__len__() > 0 else None
+    existing_ip_pool = ip_pools[0] if len(ip_pools) > 0 else None
 
     if __opts__.get("test"):
         log.info("present is called with test option")
@@ -179,10 +243,10 @@ def present(name, display_name, hostname, username, password, **kwargs):
                 "State present will create IP Pool with name {}".format(display_name),
             )
     if existing_ip_pool:
-        is_update_required = _check_for_updates(existing_ip_pool, **kwargs)
+        is_update_required = _check_for_updates(existing_ip_pool, input_dict)
 
         if is_update_required:
-            _fill_kwargs_with_existing_info(existing_ip_pool, kwargs)
+            _fill_input_dict_with_existing_info(existing_ip_pool, input_dict)
 
             log.info("IP Pool found with name %s", display_name)
             updated_ip_pool = __salt__["nsxt_ip_pools.update"](
@@ -191,10 +255,17 @@ def present(name, display_name, hostname, username, password, **kwargs):
                 hostname=hostname,
                 username=username,
                 password=password,
-                **kwargs
+                cert=cert,
+                verify_ssl=verify_ssl,
+                cert_common_name=cert_common_name,
+                display_name=input_dict.get("display_name"),
+                description=input_dict.get("description"),
+                tags=input_dict.get("tags"),
+                subnets=input_dict.get("subnets"),
+                ip_release_delay=input_dict.get("ip_release_delay"),
             )
 
-            if updated_ip_pool and "error" in updated_ip_pool:
+            if "error" in updated_ip_pool:
                 return _create_state_response(name, None, None, False, updated_ip_pool["error"])
 
             return _create_state_response(
@@ -212,10 +283,20 @@ def present(name, display_name, hostname, username, password, **kwargs):
     else:
         log.info("No IP Pool found with name %s", display_name)
         created_ip_pool = __salt__["nsxt_ip_pools.create"](
-            hostname, username, password, display_name=display_name, **kwargs
+            hostname,
+            username,
+            password,
+            display_name=input_dict.get("display_name"),
+            cert=cert,
+            verify_ssl=verify_ssl,
+            cert_common_name=cert_common_name,
+            description=input_dict.get("description"),
+            tags=input_dict.get("tags"),
+            subnets=input_dict.get("subnets"),
+            ip_release_delay=input_dict.get("ip_release_delay"),
         )
 
-        if created_ip_pool and "error" in created_ip_pool:
+        if "error" in created_ip_pool:
             return _create_state_response(name, None, None, False, created_ip_pool["error"])
 
         return _create_state_response(
@@ -223,7 +304,16 @@ def present(name, display_name, hostname, username, password, **kwargs):
         )
 
 
-def absent(name, display_name, hostname, username, password, **kwargs):
+def absent(
+    name,
+    display_name,
+    hostname,
+    username,
+    password,
+    cert=None,
+    verify_ssl=True,
+    cert_common_name=None,
+):
     """
     Deletes an IP Address Pool of provided name (if present)
 
@@ -235,7 +325,7 @@ def absent(name, display_name, hostname, username, password, **kwargs):
           hostname: <hostname>
           username: <username>
           password: <password>
-          certificate: <certificate>
+          cert: <certificate>
           verify_ssl: <False/True>
           display_name: <ip pool name>
 
@@ -252,11 +342,11 @@ def absent(name, display_name, hostname, username, password, **kwargs):
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -272,15 +362,21 @@ def absent(name, display_name, hostname, username, password, **kwargs):
     log.info("Checking if IP Address Pool with name %s is present", display_name)
 
     get_ip_pools_response = __salt__["nsxt_ip_pools.get_by_display_name"](
-        hostname, username, password, display_name, **kwargs
+        hostname,
+        username,
+        password,
+        display_name,
+        cert=cert,
+        verify_ssl=verify_ssl,
+        cert_common_name=cert_common_name,
     )
 
-    if get_ip_pools_response and "error" in get_ip_pools_response:
+    if "error" in get_ip_pools_response:
         return _create_state_response(name, None, None, False, get_ip_pools_response["error"])
 
     ip_pools = get_ip_pools_response["results"]
 
-    if ip_pools.__len__() > 1:
+    if len(ip_pools) > 1:
         log.info("Multiple instances found for the provided display name %s", display_name)
         return _create_state_response(
             name,
@@ -290,7 +386,7 @@ def absent(name, display_name, hostname, username, password, **kwargs):
             "Multiple IP Pools found for the provided display name {}".format(display_name),
         )
 
-    existing_ip_pool = ip_pools[0] if ip_pools.__len__() > 0 else None
+    existing_ip_pool = ip_pools[0] if len(ip_pools) > 0 else None
 
     if __opts__.get("test"):
         log.info("absent is called with test option")
@@ -316,10 +412,16 @@ def absent(name, display_name, hostname, username, password, **kwargs):
     if existing_ip_pool:
         log.info("IP Address Pool found with name %s", display_name)
         deleted_response = __salt__["nsxt_ip_pools.delete"](
-            existing_ip_pool["id"], hostname, username, password, **kwargs
+            existing_ip_pool["id"],
+            hostname,
+            username,
+            password,
+            cert=cert,
+            verify_ssl=verify_ssl,
+            cert_common_name=cert_common_name,
         )
 
-        if deleted_response and "error" in deleted_response:
+        if "error" in deleted_response:
             return _create_state_response(name, None, None, False, deleted_response["error"])
 
         return _create_state_response(
@@ -330,41 +432,3 @@ def absent(name, display_name, hostname, username, password, **kwargs):
         return _create_state_response(
             name, None, None, True, "No IP Address Pool found with name {}".format(display_name)
         )
-
-
-def _create_state_response(name, old_state, new_state, result, comment):
-    state_response = dict()
-    state_response["name"] = name
-    state_response["result"] = result
-    state_response["comment"] = comment
-    state_response["changes"] = dict()
-    if new_state or old_state:
-        state_response["changes"]["old"] = old_state
-        state_response["changes"]["new"] = new_state
-
-    return state_response
-
-
-def _check_for_updates(existing_ip_pool, **kwargs):
-    updatable_keys = ["subnets", "description", "tags", "ip_release_delay"]
-
-    is_updatable = False
-
-    # check if any updatable field has different value from the existing one
-    for key in updatable_keys:
-        if not existing_ip_pool.__contains__(key) and kwargs.__contains__(key):
-            is_updatable = True
-        if (
-            existing_ip_pool.__contains__(key)
-            and kwargs.__contains__(key)
-            and existing_ip_pool[key] != kwargs[key]
-        ):
-            is_updatable = True
-
-    return is_updatable
-
-
-def _fill_kwargs_with_existing_info(existing_ip_pool, kwargs):
-    for key in dict(existing_ip_pool).keys():
-        if key not in kwargs:
-            kwargs[key] = existing_ip_pool[key]

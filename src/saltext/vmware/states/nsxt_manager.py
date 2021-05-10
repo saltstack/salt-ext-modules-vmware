@@ -20,6 +20,8 @@ Example usage:
           cert: <certificate pem file path>
           verify_ssl: <False/True>
 
+.. warning::
+
     It is recommended to pass the NSX authentication details using Pillars rather than specifying as plain text in SLS
     files.
 
@@ -41,7 +43,59 @@ def __virtual__():
     )
 
 
-def publish_fqdns_enabled(name, hostname, username, password, **kwargs):
+def _set_publish_fqdns_in_nsxt(
+    publish_fqdns, revision, hostname, username, password, verify_ssl, cert, cert_common_name
+):
+    out = __salt__["nsxt_manager.set_manager_config"](
+        hostname=hostname,
+        username=username,
+        password=password,
+        revision=revision,
+        publish_fqdns=publish_fqdns,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+    )
+    return out
+
+
+def _get_publish_fqdns_revision_from_nsxt(
+    hostname, username, password, verify_ssl, cert, cert_common_name
+):
+    out = __salt__["nsxt_manager.get_manager_config"](
+        hostname=hostname,
+        username=username,
+        password=password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+    )
+    return out
+
+
+def _get_publish_fqdns_revision_from_response(current_config_response):
+    current_publish_fqdns = current_config_response.get("publish_fqdns")
+    current_revision = current_config_response.get("_revision")
+
+    return current_publish_fqdns, current_revision
+
+
+def _create_state_response(name, old_state, new_state, result, comment):
+    state_response = dict()
+    state_response["name"] = name
+    state_response["result"] = result
+    state_response["comment"] = comment
+    state_response["changes"] = dict()
+    if new_state:
+        state_response["changes"]["old"] = old_state
+        state_response["changes"]["new"] = new_state
+
+    return state_response
+
+
+def publish_fqdns_enabled(
+    name, hostname, username, password, verify_ssl=True, cert=None, cert_common_name=None
+):
     """
     Check the value for publish_fqdns, if it is true then do nothing else set it to true
 
@@ -69,11 +123,11 @@ def publish_fqdns_enabled(name, hostname, username, password, **kwargs):
         NSX-T manager's password
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -85,11 +139,16 @@ def publish_fqdns_enabled(name, hostname, username, password, **kwargs):
 
     log.info("Getting the manager's config")
 
-    cert_common_name = kwargs.get("cert_common_name")
-    cert = kwargs.get("cert")
+    cert_common_name = cert_common_name
+    cert = cert
 
     get_current_config = _get_publish_fqdns_revision_from_nsxt(
-        hostname, username, password, **kwargs
+        hostname,
+        username,
+        password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
     )
     if "error" in get_current_config:
         return _create_state_response(name, None, None, False, get_current_config["error"])
@@ -106,11 +165,11 @@ def publish_fqdns_enabled(name, hostname, username, password, **kwargs):
             None,
             None,
             "State publish_fqdns_enabled will execute with params {}, {}, {}, {}, {}".format(
-                name, hostname, username, password, kwargs.get("verify_ssl", True)
+                name, hostname, username, password, verify_ssl
             ),
         )
 
-    if bool(current_publish_fqdns):
+    if current_publish_fqdns:
         return _create_state_response(
             name, None, None, True, "publish_fqdns is already set to True"
         )
@@ -119,7 +178,14 @@ def publish_fqdns_enabled(name, hostname, username, password, **kwargs):
 
     log.info("Updating the NSX-T manager's config")
     updated_config_response = _set_publish_fqdns_in_nsxt(
-        publish_fqdns, current_revision, hostname, username, password, **kwargs
+        publish_fqdns,
+        current_revision,
+        hostname,
+        username,
+        password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
     )
 
     if "error" in updated_config_response:
@@ -134,7 +200,9 @@ def publish_fqdns_enabled(name, hostname, username, password, **kwargs):
     )
 
 
-def publish_fqdns_disabled(name, hostname, username, password, **kwargs):
+def publish_fqdns_disabled(
+    name, hostname, username, password, verify_ssl=True, cert=None, cert_common_name=None
+):
     """
     Check the value for publish_fqdns, if it is false then do nothing else set it to false
 
@@ -162,11 +230,11 @@ def publish_fqdns_disabled(name, hostname, username, password, **kwargs):
         NSX-T manager's password
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -176,12 +244,17 @@ def publish_fqdns_disabled(name, hostname, username, password, **kwargs):
         certificate common name.
     """
 
-    cert_common_name = kwargs.get("cert_common_name")
-    cert = kwargs.get("cert")
+    cert_common_name = cert_common_name
+    cert = cert
 
     log.info("Getting the manager's config")
     get_current_config = _get_publish_fqdns_revision_from_nsxt(
-        hostname, username, password, **kwargs
+        hostname,
+        username,
+        password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
     )
     if "error" in get_current_config:
         return _create_state_response(name, None, None, False, get_current_config["error"])
@@ -198,11 +271,11 @@ def publish_fqdns_disabled(name, hostname, username, password, **kwargs):
             None,
             None,
             "State publish_fqdns_disabled will execute with params {}, {}, {}, {}, {}".format(
-                name, hostname, username, password, kwargs.get("verify_ssl", True)
+                name, hostname, username, password, verify_ssl
             ),
         )
 
-    if not bool(current_publish_fqdns):
+    if not current_publish_fqdns:
         return _create_state_response(
             name, None, None, True, "publish_fqdns is already set to False"
         )
@@ -211,7 +284,14 @@ def publish_fqdns_disabled(name, hostname, username, password, **kwargs):
 
     log.info("Updating the manager's config")
     updated_config_response = _set_publish_fqdns_in_nsxt(
-        publish_fqdns, current_revision, hostname, username, password, **kwargs
+        publish_fqdns,
+        current_revision,
+        hostname,
+        username,
+        password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
     )
 
     if "error" in updated_config_response:
@@ -224,42 +304,3 @@ def publish_fqdns_disabled(name, hostname, username, password, **kwargs):
         True,
         "publish_fqdns has been set to False",
     )
-
-
-def _set_publish_fqdns_in_nsxt(publish_fqdns, revision, hostname, username, password, **kwargs):
-    out = __salt__["nsxt_manager.set_manager_config"](
-        hostname=hostname,
-        username=username,
-        password=password,
-        revision=revision,
-        publish_fqdns=publish_fqdns,
-        **kwargs
-    )
-    return out
-
-
-def _get_publish_fqdns_revision_from_nsxt(hostname, username, password, **kwargs):
-    out = __salt__["nsxt_manager.get_manager_config"](
-        hostname=hostname, username=username, password=password, **kwargs
-    )
-    return out
-
-
-def _get_publish_fqdns_revision_from_response(current_config_response):
-    current_publish_fqdns = current_config_response.get("publish_fqdns")
-    current_revision = current_config_response.get("_revision")
-
-    return current_publish_fqdns, current_revision
-
-
-def _create_state_response(name, old_state, new_state, result, comment):
-    state_response = dict()
-    state_response["name"] = name
-    state_response["result"] = result
-    state_response["comment"] = comment
-    state_response["changes"] = dict()
-    if new_state:
-        state_response["changes"]["old"] = old_state
-        state_response["changes"]["new"] = new_state
-
-    return state_response

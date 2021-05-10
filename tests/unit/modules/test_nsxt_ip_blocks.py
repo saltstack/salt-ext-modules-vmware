@@ -34,8 +34,7 @@ error_json = {"error": "The credentials were incorrect or the account specified 
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_using_basic_auth(mock_call_api):
-    log.info("Testing nsx-t get IP Address Block by display name")
+def test_nsxt_ip_blocks_get_should_return_api_response(mock_call_api):
 
     response = {"results": [_mock_ip_block]}
     mock_call_api.return_value = response
@@ -49,38 +48,7 @@ def test_get_using_basic_auth(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_with_query_params(mock_call_api):
-    log.info("Testing nsx-t get IP Address Block by display name")
-
-    response = {"results": [_mock_ip_block]}
-    mock_call_api.return_value = response
-
-    assert response == nsxt_ip_blocks.get(
-        hostname="sample.nsxt-hostname.vmware",
-        username="username",
-        password="password",
-        page_size=1,
-        verify_ssl=False,
-    )
-
-
-@patch.object(nsxt_request, "call_api")
-def test_get_by_display_when_error_in_response(mock_call_api):
-    log.info("Testing nsx-t get IP Address Block by display name")
-    mock_call_api.return_value = error_json
-
-    assert error_json == nsxt_ip_blocks.get_by_display_name(
-        hostname="sample.nsxt-hostname.vmware",
-        username="username",
-        password="password",
-        verify_ssl=False,
-        display_name="sample display name",
-    )
-
-
-@patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_using_basic_auth(mock_call_api):
-    log.info("Testing nsx-t get IP Address Block by display name")
+def test_nsxt_ip_blocks_get_by_display_name_should_return_single_page_api_response(mock_call_api):
 
     response = {"results": [_mock_ip_block]}
     mock_call_api.return_value = response
@@ -95,8 +63,9 @@ def test_get_by_display_name_using_basic_auth(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_with_paginated_response(mock_call_api):
-    log.info("Testing nsx-t get IP Address block by display name")
+def test_nsxt_ip_blocks_get_by_display_name_when_multiple_pages_exists_in_api_response(
+    mock_call_api,
+):
 
     response_with_cursor = {"results": [_mock_ip_block], "cursor": "sample cursor"}
     _mock_ip_block_page2 = _mock_ip_block.copy()
@@ -115,7 +84,9 @@ def test_get_by_display_name_with_paginated_response(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_with_ip_blocks_having_same_display_name(mock_call_api):
+def test_nsxt_ip_blocks_get_by_display_name_when_api_returns_multiple_ip_blocks_having_same_display_name(
+    mock_call_api,
+):
     response = {"results": [_mock_ip_block, _mock_ip_block]}
     mock_call_api.return_value = response
 
@@ -129,7 +100,9 @@ def test_get_by_display_name_with_ip_blocks_having_same_display_name(mock_call_a
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_when_no_ip_block_with_display_name(mock_call_api):
+def test_nsxt_ip_blocks_get_by_display_name_when_api_returns_no_ip_block_with_given_display_name(
+    mock_call_api,
+):
     response = {"results": []}
     mock_call_api.return_value = response
 
@@ -143,7 +116,9 @@ def test_get_by_display_name_when_no_ip_block_with_display_name(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_when_error_from_nsxt_util(mock_call_api):
+def test_nsxt_ip_blocks_get_by_display_name_when_api_returns_error_in_nsxt_request_util(
+    mock_call_api,
+):
     mock_call_api.return_value = error_json
 
     response = nsxt_ip_blocks.get_by_display_name(
@@ -158,14 +133,13 @@ def test_get_by_display_name_when_error_from_nsxt_util(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_create_using_basic_auth(mock_call_api):
+def test_nsxt_ip_blocks_create_when_api_should_return_successfully_created_object(mock_call_api):
     log.info("Testing nsx-t create an IP Address block")
 
     mock_call_api.return_value = _mock_ip_block
 
     assert _mock_ip_block == nsxt_ip_blocks.create(
         hostname="nsx-t.vmware.com",
-        revision=1,
         username="username",
         password="password",
         cidr="192.168.0.1/24",
@@ -176,7 +150,7 @@ def test_create_using_basic_auth(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_update_using_basic_auth(mock_call_api):
+def test_nsxt_ip_blocks_update_when_api_should_return_successfully_updated_object(mock_call_api):
     log.info("Testing nsx-t update an IP Address block")
 
     mock_call_api.return_value = _mock_ip_block
@@ -195,7 +169,7 @@ def test_update_using_basic_auth(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_delete_using_basic_auth(mock_call_api):
+def test_nsxt_ip_blocks_delete_when_api_should_return_successfully_deleted_message(mock_call_api):
     log.info("Testing nsx-t delete an IP Address block")
 
     mock_call_api.return_value = None
@@ -204,7 +178,6 @@ def test_delete_using_basic_auth(mock_call_api):
         hostname="sample.nsxt-hostname.vmware",
         username="username",
         password="password",
-        display_name=_mock_ip_block["display_name"],
         verify_ssl=False,
         ip_block_id=_mock_ip_block["id"],
     )

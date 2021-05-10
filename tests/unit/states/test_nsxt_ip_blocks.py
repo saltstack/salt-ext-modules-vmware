@@ -36,7 +36,7 @@ def _get_mocked_data():
     return mocked_hostname, mocked_ok_response, mocked_error_response
 
 
-def test_present_with_error_from_get_by_display_name():
+def test_present_state_when_error_from_get_by_display_name():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name = MagicMock(return_value=mocked_error_response)
@@ -59,10 +59,10 @@ def test_present_with_error_from_get_by_display_name():
         result["comment"]
         == "The credentials were incorrect or the account specified has been locked."
     )
-    assert not bool(result["result"])
+    assert not result["result"]
 
 
-def test_present_with_error_from_create():
+def test_present_state_when_error_from_create():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name = MagicMock(return_value={"results": []})
@@ -90,10 +90,10 @@ def test_present_with_error_from_create():
         result["comment"]
         == "The credentials were incorrect or the account specified has been locked."
     )
-    assert not bool(result["result"])
+    assert not result["result"]
 
 
-def test_present_with_error_from_update():
+def test_present_state_when_error_from_update():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name = MagicMock(return_value={"results": [mocked_ok_response]})
@@ -122,10 +122,10 @@ def test_present_with_error_from_update():
         result["comment"]
         == "The credentials were incorrect or the account specified has been locked."
     )
-    assert not bool(result["result"])
+    assert not result["result"]
 
 
-def test_present_with_update_to_add_new_field():
+def test_present_state_during_update_to_add_a_new_field():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mocked_updated_response = mocked_ok_response.copy()
@@ -156,10 +156,10 @@ def test_present_with_update_to_add_new_field():
     assert result["changes"]["old"] == mocked_ok_response
     assert result["changes"]["new"] == mocked_updated_response
     assert result["comment"] == "Updated IP Block Create-from_salt"
-    assert bool(result["result"])
+    assert result["result"]
 
 
-def test_present_to_create_with_basic_auth():
+def test_present_to_create_when_module_returns_success_response():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(return_value={"results": []})
@@ -185,10 +185,10 @@ def test_present_to_create_with_basic_auth():
     assert result is not None
     assert result["changes"] == {"new": mocked_ok_response, "old": None}
     assert result["comment"] == "Created IP Block {}".format(display_name)
-    assert bool(result["result"])
+    assert result["result"]
 
 
-def test_present_to_update_with_basic_auth():
+def test_present_to_update_when_module_returns_success_response():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
     mocked_updated_ip_block = mocked_ok_response.copy()
     mocked_updated_ip_block["description"] = "Updated Using Salt"
@@ -217,10 +217,10 @@ def test_present_to_update_with_basic_auth():
     assert result is not None
     assert result["changes"] == {"new": mocked_updated_ip_block, "old": mocked_ok_response}
     assert result["comment"] == "Updated IP Block {}".format(display_name)
-    assert bool(result["result"])
+    assert result["result"]
 
 
-def test_present_to_update_with_identical_fields():
+def test_present_to_update_when_user_input_and_existing_ip_block_has_identical_fields():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(return_value={"results": [mocked_ok_response]})
@@ -241,12 +241,12 @@ def test_present_to_update_with_identical_fields():
         )
 
     assert result is not None
-    assert result["changes"].__len__() == 0
+    assert len(result["changes"]) == 0
     assert result["comment"] == "IP Address Block exists already, no action to perform"
-    assert bool(result["result"])
+    assert result["result"]
 
 
-def test_present_to_create_in_test_mode():
+def test_present_state_for_create_when_opts_test_is_true():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(return_value={"results": []})
@@ -267,14 +267,14 @@ def test_present_to_create_in_test_mode():
             )
 
     assert result is not None
-    assert result["changes"].__len__() == 0
+    assert len(result["changes"]) == 0
     assert result["comment"] == "State present will create IP Block with name {}".format(
         display_name
     )
     assert result["result"] is None
 
 
-def test_present_to_update_in_test_mode():
+def test_present_state_for_update_when_opts_test_is_true():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(return_value={"results": [mocked_ok_response]})
@@ -295,14 +295,14 @@ def test_present_to_update_in_test_mode():
             )
 
     assert result is not None
-    assert result["changes"].__len__() == 0
+    assert len(result["changes"]) == 0
     assert result["comment"] == "State present will update IP Block with name {}".format(
         display_name
     )
     assert result["result"] is None
 
 
-def test_present_when_multiple_blocks_with_same_display_name():
+def test_present_state_when_get_by_display_name_returns_multiple_blocks_with_same_display_name():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(
@@ -325,18 +325,18 @@ def test_present_when_multiple_blocks_with_same_display_name():
             )
 
     assert result is not None
-    assert result["changes"].__len__() == 0
+    assert len(result["changes"]) == 0
     assert result["comment"] == "Multiple IP Blocks found for the provided display name {}".format(
         display_name
     )
     assert not result["result"]
 
 
-def test_absent_to_delete_with_basic_auth():
+def test_absent_state_to_delete_when_module_returns_success_response():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(return_value={"results": [mocked_ok_response]})
-    mock_delete_response = MagicMock(ok=True, return_value=None)
+    mock_delete_response = MagicMock(ok=True, return_value="IP Block deleted successfully")
     display_name = mocked_ok_response["display_name"]
 
     with patch.dict(
@@ -357,10 +357,10 @@ def test_absent_to_delete_with_basic_auth():
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response}
     assert result["comment"] == "Deleted IP Block {}".format(display_name)
-    assert bool(result["result"])
+    assert result["result"]
 
 
-def test_absent_do_nothing_with_basic_auth():
+def test_absent_state_when_object_to_delete_does_not_exists():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(return_value={"results": []})
@@ -381,10 +381,10 @@ def test_absent_do_nothing_with_basic_auth():
     assert result is not None
     assert result["changes"] == {}
     assert result["comment"] == "No IP Address Block found with name {}".format(display_name)
-    assert bool(result["result"])
+    assert result["result"]
 
 
-def test_absent_to_delete_in_test_mode():
+def test_absent_state_to_delete_when_opts_test_mode_is_true():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(return_value={"results": [mocked_ok_response]})
@@ -404,14 +404,14 @@ def test_absent_to_delete_in_test_mode():
             )
 
     assert result is not None
-    assert result["changes"].__len__() == 0
+    assert len(result["changes"]) == 0
     assert result["comment"] == "State absent will delete IP Block with name {}".format(
         display_name
     )
     assert result["result"] is None
 
 
-def test_absent_to_do_nothing_in_test_mode():
+def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_is_true():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(return_value={"results": []})
@@ -431,14 +431,14 @@ def test_absent_to_do_nothing_in_test_mode():
             )
 
     assert result is not None
-    assert result["changes"].__len__() == 0
+    assert len(result["changes"]) == 0
     assert result[
         "comment"
     ] == "State absent will do nothing as no IP Block found with name {}".format(display_name)
     assert result["result"] is None
 
 
-def test_absent_when_multiple_blocks_with_same_display_name():
+def test_absent_state_when_get_by_display_name_returns_multiple_blocks_with_same_display_name():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name_response = MagicMock(
@@ -460,14 +460,14 @@ def test_absent_when_multiple_blocks_with_same_display_name():
             )
 
     assert result is not None
-    assert result["changes"].__len__() == 0
+    assert len(result["changes"]) == 0
     assert result["comment"] == "Multiple IP Blocks found for the provided display name {}".format(
         display_name
     )
     assert not result["result"]
 
 
-def test_absent_with_error_from_update():
+def test_absent_when_nsxt_ip_blocks_delete_returns_error():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
 
     mock_get_using_display_name = MagicMock(return_value={"results": [mocked_ok_response]})
@@ -485,7 +485,6 @@ def test_absent_with_error_from_update():
             hostname=mocked_hostname,
             username="username",
             password="password",
-            description="Sample description",
             display_name=mocked_ok_response["display_name"],
         )
 
@@ -495,4 +494,4 @@ def test_absent_with_error_from_update():
         result["comment"]
         == "The credentials were incorrect or the account specified has been locked."
     )
-    assert not bool(result["result"])
+    assert not result["result"]

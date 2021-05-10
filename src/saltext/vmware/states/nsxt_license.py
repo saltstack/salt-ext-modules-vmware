@@ -18,6 +18,8 @@ Example usage :
             license_key: ABCDE-12345-ABCDE-12345-ABCDE
             cert: /path/to/client/certificate
 
+.. warning::
+
     It is recommended to pass the NSX authentication details using Pillars rather than specifying as plain text in SLS
     files.
 
@@ -58,14 +60,14 @@ def present(
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     license_key
         The license key to be added to NSX-T Manager
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -171,14 +173,14 @@ def absent(
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     license_key
         The license key to be removed from NSX-T Manager
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name

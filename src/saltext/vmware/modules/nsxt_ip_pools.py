@@ -9,16 +9,66 @@ log = logging.getLogger(__name__)
 
 __virtual_name__ = "nsxt_ip_pools"
 
+IP_POOLS_BASE_URL = "https://{}/api/v1/pools/ip-pools"
+
 
 def __virtual__():
     return __virtual_name__
 
 
-def _get_base_url():
-    return "https://{0}/api/v1/pools/ip-pools"
+def _create_payload_for_update(ip_pool_id, revision, display_name, **kwargs):
+    updatable_fields = ["description", "subnets", "tags", "ip_release_delay"]
+    ip_pool_to_update = {
+        "id": ip_pool_id,
+        "_revision": revision,
+        "display_name": display_name,
+    }
+
+    for field in updatable_fields:
+        val = kwargs.get(field)
+        if val:
+            ip_pool_to_update[field] = val
+
+    return ip_pool_to_update
 
 
-def get(hostname, username, password, **kwargs):
+def _create_query_params(**kwargs):
+    allowed_query_params = ["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"]
+
+    query_params = dict()
+    for param in allowed_query_params:
+        val = kwargs.get(param)
+        if val:
+            query_params[param] = kwargs.get(param)
+
+    return query_params
+
+
+def _create_payload_for_create(**kwargs):
+    fields = ["display_name", "description", "subnets", "tags", "ip_release_delay"]
+    ip_pool_to_create = {}
+
+    for field in fields:
+        val = kwargs.get(field)
+        if val:
+            ip_pool_to_create[field] = val
+
+    return ip_pool_to_create
+
+
+def get(
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    cursor=None,
+    included_fields=None,
+    page_size=None,
+    sort_by=None,
+    sort_ascending=None,
+):
     """
     Lists all IP Address pools present in the NSX-T Manager
 
@@ -38,11 +88,11 @@ def get(hostname, username, password, **kwargs):
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -69,34 +119,31 @@ def get(hostname, username, password, **kwargs):
     """
 
     log.info("Fetching IP Address Pools")
-    url = _get_base_url().format(hostname)
+    url = IP_POOLS_BASE_URL.format(hostname)
 
-    params = _create_query_params(**kwargs)
+    params = _create_query_params(
+        cursor=cursor,
+        included_fields=included_fields,
+        page_size=page_size,
+        sort_by=sort_by,
+        sort_ascending=sort_ascending,
+    )
 
     return nsxt_request.call_api(
         method="get",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
         params=params,
     )
 
 
-def _create_query_params(**kwargs):
-    allowed_query_params = ["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"]
-
-    query_params = dict()
-    for param in allowed_query_params:
-        if kwargs.get(param):
-            query_params[param] = kwargs[param]
-
-    return query_params
-
-
-def get_by_display_name(hostname, username, password, display_name, **kwargs):
+def get_by_display_name(
+    hostname, username, password, display_name, verify_ssl=True, cert=None, cert_common_name=None
+):
     """
     Gets IP Address pool present in the NSX-T Manager with given name.
 
@@ -119,11 +166,11 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
         The name of IP Address pool to fetch
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -140,7 +187,15 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
     page_cursor = None
 
     while True:
-        ip_pools_paginated = get(hostname, username, password, **kwargs, cursor=page_cursor)
+        ip_pools_paginated = get(
+            hostname,
+            username,
+            password,
+            verify_ssl=verify_ssl,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            cursor=page_cursor,
+        )
 
         # check if error dictionary is returned
         if "error" in ip_pools_paginated:
@@ -148,7 +203,7 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
 
         # add all the ip pools from paginated response with given display name to list
         for ip_pool in ip_pools_paginated["results"]:
-            if ip_pool.get("display_name") and ip_pool["display_name"] == display_name:
+            if ip_pool.get("display_name") == display_name:
                 ip_pools.append(ip_pool)
 
         # if cursor is not present then we are on the last page, end loop
@@ -160,7 +215,19 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
     return {"results": ip_pools}
 
 
-def create(hostname, username, password, **kwargs):
+def create(
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    display_name=None,
+    description=None,
+    tags=None,
+    subnets=None,
+    ip_release_delay=None,
+):
     """
     Creates an IP Address pool with given specifications
 
@@ -180,11 +247,11 @@ def create(hostname, username, password, **kwargs):
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -194,7 +261,7 @@ def create(hostname, username, password, **kwargs):
         compare against
 
     display_name
-        (Optional) The name using which IP Address Pool will be created. If not provided then pool id will be used as
+        The name using which IP Address Pool will be created. If not provided then pool id will be used as
         display name
 
     description
@@ -238,34 +305,43 @@ def create(hostname, username, password, **kwargs):
     """
 
     log.info("Creating IP Address Pool")
-    url = _get_base_url().format(hostname)
+    url = IP_POOLS_BASE_URL.format(hostname)
 
-    req_data = _create_payload_for_create(**kwargs)
+    req_data = _create_payload_for_create(
+        display_name=display_name,
+        description=description,
+        tags=tags,
+        subnets=subnets,
+        ip_release_delay=ip_release_delay,
+    )
 
     return nsxt_request.call_api(
         method="post",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
         data=req_data,
     )
 
 
-def _create_payload_for_create(**kwargs):
-    fields = ["display_name", "description", "subnets", "tags", "ip_release_delay"]
-    ip_pool_to_create = {}
-
-    for field in fields:
-        if kwargs.get(field):
-            ip_pool_to_create[field] = kwargs.get(field)
-
-    return ip_pool_to_create
-
-
-def update(ip_pool_id, display_name, revision, hostname, username, password, **kwargs):
+def update(
+    ip_pool_id,
+    display_name,
+    revision,
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    description=None,
+    tags=None,
+    subnets=None,
+    ip_release_delay=None,
+):
     """
     Updates an IP Address pool of display name with given specifications, All the fields for which no value is
     provided will be set to null
@@ -286,11 +362,11 @@ def update(ip_pool_id, display_name, revision, hostname, username, password, **k
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -349,38 +425,33 @@ def update(ip_pool_id, display_name, revision, hostname, username, password, **k
     """
 
     log.info("Updating IP Address Pool %s", display_name)
-    url = _get_base_url().format(hostname) + "/{}".format(ip_pool_id)
+    url = IP_POOLS_BASE_URL.format(hostname) + "/{}".format(ip_pool_id)
 
-    req_data = _create_payload_for_update(ip_pool_id, revision, display_name, **kwargs)
+    req_data = _create_payload_for_update(
+        ip_pool_id,
+        revision,
+        display_name=display_name,
+        description=description,
+        tags=tags,
+        subnets=subnets,
+        ip_release_delay=ip_release_delay,
+    )
 
     return nsxt_request.call_api(
         method="put",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
         data=req_data,
     )
 
 
-def _create_payload_for_update(ip_pool_id, revision, display_name, **kwargs):
-    updatable_fields = ["description", "subnets", "tags", "ip_release_delay"]
-    ip_pool_to_update = {}
-
-    for field in updatable_fields:
-        if kwargs.get(field):
-            ip_pool_to_update[field] = kwargs.get(field)
-
-    ip_pool_to_update["id"] = ip_pool_id
-    ip_pool_to_update["_revision"] = revision
-    ip_pool_to_update["display_name"] = display_name
-
-    return ip_pool_to_update
-
-
-def delete(ip_pool_id, hostname, username, password, **kwargs):
+def delete(
+    ip_pool_id, hostname, username, password, verify_ssl=True, cert=None, cert_common_name=None
+):
     """
     Deletes an IP Address pool with given id
 
@@ -403,11 +474,11 @@ def delete(ip_pool_id, hostname, username, password, **kwargs):
         Existing IP Pool id
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -420,16 +491,16 @@ def delete(ip_pool_id, hostname, username, password, **kwargs):
 
     log.info("Deleting IP Address Pool %s", ip_pool_id)
 
-    url = _get_base_url().format(hostname) + "/{}".format(ip_pool_id)
+    url = IP_POOLS_BASE_URL.format(hostname) + "/{}".format(ip_pool_id)
 
     response = nsxt_request.call_api(
         method="delete",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
     )
 
-    return response if response else "IP Pool deleted successfully"
+    return response or "IP Pool deleted successfully"

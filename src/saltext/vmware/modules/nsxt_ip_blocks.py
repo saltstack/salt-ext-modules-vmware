@@ -9,16 +9,67 @@ log = logging.getLogger(__name__)
 
 __virtual_name__ = "nsxt_ip_blocks"
 
+IP_BLOCKS_BASE_URL = "https://{}/api/v1/pools/ip-blocks"
+
 
 def __virtual__():
     return __virtual_name__
 
 
-def _get_base_url():
-    return "https://{0}/api/v1/pools/ip-blocks"
+def _create_payload_for_update(ip_block_id, revision, display_name, cidr, **kwargs):
+    updatable_fields = ["description", "tags"]
+    ip_block_to_update = {
+        "id": ip_block_id,
+        "_revision": revision,
+        "display_name": display_name,
+        "cidr": cidr,
+    }
+
+    for field in updatable_fields:
+        val = kwargs.get(field)
+        if val:
+            ip_block_to_update[field] = val
+
+    return ip_block_to_update
 
 
-def get(hostname, username, password, **kwargs):
+def _create_payload_for_create(cidr, **kwargs):
+    fields = ["display_name", "description", "tags"]
+    ip_block_to_create = {"cidr": cidr}
+
+    for field in fields:
+        val = kwargs.get(field)
+        if val:
+            ip_block_to_create[field] = val
+
+    return ip_block_to_create
+
+
+def _create_query_params(**kwargs):
+    allowed_query_params = ["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"]
+
+    query_params = dict()
+    for param in allowed_query_params:
+        val = kwargs.get(param)
+        if val:
+            query_params[param] = val
+
+    return query_params
+
+
+def get(
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    cursor=None,
+    included_fields=None,
+    page_size=None,
+    sort_by=None,
+    sort_ascending=None,
+):
     """
     Lists IP Address blocks present in the NSX-T Manager for given query params
 
@@ -38,11 +89,11 @@ def get(hostname, username, password, **kwargs):
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -69,34 +120,31 @@ def get(hostname, username, password, **kwargs):
     """
 
     log.info("Fetching IP Address Blocks")
-    url = _get_base_url().format(hostname)
+    url = IP_BLOCKS_BASE_URL.format(hostname)
 
-    params = _create_query_params(**kwargs)
+    params = _create_query_params(
+        cursor=cursor,
+        included_fields=included_fields,
+        page_size=page_size,
+        sort_by=sort_by,
+        sort_ascending=sort_ascending,
+    )
 
     return nsxt_request.call_api(
         method="get",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
         params=params,
     )
 
 
-def _create_query_params(**kwargs):
-    allowed_query_params = ["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"]
-
-    query_params = dict()
-    for param in allowed_query_params:
-        if kwargs.get(param):
-            query_params[param] = kwargs[param]
-
-    return query_params
-
-
-def get_by_display_name(hostname, username, password, display_name, **kwargs):
+def get_by_display_name(
+    hostname, username, password, display_name, verify_ssl=True, cert=None, cert_common_name=None
+):
     """
     Gets IP Address block present in the NSX-T Manager with given name.
 
@@ -119,11 +167,11 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
         The name of IP Address block to fetch
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -139,8 +187,17 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
     ip_blocks = list()
     page_cursor = None
 
+    # There is a scope to refactor this loop as it exists across the modules, team maynot take this up in phase I
     while True:
-        ip_blocks_paginated = get(hostname, username, password, **kwargs, cursor=page_cursor)
+        ip_blocks_paginated = get(
+            hostname,
+            username,
+            password,
+            verify_ssl=verify_ssl,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            cursor=page_cursor,
+        )
 
         # check if error dictionary is returned
         if "error" in ip_blocks_paginated:
@@ -148,7 +205,7 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
 
         # add all the ip blocks from paginated response with given display name to list
         for ip_block in ip_blocks_paginated["results"]:
-            if ip_block.get("display_name") and ip_block["display_name"] == display_name:
+            if ip_block.get("display_name") == display_name:
                 ip_blocks.append(ip_block)
 
         # if cursor is not present then we are on the last page, end loop
@@ -160,7 +217,18 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
     return {"results": ip_blocks}
 
 
-def create(cidr, hostname, username, password, **kwargs):
+def create(
+    cidr,
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    display_name=None,
+    description=None,
+    tags=None,
+):
     """
     Creates an IP Address block with given specifications
 
@@ -180,11 +248,11 @@ def create(cidr, hostname, username, password, **kwargs):
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -219,36 +287,37 @@ def create(cidr, hostname, username, password, **kwargs):
     """
 
     log.info("Creating IP Address Block")
-    url = _get_base_url().format(hostname)
+    url = IP_BLOCKS_BASE_URL.format(hostname)
 
-    req_data = _create_payload_for_create(cidr, **kwargs)
-
+    req_data = _create_payload_for_create(
+        cidr=cidr, display_name=display_name, description=description, tags=tags
+    )
     return nsxt_request.call_api(
         method="post",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
         data=req_data,
     )
 
 
-def _create_payload_for_create(cidr, **kwargs):
-    fields = ["display_name", "description", "tags"]
-    ip_block_to_create = {}
-
-    for field in fields:
-        if kwargs.get(field):
-            ip_block_to_create[field] = kwargs.get(field)
-
-    ip_block_to_create["cidr"] = cidr
-
-    return ip_block_to_create
-
-
-def update(ip_block_id, cidr, display_name, revision, hostname, username, password, **kwargs):
+def update(
+    ip_block_id,
+    cidr,
+    display_name,
+    revision,
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    description=None,
+    tags=None,
+):
     """
     Updates an IP Address block of display name with given specifications. All the fields for which no value is
     provided will be set to null
@@ -269,11 +338,11 @@ def update(ip_block_id, cidr, display_name, revision, hostname, username, passwo
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -312,39 +381,32 @@ def update(ip_block_id, cidr, display_name, revision, hostname, username, passwo
     """
 
     log.info("Updating IP Address block %s", display_name)
-    url = _get_base_url().format(hostname) + "/{}".format(ip_block_id)
+    url = IP_BLOCKS_BASE_URL.format(hostname) + "/{}".format(ip_block_id)
 
-    req_data = _create_payload_for_update(ip_block_id, revision, display_name, cidr, **kwargs)
+    req_data = _create_payload_for_update(
+        ip_block_id=ip_block_id,
+        revision=revision,
+        display_name=display_name,
+        cidr=cidr,
+        tags=tags,
+        description=description,
+    )
 
     return nsxt_request.call_api(
         method="put",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
         data=req_data,
     )
 
 
-def _create_payload_for_update(ip_block_id, revision, display_name, cidr, **kwargs):
-    updatable_fields = ["description", "tags"]
-    ip_block_to_update = {}
-
-    for field in updatable_fields:
-        if kwargs.get(field):
-            ip_block_to_update[field] = kwargs.get(field)
-
-    ip_block_to_update["id"] = ip_block_id
-    ip_block_to_update["_revision"] = revision
-    ip_block_to_update["display_name"] = display_name
-    ip_block_to_update["cidr"] = cidr
-
-    return ip_block_to_update
-
-
-def delete(ip_block_id, hostname, username, password, **kwargs):
+def delete(
+    ip_block_id, hostname, username, password, verify_ssl=True, cert=None, cert_common_name=None
+):
     """
     Deletes an IP Address block with given id
 
@@ -367,11 +429,11 @@ def delete(ip_block_id, hostname, username, password, **kwargs):
         Existing IP Block id
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -384,16 +446,16 @@ def delete(ip_block_id, hostname, username, password, **kwargs):
 
     log.info("Deleting IP Address Block %s", ip_block_id)
 
-    url = _get_base_url().format(hostname) + "/{}".format(ip_block_id)
+    url = IP_BLOCKS_BASE_URL.format(hostname) + "/{}".format(ip_block_id)
 
     response = nsxt_request.call_api(
         method="delete",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
     )
 
-    return response if response else "IP Block deleted successfully"
+    return response or "IP Block deleted successfully"

@@ -25,7 +25,7 @@ def call_api(
     data=None,
     params=None,
 ):
-    headers = dict({"Accept": "application/json", "content-Type": "application/json"})
+    headers = {"Accept": "application/json", "content-Type": "application/json"}
     session = requests.Session()
 
     if cert_common_name and verify_ssl:

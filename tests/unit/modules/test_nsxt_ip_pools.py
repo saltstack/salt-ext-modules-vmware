@@ -34,8 +34,7 @@ error_json = {"error": "The credentials were incorrect or the account specified 
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_using_basic_auth(mock_call_api):
-    log.info("Testing nsx-t get IP Address Pool by display name")
+def test_nsxt_ip_pools_get_should_return_api_response(mock_call_api):
 
     response = {"results": [_mock_ip_pool]}
     mock_call_api.return_value = response
@@ -52,44 +51,7 @@ def test_get_using_basic_auth(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_with_query_params(mock_call_api):
-    log.info("Testing nsx-t get IP Address Pool by display name")
-
-    response = {"results": [_mock_ip_pool]}
-    mock_call_api.return_value = response
-
-    assert (
-        nsxt_ip_pools.get(
-            hostname="sample.nsxt-hostname.vmware",
-            username="username",
-            password="password",
-            page_size=1,
-            verify_ssl=False,
-        )
-        == response
-    )
-
-
-@patch.object(nsxt_request, "call_api")
-def test_get_by_display_when_error_in_response(mock_call_api):
-    log.info("Testing nsx-t get IP Address Pool by display name")
-    mock_call_api.return_value = error_json
-
-    assert (
-        nsxt_ip_pools.get_by_display_name(
-            hostname="sample.nsxt-hostname.vmware",
-            username="username",
-            password="password",
-            verify_ssl=False,
-            display_name="sample display name",
-        )
-        == error_json
-    )
-
-
-@patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_using_basic_auth(mock_call_api):
-    log.info("Testing nsx-t get IP Address Pool by display name")
+def test_nsxt_ip_pools_get_by_display_name_should_return_single_page_api_response(mock_call_api):
 
     response = {"results": [_mock_ip_pool]}
     mock_call_api.return_value = response
@@ -107,8 +69,9 @@ def test_get_by_display_name_using_basic_auth(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_with_paginated_response(mock_call_api):
-    log.info("Testing nsx-t get IP Address Pool by display name")
+def test_nsxt_ip_pools_get_by_display_name_when_multiple_pages_exists_in_api_response(
+    mock_call_api,
+):
 
     response_with_cursor = {"results": [_mock_ip_pool], "cursor": "sample cursor"}
     _mock_ip_pool_page2 = _mock_ip_pool.copy()
@@ -130,7 +93,9 @@ def test_get_by_display_name_with_paginated_response(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_with_ip_pools_having_same_display_name(mock_call_api):
+def test_nsxt_ip_pools_get_by_display_name_when_api_returns_multiple_ip_pools_having_same_display_name(
+    mock_call_api,
+):
     response = {"results": [_mock_ip_pool, _mock_ip_pool]}
     mock_call_api.return_value = response
 
@@ -147,7 +112,9 @@ def test_get_by_display_name_with_ip_pools_having_same_display_name(mock_call_ap
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_when_no_ip_pool_with_display_name(mock_call_api):
+def test_nsxt_ip_pools_get_by_display_name_when_api_returns_no_ip_pool_with_given_display_name(
+    mock_call_api,
+):
     response = {"results": []}
     mock_call_api.return_value = response
 
@@ -164,7 +131,9 @@ def test_get_by_display_name_when_no_ip_pool_with_display_name(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_get_by_display_name_when_error_from_nsxt_util(mock_call_api):
+def test_nsxt_ip_pools_get_by_display_name_when_api_returns_error_in_nsxt_request_util(
+    mock_call_api,
+):
     mock_call_api.return_value = error_json
 
     response = nsxt_ip_pools.get_by_display_name(
@@ -179,7 +148,7 @@ def test_get_by_display_name_when_error_from_nsxt_util(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_create_using_basic_auth(mock_call_api):
+def test_nsxt_ip_pools_create_when_api_should_return_successfully_created_object(mock_call_api):
     log.info("Testing nsx-t create an IP Address Pool")
 
     mock_call_api.return_value = _mock_ip_pool
@@ -187,7 +156,6 @@ def test_create_using_basic_auth(mock_call_api):
     assert (
         nsxt_ip_pools.create(
             hostname="nsx-t.vmware.com",
-            revision=1,
             username="username",
             password="password",
             verify_ssl=False,
@@ -199,7 +167,7 @@ def test_create_using_basic_auth(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_update_using_basic_auth(mock_call_api):
+def test_nsxt_ip_pools_update_when_api_should_return_successfully_updated_object(mock_call_api):
     log.info("Testing nsx-t update an IP Address Pool")
 
     mock_call_api.return_value = _mock_ip_pool
@@ -220,7 +188,7 @@ def test_update_using_basic_auth(mock_call_api):
 
 
 @patch.object(nsxt_request, "call_api")
-def test_delete_using_basic_auth(mock_call_api):
+def test_nsxt_ip_pools_delete_when_api_should_return_successfully_deleted_message(mock_call_api):
     log.info("Testing nsx-t delete an IP Address Pool")
 
     mock_call_api.return_value = None
@@ -230,7 +198,6 @@ def test_delete_using_basic_auth(mock_call_api):
             hostname="sample.nsxt-hostname.vmware",
             username="username",
             password="password",
-            display_name=_mock_ip_pool["display_name"],
             verify_ssl=False,
             ip_pool_id=_mock_ip_pool["id"],
         )
