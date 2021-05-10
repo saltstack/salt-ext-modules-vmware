@@ -1,15 +1,16 @@
 """
 Unit test for nsxt_request util
 """
+import json
+from unittest import mock
 from unittest.mock import patch
 
+import pytest
 from requests import RequestException
 from requests import Session
+from requests.exceptions import HTTPError
 from requests.exceptions import SSLError
 from saltext.vmware.utils import nsxt_request
-
-from tests.unit.modules.mock_utils import _mock_http_error_response
-from tests.unit.modules.mock_utils import _mock_http_success_response
 
 _mock_success_response = {"result": "success"}
 _auth_err_json = {
@@ -19,9 +20,36 @@ _auth_err_json = {
 }
 
 
+@pytest.fixture
+def mock_http_success_response():
+    mock_resp = mock.Mock()
+    mock_resp.raise_for_status = mock.Mock()
+    mock_resp.status_code = 200
+    return mock_resp
+
+
+def _mock_http_error_response(json_data=None):
+    mock_resp = mock.Mock()
+    mock_resp.raise_for_status = mock.Mock()
+    http_error_obj = HTTPError()
+    mock_resp.raise_for_status.side_effect = http_error_obj
+    if json_data:
+        error_obj_response = mock.Mock()
+        error_obj_response.json.return_value = json_data
+        error_obj_response.text.return_value = json.dumps(json_data)
+        http_error_obj.response = error_obj_response
+    else:
+        error_obj_response = mock.Mock()
+        error_obj_response.json.return_value = None
+        error_obj_response.text = ""
+        http_error_obj.response = error_obj_response
+    return mock_resp
+
+
 @patch.object(Session, "request")
-def test_success_response_with_ssl_verification_disabled(mock_request):
-    mock_request.return_value = _mock_http_success_response(json_data=_mock_success_response)
+def test_success_response_with_ssl_verification_disabled(mock_request, mock_http_success_response):
+    mock_http_success_response.json = mock.Mock(return_value=_mock_success_response)
+    mock_request.return_value = mock_http_success_response
 
     assert (
         nsxt_request.call_api(
@@ -32,8 +60,9 @@ def test_success_response_with_ssl_verification_disabled(mock_request):
 
 
 @patch.object(Session, "request")
-def test_success_response_for_delete_api_call(mock_request):
-    mock_request.return_value = _mock_http_success_response(json_data=_mock_success_response)
+def test_success_response_for_delete_api_call(mock_request, mock_http_success_response):
+    mock_http_success_response.text = None
+    mock_request.return_value = mock_http_success_response
 
     assert (
         nsxt_request.call_api(
