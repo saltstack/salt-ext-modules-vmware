@@ -89,9 +89,9 @@ def test_for_auth_error(mock_request):
 
 
 @patch.object(Session, "request")
-def test_with_ssl_verification(mock_request):
-    mock_resp = _mock_http_success_response(json_data=_mock_success_response)
-    mock_request.return_value = mock_resp
+def test_with_ssl_verification(mock_request, mock_http_success_response):
+    mock_http_success_response.json = mock.Mock(return_value=_mock_success_response)
+    mock_request.return_value = mock_http_success_response
 
     assert (
         nsxt_request.call_api(
