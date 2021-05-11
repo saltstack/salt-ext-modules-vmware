@@ -146,8 +146,6 @@ def get_by_display_name(
 
     log.info("Finding IP Address Blocks with display name: %s", display_name)
 
-    ip_blocks = list()
-
     ip_blocks = common_utils._read_paginated(
         func=get,
         display_name=display_name,
