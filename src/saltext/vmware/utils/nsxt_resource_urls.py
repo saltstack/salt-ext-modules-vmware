@@ -1,0 +1,33 @@
+"""
+    NSX-T API URLs
+"""
+
+_SITE_URL = "/infra/sites"
+_DOMAIN_URL = "/infra/domains"
+_ENFORCEMENT_POINT_URL = _SITE_URL + "/{}/enforcement-points"
+
+TIER_0_URL = "/infra/tier-0s"
+TIER_0_STATIC_ROUTE_URL = TIER_0_URL + "/{}/static-routes"
+TIER_0_LOCALE_SERVICE_URL = TIER_0_URL + "/{}/locale-services"
+TIER_0_LS_INTERFACE_URL = TIER_0_LOCALE_SERVICE_URL + "/{}/interfaces"
+TIER_0_BGP_NEIGHBOR_URL = TIER_0_LOCALE_SERVICE_URL + "/{}/bgp/neighbors"
+TIER_0_BFD_PEERS = TIER_0_STATIC_ROUTE_URL + "/bfd-peers"
+
+IPV6_DAD_PROFILE_URL = "/infra/ipv6-dad-profiles"
+IPV6_NDRA_PROFILE_URL = "/infra/ipv6-ndra-profiles"
+DHCP_RELAY_CONFIG_URL = "/infra/dhcp-relay-configs"
+BFD_PROFILE_URL = "/infra/bfd-profiles"
+EDGE_CLUSTER_URL = _ENFORCEMENT_POINT_URL + "/{}/edge-clusters"
+EDGE_NODE_URL = EDGE_CLUSTER_URL + "/{}/edge-nodes"
+SEGMENT_URL = "/infra/segments"
+SEGMENT_PORT_URL = SEGMENT_URL + "/{}/ports"
+TRANSPORT_ZONE_URL = _ENFORCEMENT_POINT_URL + "/{}/transport-zones"
+IP_POOL_URL = "/infra/ip-pools"
+TRANSPORT_ZONE_URL = _ENFORCEMENT_POINT_URL + "/{}/transport-zones"
+IP_POOL_URL = "/infra/ip-pools"
+
+TIER_1_URL = "/infra/tier-1s"
+TIER_1_STATIC_ROUTE_URL = TIER_1_URL + "/{}/static-routes"
+TIER_1_LOCALE_SERVICE_URL = TIER_1_URL + "/{}/locale-services"
+TIER_1_LS_INTERFACE_URL = TIER_1_LOCALE_SERVICE_URL + "/{}/interfaces"
+TIER_1_BGP_NEIGHBOR_URL = TIER_1_LOCALE_SERVICE_URL + "/{}/bgp/neighbors"
