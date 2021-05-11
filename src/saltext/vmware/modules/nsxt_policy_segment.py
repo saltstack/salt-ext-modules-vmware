@@ -72,7 +72,7 @@ class NSXTSegment(NSXTPolicyBaseResource):
         resource_params = {}
         for field in fields:
             val = kwargs.get(field)
-            if val:
+            if kwargs.get(field):
                 resource_params[field] = val
 
         resource_params["resource_type"] = "Segment"
@@ -81,10 +81,9 @@ class NSXTSegment(NSXTPolicyBaseResource):
             resource_params["id"] = resource_params["display_name"]
 
         # Formation of the path for transport zone id
-        transport_zone_id = None
-        if kwargs.get("transport_zone_id"):
-            transport_zone_id = kwargs.get("transport_zone_id")
-        elif kwargs.get("transport_zone_name"):
+
+        transport_zone_id = kwargs.get("transport_zone_id")
+        if not transport_zone_id and kwargs.get("transport_zone_name"):
             transport_zone_id = self.get_id_using_display_name(
                 url=(
                     "https://{}/api/v1/transport-zones".format(self.nsx_resource_params["hostname"])
@@ -101,10 +100,8 @@ class NSXTSegment(NSXTPolicyBaseResource):
             )
 
         # Formation of path for tier0
-        tier0_id = None
-        if kwargs.get("tier0_id"):
-            tier0_id = kwargs.get("tier0_id")
-        elif kwargs.get("tier0_display_name"):
+        tier0_id = kwargs.get("tier0_id")
+        if not tier0_id and kwargs.get("tier0_display_name"):
             tier0_id = self.get_id_using_display_name(
                 url=(
                     NSXTSegment.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
@@ -116,10 +113,8 @@ class NSXTSegment(NSXTPolicyBaseResource):
             resource_params["connectivity_path"] = TIER_0_URL + "/" + tier0_id
 
         # Formation of path for tier1
-        tier1_id = None
-        if kwargs.get("tier1_id"):
-            tier1_id = kwargs.get("tier0_id")
-        elif kwargs.get("tier1_display_name"):
+        tier1_id = kwargs.get("tier0_id")
+        if not tier1_id and kwargs.get("tier1_display_name"):
             tier1_id = self.get_id_using_display_name(
                 url=(
                     NSXTSegment.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
@@ -131,12 +126,10 @@ class NSXTSegment(NSXTPolicyBaseResource):
             resource_params["connectivity_path"] = TIER_1_URL + "/" + tier1_id
 
         # Support for advance config
-        if kwargs.get("advanced_config"):
-            advance_config = kwargs.get("advanced_config")
-            address_pool_id = None
-            if advance_config["address_pool_id"]:
-                address_pool_id = advance_config["address_pool_id"]
-            elif advance_config["address_pool_name"]:
+        advance_config = kwargs.get("advanced_config")
+        if advance_config:
+            address_pool_id = advance_config.get("address_pool_id")
+            if not address_pool_id and advance_config.get("address_pool_name"):
                 address_pool_id = self.get_id_using_display_name(
                     url=(
                         NSXTSegment.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
@@ -179,12 +172,12 @@ class NSXTSegment(NSXTPolicyBaseResource):
 
             if kwargs.get("segment_ports") and len(kwargs.get("segment_ports")) > 0:
                 segment_ports = kwargs.get("segment_ports")
-
                 for segment_port in segment_ports:
                     resource_params = {}
                     for key in fields:
-                        if segment_port.get(key):
-                            resource_params[key] = segment_port.get(key)
+                        val = segment_port.get(key)
+                        if val:
+                            resource_params[key] = val
 
                     if not resource_params.get("id"):
                         resource_params["id"] = resource_params["display_name"]
