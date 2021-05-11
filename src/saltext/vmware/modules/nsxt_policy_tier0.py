@@ -1,6 +1,7 @@
 """
 Execution module to perform CRUD operations for NSX-T's Tier 0 Gateway
 """
+import json
 import logging
 
 from salt.exceptions import SaltInvocationError
@@ -23,6 +24,11 @@ log = logging.getLogger(__name__)
 
 def __virtual__():
     return "nsxt_policy_tier0"
+
+
+"""
+Class to represent schema of NSXT Tier 0 Gateway with its sub-resources
+"""
 
 
 class NSXTTier0(NSXTPolicyBaseResource):
@@ -66,31 +72,38 @@ class NSXTTier0(NSXTPolicyBaseResource):
             "state",
             "_revision",
         }
+
         resource_params = {}
         for field in fields:
-            val = kwargs.get(field)
-            if val:
-                resource_params[field] = val
+            if kwargs.get(field):
+                resource_params[field] = kwargs[field]
+
         resource_params["resource_type"] = "Tier0"
 
-        resource_params.setdefault("id", resource_params["display_name"])
+        if not hasattr(resource_params, "id"):
+            resource_params["id"] = resource_params["display_name"]
 
         ipv6_profile_paths = []
-
-        ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
-        if ipv6_ndra_profile_id:
+        base_url = NSXTPolicyBaseResource.get_nsxt_base_url().format(
+            self.nsx_resource_params["hostname"]
+        )
+        if kwargs.get("ipv6_ndra_profile_id"):
+            ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
             ipv6_profile_paths.append(IPV6_NDRA_PROFILE_URL + "/" + ipv6_ndra_profile_id)
-        ipv6_dad_profile_id = kwargs.get("ipv6_dad_profile_id")
-        if ipv6_dad_profile_id:
+        if kwargs.get("ipv6_dad_profile_id"):
+            ipv6_dad_profile_id = kwargs.get("ipv6_dad_profile_id")
             ipv6_profile_paths.append(IPV6_DAD_PROFILE_URL + "/" + ipv6_dad_profile_id)
         if ipv6_profile_paths:
             resource_params["ipv6_profile_paths"] = ipv6_profile_paths
-        dhcp_config_id = kwargs.get("dhcp_config_id")
-        if dhcp_config_id:
+
+        if kwargs.get("dhcp_config_id"):
+            dhcp_config_id = kwargs.get("dhcp_config_id")
             resource_params["dhcp_config_paths"] = [DHCP_RELAY_CONFIG_URL + "/" + dhcp_config_id]
-        vrf_config = kwargs.get("vrf_config")
-        if vrf_config:
+
+        if kwargs.get("vrf_config"):
+            vrf_config = kwargs["vrf_config"]
             vrf_resource_params = {}
+
             tier0_id = vrf_config.get("tier0_id")
             if not tier0_id:
                 raise SaltInvocationError(
@@ -99,19 +112,23 @@ class NSXTTier0(NSXTPolicyBaseResource):
                         "error": "Please specify the ID of the Tier 0 in the vrf_config",
                     }
                 )
+
             vrf_resource_params["tier0_path"] = NSXTTier0.get_resource_base_url() + "/" + tier0_id
             vrf_fields = {"evpn_l2_vni_config", "evpn_transit_vni", "route_distinguisher"}
-            # This block can be refactored
+
             for field in vrf_fields:
-                val = vrf_config.get(field)
-                if val:
-                    vrf_resource_params[field] = val
+                if vrf_config.get(field):
+                    vrf_resource_params[field] = vrf_config[field]
+
             if "route_targets" in vrf_config:
                 route_targets = vrf_config["route_targets"] or []
                 for route_target in route_targets:
                     route_target["resource_type"] = "VrfRouteTargets"
+
                 vrf_resource_params["route_targets"] = route_targets
+
             resource_params["vrf_config"] = vrf_resource_params
+
         self.multi_resource_params.append(resource_params)
 
     def update_parent_info(self, parent_info):
@@ -143,19 +160,20 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 "state",
                 "_revision",
             }
-            static_routes = kwargs.get("static_routes") or {}
 
-            for static_route in static_routes:
-                resource_params = {}
-                # This block can be refactored
-                for key in fields:
-                    val = static_route.get(key)
-                    if val:
-                        resource_params[key] = val
-                if not resource_params.get("id"):
-                    # In case of default display name set default can be used and refactor can be done.
-                    resource_params["id"] = resource_params["display_name"]
-                self.multi_resource_params.append(resource_params)
+            if kwargs.get("static_routes") and len(kwargs.get("static_routes")) > 0:
+                static_routes = kwargs.get("static_routes")
+
+                for static_route in static_routes:
+                    resource_params = {}
+                    for key in fields:
+                        if static_route.get(key):
+                            resource_params[key] = static_route.get(key)
+
+                    if not resource_params.get("id"):
+                        resource_params["id"] = resource_params["display_name"]
+
+                    self.multi_resource_params.append(resource_params)
 
         @staticmethod
         def get_resource_base_url(parent_info):
@@ -192,22 +210,30 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 "_revision",
             }
             self.multi_resource_params = []
-            bfd_peers = kwargs.get("bfd_peers") or {}
-            for bfd_peer in bfd_peers:
-                resource_params = {}
-                # This block can be refactored
-                for key in fields:
-                    if bfd_peer.get(key):
-                        resource_params[key] = bfd_peer.get(key)
-                bfd_profile_id = bfd_peer.get("bfd_profile_id")
-                if bfd_profile_id:
-                    resource_params["bfd_profile_path"] = "/infra/bfd-profiles/{}".format(
-                        bfd_profile_id
-                    )
-                if not "id" in bfd_peer:
-                    resource_params["id"] = resource_params["display_name"]
-                resource_params["resource_type"] = "StaticRouteBfdPeer"
-                self.multi_resource_params.append(resource_params)
+            if kwargs.get("bfd_peers") and len(kwargs.get("bfd_peers")) > 0:
+                base_url = NSXTPolicyBaseResource.get_nsxt_base_url().format(
+                    self.nsx_resource_params["hostname"]
+                )
+                bfd_peers = kwargs.get("bfd_peers")
+
+                for bfd_peer in bfd_peers:
+                    resource_params = {}
+                    for key in fields:
+                        if bfd_peer.get(key):
+                            resource_params[key] = bfd_peer.get(key)
+
+                    if bfd_peer.get("bfd_profile_id"):
+                        bfd_profile_id = bfd_peer.get("bfd_profile_id")
+
+                        resource_params["bfd_profile_path"] = "/infra/bfd-profiles/{}".format(
+                            bfd_profile_id
+                        )
+
+                    if not hasattr(bfd_peer, "id"):
+                        resource_params["id"] = resource_params["display_name"]
+
+                    resource_params["resource_type"] = "StaticRouteBfdPeer"
+                    self.multi_resource_params.append(resource_params)
 
     class NSXTTier0LocaleService(NSXTPolicyBaseResource):
         def get_spec_identifier(self):
@@ -233,58 +259,78 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 "description",
                 "_revision",
             }
-            locale_services = kwargs.get("locale_services") or {}
-            for locale_service in locale_services:
-                resource_params = {}
-                # This block can be refactored
-                for field in fields:
-                    if locale_service.get(field):
-                        resource_params[field] = locale_service[field]
-                resource_params["resource_type"] = "LocaleServices"
-                edge_cluster_info = locale_service.get("edge_cluster_info")
-                if edge_cluster_info:
-                    site_id = edge_cluster_info["site_id"]
-                    enforcementpoint_id = edge_cluster_info["enforcementpoint_id"]
-                    edge_cluster_base_url = EDGE_CLUSTER_URL.format(site_id, enforcementpoint_id)
-                    edge_cluster_id = edge_cluster_info.get("edge_cluster_id")
-                    resource_params["edge_cluster_path"] = (
-                        edge_cluster_base_url + "/" + edge_cluster_id
-                    )
-                preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
-                if preferred_edge_nodes_info:
-                    resource_params["preferred_edge_paths"] = []
-                    for preferred_edge_node_info in preferred_edge_nodes_info:
-                        site_id = preferred_edge_node_info.get("site_id", "default")
-                        enforcementpoint_id = preferred_edge_node_info.get(
-                            "enforcementpoint_id", "default"
+
+            if kwargs.get("locale_services") and len(kwargs.get("locale_services")) > 0:
+                locale_services = kwargs.get("locale_services")
+                base_url = NSXTPolicyBaseResource.get_nsxt_base_url().format(
+                    self.nsx_resource_params["hostname"]
+                )
+
+                for locale_service in locale_services:
+                    resource_params = {}
+                    for field in fields:
+                        if locale_service.get(field):
+                            resource_params[field] = locale_service[field]
+
+                    resource_params["resource_type"] = "LocaleServices"
+
+                    if locale_service.get("edge_cluster_info"):
+                        edge_cluster_info = locale_service.get("edge_cluster_info")
+                        site_id = edge_cluster_info["site_id"]
+                        enforcementpoint_id = edge_cluster_info["enforcementpoint_id"]
+
+                        edge_cluster_base_url = EDGE_CLUSTER_URL.format(
+                            site_id, enforcementpoint_id
                         )
-                        edge_cluster_id = preferred_edge_node_info.get("edge_cluster_id")
-                        edge_node_base_url = EDGE_NODE_URL.format(
-                            site_id, enforcementpoint_id, edge_cluster_id
+                        edge_cluster_id = edge_cluster_info.get("edge_cluster_id")
+
+                        resource_params["edge_cluster_path"] = (
+                            edge_cluster_base_url + "/" + edge_cluster_id
                         )
-                        edge_node_id = preferred_edge_node_info.get("edge_node_id")
-                        resource_params["preferred_edge_paths"].append(
-                            edge_node_base_url + "/" + edge_node_id
-                        )
-                ha_vip_configs = locale_service.get("ha_vip_configs")
-                if ha_vip_configs:
-                    resource_params["ha_vip_configs"] = []
-                    for ha_vip_config in ha_vip_configs:
-                        external_interface_info = ha_vip_config.get("external_interface_info")
-                        external_interface_paths = []
-                        for external_interface in external_interface_info:
-                            interface_base_url = NSXTTier0.NSXTTier0LocaleService.NSXTTier0Interface.get_resource_base_url(
-                                self.get_parent_info()
+
+                    if locale_service.get("preferred_edge_nodes_info"):
+                        preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
+                        resource_params["preferred_edge_paths"] = []
+                        for preferred_edge_node_info in preferred_edge_nodes_info:
+                            site_id = preferred_edge_node_info.get("site_id", "default")
+                            enforcementpoint_id = preferred_edge_node_info.get(
+                                "enforcementpoint_id", "default"
                             )
-                            external_interface_id = external_interface.get("external_interface_id")
-                            external_interface_paths.append(
-                                interface_base_url + "/" + external_interface_id
+                            edge_cluster_base_url = EDGE_CLUSTER_URL.format(
+                                site_id, enforcementpoint_id
                             )
-                        ha_vip_config["external_interface_paths"] = external_interface_paths
-                        resource_params["ha_vip_configs"].append(ha_vip_config)
-                if not "id" in locale_service:
-                    resource_params["id"] = resource_params["display_name"]
-                self.multi_resource_params.append(resource_params)
+                            edge_cluster_id = preferred_edge_node_info.get("edge_cluster_id")
+
+                            edge_node_base_url = EDGE_NODE_URL.format(
+                                site_id, enforcementpoint_id, edge_cluster_id
+                            )
+                            edge_node_id = preferred_edge_node_info.get("edge_node_id")
+
+                            resource_params["preferred_edge_paths"].append(
+                                edge_node_base_url + "/" + edge_node_id
+                            )
+
+                    if locale_service.get("ha_vip_configs"):
+                        resource_params["ha_vip_configs"] = []
+                        for ha_vip_config in locale_service["ha_vip_configs"]:
+                            external_interface_info = ha_vip_config.get("external_interface_info")
+                            external_interface_paths = []
+                            for external_interface in external_interface_info:
+                                interface_base_url = NSXTTier0.NSXTTier0LocaleService.NSXTTier0Interface.get_resource_base_url(
+                                    self.get_parent_info()
+                                )
+                                external_interface_id = external_interface("external_interface_id")
+                                external_interface_paths.append(
+                                    interface_base_url + "/" + external_interface_id
+                                )
+                            ha_vip_config["external_interface_paths"] = external_interface_paths
+
+                            resource_params["ha_vip_configs"].append(ha_vip_config)
+
+                    if not hasattr(locale_service, "id"):
+                        resource_params["id"] = resource_params["display_name"]
+
+                    self.multi_resource_params.append(resource_params)
 
         def update_parent_info(self, parent_info):
             parent_info["locale_services_id"] = self.resource_params["id"]
@@ -325,60 +371,78 @@ class NSXTTier0(NSXTPolicyBaseResource):
                     "type",
                     "urpf_mode",
                 }
-                locale_services = kwargs.get("locale_services")
-                ls_display_name = self._parent_info.get("ls_display_name")
 
-                locale_service = next(
-                    (ls for ls in locale_services if ls.get("display_name") == ls_display_name),
-                    {},
-                )
-                if locale_service:
-                    interfaces = locale_service.get("interfaces") or {}
-                    # This block can be refactored
-                    for interface in interfaces:
-                        resource_params = {}
-                        for field in fields:
-                            val = interface.get(field)
-                            if val:
-                                resource_params[field] = val
-                        ipv6_profile_paths = []
-                        ipv6_ndra_profile_id = interface.get("ipv6_ndra_profile_id")
-                        if ipv6_ndra_profile_id:
-                            ipv6_profile_paths.append(
-                                IPV6_NDRA_PROFILE_URL + "/" + interface.get("ipv6_ndra_profile_id")
+                locale_services = kwargs.get("locale_services")
+
+                if locale_services:
+                    locale_service = next(
+                        (
+                            ls
+                            for ls in locale_services
+                            if ls.get("display_name") == self._parent_info.get("ls_display_name")
+                        ),
+                        None,
+                    )
+                    if (
+                        locale_service
+                        and locale_service.get("interfaces")
+                        and len(locale_service.get("interfaces")) > 0
+                    ):
+                        interfaces = locale_service.get("interfaces")
+
+                        for interface in interfaces:
+                            resource_params = {}
+                            for field in fields:
+                                if interface.get(field):
+                                    resource_params[field] = interface[field]
+
+                            ipv6_profile_paths = []
+                            if interface.get("ipv6_ndra_profile_id"):
+                                ipv6_profile_paths.append(
+                                    IPV6_NDRA_PROFILE_URL
+                                    + "/"
+                                    + interface.get("ipv6_ndra_profile_id")
+                                )
+                                resource_params["ipv6_profile_paths"] = ipv6_profile_paths
+
+                            # segment_id is a required attr
+                            if not interface.get("segment_id"):
+                                raise SaltInvocationError(
+                                    {
+                                        "resourceType": "Tier0Interface",
+                                        "error": "required attribute segment_id not found",
+                                    }
+                                )
+
+                            segment_id = interface.get("segment_id")
+                            resource_params["segment_path"] = SEGMENT_URL + "/" + segment_id
+
+                            # edge_node_info is a required attr
+                            if not interface.get("edge_node_info"):
+                                raise SaltInvocationError(
+                                    {
+                                        "resourceType": "Tier0Interface",
+                                        "error": "required attribute edge_node_info not found",
+                                    }
+                                )
+
+                            edge_node_info = interface.get("edge_node_info")
+                            site_id = edge_node_info.get("site_id")
+                            enforcementpoint_id = edge_node_info.get("enforcementpoint_id")
+                            edge_cluster_id = edge_node_info.get("edge_cluster_id")
+                            edge_node_id = edge_node_info.get("edge_node_id")
+
+                            edge_node_base_url = EDGE_NODE_URL.format(
+                                site_id, enforcementpoint_id, edge_cluster_id
                             )
-                            resource_params["ipv6_profile_paths"] = ipv6_profile_paths
-                        # segment_id is a required attr
-                        segment_id = interface.get("segment_id")
-                        if not segment_id:
-                            raise SaltInvocationError(
-                                {
-                                    "resourceType": "Tier0Interface",
-                                    "error": "required attribute segment_id not found",
-                                }
-                            )
-                        resource_params["segment_path"] = SEGMENT_URL + "/" + segment_id
-                        # edge_node_info is a required attr
-                        edge_node_info = interface.get("edge_node_info")
-                        if not edge_node_info:
-                            raise SaltInvocationError(
-                                {
-                                    "resourceType": "Tier0Interface",
-                                    "error": "required attribute edge_node_info not found",
-                                }
-                            )
-                        edge_node_info = interface.get("edge_node_info")
-                        edge_node_id = edge_node_info.get("edge_node_id")
-                        edge_node_base_url = EDGE_NODE_URL.format(
-                            edge_node_info["site_id"],
-                            edge_node_info["enforcementpoint_id"],
-                            edge_node_info["edge_cluster_id"],
-                        )
-                        resource_params["edge_path"] = edge_node_base_url + "/" + edge_node_id
-                        resource_params["resource_type"] = "ServiceInterface"
-                        if not resource_params.get("id"):
-                            resource_params["id"] = resource_params["display_name"]
-                        self.multi_resource_params.append(resource_params)
+                            resource_params["edge_path"] = edge_node_base_url + "/" + edge_node_id
+
+                            resource_params["resource_type"] = "ServiceInterface"
+
+                            if not resource_params.get("id"):
+                                resource_params["id"] = resource_params["display_name"]
+
+                            self.multi_resource_params.append(resource_params)
 
         class NSXTTier0LocaleServiceBGP(NSXTPolicyBaseResource):
             def __init__(self):
@@ -418,23 +482,29 @@ class NSXTTier0(NSXTPolicyBaseResource):
                     "route_aggregations",
                     "tags",
                 }
-                locale_services = kwargs.get("locale_services") or {}
-                ls_display_name = self._parent_info.get("ls_display_name")
 
-                locale_service = next(
-                    (ls for ls in locale_services if ls.get("display_name") == ls_display_name),
-                    {},
-                )
-                bgp = locale_service.get("bgp") or {}
-                if bgp:
-                    # This pattern of code is identical in pattern and can be refactored.
-                    for field in fields:
-                        val = bgp.get(field)
-                        if val:
-                            resource_params[field] = val
-                    resource_params["resource_type"] = "BgpRoutingConfig"
-                    resource_params["id"] = "bgp"
-                    self.multi_resource_params.append(resource_params)
+                locale_services = kwargs.get("locale_services")
+
+                if locale_services:
+                    locale_service = next(
+                        (
+                            ls
+                            for ls in locale_services
+                            if ls.get("display_name") == self._parent_info.get("ls_display_name")
+                        ),
+                        None,
+                    )
+                    if locale_service and locale_service.get("bgp"):
+                        bgp = locale_service.get("bgp")
+
+                        for field in fields:
+                            if bgp.get(field):
+                                resource_params[field] = bgp[field]
+
+                        resource_params["resource_type"] = "BgpRoutingConfig"
+                        resource_params["id"] = "bgp"
+
+                        self.multi_resource_params.append(resource_params)
 
             @staticmethod
             def get_resource_base_url(parent_info):
@@ -472,25 +542,34 @@ class NSXTTier0(NSXTPolicyBaseResource):
                         "bfd",
                         "allow_as_in",
                     }
-                    locale_services = kwargs.get("locale_services") or {}
-                    ls_display_name = self._parent_info.get("ls_display_name")
-                    locale_service = next(
-                        (ls for ls in locale_services if ls.get("display_name") == ls_display_name),
-                        {},
-                    )
-                    if locale_service:
-                        neighbors = locale_service.get("bgp").get("neighbors") or {}
-                        for neighbor in neighbors:
-                            resource_params = {}
-                            # This pattern of code is identical in pattern and can be refactored.
-                            for field in fields:
-                                val = neighbor.get(field)
-                                if val:
-                                    resource_params[field] = val
-                            resource_params["resource_type"] = "BgpNeighborConfig"
-                            if not resource_params.get("id"):
-                                resource_params["id"] = resource_params["display_name"]
-                            self.multi_resource_params.append(resource_params)
+
+                    locale_services = kwargs.get("locale_services")
+
+                    if locale_services:
+                        locale_service = next(
+                            (
+                                ls
+                                for ls in locale_services
+                                if ls.get("display_name")
+                                == self._parent_info.get("ls_display_name")
+                            ),
+                            None,
+                        )
+                        if locale_service and locale_service.get("bgp"):
+                            neighbors = locale_service.get("bgp").get("neighbors")
+
+                            for neighbor in neighbors:
+                                resource_params = {}
+                                for field in fields:
+                                    if neighbor.get(field):
+                                        resource_params[field] = neighbor[field]
+
+                                resource_params["resource_type"] = "BgpNeighborConfig"
+
+                                if not resource_params.get("id"):
+                                    resource_params["id"] = resource_params["display_name"]
+
+                                self.multi_resource_params.append(resource_params)
 
                 @staticmethod
                 def get_resource_base_url(parent_info):
@@ -499,95 +578,99 @@ class NSXTTier0(NSXTPolicyBaseResource):
                     return TIER_0_BGP_NEIGHBOR_URL.format(tier0_id, locale_service_id)
 
 
-def get_by_display_name(
-    hostname, username, password, display_name, verify_ssl=True, cert=None, cert_common_name=None
-):
+def get_by_display_name(hostname, username, password, display_name, **kwargs):
     """
     Gets Tier 0 Gateway present in the NSX-T Manager with given name.
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_tier0.get_by_display_name hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     display_name
         The name of Tier 0 Gateway to fetch
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
+        Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     """
     nsxt_tier0 = NSXTTier0()
     url = (NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_tier0.get_resource_base_url()).format(
         hostname
     )
-    return nsxt_tier0.get_by_display_name(
-        url,
-        username,
-        password,
-        display_name,
-        verify_ssl=verify_ssl,
-        cert=cert,
-        cert_common_name=cert_common_name,
-    )
+    return nsxt_tier0.get_by_display_name(url, username, password, display_name, **kwargs)
 
 
-def get(
-    hostname,
-    username,
-    password,
-    verify_ssl=True,
-    cert=None,
-    cert_common_name=None,
-    cursor=None,
-    included_fields=None,
-    page_size=None,
-    sort_ascending=None,
-    sort_by=None,
-):
+def get(hostname, username, password, **kwargs):
     """
     Lists NSXT Tier 0 Gateways present in the NSX-T Manager
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_tier0.get hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
+        Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     cursor
         (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
+
     include_mark_for_delete_objects
         (Optional) Include objects that are marked for deletion in results. If true, resources that are marked for
         deletion will be included in the results. By default, these resources are not included.
+
     included_fields
         (Optional) Comma separated list of fields that should be included in query result
+
     page_size
         (Optional) Maximum number of results to return in this page
+
     sort_by
         (Optional) Field by which records are sorted
+
     sort_ascending
         (Optional) Boolean value to sort result in ascending order
     """
@@ -595,78 +678,51 @@ def get(
     url = (NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_tier0.get_resource_base_url()).format(
         hostname
     )
-    return nsxt_tier0.get(
-        url,
-        username,
-        password,
-        verify_ssl=verify_ssl,
-        cert=cert,
-        cert_common_name=cert_common_name,
-        cursor=cursor,
-        included_fields=included_fields,
-        page_size=page_size,
-        sort_ascending=sort_ascending,
-        sort_by=sort_by,
-    )
+    return nsxt_tier0.get(url, username, password, **kwargs)
 
 
 def create_or_update(
-    hostname,
-    username,
-    password,
-    cert=None,
-    cert_common_name=None,
-    verify_ssl=True,
-    arp_limit=None,
-    bfd_peers=None,
-    display_name=None,
-    description=None,
-    default_rule_logging=None,
-    dhcp_config_id=None,
-    disable_firewall=None,
-    failover_mode=None,
-    force_whitelisting=None,
-    ha_mode=None,
-    id=None,
-    internal_transit_subnets=None,
-    intersite_config=None,
-    ipv6_ndra_profile_id=None,
-    ipv6_dad_profile_id=None,
-    locale_services=None,
-    rd_admin_field=None,
-    static_routes=None,
-    tags=None,
-    transit_subnets=None,
-    vrf_config=None,
+    hostname, username, password, cert=None, cert_common_name=None, verify_ssl=True, **kwargs
 ):
     """
     Creates a Tier 0 Gateway and its sub-resources with given specifications
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_tier0.create hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
+        Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     display_name:
         description:
             - Display name.
             - If resource ID is not specified, display_name will be used as ID.
         required: false
         type: str
+
     tags:
         description: Opaque identifiers meaningful to the API user.
         type: dict
@@ -679,21 +735,26 @@ def create_or_update(
                 description: Tag value.
                 required: true
                 type: str
+
     id:
         description: Tier-0 ID
         required: false
         type: str
+
     description:
         description: Tier-0 description
         type: str
+
     state:
         description: present or absent keyword is used as an indetifier, default value is present.
                     If a user has provided absent that resource/sub-resource will be deleted
+
     default_rule_logging:
         description: Enable logging for whitelisted rule.
                      Indicates if logging should be enabled for the default
                      whitelisting rule.
         default: false
+
     ha_mode:
         description: High-availability Mode for Tier-0
         choices:
@@ -701,10 +762,12 @@ def create_or_update(
             - 'ACTIVE_ACTIVE'
         default: 'ACTIVE_ACTIVE'
         type: str
+
     disable_firewall:
         description: Disable or enable gateway fiewall.
         default: False
         type: bool
+
     failover_mode:
         description: Determines the behavior when a Tier-0 instance in
                      ACTIVE-STANDBY high-availability mode restarts
@@ -719,11 +782,13 @@ def create_or_update(
             - 'PREEMPTIVE'
         default: 'NON_PREEMPTIVE'
         type: str
+
     force_whitelisting:
         description: Flag to add whitelisting FW rule during
                      realization.
         default: False
         type: bool
+
     internal_transit_subnets:
         description: Internal transit subnets in CIDR format.
                      Specify subnets that are used to assign addresses
@@ -734,6 +799,7 @@ def create_or_update(
                      or 169.254.0.0/28 in ACTIVE_STANDBY mode.
         default: False
         type: list
+
     intersite_config:
         description: Inter site routing configuration when the gateway is
                      streched.
@@ -781,15 +847,18 @@ def create_or_update(
                       locally learned routes. This field is not applicable for
                       T1 gateway with no services
                 type: str
+
     ipv6_ndra_profile_id:
         description: IPv6 NDRA profile configuration on Tier0.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_dad_profile_id.
         type: str
+
     ipv6_dad_profile_id:
         description: IPv6 DRA profile configuration on Tier0.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_ndra_profile_id.
+
     rd_admin_field:
         description:
             - Route distinguisher administrator address
@@ -797,6 +866,7 @@ def create_or_update(
               administrator address should be defined if you need auto
               generation of route distinguisher on your VRF configuration
         type: str
+
     transit_subnets:
         description: Transit subnets in CIDR format.
                      Specify transit subnets that are used to assign
@@ -806,10 +876,12 @@ def create_or_update(
                      When not specified, subnet 100.64.0.0/16 is
                      configured by default.
         type: list
+
     dhcp_config_id:
         description: DHCP configuration for Segments connected to
                      Tier-0. DHCP service is configured in relay mode.
         type: str
+
     vrf_config:
         type: dict
         description: VRF config, required for VRF Tier0
@@ -819,9 +891,11 @@ def create_or_update(
                     - L3 VNI associated with the VRF for overlay traffic.
                     - VNI must be unique and belong to configured VNI pool.
                 type: int
+
             route_distinguisher:
                 description: Route distinguisher. 'ASN:<>' or 'IPAddress:<>'.
                 type: str
+
             route_targets:
                 description: Route targets
                 type: list
@@ -837,6 +911,7 @@ def create_or_update(
                                      'IPAddress:<>'
                         type: list
                         element: str
+
             tier0_id:
                 description: Default tier0 id. Cannot be modified after
                              realization. Either this or tier0_id must
@@ -845,7 +920,8 @@ def create_or_update(
     static_routes:
         type: list
         element: dict
-        description: This is a list of Static Routes that need to be created, updated, or deleted
+        description: This is a list of Static Routes that need to be created,
+                     updated, or deleted
         suboptions:
             id:
                 description: Tier-0 Static Route ID.
@@ -878,15 +954,18 @@ def create_or_update(
                         description: Cost associated with next hop route
                         type: int
                         default: 1
+
                     ip_address:
                         description: Next hop gateway IP address
                         type: str
+
                     scope:
                         description:
                             - Interface path associated with current route
                             - For example, specify a policy path referencing the
                               IPSec VPN Session
                         type: list
+
             tags:
                 description: Opaque identifiers meaningful to the API user
                 type: dict
@@ -899,15 +978,18 @@ def create_or_update(
                         description: Tag value.
                         required: true
                         type: str
+
     bfd_peers:
         type: list
         element: dict
-        description: This is a list of BFD Peers that need to be created, updated, or deleted
+        description: This is a list of BFD Peers that need to be created,
+                     updated, or deleted
         suboptions:
             id:
                 description: Tier-0 BFD Peer ID.
                 required: false
                 type: str
+
             display_name:
                 description:
                     - Tier-0 BFD Peer display name.
@@ -915,38 +997,47 @@ def create_or_update(
                       specified, id takes precedence.
                 required: false
                 type: str
+
             description:
                 description:
                     - Tier-0 BFD Peer description. config
                 type: str
+
             state:
                 description: present or absent keyword is used as an indetifier, default value is present.
                              If a user has provided absent that resource/sub-resource will be deleted
+
             bfd_profile_id:
                 description:
                     - The associated BFD Profile ID
                     - Either this or bfd_profile_display_name must be specified
                     - BFD Profile is not supported for IPv6 networks.
                 type: str
+
             enabled:
                 description: Flag to enable BFD peer.
                 type: boolean
+
             peer_address:
-                description: IP Address of static route next hop peer. Only IPv4 addresses are supported
+                description: IP Address of static route next hop peer. Only IPv4 addresses are supported.
                              Only a single BFD config per peer address is allowed.
                 type: str
+
             source_addresses:
                 description: List of source IP addresses. Array of Tier0 external interface IP addresses. BFD peering
                              is established from all these source addresses to the neighbor specified in peer_address.
                              Only IPv4 addresses are supported.(Minimum-0, Maximum-8 values are allowed)
                 type: list
                 elements: IPv4 addresse strings
+
             scope:
                 description: Array of policy paths of locale services. Represents the array of policy paths of
                              locale services where this BFD peer should get relalized on. The locale service service
                              and this BFD peer must belong to the same router. Default scope is empty.
+
                 type: list
                 elements: policy path string of locale services
+
             tags:
                 description: Opaque identifiers meaningful to the API user
                 type: dict
@@ -962,12 +1053,14 @@ def create_or_update(
     locale_services:
         type: list
         element: dict
-        description: This is a list of Locale Services that need to be created,updated, or deleted
+        description: This is a list of Locale Services that need to be created,
+                     updated, or deleted
         suboptions:
             id:
                 description: Tier-0 Locale Service ID.
                 required: false
                 type: str
+
             display_name:
                 description:
                     - Tier-0 Locale Service display name.
@@ -975,13 +1068,16 @@ def create_or_update(
                       specified, id takes precedence
                 required: false
                 type: str
+
             description:
                 description:
                     - Tier-0 Locale Service  description.
                 type: str
+
             state:
                 description: present or absent keyword is used as an indetifier, default value is present.
                              If a user has provided absent that resource/sub-resource will be deleted
+
             tags:
                 description: Opaque identifiers meaningful to the API user
                 type: dict
@@ -994,6 +1090,7 @@ def create_or_update(
                         description: Tag value.
                         required: true
                         type: str
+
             edge_cluster_info:
                 description: Used to create path to edge cluster. Auto-assigned
                             if associated enforcement-point has only one edge
@@ -1004,13 +1101,17 @@ def create_or_update(
                         description: site_id where edge cluster is located
                         default: default
                         type: str
+
                     enforcementpoint_id:
-                        description: enforcementpoint_id where edge cluster is located
+                        description: enforcementpoint_id where edge cluster is
+                                    located
                         default: default
                         type: str
+
                     edge_cluster_id:
                         description: ID of the edge cluster
                         type: str
+
             preferred_edge_nodes_info:
                 description: Used to create paths to edge nodes. Specified edge
                             is used as preferred edge cluster member when
@@ -1022,16 +1123,22 @@ def create_or_update(
                         description: site_id where edge node is located
                         default: default
                         type: str
+
                     enforcementpoint_id:
-                        description: enforcementpoint_id where edge node is located
+                        description: enforcementpoint_id where edge node is
+                                    located
                         default: default
                         type: str
+
                     edge_cluster_id:
-                        description: edge_cluster_id where edge node is located
+                        description: edge_cluster_id where edge node is
+                                    located
                         type: str
+
                     edge_node_id:
                         description: ID of the edge node
                         type: str
+
             route_redistribution_config:
                 description: Configure all route redistribution properties like
                              enable/disable redistributon, redistribution rule
@@ -1042,6 +1149,7 @@ def create_or_update(
                         description: Flag to enable route redistribution.
                         type: bool
                         default: false
+
                     redistribution_rules:
                         description: List of redistribution rules.
                         type: list
@@ -1050,10 +1158,12 @@ def create_or_update(
                             name:
                                 description: Rule name
                                 type: str
+
                             route_map_path:
                                 description: Route map to be associated with
                                              the redistribution rule
                                 type: str
+
                             route_redistribution_types:
                                 description: Tier-0 route redistribution types
                                 choices:
@@ -1149,9 +1259,10 @@ def create_or_update(
             bgp:
                 description: Specify the BGP spec in this section
                 type: dict
+
                 state:
-                    description: present or absent keyword is used as an indetifier, default value is present,
-                                 If a user has provided absent that resource/sub-resource will be deleted.
+                    description: present or absent keyword is used as an indetifier, default value is present.
+                                 If a user has provided absent that resource/sub-resource will be deleted
                 suboptions:
                     ecmp:
                         description: Flag to enable ECMP.
@@ -1268,13 +1379,14 @@ def create_or_update(
                                      deleted
                         type: list
                         element: dict
+
                         state:
                             description: present or absent keyword is used as an indetifier, default value is present.
                                          If a user has provided absent that resource/sub-resource will be deleted
                         suboptions:
                             allow_as_in:
                                 description: Flag to enable allowas_in option
-                                             for BGP neighbor.
+                                             for BGP neighbor
                                 type: bool
                                 default: False
                             bfd:
@@ -1287,14 +1399,14 @@ def create_or_update(
                                 suboptions:
                                     enabled:
                                         description: Flag to enable BFD
-                                                     cofiguration.
+                                                     cofiguration
                                         type: bool
                                         required: False
                                     interval:
                                         description: Time interval between
                                                      heartbeat packets in
                                                      milliseconds. Min 300 and
-                                                     Max 60000.
+                                                     Max 60000
                                         type: int
                                         default: 1000
                                     multiple:
@@ -1303,7 +1415,7 @@ def create_or_update(
                                             - Number of times heartbeat packet
                                               is missed before BFD declares the
                                               neighbor is down.
-                                              Min 2 and Max 16.
+                                              Min 2 and Max 16
                                         type: int
                                         default: 3
                             graceful_restart_mode:
@@ -1330,7 +1442,7 @@ def create_or_update(
                             hold_down_time:
                                 description: Wait time in seconds before
                                              declaring peer dead. Min 1 and Max
-                                             65535.
+                                             65535
                                 type: int
                                 default: 180
                             keep_alive_time:
@@ -1342,7 +1454,7 @@ def create_or_update(
                             maximum_hop_limit:
                                 description: Maximum number of hops allowed to
                                              reach BGP neighbor. Min 1 and Max
-                                             255.
+                                             255
                                 type: int
                                 default: 1
                             address:
@@ -1357,12 +1469,12 @@ def create_or_update(
                                 required: False
                             remote_as_num:
                                 description: 4 Byte ASN of the neighbor in
-                                             ASPLAIN Format.
+                                             ASPLAIN Format
                                 type: str
                                 required: True
                             route_filtering:
                                 description: Enable address families and route
-                                             filtering in each direction.
+                                             filtering in each direction
                                 type: list
                                 elements: dict
                                 required: False
@@ -1377,7 +1489,7 @@ def create_or_update(
                                             - 'VPN'
                                     enabled:
                                         description: Flag to enable address
-                                                     family.
+                                                     family
                                         type: bool
                                         default: True
                                     in_route_filters:
@@ -1447,7 +1559,7 @@ def create_or_update(
                             - absent
                     tags:
                         description: Opaque identifiers meaningful to the API
-                                     user.
+                                     user
                         type: dict
                         suboptions:
                             scope:
@@ -1490,6 +1602,7 @@ def create_or_update(
                         choices:
                             - NONE
                             - STRICT
+                        default: STRICT
                     segment_id:
                         description: Specify Segment to which this interface is
                                      connected to. Required if id is specified.
@@ -1506,6 +1619,7 @@ def create_or_update(
                             - "EXTERNAL"
                             - "LOOPBACK"
                             - "SERVICE"
+                        default: "EXTERNAL"
                         type: str
                     edge_node_info:
                         description:
@@ -1521,7 +1635,7 @@ def create_or_update(
                                 type: str
                             enforcementpoint_id:
                                 description: enforcementpoint_id where edge
-                                             node is located.
+                                             node is located
                                 default: default
                                 type: str
                             edge_cluster_id:
@@ -1537,41 +1651,20 @@ def create_or_update(
                             - Specify IP address and network prefix for
                               interface.
                             - Required if I(id != null).
-                        required: False
                         type: list
     """
     execution_logs = []
     try:
         nsxt_tier0 = NSXTTier0()
         nsxt_tier0.create_or_update(
-            hostname=hostname,
-            username=username,
-            password=password,
-            execution_logs=execution_logs,
-            cert=cert,
-            cert_common_name=cert_common_name,
-            verify_ssl=verify_ssl,
-            arp_limit=arp_limit,
-            bfd_peers=bfd_peers,
-            description=description,
-            display_name=display_name,
-            default_rule_logging=default_rule_logging,
-            dhcp_config_id=dhcp_config_id,
-            disable_firewall=disable_firewall,
-            failover_mode=failover_mode,
-            force_whitelisting=force_whitelisting,
-            ha_mode=ha_mode,
-            id=id,
-            internal_transit_subnets=internal_transit_subnets,
-            intersite_config=intersite_config,
-            ipv6_ndra_profile_id=ipv6_ndra_profile_id,
-            ipv6_dad_profile_id=ipv6_dad_profile_id,
-            locale_services=locale_services,
-            rd_admin_field=rd_admin_field,
-            static_routes=static_routes,
-            tags=tags,
-            transit_subnets=transit_subnets,
-            vrf_config=vrf_config,
+            hostname,
+            username,
+            password,
+            cert,
+            cert_common_name,
+            verify_ssl,
+            execution_logs,
+            **kwargs
         )
         return execution_logs
     except SaltInvocationError as e:
@@ -1584,20 +1677,27 @@ def delete(
 ):
     """
     Deletes a Tier 0 gateway and it sub-resources
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     tier0_id
         id of the tier 0 to be deleted
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
+        Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
@@ -1628,20 +1728,27 @@ def get_hierarchy(
 ):
     """
     Returns entire hieararchy of Tier 0 gateway and its sub-resources
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     tier0_id
         id of the tier 0 gateway
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
+        Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
