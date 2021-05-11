@@ -77,10 +77,8 @@ class NSXTTier1(NSXTPolicyBaseResource):
         resource_params["resource_type"] = "Tier1"
 
         ipv6_profile_paths = []
-        ipv6_ndra_profile_id = None
-        if kwargs.get("ipv6_ndra_profile_id"):
-            ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
-        elif kwargs.get("ipv6_ndra_profile_display_name"):
+        ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
+        if not ipv6_ndra_profile_id and kwargs.get("ipv6_ndra_profile_display_name"):
             ipv6_ndra_profile_id = self.get_id_using_display_name(
                 url=(
                     NSXTTier1.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
@@ -91,10 +89,8 @@ class NSXTTier1(NSXTPolicyBaseResource):
         if ipv6_ndra_profile_id:
             ipv6_profile_paths.append(IPV6_NDRA_PROFILE_URL + "/" + ipv6_ndra_profile_id)
 
-        ipv6_dad_profile_id = None
-        if kwargs.get("ipv6_dad_profile_id"):
-            ipv6_dad_profile_id = kwargs.get("ipv6_dad_profile_id")
-        elif kwargs.get("ipv6_dad_profile_display_name"):
+        ipv6_dad_profile_id = kwargs.get("ipv6_dad_profile_id")
+        if not ipv6_dad_profile_id and kwargs.get("ipv6_dad_profile_display_name"):
             ipv6_dad_profile_id = self.get_id_using_display_name(
                 url=(
                     NSXTTier1.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
@@ -108,10 +104,8 @@ class NSXTTier1(NSXTPolicyBaseResource):
         if ipv6_profile_paths:
             resource_params["ipv6_profile_paths"] = ipv6_profile_paths
 
-        dhcp_config_id = None
-        if kwargs.get("dhcp_config_id"):
-            dhcp_config_id = kwargs.get("dhcp_config_id")
-        elif kwargs.get("dhcp_config_display_name"):
+        dhcp_config_id = kwargs.get("dhcp_config_id")
+        if not dhcp_config_id and kwargs.get("dhcp_config_display_name"):
             dhcp_config_id = self.get_id_using_display_name(
                 url=(
                     NSXTTier1.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
@@ -122,10 +116,8 @@ class NSXTTier1(NSXTPolicyBaseResource):
         if dhcp_config_id:
             resource_params["dhcp_config_paths"] = [DHCP_RELAY_CONFIG_URL + "/" + dhcp_config_id]
 
-        tier0_id = None
-        if kwargs.get("tier0_id"):
-            tier0_id = kwargs.get("tier0_id")
-        elif kwargs.get("tier0_display_name"):
+        tier0_id = kwargs.get("tier0_id")
+        if not tier0_id and kwargs.get("tier0_display_name"):
             tier0_id = self.get_id_using_display_name(
                 url=(
                     NSXTTier1.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
@@ -166,14 +158,15 @@ class NSXTTier1(NSXTPolicyBaseResource):
                 "_revision",
             }
 
-            if kwargs.get("static_routes") and len(kwargs.get("static_routes")) > 0:
-                static_routes = kwargs.get("static_routes")
+            static_routes = kwargs.get("static_routes")
+            if static_routes and len(static_routes) > 0:
 
                 for static_route in static_routes:
                     resource_params = {}
                     for key in fields:
-                        if static_route.get(key):
-                            resource_params[key] = static_route.get(key)
+                        val = static_route.get(key)
+                        if val:
+                            resource_params[key] = val
 
                     if not resource_params.get("id"):
                         resource_params["id"] = resource_params["display_name"]
@@ -210,7 +203,8 @@ class NSXTTier1(NSXTPolicyBaseResource):
                 "_revision",
             }
 
-            if kwargs.get("locale_services") and len(kwargs.get("locale_services")) > 0:
+            locale_services = kwargs.get("locale_services")
+            if locale_services and len(locale_services) > 0:
                 locale_services = kwargs.get("locale_services")
                 base_url = NSXTPolicyBaseResource.get_nsxt_base_url().format(
                     self.nsx_resource_params["hostname"]
@@ -224,18 +218,18 @@ class NSXTTier1(NSXTPolicyBaseResource):
 
                     resource_params["resource_type"] = "LocaleServices"
 
-                    if locale_service.get("edge_cluster_info"):
-                        edge_cluster_info = locale_service.get("edge_cluster_info")
+                    edge_cluster_info = locale_service.get("edge_cluster_info")
+                    if edge_cluster_info:
                         site_id = edge_cluster_info["site_id"]
                         enforcementpoint_id = edge_cluster_info["enforcementpoint_id"]
                         edge_cluster_base_url = EDGE_CLUSTER_URL.format(
                             site_id, enforcementpoint_id
                         )
 
-                        edge_cluster_id = None
-                        if edge_cluster_info.get("edge_cluster_id"):
-                            edge_cluster_id = edge_cluster_info.get("edge_cluster_id")
-                        elif edge_cluster_info.get("edge_cluster_display_name"):
+                        edge_cluster_id = edge_cluster_info.get("edge_cluster_id")
+                        if not edge_cluster_info and edge_cluster_info.get(
+                            "edge_cluster_display_name"
+                        ):
                             edge_cluster_id = self.get_id_using_display_name(
                                 url=(base_url + edge_cluster_base_url),
                                 display_name=edge_cluster_info.get("edge_cluster_display_name"),
@@ -245,8 +239,8 @@ class NSXTTier1(NSXTPolicyBaseResource):
                                 edge_cluster_base_url + "/" + edge_cluster_id
                             )
 
-                    if locale_service.get("preferred_edge_nodes_info"):
-                        preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
+                    preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
+                    if preferred_edge_nodes_info:
                         resource_params["preferred_edge_paths"] = []
                         for preferred_edge_node_info in preferred_edge_nodes_info:
                             site_id = preferred_edge_node_info.get("site_id", "default")
@@ -257,10 +251,10 @@ class NSXTTier1(NSXTPolicyBaseResource):
                                 site_id, enforcementpoint_id
                             )
 
-                            edge_cluster_id = None
-                            if preferred_edge_node_info.get("edge_cluster_id"):
-                                edge_cluster_id = preferred_edge_node_info.get("edge_cluster_id")
-                            elif preferred_edge_node_info.get("edge_cluster_display_name"):
+                            edge_cluster_id = preferred_edge_node_info.get("edge_cluster_id")
+                            if not edge_cluster_info and preferred_edge_node_info.get(
+                                "edge_cluster_display_name"
+                            ):
                                 edge_cluster_id = self.get_id_using_display_name(
                                     url=(
                                         NSXTTier1.get_nsxt_base_url().format(
@@ -298,10 +292,8 @@ class NSXTTier1(NSXTPolicyBaseResource):
                                         edge_node_base_url + "/" + edge_node_id
                                     )
 
-                    bfd_profile_id = None
-                    if locale_service.get("bfd_profile_id"):
-                        bfd_profile_id = locale_service.get("bfd_profile_id")
-                    elif locale_service.get("bfd_profile_display_name"):
+                    bfd_profile_id = locale_service.get("bfd_profile_id")
+                    if not bfd_profile_id and locale_service.get("bfd_profile_display_name"):
                         bfd_profile_id = self.get_id_using_display_name(
                             url=(
                                 NSXTTier1.get_nsxt_base_url().format(
@@ -317,9 +309,10 @@ class NSXTTier1(NSXTPolicyBaseResource):
                             bfd_profile_id
                         )
 
-                    if locale_service.get("ha_vip_configs"):
+                    ha_vip_configs = locale_service.get("ha_vip_configs")
+                    if ha_vip_configs:
                         resource_params["ha_vip_configs"] = []
-                        for ha_vip_config in locale_service.get("ha_vip_configs"):
+                        for ha_vip_config in ha_vip_configs:
                             external_interface_info = ha_vip_config.pop("external_interface_info")
                             external_interface_paths = []
                             for external_interface in external_interface_info:
@@ -435,14 +428,13 @@ class NSXTTier1(NSXTPolicyBaseResource):
                             resource_params = {}
                             resource_params["resource_type"] = "Tier1Interface"
                             for field in fields:
-                                if interface.get(field):
-                                    resource_params[field] = interface[field]
+                                val = interface.get(field)
+                                if val:
+                                    resource_params[field] = val
 
                             # segment_id is a required attr
-                            segment_id = None
-                            if interface.get("segment_id"):
-                                segment_id = interface.get("segment_id")
-                            elif interface.get("segment_display_name"):
+                            segment_id = interface.get("segment_id")
+                            if not segment_id and interface.get("segment_display_name"):
                                 segment_id = self.get_id_using_display_name(
                                     url=(
                                         NSXTTier1.get_nsxt_base_url().format(
@@ -473,10 +465,8 @@ class NSXTTier1(NSXTPolicyBaseResource):
                                     IPV6_NDRA_PROFILE_URL + "/" + ipv6_ndra_profile_id
                                 ]
 
-                            dhcp_config_id = None
-                            if interface.get("dhcp_config_id"):
-                                dhcp_config_id = interface.get("dhcp_config_id")
-                            elif interface.get("dhcp_config_display_name"):
+                            dhcp_config_id = interface.get("segment_id")
+                            if not dhcp_config_id and interface.get("dhcp_config_display_name"):
                                 dhcp_config_id = self.get_id_using_display_name(
                                     url=(
                                         NSXTTier1.get_nsxt_base_url().format(

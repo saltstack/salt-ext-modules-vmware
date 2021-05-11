@@ -75,8 +75,9 @@ class NSXTTier0(NSXTPolicyBaseResource):
 
         resource_params = {}
         for field in fields:
-            if kwargs.get(field):
-                resource_params[field] = kwargs[field]
+            val = kwargs.get(field)
+            if val:
+                resource_params[field] = val
 
         resource_params["resource_type"] = "Tier0"
 
@@ -87,21 +88,23 @@ class NSXTTier0(NSXTPolicyBaseResource):
         base_url = NSXTPolicyBaseResource.get_nsxt_base_url().format(
             self.nsx_resource_params["hostname"]
         )
-        if kwargs.get("ipv6_ndra_profile_id"):
-            ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
+        ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
+        if ipv6_ndra_profile_id:
             ipv6_profile_paths.append(IPV6_NDRA_PROFILE_URL + "/" + ipv6_ndra_profile_id)
-        if kwargs.get("ipv6_dad_profile_id"):
-            ipv6_dad_profile_id = kwargs.get("ipv6_dad_profile_id")
+
+        ipv6_dad_profile_id = kwargs.get("ipv6_dad_profile_id")
+        if ipv6_dad_profile_id:
             ipv6_profile_paths.append(IPV6_DAD_PROFILE_URL + "/" + ipv6_dad_profile_id)
+
         if ipv6_profile_paths:
             resource_params["ipv6_profile_paths"] = ipv6_profile_paths
 
-        if kwargs.get("dhcp_config_id"):
-            dhcp_config_id = kwargs.get("dhcp_config_id")
+        dhcp_config_id = kwargs.get("dhcp_config_id")
+        if dhcp_config_id:
             resource_params["dhcp_config_paths"] = [DHCP_RELAY_CONFIG_URL + "/" + dhcp_config_id]
 
-        if kwargs.get("vrf_config"):
-            vrf_config = kwargs["vrf_config"]
+        vrf_config = kwargs.get("vrf_config")
+        if vrf_config:
             vrf_resource_params = {}
 
             tier0_id = vrf_config.get("tier0_id")
@@ -117,8 +120,9 @@ class NSXTTier0(NSXTPolicyBaseResource):
             vrf_fields = {"evpn_l2_vni_config", "evpn_transit_vni", "route_distinguisher"}
 
             for field in vrf_fields:
-                if vrf_config.get(field):
-                    vrf_resource_params[field] = vrf_config[field]
+                val = vrf_config.get(field)
+                if val:
+                    vrf_resource_params[field] = val
 
             if "route_targets" in vrf_config:
                 route_targets = vrf_config["route_targets"] or []
@@ -161,14 +165,15 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 "_revision",
             }
 
-            if kwargs.get("static_routes") and len(kwargs.get("static_routes")) > 0:
-                static_routes = kwargs.get("static_routes")
+            static_routes = kwargs.get("static_routes")
+            if static_routes and len(static_routes) > 0:
 
                 for static_route in static_routes:
                     resource_params = {}
                     for key in fields:
-                        if static_route.get(key):
-                            resource_params[key] = static_route.get(key)
+                        val = static_route.get(key)
+                        if val:
+                            resource_params[key] = val
 
                     if not resource_params.get("id"):
                         resource_params["id"] = resource_params["display_name"]
@@ -210,11 +215,11 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 "_revision",
             }
             self.multi_resource_params = []
-            if kwargs.get("bfd_peers") and len(kwargs.get("bfd_peers")) > 0:
+            bfd_peers = kwargs.get("bfd_peers")
+            if bfd_peers and len(bfd_peers) > 0:
                 base_url = NSXTPolicyBaseResource.get_nsxt_base_url().format(
                     self.nsx_resource_params["hostname"]
                 )
-                bfd_peers = kwargs.get("bfd_peers")
 
                 for bfd_peer in bfd_peers:
                     resource_params = {}
@@ -260,8 +265,8 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 "_revision",
             }
 
-            if kwargs.get("locale_services") and len(kwargs.get("locale_services")) > 0:
-                locale_services = kwargs.get("locale_services")
+            locale_services = kwargs.get("locale_services")
+            if locale_services and len(locale_services) > 0:
                 base_url = NSXTPolicyBaseResource.get_nsxt_base_url().format(
                     self.nsx_resource_params["hostname"]
                 )
@@ -274,8 +279,8 @@ class NSXTTier0(NSXTPolicyBaseResource):
 
                     resource_params["resource_type"] = "LocaleServices"
 
-                    if locale_service.get("edge_cluster_info"):
-                        edge_cluster_info = locale_service.get("edge_cluster_info")
+                    edge_cluster_info = locale_service.get("edge_cluster_info")
+                    if edge_cluster_info:
                         site_id = edge_cluster_info["site_id"]
                         enforcementpoint_id = edge_cluster_info["enforcementpoint_id"]
 
@@ -288,8 +293,8 @@ class NSXTTier0(NSXTPolicyBaseResource):
                             edge_cluster_base_url + "/" + edge_cluster_id
                         )
 
+                    preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
                     if locale_service.get("preferred_edge_nodes_info"):
-                        preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
                         resource_params["preferred_edge_paths"] = []
                         for preferred_edge_node_info in preferred_edge_nodes_info:
                             site_id = preferred_edge_node_info.get("site_id", "default")
@@ -309,10 +314,10 @@ class NSXTTier0(NSXTPolicyBaseResource):
                             resource_params["preferred_edge_paths"].append(
                                 edge_node_base_url + "/" + edge_node_id
                             )
-
-                    if locale_service.get("ha_vip_configs"):
+                    ha_vip_configs = locale_service.get("ha_vip_configs")
+                    if ha_vip_configs:
                         resource_params["ha_vip_configs"] = []
-                        for ha_vip_config in locale_service["ha_vip_configs"]:
+                        for ha_vip_config in ha_vip_configs:
                             external_interface_info = ha_vip_config.get("external_interface_info")
                             external_interface_paths = []
                             for external_interface in external_interface_info:
@@ -393,8 +398,9 @@ class NSXTTier0(NSXTPolicyBaseResource):
                         for interface in interfaces:
                             resource_params = {}
                             for field in fields:
-                                if interface.get(field):
-                                    resource_params[field] = interface[field]
+                                val = interface.get(field)
+                                if val:
+                                    resource_params[field] = val
 
                             ipv6_profile_paths = []
                             if interface.get("ipv6_ndra_profile_id"):
@@ -494,12 +500,14 @@ class NSXTTier0(NSXTPolicyBaseResource):
                         ),
                         None,
                     )
-                    if locale_service and locale_service.get("bgp"):
+                    bgp = locale_service.get("bgp")
+                    if locale_service and bgp:
                         bgp = locale_service.get("bgp")
 
                         for field in fields:
-                            if bgp.get(field):
-                                resource_params[field] = bgp[field]
+                            val = bgp.get(field)
+                            if val:
+                                resource_params[field] = val
 
                         resource_params["resource_type"] = "BgpRoutingConfig"
                         resource_params["id"] = "bgp"
@@ -555,14 +563,15 @@ class NSXTTier0(NSXTPolicyBaseResource):
                             ),
                             None,
                         )
-                        if locale_service and locale_service.get("bgp"):
-                            neighbors = locale_service.get("bgp").get("neighbors")
+                        neighbors = locale_service.get("bgp").get("neighbors")
+                        if locale_service and neighbors:
 
                             for neighbor in neighbors:
                                 resource_params = {}
                                 for field in fields:
-                                    if neighbor.get(field):
-                                        resource_params[field] = neighbor[field]
+                                    val = neighbor.get(field)
+                                    if val:
+                                        resource_params[field] = val
 
                                 resource_params["resource_type"] = "BgpNeighborConfig"
 
