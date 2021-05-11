@@ -3,6 +3,7 @@ Salt Module to perform CRUD operations for NSX-T's IP Address Pools
 """
 import logging
 
+from saltext.vmware.utils import common_utils
 from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
@@ -14,46 +15,6 @@ IP_POOLS_BASE_URL = "https://{}/api/v1/pools/ip-pools"
 
 def __virtual__():
     return __virtual_name__
-
-
-def _create_payload_for_update(ip_pool_id, revision, display_name, **kwargs):
-    updatable_fields = ["description", "subnets", "tags", "ip_release_delay"]
-    ip_pool_to_update = {
-        "id": ip_pool_id,
-        "_revision": revision,
-        "display_name": display_name,
-    }
-
-    for field in updatable_fields:
-        val = kwargs.get(field)
-        if val:
-            ip_pool_to_update[field] = val
-
-    return ip_pool_to_update
-
-
-def _create_query_params(**kwargs):
-    allowed_query_params = ["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"]
-
-    query_params = dict()
-    for param in allowed_query_params:
-        val = kwargs.get(param)
-        if val:
-            query_params[param] = kwargs.get(param)
-
-    return query_params
-
-
-def _create_payload_for_create(**kwargs):
-    fields = ["display_name", "description", "subnets", "tags", "ip_release_delay"]
-    ip_pool_to_create = {}
-
-    for field in fields:
-        val = kwargs.get(field)
-        if val:
-            ip_pool_to_create[field] = val
-
-    return ip_pool_to_create
 
 
 def get(
@@ -121,7 +82,9 @@ def get(
     log.info("Fetching IP Address Pools")
     url = IP_POOLS_BASE_URL.format(hostname)
 
-    params = _create_query_params(
+    params = common_utils._filter_kwargs(
+        allowed_kwargs=["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"],
+        default_dict=None,
         cursor=cursor,
         included_fields=included_fields,
         page_size=page_size,
@@ -183,34 +146,19 @@ def get_by_display_name(
 
     log.info("Finding IP Address Pool with display name: %s", display_name)
 
-    ip_pools = list()
-    page_cursor = None
+    ip_pools = common_utils._read_paginated(
+        func=get,
+        display_name=display_name,
+        hostname=hostname,
+        username=username,
+        password=password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+    )
 
-    while True:
-        ip_pools_paginated = get(
-            hostname,
-            username,
-            password,
-            verify_ssl=verify_ssl,
-            cert=cert,
-            cert_common_name=cert_common_name,
-            cursor=page_cursor,
-        )
-
-        # check if error dictionary is returned
-        if "error" in ip_pools_paginated:
-            return ip_pools_paginated
-
-        # add all the ip pools from paginated response with given display name to list
-        for ip_pool in ip_pools_paginated["results"]:
-            if ip_pool.get("display_name") == display_name:
-                ip_pools.append(ip_pool)
-
-        # if cursor is not present then we are on the last page, end loop
-        if "cursor" not in ip_pools_paginated:
-            break
-        # updated query parameter with cursor
-        page_cursor = ip_pools_paginated["cursor"]
+    if "error" in ip_pools:
+        return ip_pools
 
     return {"results": ip_pools}
 
@@ -301,13 +249,15 @@ def create(
         ]'
 
     ip_release_delay
-        (Optional) Delay in milliseconds, while releasing allocated IP address from IP pool (Default is 2 mins).
+        (Optional) Delay in milliseconds, while releasing allocated IP address from IP pool (Default is 2 mins - configured on NSX device).
     """
 
     log.info("Creating IP Address Pool")
     url = IP_POOLS_BASE_URL.format(hostname)
 
-    req_data = _create_payload_for_create(
+    req_data = common_utils._filter_kwargs(
+        allowed_kwargs=["display_name", "description", "subnets", "tags", "ip_release_delay"],
+        default_dict=None,
         display_name=display_name,
         description=description,
         tags=tags,
@@ -427,10 +377,13 @@ def update(
     log.info("Updating IP Address Pool %s", display_name)
     url = IP_POOLS_BASE_URL.format(hostname) + "/{}".format(ip_pool_id)
 
-    req_data = _create_payload_for_update(
-        ip_pool_id,
-        revision,
-        display_name=display_name,
+    req_data = common_utils._filter_kwargs(
+        allowed_kwargs=["description", "subnets", "tags", "ip_release_delay"],
+        default_dict={
+            "id": ip_pool_id,
+            "_revision": revision,
+            "display_name": display_name,
+        },
         description=description,
         tags=tags,
         subnets=subnets,

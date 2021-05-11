@@ -24,12 +24,6 @@ _mock_ip_block = {
     "_revision": 0,
 }
 
-auth_err_json = {
-    "module_name": "common-services",
-    "error_message": "The credentials were incorrect or the account specified has been locked.",
-    "error_code": 403,
-}
-
 error_json = {"error": "The credentials were incorrect or the account specified has been locked."}
 
 

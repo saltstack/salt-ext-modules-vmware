@@ -71,7 +71,7 @@ def test_publish_fqdns_enabled_with_execution_error():
         "The credentials were incorrect or the account specified has been locked."
         == result["comment"]
     )
-    assert not bool(result["result"])
+    assert result["result"] == False
 
 
 def test_publish_fqdns_enabled_when_disabled_with_basic_auth():
@@ -95,7 +95,7 @@ def test_publish_fqdns_enabled_when_disabled_with_basic_auth():
     assert result
     assert {"new": _mocked_response_enabled, "old": _mocked_response_disabled} == result["changes"]
     assert "publish_fqdns has been set to True" == result["comment"]
-    assert bool(result["result"])
+    assert result["result"] == True
 
 
 def test_publish_fqdns_disabled_when_enabled_with_basic_auth():
@@ -119,7 +119,7 @@ def test_publish_fqdns_disabled_when_enabled_with_basic_auth():
     assert result
     assert {"new": _mocked_response_disabled, "old": _mocked_response_enabled} == result["changes"]
     assert "publish_fqdns has been set to False" == result["comment"]
-    assert bool(result["result"])
+    assert result["result"] == True
 
 
 def test_publish_fqdns_enabled_when_enabled_with_basic_auth():
@@ -143,7 +143,7 @@ def test_publish_fqdns_enabled_when_enabled_with_basic_auth():
     assert result
     assert {} == result["changes"]
     assert "publish_fqdns is already set to True" == result["comment"]
-    assert bool(result["result"])
+    assert result["result"] == True
 
 
 def test_publish_fqdns_disabled_when_disabled_with_basic_auth():
@@ -167,7 +167,7 @@ def test_publish_fqdns_disabled_when_disabled_with_basic_auth():
     assert result
     assert {} == result["changes"]
     assert "publish_fqdns is already set to False" == result["comment"]
-    assert bool(result["result"])
+    assert result["result"] == True
 
 
 def test_publish_fqdns_disabled_test_mode():

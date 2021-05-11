@@ -32,25 +32,29 @@ def call_api(
         session.mount("https://", HostHeaderSSLAdapter())
         headers["Host"] = cert_common_name
 
-    try:
-        if verify_ssl and not cert:
-            return {
+    verify = verify_ssl
+    if verify_ssl:
+        if cert:
+            verify = cert
+        else:
+            result = {
                 "error": "No certificate path specified. Please specify certificate path in cert parameter"
             }
-        elif not verify_ssl:
-            cert = False
+            return result
+
+    try:
         response = session.request(
             method=method,
             url=url,
             headers=headers,
             auth=HTTPBasicAuth(username, password),
-            verify=cert,
+            verify=verify,
             params=params,
             data=json.dumps(data),
         )
+        log.info("Response status code: {}".format(response.status_code))
         # raise error for any client/server HTTP Error codes
         response.raise_for_status()
-        log.info("Response status code: {}".format(response.status_code))
 
         if not response.text:
             return None
@@ -65,7 +69,7 @@ def call_api(
         }
         # if response contains json, extract error message from it
         if e.response.text:
-            log.error("Response from NSX-T Manager {}".format(e.response.text))
+            log.error("Response from NSX-T Manager %s", e.response.text)
             try:
                 error_json = e.response.json()
                 if error_json["error_message"]:

@@ -3,6 +3,7 @@ Salt Module to perform CRUD operations for NSX-T's IP Address Blocks
 """
 import logging
 
+from saltext.vmware.utils import common_utils
 from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
@@ -14,47 +15,6 @@ IP_BLOCKS_BASE_URL = "https://{}/api/v1/pools/ip-blocks"
 
 def __virtual__():
     return __virtual_name__
-
-
-def _create_payload_for_update(ip_block_id, revision, display_name, cidr, **kwargs):
-    updatable_fields = ["description", "tags"]
-    ip_block_to_update = {
-        "id": ip_block_id,
-        "_revision": revision,
-        "display_name": display_name,
-        "cidr": cidr,
-    }
-
-    for field in updatable_fields:
-        val = kwargs.get(field)
-        if val:
-            ip_block_to_update[field] = val
-
-    return ip_block_to_update
-
-
-def _create_payload_for_create(cidr, **kwargs):
-    fields = ["display_name", "description", "tags"]
-    ip_block_to_create = {"cidr": cidr}
-
-    for field in fields:
-        val = kwargs.get(field)
-        if val:
-            ip_block_to_create[field] = val
-
-    return ip_block_to_create
-
-
-def _create_query_params(**kwargs):
-    allowed_query_params = ["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"]
-
-    query_params = dict()
-    for param in allowed_query_params:
-        val = kwargs.get(param)
-        if val:
-            query_params[param] = val
-
-    return query_params
 
 
 def get(
@@ -122,7 +82,9 @@ def get(
     log.info("Fetching IP Address Blocks")
     url = IP_BLOCKS_BASE_URL.format(hostname)
 
-    params = _create_query_params(
+    params = common_utils._filter_kwargs(
+        allowed_kwargs=["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"],
+        default_dict=None,
         cursor=cursor,
         included_fields=included_fields,
         page_size=page_size,
@@ -185,34 +147,20 @@ def get_by_display_name(
     log.info("Finding IP Address Blocks with display name: %s", display_name)
 
     ip_blocks = list()
-    page_cursor = None
 
-    # There is a scope to refactor this loop as it exists across the modules, team maynot take this up in phase I
-    while True:
-        ip_blocks_paginated = get(
-            hostname,
-            username,
-            password,
-            verify_ssl=verify_ssl,
-            cert=cert,
-            cert_common_name=cert_common_name,
-            cursor=page_cursor,
-        )
+    ip_blocks = common_utils._read_paginated(
+        func=get,
+        display_name=display_name,
+        hostname=hostname,
+        username=username,
+        password=password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+    )
 
-        # check if error dictionary is returned
-        if "error" in ip_blocks_paginated:
-            return ip_blocks_paginated
-
-        # add all the ip blocks from paginated response with given display name to list
-        for ip_block in ip_blocks_paginated["results"]:
-            if ip_block.get("display_name") == display_name:
-                ip_blocks.append(ip_block)
-
-        # if cursor is not present then we are on the last page, end loop
-        if "cursor" not in ip_blocks_paginated:
-            break
-        # updated query parameter with cursor
-        page_cursor = ip_blocks_paginated["cursor"]
+    if "error" in ip_blocks:
+        return ip_blocks
 
     return {"results": ip_blocks}
 
@@ -289,9 +237,14 @@ def create(
     log.info("Creating IP Address Block")
     url = IP_BLOCKS_BASE_URL.format(hostname)
 
-    req_data = _create_payload_for_create(
-        cidr=cidr, display_name=display_name, description=description, tags=tags
+    req_data = common_utils._filter_kwargs(
+        allowed_kwargs=["display_name", "description", "tags"],
+        default_dict={"cidr": cidr},
+        display_name=display_name,
+        description=description,
+        tags=tags,
     )
+
     return nsxt_request.call_api(
         method="post",
         url=url,
@@ -383,11 +336,14 @@ def update(
     log.info("Updating IP Address block %s", display_name)
     url = IP_BLOCKS_BASE_URL.format(hostname) + "/{}".format(ip_block_id)
 
-    req_data = _create_payload_for_update(
-        ip_block_id=ip_block_id,
-        revision=revision,
-        display_name=display_name,
-        cidr=cidr,
+    req_data = common_utils._filter_kwargs(
+        allowed_kwargs=["description", "tags"],
+        default_dict={
+            "id": ip_block_id,
+            "_revision": revision,
+            "display_name": display_name,
+            "cidr": cidr,
+        },
         tags=tags,
         description=description,
     )

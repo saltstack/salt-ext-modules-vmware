@@ -186,7 +186,7 @@ def present(
                   end: <IP-Address-Range-end-1>
 
     ip_release_delay
-        (Optional) Delay in milliseconds, while releasing allocated IP address from IP pool (Default is 2 mins).
+        (Optional) Delay in milliseconds, while releasing allocated IP address from IP pool (Default is 2 mins - configured on NSX device).
     """
     input_dict = {
         "display_name": display_name,
