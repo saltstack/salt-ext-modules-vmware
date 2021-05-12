@@ -10,6 +10,7 @@ distlib==0.3.1            # via virtualenv
 filelock==3.0.12          # via virtualenv
 iniconfig==1.1.1          # via pytest
 msgpack==1.0.2            # via pytest-salt-factories
+nox==2020.12.31
 packaging==20.9           # via pytest
 pluggy==0.13.1            # via pytest
 psutil==5.8.0             # via pytest-salt-factories
@@ -19,6 +20,7 @@ pytest-helpers-namespace==2021.3.24  # via pytest-salt-factories
 pytest-salt-factories==0.901.0
 pytest-tempdir==2019.10.12  # via pytest-salt-factories
 pytest==6.2.3
+pyvmomi==7.0.2
 pyzmq==20.0.0             # via pytest-salt-factories
 six==1.15.0               # via virtualenv
 toml==0.10.2              # via pytest
