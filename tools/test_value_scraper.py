@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This is a helper script to build the test values that we need.
 Currently, we lack the ability to actually spin up a vCenter/vSphere
