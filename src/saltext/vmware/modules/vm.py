@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-def get_vm_facts(*, service_instance):
+import saltext.vmware.utils.vmware as utils
+
+
+@utils._get_si
+def get_vm_facts(*, service_instance=None):
     """
     Return basic facts about a vSphere VM guest
     """
@@ -27,6 +31,23 @@ def get_vm_facts(*, service_instance):
                 # TODO get attributes, tags, folder, moid
             }
     return vms
+
+
+def deploy_vm(*, service_instance):
+    """
+    Deploy a VMware VM from an OVF or OVA file
+    """
+    content = service_instance.RetrieveContent()
+    dc = utils._get_datacenter(service_instance)
+    # for child in content.rootFolder.childEntity:
+    #     if child.name == datacenter_name:
+    #         vm_folder = child.vmFolder  # child is a datacenter
+    #         break
+    # else:
+    #     print("Datacenter %s not found!" % datacenter_name)
+    #     sys.exit(1)
+    print(content)
+    return 'noob'
 
 
 # pylint: disable=C0302
@@ -256,8 +277,8 @@ except ImportError:
     HAS_PYVMOMI = False
 
 
-__virtualname__ = "vmware_vm"
-
+__virtualname__ = "vm"
+__proxyenabled__ = ["vm"]
 
 def __virtual__():
     return __virtualname__

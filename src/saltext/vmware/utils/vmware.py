@@ -3992,3 +3992,19 @@ def _get_datacenter(node):
         except AttributeError:
             break
     return dc
+
+def _get_si(f):
+    def wraps():
+        import ssl
+        from pyVim import connect
+        config = {
+            "esxi_host_name": "10.206.240.214",
+            "host": "10.206.240.179",
+            "password": "VMware1!",
+            "user": "administrator@vsphere.local",
+        }
+        ctx = ssl._create_unverified_context()
+        return f(service_instance=connect.SmartConnect( 
+        host=config["host"], user=config["user"], pwd=config["password"], sslContext=ctx
+    ))
+    return wraps
