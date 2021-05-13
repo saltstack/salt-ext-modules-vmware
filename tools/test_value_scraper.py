@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This is a helper script to build the test values that we need.
 Currently, we lack the ability to actually spin up a vCenter/vSphere
@@ -61,10 +62,30 @@ def do_it(*, config_file):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        exit(f"Usage: {sys.argv[-1]} CONFIG_FILE\n\n{__doc__}")
+        exit(
+            f"Usage: {sys.argv[-1]} [-c] CONFIG_FILE\n\n\t-c\tcreate config file if not exist.\n\n{__doc__}"
+        )
     else:
-        config_file = pathlib.Path(sys.argv[1])
+        config_file = pathlib.Path(sys.argv[-1])
         if not config_file.is_file():
-            exit(f"ERROR: {config_file} does not exist.")
+            if "-c" in sys.argv:
+                host = input("vSphere host name/ip: ").strip()
+                user = (
+                    input("Admin username [administrator@vsphere.local]: ").strip()
+                    or "administrator@vsphere.local"
+                )
+                password = input("Admin password [VMware1!]: ").strip() or "VMware1!"
+                config_file.write_text(
+                    json.dumps(
+                        {
+                            "host": host,
+                            "user": user,
+                            "password": password,
+                        }
+                    )
+                )
+                do_it(config_file=config_file)
+            else:
+                exit(f"ERROR: {config_file} does not exist.")
         else:
             do_it(config_file=config_file)
