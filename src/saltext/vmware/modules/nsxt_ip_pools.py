@@ -3,7 +3,7 @@ Salt Module to perform CRUD operations for NSX-T's IP Address Pools
 """
 import logging
 
-from saltext.vmware.utils import common_utils
+from saltext.vmware.utils import common
 from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ def get(
     log.info("Fetching IP Address Pools")
     url = IP_POOLS_BASE_URL.format(hostname)
 
-    params = common_utils._filter_kwargs(
+    params = common._filter_kwargs(
         allowed_kwargs=["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"],
         default_dict=None,
         cursor=cursor,
@@ -146,7 +146,7 @@ def get_by_display_name(
 
     log.info("Finding IP Address Pool with display name: %s", display_name)
 
-    ip_pools = common_utils._read_paginated(
+    ip_pools = common._read_paginated(
         func=get,
         display_name=display_name,
         hostname=hostname,
@@ -255,7 +255,7 @@ def create(
     log.info("Creating IP Address Pool")
     url = IP_POOLS_BASE_URL.format(hostname)
 
-    req_data = common_utils._filter_kwargs(
+    req_data = common._filter_kwargs(
         allowed_kwargs=["display_name", "description", "subnets", "tags", "ip_release_delay"],
         default_dict=None,
         display_name=display_name,
@@ -377,7 +377,7 @@ def update(
     log.info("Updating IP Address Pool %s", display_name)
     url = IP_POOLS_BASE_URL.format(hostname) + "/{}".format(ip_pool_id)
 
-    req_data = common_utils._filter_kwargs(
+    req_data = common._filter_kwargs(
         allowed_kwargs=["description", "subnets", "tags", "ip_release_delay"],
         default_dict={
             "id": ip_pool_id,

@@ -3,7 +3,7 @@ Salt Module to perform CRUD operations for NSX-T's IP Address Blocks
 """
 import logging
 
-from saltext.vmware.utils import common_utils
+from saltext.vmware.utils import common
 from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ def get(
     log.info("Fetching IP Address Blocks")
     url = IP_BLOCKS_BASE_URL.format(hostname)
 
-    params = common_utils._filter_kwargs(
+    params = common._filter_kwargs(
         allowed_kwargs=["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"],
         default_dict=None,
         cursor=cursor,
@@ -146,7 +146,7 @@ def get_by_display_name(
 
     log.info("Finding IP Address Blocks with display name: %s", display_name)
 
-    ip_blocks = common_utils._read_paginated(
+    ip_blocks = common._read_paginated(
         func=get,
         display_name=display_name,
         hostname=hostname,
@@ -235,7 +235,7 @@ def create(
     log.info("Creating IP Address Block")
     url = IP_BLOCKS_BASE_URL.format(hostname)
 
-    req_data = common_utils._filter_kwargs(
+    req_data = common._filter_kwargs(
         allowed_kwargs=["display_name", "description", "tags"],
         default_dict={"cidr": cidr},
         display_name=display_name,
@@ -334,7 +334,7 @@ def update(
     log.info("Updating IP Address block %s", display_name)
     url = IP_BLOCKS_BASE_URL.format(hostname) + "/{}".format(ip_block_id)
 
-    req_data = common_utils._filter_kwargs(
+    req_data = common._filter_kwargs(
         allowed_kwargs=["description", "tags"],
         default_dict={
             "id": ip_block_id,
