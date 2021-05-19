@@ -1,5 +1,7 @@
-vSphere
-=======
+.. _managing vsphere:
+
+Managing vSphere/vCenter with Salt
+==================================
 
 These are vSphere modules/states
 

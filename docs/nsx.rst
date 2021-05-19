@@ -1,23 +1,22 @@
-NSX
-===
+.. _managing nsx devices:
+
+Managing NSX-T Devices with Salt
+================================
 
 Modules and States for controlling NSX-T devices:
-
-NSX-T Execution Modules
 
 .. toctree::
    :glob:
    :maxdepth: 2
-   :caption: Modules:
+   :caption: NSX-T Execution Modules
 
    ref/modules/saltext.vmware.modules.nsxt*
 
 
-NSX-T State Modules
 
 .. toctree::
    :glob:
    :maxdepth: 2
-   :caption: States:
+   :caption: NSX-T State Modules
 
    ref/states/saltext.vmware.states.nsxt*

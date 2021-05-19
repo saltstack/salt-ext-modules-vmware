@@ -1,10 +1,16 @@
+.. _all the states/modules:
+
+Complete List of Salt Extension Modules for VMware
+==================================================
+
+
 .. toctree::
-   :caption: All Execution Modules:
+   :maxdepth: 2
 
    ref/modules/all.rst
 
 
 .. toctree::
-   :caption: All State Modules:
+   :maxdepth: 2
 
    ref/states/all.rst
