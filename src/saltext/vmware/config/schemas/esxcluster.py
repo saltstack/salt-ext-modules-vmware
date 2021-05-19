@@ -1,12 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """
-    :codeauthor: :email:`Alexandru Bleotu (alexandru.bleotu@morganstanley.com)`
+salt.config.schemas.esxcluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-    salt.config.schemas.esxcluster
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    ESX Cluster configuration schemas
+ESX Cluster configuration schemas
 """
 from salt.utils.schema import AnyOfItem
 from salt.utils.schema import ArrayItem

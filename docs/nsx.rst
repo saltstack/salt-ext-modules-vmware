@@ -10,7 +10,7 @@ NSX-T Execution Modules
    :maxdepth: 2
    :caption: Modules:
 
-..   ref/modules/saltext.vmware.modules.nsxt*
+   ref/modules/saltext.vmware.modules.nsxt*
 
 
 NSX-T State Modules
@@ -20,4 +20,4 @@ NSX-T State Modules
    :maxdepth: 2
    :caption: States:
 
-..   ref/states/saltext.vmware.states.nsxt*
+   ref/states/saltext.vmware.states.nsxt*

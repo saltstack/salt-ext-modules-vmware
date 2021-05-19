@@ -15,6 +15,13 @@ and the rest of vSphere.
   vsphere.rst
   nsx.rst
 
+.. toctree::
+   :maxdepth: 1
+   :caption: All Modules/State
+
+   all.rst
+
+
 .. Do we need this block? (unindent block, and remove this line if so.)
  Indices and tables
  ==================

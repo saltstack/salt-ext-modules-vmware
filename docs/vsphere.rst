@@ -8,7 +8,7 @@ These are vSphere modules/states
    :maxdepth: 2
    :caption: Execution Modules:
 
-..   ref/modules/saltext.vmware.modules.[!nsxt]*
+   ref/modules/saltext.vmware.modules.[!nsxt]*
 
 
 .. toctree::
@@ -16,4 +16,4 @@ These are vSphere modules/states
    :maxdepth: 2
    :caption: State Modules:
 
-..   ref/states/saltext.vmware.states.[!nsxt]*
+   ref/states/saltext.vmware.states.[!nsxt]*

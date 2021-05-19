@@ -1144,7 +1144,7 @@ def add_host_to_dvs(
 
     This was very difficult to figure out.  VMware's PyVmomi documentation at
 
-    https://github.com/vmware/pyvmomi/blob/master/docs/vim/DistributedVirtualSwitch.rst
+    https://github.com/vmware/pyvmomi/blob/35e9bc6db903aecc00c8ed7ce22698d3d3b845ad/docs/vim/DistributedVirtualSwitch.rst
     (which is a copy of the official documentation here:
     https://www.vmware.com/support/developer/converter-sdk/conv60_apireference/vim.DistributedVirtualSwitch.html)
 

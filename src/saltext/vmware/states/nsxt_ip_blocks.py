@@ -95,22 +95,22 @@ def present(
 
     .. code-block:: yaml
 
-    create_ip_block:
-      nsxt_ip_blocks.present:
-        - name: Create IP Block
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate>
-          verify_ssl: <False/True>
-          display_name: <ip block name>
-          description: <ip block description>
-          tags:
-            - tag: <tag-key-1>
-              scope: <tag-value-1>
-            - tag: <tag-key-2>
-              scope: <tag-value-2>
-          cidr: <cidr>
+        create_ip_block:
+          nsxt_ip_blocks.present:
+            - name: Create IP Block
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              cert: <certificate>
+              verify_ssl: <False/True>
+              display_name: <ip block name>
+              description: <ip block description>
+              tags:
+                - tag: <tag-key-1>
+                  scope: <tag-value-1>
+                - tag: <tag-key-2>
+                  scope: <tag-value-2>
+              cidr: <cidr>
 
     name
         The Operation to perform
@@ -147,11 +147,14 @@ def present(
 
     tags
         (Optional) Opaque identifiers meaningful to the API user. Maximum 30 tags can be associated:
-        tags:
-            - tag: <tag-key-1>
-              scope: <tag-value-1>
-            - tag: <tag-key-2>
-              scope: <tag-value-2>
+
+        .. code-block:: yaml
+
+            tags:
+                - tag: <tag-key-1>
+                  scope: <tag-value-1>
+                - tag: <tag-key-2>
+                  scope: <tag-value-2>
 
     cidr
         Represents network address and the prefix length which will be associated with a layer-2 broadcast domain
@@ -285,15 +288,15 @@ def absent(
 
     .. code-block:: yaml
 
-    delete_ip_block:
-      nsxt_ip_blocks.absent:
-        - name: Delete IP Block
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate>
-          verify_ssl: <False/True>
-          display_name: <ip block name>
+        delete_ip_block:
+          nsxt_ip_blocks.absent:
+            - name: Delete IP Block
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              cert: <certificate>
+              verify_ssl: <False/True>
+              display_name: <ip block name>
 
     name
         The Operation to perform

@@ -10,6 +10,7 @@ Add new license and delete existing license from NSX-T Manager.
 Example usage :
 
 .. code-block:: yaml
+
     Ensure license exists:
         nsxt_license.present:
             hostname: 10.11.12.13

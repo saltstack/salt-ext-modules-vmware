@@ -17,6 +17,7 @@ class HostHeaderSSLAdapter(HTTPAdapter):
     """
 
     def send(self, request, **kwargs):
+        """"""
         # HTTP headers are case-insensitive (RFC 7230)
         host_header = None
         for header in request.headers:
