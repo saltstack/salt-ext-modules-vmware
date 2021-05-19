@@ -2,7 +2,7 @@
 .. all-saltext.vmware.modules:
 
 -----------------
-execution modules
+Execution Modules
 -----------------
 
 .. autosummary::

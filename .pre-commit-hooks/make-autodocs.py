@@ -51,7 +51,7 @@ mods_rst.write_text(
 .. all-saltext.vmware.modules:
 
 -----------------
-execution modules
+Execution Modules
 -----------------
 
 .. autosummary::
@@ -65,7 +65,7 @@ states_rst.write_text(
 .. all-saltext.vmware.states:
 
 -------------
-state modules
+State Modules
 -------------
 
 .. autosummary::

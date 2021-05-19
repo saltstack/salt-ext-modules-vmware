@@ -2,7 +2,7 @@
 .. all-saltext.vmware.states:
 
 -------------
-state modules
+State Modules
 -------------
 
 .. autosummary::
