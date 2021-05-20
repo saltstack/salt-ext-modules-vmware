@@ -1,6 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
 
+
 def get_lun_ids(*, service_instance):
     """
     Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
@@ -124,7 +125,7 @@ def get_capabilities(*, service_instance):
             "vmotionSupported": capability.vmotionSupported,
             "vmotionWithStorageVMotionSupported": capability.vmotionWithStorageVMotionSupported,
             "vrNfcNicSelectionSupported": capability.vrNfcNicSelectionSupported,
-            "vsanSupported": capability.vsanSupported
+            "vsanSupported": capability.vsanSupported,
         }
 
     return capabilities

@@ -217,36 +217,42 @@ def create(
 
     tags
         (Optional) Opaque identifiers meaningful to the API user. Maximum 30 tags can be associated:
-        tags='[
-            {
-                "tag": "<tag-key-1>"
-                "scope": "<tag-value-1>"
-            },
-            {
-                "tag": "<tag-key-2>"
-                "scope": "<tag-value-2>"
-            }
-        ]'
+
+        .. code::
+
+            tags='[
+                {
+                    "tag": "<tag-key-1>"
+                    "scope": "<tag-value-1>"
+                },
+                {
+                    "tag": "<tag-key-2>"
+                    "scope": "<tag-value-2>"
+                }
+            ]'
 
     subnets
         (Optional) The collection of one or more subnet objects in a pool.
         Subnets can be IPv4 or IPv6 and they should not overlap. The maximum number will not exceed 5 subnets.
-        subnets='[
-            {
-                "cidr": "cidr_value",
-                "gateway_ip": "gateway_ip_value",
-                "dns_nameservers": [
-                    "dns_nameserver1",
-                    "dns_nameserver2"
-                ],
-                "allocation_ranges": [
-                    {
-                        "start": "IP-Address-Range-start",
-                        "end": "IP-Address-Range-end"
-                    }
-                ]
-            }
-        ]'
+
+        .. code::
+
+            subnets='[
+                {
+                    "cidr": "cidr_value",
+                    "gateway_ip": "gateway_ip_value",
+                    "dns_nameservers": [
+                        "dns_nameserver1",
+                        "dns_nameserver2"
+                    ],
+                    "allocation_ranges": [
+                        {
+                            "start": "IP-Address-Range-start",
+                            "end": "IP-Address-Range-end"
+                        }
+                    ]
+                }
+            ]'
 
     ip_release_delay
         (Optional) Delay in milliseconds, while releasing allocated IP address from IP pool (Default is 2 mins - configured on NSX device).
@@ -336,36 +342,42 @@ def update(
 
     tags
         (Optional) Opaque identifiers meaningful to the API user. Maximum 30 tags can be associated:
-        tags='[
-            {
-                "tag": "<tag-key-1>"
-                "scope": "<tag-value-1>"
-            },
-            {
-                "tag": "<tag-key-2>"
-                "scope": "<tag-value-2>"
-            }
-        ]'
+
+        .. code::
+
+            tags='[
+                {
+                    "tag": "<tag-key-1>"
+                    "scope": "<tag-value-1>"
+                },
+                {
+                    "tag": "<tag-key-2>"
+                    "scope": "<tag-value-2>"
+                }
+            ]'
 
     subnets
         (Optional) The collection of one or more subnet objects in a pool.
         Subnets can be IPv4 or IPv6 and they should not overlap. The maximum number will not exceed 5 subnets.
-        subnets='[
-            {
-                "cidr": "cidr_value",
-                "gateway_ip": "gateway_ip_value",
-                "dns_nameservers": [
-                    "dns_nameserver1",
-                    "dns_nameserver2"
-                ],
-                "allocation_ranges": [
-                    {
-                        "start": "IP-Address-Range-start",
-                        "end": "IP-Address-Range-end"
-                    }
-                ]
-            }
-        ]'
+
+        .. code::
+
+            subnets='[
+                {
+                    "cidr": "cidr_value",
+                    "gateway_ip": "gateway_ip_value",
+                    "dns_nameservers": [
+                        "dns_nameserver1",
+                        "dns_nameserver2"
+                    ],
+                    "allocation_ranges": [
+                        {
+                            "start": "IP-Address-Range-start",
+                            "end": "IP-Address-Range-end"
+                        }
+                    ]
+                }
+            ]'
 
     ip_release_delay
         (Optional) Delay in milliseconds, while releasing allocated IP address from IP pool (Default is 2 mins).

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """
-    :codeauthor: :email:`Alexandru Bleotu (alexandru.bleotu@morganstanley.com)`
+    :codeauthor: `Alexandru Bleotu (alexandru.bleotu@morganstanley.com)`
 
 
     salt.config.schemas.esxi

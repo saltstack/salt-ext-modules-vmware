@@ -136,3 +136,6 @@ artifacts/
 
 # Just a dir for local whatever
 local/
+
+# Useful for command line args
+Saltfile

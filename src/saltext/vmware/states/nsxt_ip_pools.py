@@ -105,31 +105,31 @@ def present(
 
     .. code-block:: yaml
 
-    create_ip_pool:
-      nsxt_ip_pools.present:
-        - name: Create IP Pool
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate>
-          verify_ssl: <False/True>
-          display_name: <ip pool name>
-          description: <ip pool description>
-          tags:
-            - tag: <tag-key-1>
-              scope: <tag-value-1>
-            - tag: <tag-key-2>
-              scope: <tag-value-2>
-          subnets:
-            - cidr: <cidr_value>
-              gateway_ip: <gateway_ip_value>
-              dns_nameservers:
-                - <dns_nameserver1>
-                - <dns_nameserver2>
-              allocation_ranges:
-                - start: <IP-Address-Range-start-1>
-                  end: <IP-Address-Range-end-1>
-          ip_release_delay: <delay in milliseconds>
+        create_ip_pool:
+          nsxt_ip_pools.present:
+            - name: Create IP Pool
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              cert: <certificate>
+              verify_ssl: <False/True>
+              display_name: <ip pool name>
+              description: <ip pool description>
+              tags:
+                - tag: <tag-key-1>
+                  scope: <tag-value-1>
+                - tag: <tag-key-2>
+                  scope: <tag-value-2>
+              subnets:
+                - cidr: <cidr_value>
+                  gateway_ip: <gateway_ip_value>
+                  dns_nameservers:
+                    - <dns_nameserver1>
+                    - <dns_nameserver2>
+                  allocation_ranges:
+                    - start: <IP-Address-Range-start-1>
+                      end: <IP-Address-Range-end-1>
+              ip_release_delay: <delay in milliseconds>
 
     name
         The Operation to perform
@@ -166,24 +166,30 @@ def present(
 
     tags
         (Optional) Opaque identifiers meaningful to the API user. Maximum 30 tags can be associated:
-        tags:
-            - tag: <tag-key-1>
-              scope: <tag-value-1>
-            - tag: <tag-key-2>
-              scope: <tag-value-2>
+
+        .. code-block:: yaml
+
+            tags:
+                - tag: <tag-key-1>
+                  scope: <tag-value-1>
+                - tag: <tag-key-2>
+                  scope: <tag-value-2>
 
     subnets
         (Optional) The collection of one or more subnet objects in a pool.
         Subnets can be IPv4 or IPv6 and they should not overlap. The maximum number will not exceed 5 subnets.
-        subnets:
-            - cidr: <cidr_value>
-              gateway_ip: <gateway_ip_value>
-              dns_nameservers:
-                - <dns_nameserver1>
-                  <dns_nameserver2>
-              allocation_ranges:
-                - start: <IP-Address-Range-start-1>
-                  end: <IP-Address-Range-end-1>
+
+        .. code-block:: yaml
+
+            subnets:
+                - cidr: <cidr_value>
+                  gateway_ip: <gateway_ip_value>
+                  dns_nameservers:
+                    - <dns_nameserver1>
+                      <dns_nameserver2>
+                  allocation_ranges:
+                    - start: <IP-Address-Range-start-1>
+                      end: <IP-Address-Range-end-1>
 
     ip_release_delay
         (Optional) Delay in milliseconds, while releasing allocated IP address from IP pool (Default is 2 mins - configured on NSX device).

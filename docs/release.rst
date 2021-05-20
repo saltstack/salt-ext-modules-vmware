@@ -1,3 +1,5 @@
+.. _release:
+
 Release
 =======
 
@@ -49,9 +51,12 @@ may be released.
 Versions, Tagging, and Changelog
 --------------------------------
 
-This project uses `CalVer<https://calver.org/>_` for versions. In order to
+This project uses CalVer_ for versions. In order to
 communicate breaking changes, this project keeps a
-`changelog<https://keepachangelog.com/en/1.0.0/>_`.
+changelog_.
+
+.. _CalVer: https://calver.org/
+.. _changelog: https://keepachangelog.com/en/1.0.0/
 
 For dev/nightly builds, no tags will be used, and packages will not be uploaded
 to PyPI.
