@@ -60,24 +60,24 @@ def present(
 
     .. code-block:: yaml
 
-    register_compute_manager:
-      nsxt_compute_manager.present:
-        - name: Registration
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          certificate: <certificate>
-          verify_ssl: <False/True>
-          compute_manager_server: <compute manager ip address or fqdn>
-          server_origin_type: <compute manager origin type>
-          credential:
-            credential_type:  UsernamePasswordLoginCredential
-            username: <compute manager username>
-            password: <compute manager password>
-            thumbprint: <compute manager thumbprint>
-          display_name: <compute manager name>
-          description: <compute manager description>
-          set_as_oidc_provider: <False/True>
+        register_compute_manager:
+          nsxt_compute_manager.present:
+            - name: Registration
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              certificate: <certificate>
+              verify_ssl: <False/True>
+              compute_manager_server: <compute manager ip address or fqdn>
+              server_origin_type: <compute manager origin type>
+              credential:
+                credential_type:  UsernamePasswordLoginCredential
+                username: <compute manager username>
+                password: <compute manager password>
+                thumbprint: <compute manager thumbprint>
+              display_name: <compute manager name>
+              description: <compute manager description>
+              set_as_oidc_provider: <False/True>
 
     name
         name of the operation to perform
@@ -97,6 +97,9 @@ def present(
     credential
         An object which contains credential details to validate compute manager
         Sample usage in sls file:
+
+        .. code::
+
             credential:
                credential_type: "UsernamePasswordLoginCredential"
                username: "user"
@@ -280,7 +283,8 @@ def absent(
 ):
     """
 
-    De-Registers compute manager in NSX-T Manager if present. Requires either compute_manager_server or compute_manager_id to be provided
+    De-Registers compute manager in NSX-T Manager if present. Requires either compute_manager_server or
+    compute_manager_id to be provided
 
     CLI Example:
 
@@ -288,15 +292,17 @@ def absent(
 
         salt vm_minion nsxt_compute_manager.absent hostname=nsxt-manager.local username=admin ...
 
-    register_compute_manager:
-      nsxt_compute_manager.absent:
-        - name: Registration
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          certificate: <certificate>
-          verify_ssl: <False/True>
-          compute_manager_server: <compute manager ip address or fqdn>
+    .. code-block:: yaml
+
+        register_compute_manager:
+          nsxt_compute_manager.absent:
+            - name: Registration
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              certificate: <certificate>
+              verify_ssl: <False/True>
+              compute_manager_server: <compute manager ip address or fqdn>
 
     name
         Name of the operation to perform
