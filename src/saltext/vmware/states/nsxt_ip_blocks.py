@@ -59,13 +59,11 @@ def _check_for_updates(existing_ip_block, input_dict):
 
     # check if any updatable field has different value from the existing one
     for key in updatable_keys:
-        if key not in existing_ip_block and input_dict.get(key):
+        existing_val = existing_ip_block.get(key)
+        input_val = input_dict.get(key)
+        if not existing_val and input_val:
             is_updatable = True
-        if (
-            key in existing_ip_block
-            and existing_ip_block[key]
-            and existing_ip_block[key] != input_dict.get(key)
-        ):
+        if existing_val and input_val and existing_val != input_val:
             is_updatable = True
 
     return is_updatable
