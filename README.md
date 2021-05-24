@@ -22,6 +22,9 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     python3 -m venv env --prompt vmw-ext
     source env/bin/activate
 
+    # On mac, you may need to upgrade pip
+    python -m pip install --upgrade pip
+
     # Install extension + test/dev/doc dependencies into your environment
     python -m pip install -e .[tests,dev,docs]
 
@@ -33,6 +36,23 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
 
     # Build the docs, serve, and view in your web browser:
     python -m nox -e docs && (cd docs/_build/html; python -m webbrowser localhost:8000; python -m http.server; cd -)
+
+    # If you want to run tests against an actual vCenter, make
+    # a local salt dir
+    mkdir -p local/etc/salt
+
+    # Create a minion config
+    cat << EOF> local/etc/salt/minion
+    user: $(whoami)
+    root_dir: $PWD/local/
+    file_root: $PWD/local
+    master: localhost
+    id: saltdev
+    master_port: 55506
+    EOF
+
+    # Create a test config file:
+    python tools/test_value_scraper.py -c local/vcenter.conf
 
 
 Of course, writing code isn't the only way to contribute! We value
