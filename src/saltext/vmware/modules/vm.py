@@ -1,8 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
+from os import system
+from time import sleep
+from threading import Thread
+
 import saltext.vmware.utils.vmware as utils
+from pyVim.task import WaitForTask
 
-
-@utils._get_si
+@utils.get_si
 def get_vm_facts(*, service_instance=None):
     """
     Return basic facts about a vSphere VM guest
@@ -14,7 +18,7 @@ def get_vm_facts(*, service_instance=None):
         host_id = host.name
         vms[host_id] = {}
         for vm in virtual_machines:
-            dc = utils._get_datacenter(vm)
+            dc = utils.get_datacenter(vm)
             vms[host_id][vm.summary.config.name] = {
                 "cluster": vm.summary.runtime.host.parent.name,
                 "datacenter": dc.name,
@@ -33,20 +37,92 @@ def get_vm_facts(*, service_instance=None):
     return vms
 
 
+def keep_lease_alive(lease):
+    """
+    Keeps the lease alive while POSTing the VMDK.
+    """
+    while True:
+        sleep(5)
+        try:
+            # Choosing arbitrary percentage to keep the lease alive.
+            lease.HttpNfcLeaseProgress(50)
+            if lease.state == vim.HttpNfcLease.State.done:
+                return
+            # If the lease is released, we get an exception.
+            # Returning to kill the thread.
+        except Exception:
+            return
+
+
+@utils.get_si
 def deploy_vm(*, service_instance):
     """
     Deploy a VMware VM from an OVF or OVA file
     """
-    content = service_instance.RetrieveContent()
-    dc = utils._get_datacenter(service_instance)
-    # for child in content.rootFolder.childEntity:
-    #     if child.name == datacenter_name:
-    #         vm_folder = child.vmFolder  # child is a datacenter
-    #         break
-    # else:
-    #     print("Datacenter %s not found!" % datacenter_name)
-    #     sys.exit(1)
-    print(content)
+    content = service_instance.content
+    manager = content.ovfManager
+    datacenter_name = "Datacenter"
+    host_name = "10.206.240.192"
+    cluster_name = "Cluster"
+    vmdk_path = "/vmfs/volumes"
+    name = "joey2"
+    ovf = utils.read_ovf_file('../ovf/centos-7-114180-tools.ovf')
+    spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
+    
+    # get destination host
+    destination_host = utils.get_destination_host(service_instance=service_instance, host_name=host_name)
+
+    # get datacenter
+    datacenter = utils.get_service_instance_datacenter(service_instance=service_instance, datacenter_name=datacenter_name)
+    
+    # Get cluster
+    cluster = utils.get_cluster(datacenter=datacenter, cluster_name=cluster_name)
+    
+    # Generate resource pool.
+    resource_pool = cluster.resourcePool
+
+    import_spec = manager.CreateImportSpec(ovf, resource_pool, destination_host.datastore[0], spec_params)
+    lease = resource_pool.ImportVApp(import_spec.importSpec, datacenter.vmFolder)
+
+    while True:
+        if lease.state == vim.HttpNfcLease.State.ready:
+            # Assuming single VMDK.
+            url = lease.info.deviceUrl[0].url.replace('*', host_name)
+            # Spawn a dawmon thread to keep the lease active while POSTing
+            # VMDK.
+            keepalive_thread = Thread(target=keep_lease_alive, args=(lease,))
+            keepalive_thread.start()
+            # POST the VMDK to the host via curl. Requests library would work
+            # too.
+            curl_cmd = (
+                "curl -Ss -X POST --insecure -T %s -H 'Content-Type: \
+                application/x-vnd.vmware-streamVmdk' %s" %
+                (vmdk_path, url))
+            system(curl_cmd)
+            lease.HttpNfcLeaseComplete()
+            keepalive_thread.join()
+            return 0
+        elif lease.state == vim.HttpNfcLease.State.error:
+            print("Lease error: " + lease.state.error)
+            exit(1)
+
+    # datastore_name = dest_host.datastore[0].name
+    # source_pool = dest_host.parent.resourcePool
+
+    # #config
+    # config = vim.vm.ConfigSpec()
+    # config.annotation = "Sample"
+    # config.memoryMB = 4
+    # config.guestId = "otherGuest"
+    # config.name = "joey"
+    # config.numCPUs = 1
+    # files = vim.vm.FileInfo()
+    # files.vmPathName = "["+datastore_name+"]"
+    # config.files = files
+
+
+    # WaitForTask(vm_folder.CreateVm(config, pool=source_pool, host=dest_host))
+    # print(dest_host)
     return 'noob'
 
 

@@ -46,6 +46,8 @@ def do_it(*, config_file):
     }
     for host in hosts:
         for vm in host.vm:
+            config["vm_facts"] = {}
+            config["vm_facts"][host.name] = {}
             config["vm_facts"][host.name][vm.name] = {
                 "cluster": vm.summary.runtime.host.parent.name,
                 "esxi_hostname": vm.summary.runtime.host.summary.config.name,
