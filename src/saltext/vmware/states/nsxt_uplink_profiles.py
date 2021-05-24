@@ -110,56 +110,56 @@ def present(
 
     .. code-block:: yaml
 
-    create_uplink_profile:
-      nsxt_uplink_profiles.present:
-        - name: Create uplink profile
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate>
-          verify_ssl: <False/True>
-          display_name: <uplink profile name>
-          description: <uplink profile description>
-          resource_type: UplinkHostSwitchProfile
-          teaming:
-            active_list:
-              -  uplink_name: <Name of the uplink>
-                 uplink_type: <PNIC/LAG>
-              -  uplink_name: <Name of the uplink>
-                 uplink_type: <PNIC/LAG>
-            policy: <FAILOVER_ORDER/LOADBALANCE_SRCID/LOADBALANCE_SRC_MAC>
-            standby_list:
-              -  uplink_name: <Name of the uplink>
-                 uplink_type: <PNIC/LAG>
-          tags:
-            - tag: <tag-key-1>
-              scope: <tag-value-1>
-            - tag: <tag-key-2>
-              scope: <tag-value-2>
-          mtu: <mtu value>
-          transport_vlan: <vlan_id>
-          lags:
-            -  load_balance_algorithm: <SRCMAC/DESTMAC/SRCDESTMAC/SRCDESTIPVLAN/SRCDESTMACIPPORT>
-               mode: <ACTIVE/PASSIVE>
-               name: <name of the lag>
-               number_of_uplinks: <Integer>
-               timeout_type: <SLOW/FAST>
-            -  load_balance_algorithm: <SRCMAC/DESTMAC/SRCDESTMAC/SRCDESTIPVLAN/SRCDESTMACIPPORT>
-               mode: <ACTIVE/PASSIVE>
-               name: <name of the lag>
-               number_of_uplinks: <Integer>
-               timeout_type: <SLOW/FAST>
-          named_teamings:
-            -  name: <Name of the teaming>
-               active_list:
-                 -  uplink_name: <Name of the uplink>
-                    uplink_type: <PNIC/LAG>
-                 -  uplink_name: <Name of the uplink>
-                    uplink_type: <PNIC/LAG>
-               policy: <FAILOVER_ORDER/LOADBALANCE_SRCID/LOADBALANCE_SRC_MAC>
-               standby_list:
-                 -  uplink_name: <Name of the uplink>
-                    uplink_type: <PNIC/LAG>
+        create_uplink_profile:
+          nsxt_uplink_profiles.present:
+            - name: Create uplink profile
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              cert: <certificate>
+              verify_ssl: <False/True>
+              display_name: <uplink profile name>
+              description: <uplink profile description>
+              resource_type: UplinkHostSwitchProfile
+              teaming:
+                active_list:
+                  -  uplink_name: <Name of the uplink>
+                     uplink_type: <PNIC/LAG>
+                  -  uplink_name: <Name of the uplink>
+                     uplink_type: <PNIC/LAG>
+                policy: <FAILOVER_ORDER/LOADBALANCE_SRCID/LOADBALANCE_SRC_MAC>
+                standby_list:
+                  -  uplink_name: <Name of the uplink>
+                     uplink_type: <PNIC/LAG>
+              tags:
+                - tag: <tag-key-1>
+                  scope: <tag-value-1>
+                - tag: <tag-key-2>
+                  scope: <tag-value-2>
+              mtu: <mtu value>
+              transport_vlan: <vlan_id>
+              lags:
+                -  load_balance_algorithm: <SRCMAC/DESTMAC/SRCDESTMAC/SRCDESTIPVLAN/SRCDESTMACIPPORT>
+                   mode: <ACTIVE/PASSIVE>
+                   name: <name of the lag>
+                   number_of_uplinks: <Integer>
+                   timeout_type: <SLOW/FAST>
+                -  load_balance_algorithm: <SRCMAC/DESTMAC/SRCDESTMAC/SRCDESTIPVLAN/SRCDESTMACIPPORT>
+                   mode: <ACTIVE/PASSIVE>
+                   name: <name of the lag>
+                   number_of_uplinks: <Integer>
+                   timeout_type: <SLOW/FAST>
+              named_teamings:
+                -  name: <Name of the teaming>
+                   active_list:
+                     -  uplink_name: <Name of the uplink>
+                        uplink_type: <PNIC/LAG>
+                     -  uplink_name: <Name of the uplink>
+                        uplink_type: <PNIC/LAG>
+                   policy: <FAILOVER_ORDER/LOADBALANCE_SRCID/LOADBALANCE_SRC_MAC>
+                   standby_list:
+                     -  uplink_name: <Name of the uplink>
+                        uplink_type: <PNIC/LAG>
 
     name
         Name of the operation
@@ -181,17 +181,23 @@ def present(
 
     teaming
         Default TeamingPolicy associated with this UplinkProfile. Object with following parameters:
-        Example:
-        {'standby_list':[],'active_list':[{'uplink_name':'uplink3','uplink_type':'PNIC'}],'policy':'FAILOVER_ORDER'}
+
+        .. code::
+
+            {'standby_list':[],'active_list':[{'uplink_name':'uplink3','uplink_type':'PNIC'}],'policy':'FAILOVER_ORDER'}
 
         active_list
             List of Uplinks used in active list. Array of Uplink objects.
-             active_list='[
-                {
-                "uplink_name": "uplink3",
-                "uplink_type": "PNIC"
-                }
-            ]'
+
+            .. code::
+
+                 active_list='[
+                    {
+                    "uplink_name": "uplink3",
+                    "uplink_type": "PNIC"
+                    }
+                ]'
+
             Parameters as follows:
 
             uplink_name
@@ -207,12 +213,16 @@ def present(
 
         standby_list
             List of Uplinks used in standby list. Array of Uplink objects.
-            standby_list=[
-                {
-                "uplink_name": "uplink2",
-                "uplink_type": "PNIC"
-                }
-            ]
+
+            .. code::
+
+                standby_list=[
+                    {
+                    "uplink_name": "uplink2",
+                    "uplink_type": "PNIC"
+                    }
+                ]
+
            Parameters as follows:
 
             uplink_name
@@ -418,15 +428,17 @@ def absent(
 
         salt vm_minion nsxt_uplink_profiles.absent hostname=nsxt-manager.local username=admin ...
 
-    delete_uplink_profile:
-      nsxt_uplink_profiles.absent:
-        - name: <Name of the operation>
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          display_name: <display_name of the uplink profile>
-          cert: <certificate>
-          verify_ssl: <False/True>
+    .. code-block:: yaml
+
+        delete_uplink_profile:
+          nsxt_uplink_profiles.absent:
+            - name: <Name of the operation>
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              display_name: <display_name of the uplink profile>
+              cert: <certificate>
+              verify_ssl: <False/True>
 
 
     name

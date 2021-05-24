@@ -286,36 +286,36 @@ def present(
 
     .. code-block:: yaml
 
-    create_transport_node_profile:
-      nsxt_transport_node_profiles.present:
-        - name: Create uplink profile
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate>
-          verify_ssl: <False/True>
-          display_name: <uplink profile name>
-          description: <uplink profile description>
-          host_switch_spec:
-            resource_type: "StandardHostSwitchSpec"
-            host_switches:
-              - host_switch_name: "hostswitch1"
-                host_switch_mode: "<STANDARD/ENS/ENS_INTERRUPT>"
-                host_switch_type: "<NVDS/VDS>"
-                host_switch_profiles:
-                  - name: "<host_switch_profile_name>"
-                    type: "<UplinkHostSwitchProfile/LldpHostSwitchProfile/NiocProfile>"
-                pnics:
-                  - device_name: "vmnic1"
-                    uplink_name: "uplink-1"
-                ip_assignment_spec:
-                  resource_type: "StaticIpPoolSpec"
-                  ip_pool_name: "IPPool-IPV4-1"
-                transport_zone_endpoints:
-                  - transport_zone_name: "TZ1"
-                vmk_install_migration:
-                  - device_name: vmk0
-                    destination_network_name: "ls_vmk_Mgmt"
+        create_transport_node_profile:
+          nsxt_transport_node_profiles.present:
+            - name: Create uplink profile
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              cert: <certificate>
+              verify_ssl: <False/True>
+              display_name: <uplink profile name>
+              description: <uplink profile description>
+              host_switch_spec:
+                resource_type: "StandardHostSwitchSpec"
+                host_switches:
+                  - host_switch_name: "hostswitch1"
+                    host_switch_mode: "<STANDARD/ENS/ENS_INTERRUPT>"
+                    host_switch_type: "<NVDS/VDS>"
+                    host_switch_profiles:
+                      - name: "<host_switch_profile_name>"
+                        type: "<UplinkHostSwitchProfile/LldpHostSwitchProfile/NiocProfile>"
+                    pnics:
+                      - device_name: "vmnic1"
+                        uplink_name: "uplink-1"
+                    ip_assignment_spec:
+                      resource_type: "StaticIpPoolSpec"
+                      ip_pool_name: "IPPool-IPV4-1"
+                    transport_zone_endpoints:
+                      - transport_zone_name: "TZ1"
+                    vmk_install_migration:
+                      - device_name: vmk0
+                        destination_network_name: "ls_vmk_Mgmt"
 
     name
         Name of the operation
@@ -353,10 +353,12 @@ def present(
 
             host_switch_profiles
                 Array of host switch profiles. Each entry should have name of the profile and type of the profile
-                Example:
-                host_switch_profiles:
-                  -  name: <name of the profile>
-                     type: <type of the profile>
+
+                .. code::
+
+                    host_switch_profiles:
+                      -  name: <name of the profile>
+                         type: <type of the profile>
 
             ip_assignment_spec
                 Specification for IPs to be used with host switch virtual tunnel endpoints
@@ -568,15 +570,17 @@ def absent(
 
         salt vm_minion nsxt_transport_node_profiles.absent hostname=nsxt-manager.local username=admin ...
 
-    delete_transport_node_profile:
-      nsxt_transport_node_profiles.absent:
-        - name: <Name of the operation>
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          display_name: <display_name of the transport node profile>
-          cert: <certificate>
-          verify_ssl: <False/True>
+    -- code-block :: yaml
+
+        delete_transport_node_profile:
+          nsxt_transport_node_profiles.absent:
+            - name: <Name of the operation>
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              display_name: <display_name of the transport node profile>
+              cert: <certificate>
+              verify_ssl: <False/True>
 
 
     name
