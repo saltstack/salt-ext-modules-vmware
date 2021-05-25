@@ -3,11 +3,12 @@ from os import system
 from time import sleep
 from threading import Thread
 
-import saltext.vmware.utils.tools as tools
+import saltext.vmware.utils.connect as connect
+import saltext.vmware.utils.common as common
 import saltext.vmware.utils.datacenter as datacenter
 from pyVim.task import WaitForTask
 
-# @tools.get_si
+# @connect.get_si
 def get_vm_facts(*, service_instance=None):
     """
     Return basic facts about a vSphere VM guest
@@ -55,7 +56,7 @@ def keep_lease_alive(lease):
             return
 
 
-# @tools.get_si
+# @connect.get_si
 def create(*, service_instance):
     """
     Deploy a VMware VM from an OVF or OVA file
@@ -67,23 +68,23 @@ def create(*, service_instance):
     cluster_name = "Cluster"
     vmdk_path = "/vmfs/volumes"
     name = "joey2"
-    ovf = tools.read_ovf_file('../ovf/centos-7-114180-tools.ovf')
+    ovf = common.read_ovf_file('../ovf/centos-7-114180-tools.ovf')
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
     
     # get destination host
     destination_host = datacenter.get_destination_host(service_instance=service_instance, host_name=host_name)
 
     # get datacenter
-    datacenter = datacenter.get_service_instance_datacenter(service_instance=service_instance, datacenter_name=datacenter_name)
+    dc = datacenter.get_service_instance_datacenter(service_instance=service_instance, datacenter_name=datacenter_name)
     
     # Get cluster
-    cluster = datacenter.get_cluster(datacenter=datacenter, cluster_name=cluster_name)
+    cluster = datacenter.get_cluster(datacenter=dc, cluster_name=cluster_name)
     
     # Generate resource pool.
     resource_pool = cluster.resourcePool
 
     import_spec = manager.CreateImportSpec(ovf, resource_pool, destination_host.datastore[0], spec_params)
-    lease = resource_pool.ImportVApp(import_spec.importSpec, datacenter.vmFolder)
+    lease = resource_pool.ImportVApp(import_spec.importSpec, dc.vmFolder)
 
     while True:
         if lease.state == vim.HttpNfcLease.State.ready:

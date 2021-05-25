@@ -25,11 +25,3 @@ def test_vm_get_basic_facts(service_instance, integration_test_config, arg_name)
         for vm_name in vm_facts[host_id]:
             expected_value = integration_test_config["vm_facts"][host_id][vm_name][arg_name]
             assert vm_facts[host_id][vm_name][arg_name] == expected_value
-
-
-# def test_vm_deploy(service_instance):
-#     """
-#     Test vm deploy
-#     """
-#     res = vm.deploy_vm(service_instance=service_instance)
-#     assert res == 'noob'

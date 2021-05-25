@@ -23,3 +23,14 @@ def _read_paginated(func, display_name, **kwargs):
             result for result in paginated["results"] if result.get("display_name") == display_name
         )
     return results
+
+
+def read_ovf_file(ovf_path):
+    """
+    Read in OVF file.
+    """
+    try:
+        with open(ovf_path) as ovf_file:
+            return ovf_file.read()
+    except Exception:
+        exit(f"Could not read file: {ovf_path}")

@@ -23,14 +23,3 @@ def get_si(f):
         host=config["host"], user=config["user"], pwd=config["password"], sslContext=ctx
     ))
     return wraps
-
-
-def read_ovf_file(ovf_path):
-    """
-    Read in the OVF file.
-    """
-    try:
-        with open(ovf_path) as ovf_file:
-            return ovf_file.read()
-    except Exception:
-        exit(f"Could not read file: {ovf_path}")
