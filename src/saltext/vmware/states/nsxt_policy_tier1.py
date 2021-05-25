@@ -1,22 +1,20 @@
 """
 State module for NSX-T tier1 gateway
 """
+import json
 import logging
 
 log = logging.getLogger(__name__)
 
-try:
-    from saltext.vmware.modules import nsxt_policy_tier1
-
-    HAS_POLICY_TIER1 = True
-except ImportError:
-    HAS_POLICY_TIER1 = False
-
 
 def __virtual__():
-    if not HAS_POLICY_TIER1:
-        return False, "'nsxt_policy_tier1' binary not found on system"
-    return "nsxt_policy_tier1"
+    """
+    Only load if module nsxt_policy_tier1 is available
+    """
+    return (
+        "nsxt_policy_tier1" if "nsxt_policy_tier1.get" in __salt__ else False,
+        "'nsxt_policy_tier1' binary not found on system",
+    )
 
 
 def present(
@@ -62,7 +60,8 @@ def present(
     CLI Example:
     .. code-block:: bash
         salt vm_minion nsxt_policy_tier1.present hostname=nsxt-manager.local username=admin ...
-    .. code-block:: yaml
+    .. code-block:: yaml example
+    create_tier1:
       nsxt_policy_tier1.present:
         - name: Create tier 1 gateway
           hostname: <hostname>
@@ -128,6 +127,7 @@ def present(
                         - <ip-address>
                       prefix_len: <prefix-len-number>
                   urpf_mode: <urpf-mode-enum>
+    .. code-block:: all parameters present
     hostname
         The host name of NSX-T manager
     username
@@ -135,7 +135,7 @@ def present(
     password
         Password to connect to NSX-T manager
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
@@ -146,15 +146,25 @@ def present(
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
     display_name:
+        required: true
         description:
             - Display name.
             - If resource ID is not specified, display_name will be used as ID.
         required: true
         type: str
     state:
-        description: present or absent keyword is used as an indetifier, default value is present.
-                    If a user has provided absent that resource/sub-resource will be deleted
+        required: false
+        choices:
+        - present
+        - absent
+        description:
+            - "State can be either 'present' or 'absent'.
+            - 'present' is used to create or update resource.
+            - 'absent' is used to delete resource."
+            - If not provided then it will be considered as present
+        required: false
     tags:
+        required: false
         description: Opaque identifiers meaningful to the API user.
         type: dict
         suboptions:
@@ -167,22 +177,27 @@ def present(
                 required: true
                 type: str
     id:
+        required: false
         description: Tier-1 ID
         required: false
         type: str
     description:
+        required: false
         description: Tier-1 description
         type: str
     default_rule_logging:
+        required: false
         description: Enable logging for whitelisted rule.
                      Indicates if logging should be enabled for the default
                      whitelisting rule.
         default: false
     disable_firewall:
+        required: false
         description: Disable or enable gateway fiewall.
         default: False
         type: bool
     failover_mode:
+        required: false
         description: Determines the behavior when a Tier-1 instance in
                      ACTIVE-STANDBY high-availability mode restarts
                      after a failure. If set to PREEMPTIVE, the preferred node
@@ -194,8 +209,10 @@ def present(
         choices:
             - 'NON_PREEMPTIVE'
             - 'PREEMPTIVE'
+        default: 'NON_PREEMPTIVE'
         type: str
     enable_standby_relocation:
+        required: false
         description:
             - Flag to enable standby service router relocation.
             - Standby relocation is not enabled until edge cluster is
@@ -203,11 +220,13 @@ def present(
         type: bool
         default: false
     force_whitelisting:
+        required: false
         description: Flag to add whitelisting FW rule during
                      realization.
         default: False
         type: bool
     intersite_config:
+        required: false
         description: Inter site routing configuration when the gateway is
                      streched.
         type: dict
@@ -219,7 +238,7 @@ def present(
                              API/UI. Fallback site configuration is
                              supported only for T0 gateway. T1 gateway
                              will follow T0 gateway's primary site
-                             during disaster recovery.
+                             during disaster recovery
                 type: list
             intersite_transit_subnet:
                 description:
@@ -255,34 +274,41 @@ def present(
                       T1 gateway with no services
                 type: str
     ipv6_ndra_profile_id:
+        required: false
         description: IPv6 NDRA profile configuration on Tier1.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_dad_profile_id.
         type: str
     ipv6_ndra_profile_display_name:
+        required: false
         description: Same as ipv6_ndra_profile_id. Either one can be specified.
                      If both are specified, ipv6_ndra_profile_id takes
                      precedence.
         type: str
     ipv6_dad_profile_id:
+        required: false
         description: IPv6 DRA profile configuration on Tier1.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_ndra_profile_id.
         type: str
     ipv6_dad_profile_display_name:
+        required: false
         description: Same as ipv6_dad_profile_id. Either one can be specified.
                      If both are specified, ipv6_dad_profile_id takes
                      precedence.
         type: str
     dhcp_config_id:
+        required: false
         description: DHCP configuration for Segments connected to
                      Tier-1. DHCP service is configured in relay mode.
         type: str
     dhcp_config_display_name:
+        required: false
         description: Same as dhcp_config_id. Either one can be specified.
                      If both are specified, dhcp_config_id takes precedence.
         type: str
     pool_allocation:
+        required: false
         description:
             - Edge node allocation size
             - Supports edge node allocation at different sizes for routing and
@@ -298,8 +324,9 @@ def present(
             - LB_MEDIUM
             - LB_LARGE
             - LB_XLARGE
-        default: ROUTING
+        default: ROUTING (default value is provide by NSX-T product)
     qos_profile:
+        required: false
         description: QoS Profile configuration for Tier1 router link connected
                      to Tier0 gateway.
         type: dict
@@ -313,6 +340,7 @@ def present(
                              direction.
                 type: str
     route_advertisement_rules:
+        required: false
         description: Route advertisement rules and filtering
         type: list
         suboptions:
@@ -359,6 +387,7 @@ def present(
                 description: Network CIDRs to be routed.
                 type: list
     route_advertisement_types:
+        required: false
         description:
             - Enable different types of route advertisements.
             - By default, Routes to IPSec VPN local-endpoint subnets
@@ -374,16 +403,20 @@ def present(
             - 'TIER1_DNS_FORWARDER_IP'
             - 'TIER1_IPSEC_LOCAL_ENDPOINT'
     tier0_id:
+        required: false
         description: Tier-1 connectivity to Tier-0
         type: str
     tier0_display_name:
+        required: false
         description: Same as tier0_id. Either one can be specified.
                     If both are specified, tier0_id takes precedence.
         type: str
     static_routes:
+        required: false
         type: list
         element: dict
-        description: This is a list of Static Routes that need to be created,updated, or deleted
+        description: This is a list of Static Routes that need to be created,
+                     updated, or deleted
         suboptions:
             id:
                 description: Tier-1 Static Route ID.
@@ -444,9 +477,11 @@ def present(
                         required: true
                         type: str
     locale_services:
+        required: false
         type: list
         element: dict
-        description: This is a list of Locale Services that need to be created,updated, or deleted
+        description: This is a list of Locale Services that need to be created,
+                     updated, or deleted
         suboptions:
             id:
                 description: Tier-1 Locale Service ID
@@ -600,7 +635,8 @@ def present(
                         configured on Segments connected to
                         Tier1.
                     - TIER1_IPSEC_LOCAL_ENDPOINT - Redistribute
-                        IPSec VPN local-endpoint subnets advertised by TIER1.
+                        IPSec VPN local-endpoint subnets
+                        advertised by TIER1.
                 type: list
             route_redistribution_config:
                 description: Configure all route redistribution properties like
@@ -695,7 +731,8 @@ def present(
                     external_interface_info:
                         type: list
                         elements: dict
-                        description: Array of external interface info
+                        description:
+                            - Array of external interface info
                         external_interface_paths:
                             description:
                                 - Policy paths to Tier0 external interfaces for
@@ -735,6 +772,8 @@ def present(
                 type: list
                 element: dict
                 description: Specify the interfaces associated with the Gateway
+                             in this section that need to be created, updated,
+                             or deleted
                 suboptions:
                     id:
                         description: Tier-1 Interface ID
@@ -820,7 +859,6 @@ def present(
                     urpf_mode:
                         description: Unicast Reverse Path Forwarding mode
                         type: str
-                        requires: False
                         choices:
                             - NONE
                             - STRICT
@@ -878,6 +916,7 @@ def present(
             cert=cert,
             cert_common_name=cert_common_name,
             display_name=display_name,
+            state=state,
             tags=tags,
             id=id,
             description=description,
@@ -941,7 +980,7 @@ def present(
         ret["comment"] = "Created Tier-1 gateway {display_name} successfully".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = tier1_hierarchy
+        ret["changes"]["new"] = json.dumps(tier1_hierarchy)
         return ret
     else:
         tier1_id = tier_1_result.get("results")[0].get("id")
@@ -971,6 +1010,7 @@ def present(
             cert=cert,
             cert_common_name=cert_common_name,
             display_name=display_name,
+            state=state,
             tags=tags,
             id=id,
             description=description,
@@ -1031,8 +1071,8 @@ def present(
         ret["comment"] = "Updated Tier-1 gateway {display_name} successfully".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = tier1_hierarchy_after_update
-        ret["changes"]["old"] = tier1_hierarchy_before_update
+        ret["changes"]["new"] = json.dumps(tier1_hierarchy_after_update)
+        ret["changes"]["old"] = json.dumps(tier1_hierarchy_before_update)
         return ret
 
 
@@ -1049,8 +1089,8 @@ def absent(
     """
     Deletes tier1 gateway with the given display_name and all its sub-resources
     CLI Example:
-    .. code-block:: bash
-        salt vm_minion nsxt_policy_tier1.absent hostname=nsxt-manager.local username=admin ...
+        .. code-block:: bash
+            salt vm_minion nsxt_policy_tier1.absent hostname=nsxt-manager.local username=admin ...
         delete_tier1:
           nsxt_policy_tier1.absent:
             - name: <Name of the operation>
@@ -1166,6 +1206,6 @@ def absent(
             ] = "tier1 gateway with display_name: {} and its sub-resources deleted successfully".format(
                 display_name
             )
-            ret["changes"]["old"] = tier1_hierarchy
+            ret["changes"]["old"] = json.dumps(tier1_hierarchy)
             ret["changes"]["new"] = {}
             return ret

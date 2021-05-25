@@ -68,80 +68,73 @@ class NSXTSegment(NSXTPolicyBaseResource):
             "state",
             "_revision",
         }
-
         resource_params = {}
         for field in fields:
             val = kwargs.get(field)
-            if kwargs.get(field):
+            if val:
                 resource_params[field] = val
-
         resource_params["resource_type"] = "Segment"
-
-        if not hasattr(resource_params, "id"):
-            resource_params["id"] = resource_params["display_name"]
-
+        resource_params.setdefault("id", resource_params["display_name"])
         # Formation of the path for transport zone id
-
         transport_zone_id = kwargs.get("transport_zone_id")
-        if not transport_zone_id and kwargs.get("transport_zone_name"):
+        transport_zone_display_name = kwargs.get("transport_zone_display_name")
+        if not transport_zone_id and transport_zone_display_name:
             transport_zone_id = self.get_id_using_display_name(
                 url=(
                     "https://{}/api/v1/transport-zones".format(self.nsx_resource_params["hostname"])
                 ),
-                display_name=kwargs.get("transport_zone_name"),
+                display_name=transport_zone_display_name,
             )
-
-        site_id = kwargs.get("site_id", "default")
-        enforcementpoint_id = kwargs.get("enforcementpoint_id", "default")
-        transport_zone_base_url = TRANSPORT_ZONE_URL.format(site_id, enforcementpoint_id)
-        if transport_zone_id:
-            resource_params["transport_zone_path"] = (
-                transport_zone_base_url + "/" + transport_zone_id
-            )
-
+            site_id = kwargs.get("site_id", "default")
+            enforcementpoint_id = kwargs.get("enforcementpoint_id", "default")
+            transport_zone_base_url = TRANSPORT_ZONE_URL.format(site_id, enforcementpoint_id)
+            if transport_zone_id:
+                resource_params["transport_zone_path"] = (
+                    transport_zone_base_url + "/" + transport_zone_id
+                )
         # Formation of path for tier0
         tier0_id = kwargs.get("tier0_id")
-        if not tier0_id and kwargs.get("tier0_display_name"):
+        tier0_display_name = kwargs.get("tier0_display_name")
+        if not tier0_id and tier0_display_name:
             tier0_id = self.get_id_using_display_name(
                 url=(
                     NSXTSegment.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
                     + TIER_0_URL
                 ),
-                display_name=kwargs.get("tier0_display_name"),
+                display_name=tier0_display_name,
             )
         if tier0_id:
             resource_params["connectivity_path"] = TIER_0_URL + "/" + tier0_id
-
         # Formation of path for tier1
-        tier1_id = kwargs.get("tier0_id")
-        if not tier1_id and kwargs.get("tier1_display_name"):
+        tier1_id = kwargs.get("tier1_id")
+        tier1_display_name = kwargs.get("tier1_display_name")
+        if not tier1_id and tier1_display_name:
             tier1_id = self.get_id_using_display_name(
                 url=(
                     NSXTSegment.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
                     + TIER_1_URL
                 ),
-                display_name=kwargs.get("tier1_display_name"),
+                display_name=tier1_display_name,
             )
         if tier1_id:
             resource_params["connectivity_path"] = TIER_1_URL + "/" + tier1_id
-
         # Support for advance config
         advance_config = kwargs.get("advanced_config")
         if advance_config:
             address_pool_id = advance_config.get("address_pool_id")
-            if not address_pool_id and advance_config.get("address_pool_name"):
+            address_pool_name = advance_config.get("address_pool_name")
+            if not address_pool_id and address_pool_name:
                 address_pool_id = self.get_id_using_display_name(
                     url=(
                         NSXTSegment.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
                         + IP_POOL_URL
                     ),
-                    display_name=advance_config["address_pool_name"],
+                    display_name=address_pool_name,
                 )
             if address_pool_id:
                 address_pool_paths = [IP_POOL_URL + "/" + address_pool_id]
                 advance_config.pop("address_pool_id")
                 resource_params["advanced_config"]["address_pool_paths"] = address_pool_paths
-
         self.multi_resource_params.append(resource_params)
 
     def update_parent_info(self, parent_info):
@@ -169,20 +162,16 @@ class NSXTSegment(NSXTPolicyBaseResource):
                 "state",
                 "_revision",
             }
-
-            if kwargs.get("segment_ports") and len(kwargs.get("segment_ports")) > 0:
-                segment_ports = kwargs.get("segment_ports")
-                for segment_port in segment_ports:
-                    resource_params = {}
-                    for key in fields:
-                        val = segment_port.get(key)
-                        if val:
-                            resource_params[key] = val
-
-                    if not resource_params.get("id"):
-                        resource_params["id"] = resource_params["display_name"]
-
-                    self.multi_resource_params.append(resource_params)
+            segment_ports = kwargs.get("segment_ports") or {}
+            for segment_port in segment_ports:
+                resource_params = {}
+                for key in fields:
+                    val = segment_port.get(key)
+                    if val:
+                        resource_params[key] = val
+                if not resource_params.get("id"):
+                    resource_params["id"] = resource_params["display_name"]
+                self.multi_resource_params.append(resource_params)
 
         @staticmethod
         def get_resource_base_url(parent_info):
@@ -193,52 +182,37 @@ class NSXTSegment(NSXTPolicyBaseResource):
 def get(hostname, username, password, **kwargs):
     """
     Lists NSXT Segment present in the NSX-T Manager
-
     CLI Example:
-
     .. code-block:: bash
-
         salt vm_minion nsxt_policy_segment.get hostname=nsxt-manager.local username=admin ...
-
     hostname
         The host name of NSX-T manager
-
     username
         Username to connect to NSX-T manager
-
     password
         Password to connect to NSX-T manager
-
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
-
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
-
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
-
     cursor
         (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
-
     include_mark_for_delete_objects
         (Optional) Include objects that are marked for deletion in results. If true, resources that are marked for
         deletion will be included in the results. By default, these resources are not included.
-
     included_fields
         (Optional) Comma separated list of fields that should be included in query result
-
     page_size
         (Optional) Maximum number of results to return in this page
-
     sort_by
         (Optional) Field by which records are sorted
-
     sort_ascending
         (Optional) Boolean value to sort result in ascending order
     """
@@ -252,39 +226,28 @@ def get(hostname, username, password, **kwargs):
 def get_by_display_name(hostname, username, password, display_name, **kwargs):
     """
     Gets NSXT Segment present in the NSX-T Manager with given name.
-
     CLI Example:
-
     .. code-block:: bash
-
         salt vm_minion nsxt_policy_segment.get_by_display_name hostname=nsxt-manager.local username=admin ...
-
     hostname
         The host name of NSX-T manager
-
     username
         Username to connect to NSX-T manager
-
     password
         Password to connect to NSX-T manager
-
     display_name
         The name of segment to fetch
-
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
-
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
-
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
-
     """
     nsxt_segment = NSXTSegment()
     url = (
@@ -296,27 +259,20 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
 def get_hierarchy(hostname, username, password, segment_id, **kwargs):
     """
     Returns entire hieararchy of segment and its sub-resources
-
     hostname
         The host name of NSX-T manager
-
     username
         Username to connect to NSX-T manager
-
     password
         Password to connect to NSX-T manager
-
     segment_id
         id of the segment
-
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
-
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
-
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
@@ -347,30 +303,21 @@ def create_or_update(
 ):
     """
     Creates a Segment and its sub-resources with given specifications
-
     CLI Example:
-
     .. code-block:: bash
-
         salt vm_minion nsxt_policy_segment.create hostname=nsxt-manager.local username=admin ...
-
     hostname
         The host name of NSX-T manager
-
     username
         Username to connect to NSX-T manager
-
     password
         Password to connect to NSX-T manager
-
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
-
     cert
-        Path to the SSL client certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
-
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
@@ -390,11 +337,12 @@ def create_or_update(
                     'absent' is used to delete resource."
     tags:
         description: Opaque identifiers meaningful to the API user.
-
+        required: False
     description:
         description: Segment description.
     address_bindings:
         description: Address bindings for the Segment
+        required: False
         type: list
         elements: dict
         suboptions:
@@ -409,6 +357,7 @@ def create_or_update(
                 type: int
     admin_state:
         description: Represents Desired state of the Segment
+        required: False
         type: str
         choices:
             - UP
@@ -416,6 +365,7 @@ def create_or_update(
         default: UP
     advanced_config:
         description: Advanced configuration for Segment.
+        required: False
         type: dict
         suboptions:
             address_pool_id:
@@ -497,6 +447,7 @@ def create_or_update(
                 type: str
     bridge_profiles:
         description: Bridge Profile Configuration
+        required: False
         type: list
         elements: dict
         suboptions:
@@ -528,12 +479,14 @@ def create_or_update(
     connectivity_path:
         description: Policy path to the connecting Tier-0 or Tier-1. Valid only
                      for segments created under Infra
+        required: False
         type: str
     dhcp_config_path:
         description:
             - Policy path to DHCP configuration
             - Policy path to DHCP server or relay configuration to use for all
               IPv4 & IPv6 subnets configured on this segment.
+        required: False
         type: str
     extra_configs:
         description:
@@ -542,6 +495,7 @@ def create_or_update(
               key value string pairs, the setting in extra_configs will be
               automatically inheritted by segment ports in the Segment.
         type: list
+        required: False
         elements: dict
         suboptions:
             config_pair:
@@ -559,6 +513,7 @@ def create_or_update(
                         required: true
     l2_extension:
         description: Configuration for extending Segment through L2 VPN
+        required: False
         type: dict
         suboptions:
             l2vpn_paths:
@@ -586,11 +541,11 @@ def create_or_update(
             description: Metadata Proxy Configuration Paths
             type: list
             elements: str
-
     tier0_display_name:
         description: Same as tier_0_id. Either one can be specified.
                      If both are specified, tier_0_id takes
                      precedence.
+        required: False
         type: str
     tier0_id:
         description: The Uplink of the Policy Segment.Mutually exclusive with tier_1_id.
@@ -807,27 +762,20 @@ def create_or_update(
 def delete(hostname, username, password, segment_id, **kwargs):
     """
     Deletes a segment and it sub-resources
-
     hostname
         The host name of NSX-T manager
-
     username
         Username to connect to NSX-T manager
-
     password
         Password to connect to NSX-T manager
-
     segment_id
         id of the segment to be deleted
-
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
-
     cert
         Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
-
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed

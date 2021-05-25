@@ -158,7 +158,7 @@ def test_present_create_new_tier1():
             ret["comment"] = "Created Tier-1 gateway {display_name} successfully".format(
                 display_name=_mocked_tier1["display_name"]
             )
-            ret["changes"]["new"] = _mocked_tier1
+            ret["changes"]["new"] = json.dumps(_mocked_tier1)
             assert (
                 nsxt_policy_tier1.present(
                     name="create tier1",
@@ -253,8 +253,8 @@ def test_present_update_tier1():
             ret["comment"] = "Updated Tier-1 gateway {display_name} successfully".format(
                 display_name=_mocked_tier1["display_name"]
             )
-            ret["changes"]["new"] = _mocked_tier1
-            ret["changes"]["old"] = _mocked_tier1
+            ret["changes"]["new"] = json.dumps(_mocked_tier1)
+            ret["changes"]["old"] = json.dumps(_mocked_tier1)
             assert (
                 nsxt_policy_tier1.present(
                     name="update tier1",
@@ -591,7 +591,7 @@ def test_absent():
                 _mocked_tier1["display_name"]
             )
             ret["changes"]["new"] = {}
-            ret["changes"]["old"] = _mocked_tier1
+            ret["changes"]["old"] = json.dumps(_mocked_tier1)
             assert (
                 nsxt_policy_tier1.absent(
                     name="delete tier1",

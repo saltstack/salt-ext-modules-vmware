@@ -1,23 +1,20 @@
 """
 State module for NSX-T segment
 """
+import json
 import logging
 
 log = logging.getLogger(__name__)
 
 
-try:
-    from saltext.nsxt.modules import nsxt_policy_segment
-
-    HAS_POLICY_SEGMENT = True
-except ImportError:
-    HAS_POLICY_SEGMENT = False
-
-
 def __virtual__():
-    if not HAS_POLICY_SEGMENT:
-        return False, "'nsxt_policy_segment' binary not found on system"
-    return "nsxt_policy_segment"
+    """
+    Only load if module nsxt_policy_segment is available
+    """
+    return (
+        "nsxt_policy_segment" if "nsxt_policy_segment.get" in __salt__ else False,
+        "'nsxt_policy_segment' not found on ",
+    )
 
 
 def present(
@@ -58,9 +55,14 @@ def present(
       specifications.
       Note: To delete any subresource of segment state parameter as absent
       CLI Example:
+
       .. code-block:: bash
+
           salt vm_minion nsxt_policy_segment.present hostname=nsxt-manager.local username=admin ...
+
       .. code-block:: yaml
+
+    create_segment:
     nsxt_policy_segment.present:
       - name: Create segment
         hostname: <hostname>
@@ -68,16 +70,18 @@ def present(
         password: <password>
         cert: <certificate>
         verify_ssl: <False/True>
-        display_name: test-seg-4
+            display_name: test-seg-4
         state: present
         domain_name: dn1
         transport_zone_display_name: "1-transportzone-730"
         replication_mode: "SOURCE"
+        address_bindings:
+          - ip_address: "10.1.2.11"
         advanced_config:
-          - address_pool_display_name: small-2-pool
-            connectivity: "OFF"
-            hybrid: False
-            local_egress: True
+          address_pool_display_name: small-2-pool
+          connectivity: "OFF"
+          hybrid: False
+          local_egress: True
         admin_state: UP
         connectivity_path: "/infra/tier-1s/d082bc25-a9b2-4d13-afe5-d3cecad4b854"
         subnets:
@@ -98,39 +102,56 @@ def present(
             state: present
           - display_name: test-sp-3
             state: present
-    hostname
+
+        hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     display_name:
-        description: Display name.If resource ID is not specified, display_name will be used as ID.
+        required: true
+        description:
+            - Display name.
+            - If resource ID is not specified, display_name will be used as ID.
         type: str
+
     state:
+        required: false
         choices:
         - present
         - absent
-        description: State can be either 'present' or 'absent'.'present' is used to create or update resource.'absent' is used to delete resource.
+        description: "State can be either 'present' or 'absent'.
+                    'present' is used to create or update resource.
+                    'absent' is used to delete resource."
     tags:
+        required: false
         description: Opaque identifiers meaningful to the API user.
-        required: False
+
     description:
+        required: false
         description: Segment description.
+
     address_bindings:
+        required: false
         description: Address bindings for the Segment
-        required: False
         type: list
         elements: dict
         suboptions:
@@ -143,24 +164,33 @@ def present(
             vlan_id:
                 description: VLAN ID for port binding
                 type: int
+
     admin_state:
+        required: false
         description: Represents Desired state of the Segment
-        required: False
         type: str
         choices:
-        - UP
-        - DOWN
+            - UP
+            - DOWN
         default: UP
+
     advanced_config:
+        required: false
         description: Advanced configuration for Segment.
-        required: False
         type: dict
         suboptions:
             address_pool_id:
-                description: IP address pool ID
+                description:
+                    - IP address pool ID
+                    - Either this or address_pool_display_name must be
+                      specified. If both are specified, address_pool_id takes
+                      precedence
                 type: str
             address_pool_name:
-                description: IP address pool display name
+                description:
+                    - IP address pool display name
+                    - Either this or address_pool_id must be specified. If both
+                      are specified, address_pool_id takes precedence
                 type: str
             connectivity:
                 description: Connectivity configuration to manually connect
@@ -200,7 +230,8 @@ def present(
                     prefix_list_paths:
                         required: true
                         description:
-                            - Policy path to prefix lists, max 1 element
+                            - Policy path to prefix lists
+                            - max 1 element
                             - The destination address of traffic matching a
                               prefix-list is forwarded to the nexthop_address.
                               Traffic matching a prefix list with Action DENY
@@ -225,9 +256,10 @@ def present(
                       associated with it and the host switch's default teaming
                       policy will be used by MP.
                 type: str
+
     bridge_profiles:
+        required: false
         description: Bridge Profile Configuration
-        required: False
         type: list
         elements: dict
         suboptions:
@@ -256,26 +288,29 @@ def present(
                     - VLAN transport zone should belong to the enforcment-point
                       as the transport zone specified in the segment.
                 type: str
+
     connectivity_path:
+        required: false
         description: Policy path to the connecting Tier-0 or Tier-1. Valid only
                      for segments created under Infra
-        required: False
         type: str
+
     dhcp_config_path:
+        required: false
         description:
             - Policy path to DHCP configuration
             - Policy path to DHCP server or relay configuration to use for all
               IPv4 & IPv6 subnets configured on this segment.
-        required: False
         type: str
+
     extra_configs:
+        required: false
         description:
             - Extra configs on Segment
             - This property could be used for vendor specific configuration in
               key value string pairs, the setting in extra_configs will be
               automatically inheritted by segment ports in the Segment.
         type: list
-        required: False
         elements: dict
         suboptions:
             config_pair:
@@ -291,9 +326,10 @@ def present(
                         description: Value
                         type: str
                         required: true
+
     l2_extension:
+        required: false
         description: Configuration for extending Segment through L2 VPN
-        required: False
         type: dict
         suboptions:
             l2vpn_paths:
@@ -307,7 +343,8 @@ def present(
                suboptions:
                    optimized_ips:
                        description: Gateway IP for Local Egress. Local egress
-                                    is enabled only when this list is not empty
+                                    is enabled only when this list is not
+                                    empty
                        type: list
                        elements: str
             tunnel_id:
@@ -320,50 +357,71 @@ def present(
             description: Metadata Proxy Configuration Paths
             type: list
             elements: str
+
     tier0_display_name:
+        required: false
         description: Same as tier_0_id. Either one can be specified.
                      If both are specified, tier_0_id takes
                      precedence.
-        required: False
         type: str
+
     tier0_id:
+        required: false
         description: The Uplink of the Policy Segment.Mutually exclusive with tier_1_id.
         type: str
+
     tier1_display_name:
+        required: false
         description: Same as tier_1_id. Either one can be specified.
                      If both are specified, tier_1_id takes
                      precedence.
         type: str
+
     tier1_id:
+        required: false
         description: The Uplink of the Policy Segment.Mutually exclusive with tier_0_id but takes precedence.
         type: str
+
     domain_name:
+        required: false
         description: Domain name associated with the Policy Segment.
         type: str
+
     transport_zone_display_name:
+        required: false
         description: Same as transport_zone_id. Either one can be specified.
                      If both are specified, transport_zone_id takes
                      precedence.
         type: str
+
     transport_zone_id:
+        required: false
         description: The TZ associated with the Policy Segment.
         type: str
+
     enforcementpoint_id:
+        required: false
         description: The EnforcementPoint ID where the TZ is located.
                      Required if transport_zone_id is specified.
         default: default
         type: str
+
     site_id:
+        required: false
         description: The site ID where the EnforcementPoint is located.
                      Required if transport_zone_id is specified.
         default: default
         type: str
+
     vlan_ids:
+        required: false
         description: VLAN ids for a VLAN backed Segment.
                      Can be a VLAN id or a range of VLAN ids specified with '-'
                      in between.
         type: list
+
     subnets:
+        required: false
         description: Subnets that belong to this Policy Segment.
         type: dict
         suboptions:
@@ -382,9 +440,13 @@ def present(
                              Gateway IP address in CIDR format for both IPv4
                              and IPv6.
                 type: str
+
     segment_ports:
+        required: false
         type: list
-        description: Add the Segment Ports to be create, updated, or deleted in this section
+        description:
+            - Add the Segment Ports to be create, updated, or deleted in this
+              section
         element: dict
         suboptions:
             address_bindings:
@@ -574,6 +636,7 @@ def present(
             cert=cert,
             cert_common_name=cert_common_name,
             display_name=display_name,
+            state=state,
             tags=tags,
             description=description,
             address_bindings=address_bindings,
@@ -635,7 +698,7 @@ def present(
         ret["comment"] = "Created segment {display_name} successfully".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = segment_hierarchy
+        ret["changes"]["new"] = json.dumps(segment_hierarchy)
         return ret
 
     else:
@@ -666,6 +729,7 @@ def present(
             cert=cert,
             cert_common_name=cert_common_name,
             display_name=display_name,
+            state=state,
             tags=tags,
             description=description,
             address_bindings=address_bindings,
@@ -717,8 +781,8 @@ def present(
         ret["comment"] = "Updated segment {display_name} successfully".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = segment_hierarchy_response_after_update
-        ret["changes"]["old"] = segment_hierarchy_response
+        ret["changes"]["new"] = json.dumps(segment_hierarchy_response_after_update)
+        ret["changes"]["old"] = json.dumps(segment_hierarchy_response)
         return ret
 
 
@@ -734,9 +798,13 @@ def absent(
 ):
     """
     Deletes segment with the given display_name and all its sub-resources
+
     CLI Example:
-    .. code-block:: bash
-        salt vm_minion nsxt_policy_segment.absent hostname=nsxt-manager.local username=admin ...
+
+        .. code-block:: bash
+
+            salt vm_minion nsxt_policy_segment.absent hostname=nsxt-manager.local username=admin ...
+
         delete_segment:
           nsxt_policy_segment.absent:
             - name: <Name of the operation>
@@ -746,27 +814,37 @@ def absent(
               display_name: <display name of segment>
               cert: <certificate>
               verify_ssl: <False/True>
+
+
         name
             Name of the operation to perform
+
         hostname
             The host name of NSX-T manager
+
         username
             Username to connect to NSX-T manager
+
         password
             Password to connect to NSX-T manager
+
         display_name
             Display name of the segment to delete
+
         verify_ssl
             (Optional) Option to enable/disable SSL verification. Enabled by default.
             If set to False, the certificate validation is skipped.
+
         cert
             (Optional) Path to the SSL certificate file to connect to NSX-T manager.
             The certificate can be retrieved from browser.
+
         cert_common_name
             (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
              verification. If the client certificate common name and hostname do not match (in case of self-signed
              certificates), specify the certificate common name as part of this parameter. This value is then used to
              compare against certificate common name.
+
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
 
@@ -853,6 +931,6 @@ def absent(
         ] = "Segment with display_name: {} and its sub-resources deleted successfully".format(
             display_name
         )
-        ret["changes"]["old"] = segment_hierarchy
+        ret["changes"]["old"] = json.dumps(segment_hierarchy)
         ret["changes"]["new"] = {}
         return ret

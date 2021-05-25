@@ -242,7 +242,9 @@ def test_create_of_segment_with_error(mock_call_api):
         subnets=[{"gateway_address": "10.22.12.2/23", "network": "10.22.12.0/23"}],
     )
 
-    assert "error" in result[0].get("error")
+    assert result[0].__contains__("error") == True
+    assert result[0]["error"].__contains__(_error_json["error"]) == True
+    assert result[0]["error"].__contains__("segments") == True
 
 
 @patch.object(nsxt_request, "call_api")
@@ -319,7 +321,8 @@ def test_create_of_segment_with_segment_port_with_error(mock_call_api):
 
     assert result[0].get("resourceType") == "segments"
     assert result[0].get("results") == _mock_segment
-    assert "error" in result[1].get("error")
+    assert result[1].__contains__("error") == True
+    assert result[1]["error"].__contains__(_error_json["error"]) == True
 
 
 @patch.object(nsxt_request, "call_api")
@@ -358,7 +361,8 @@ def test_delete_segment_with_error(mock_call_api):
         verify_ssl=False,
     )
 
-    assert "error" in result[0].get("error")
+    assert result[0].__contains__("error") == True
+    assert result[0].get("error").__contains__("segment_ports") == True
 
 
 @patch.object(nsxt_request, "call_api")
