@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """
-    :codeauthor: :email:`Rod McKenzie (roderick.mckenzie@morganstanley.com)`
-    :codeauthor: :email:`Alexandru Bleotu (alexandru.bleotu@morganstanley.com)`
+    :codeauthor: `Rod McKenzie (roderick.mckenzie@morganstanley.com)`
+    :codeauthor: `Alexandru Bleotu (alexandru.bleotu@morganstanley.com)`
 
     salt.config.schemas.vcenter
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~

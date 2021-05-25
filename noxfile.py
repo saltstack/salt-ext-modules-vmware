@@ -81,7 +81,9 @@ def _install_requirements(
     install_test_requirements=True,
     install_source=False,
     install_salt=True,
+    install_extras=None,
 ):
+    install_extras = install_extras or []
     if SKIP_REQUIREMENTS_INSTALL is False:
         # Always have the wheel package installed
         session.install("--progress-bar=off", "wheel", silent=PIP_INSTALL_SILENT)
@@ -94,7 +96,7 @@ def _install_requirements(
             session.install("--progress-bar=off", SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
         if install_test_requirements:
-            session.install("-e", ".[tests]", silent=PIP_INSTALL_SILENT)
+            install_extras.append("tests")
 
         if EXTRA_REQUIREMENTS_INSTALL:
             session.log(
@@ -107,10 +109,12 @@ def _install_requirements(
             install_command += [req.strip() for req in EXTRA_REQUIREMENTS_INSTALL.split()]
             session.install(*install_command, silent=PIP_INSTALL_SILENT)
 
-        if passed_requirements:
-            session.install(*passed_requirements)
         if install_source:
-            session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+            pkg = "."
+            if install_extras:
+                pkg += f"[{','.join(install_extras)}]"
+
+            session.install("-e", pkg, silent=PIP_INSTALL_SILENT)
 
 
 @nox.session(python=PYTHON_VERSIONS)
@@ -378,14 +382,12 @@ def docs(session):
     """
     Build Docs
     """
-    requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "docs.txt"
     _install_requirements(
         session,
-        "-r",
-        str(requirements_file.relative_to(REPO_ROOT)),
         install_coverage_requirements=False,
         install_test_requirements=False,
         install_source=True,
+        install_extras=["docs"],
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
@@ -450,16 +452,20 @@ def gen_api_docs(session):
     """
     Generate API Docs
     """
-    requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "docs.txt"
     _install_requirements(
         session,
-        "-r",
-        str(requirements_file.relative_to(REPO_ROOT)),
         install_coverage_requirements=False,
         install_test_requirements=False,
         install_source=True,
+        install_extras=["docs"],
     )
     shutil.rmtree("docs/ref")
     session.run(
-        "sphinx-apidoc", "--implicit-namespaces", "--module-first", "-o", "docs/ref/", "src/saltext"
+        "sphinx-apidoc",
+        "--implicit-namespaces",
+        "--module-first",
+        "-o",
+        "docs/ref/",
+        "src/saltext",
+        "src/saltext/vmware/config/schemas",
     )

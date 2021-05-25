@@ -94,9 +94,11 @@ exclude_patterns = [
     ".gitlab-ci",
     ".gitignore",
     "sitevars.rst",
+    "schemas",
 ]
 
-autosummary_generate = True
+autosummary_generate = False
+coverage_ignore_modules = ["salt.*"]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -181,6 +183,8 @@ intersphinx_mapping = {
 autodoc_default_options = {"member-order": "bysource"}
 autodoc_mock_imports = ["salt"]
 # <---- Autodoc Config -----------------------------------------------------------------------------------------------
+
+linkcheck_timeout = 10
 
 
 def setup(app):

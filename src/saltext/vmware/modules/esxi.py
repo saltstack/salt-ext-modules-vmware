@@ -130,7 +130,7 @@ def get_capabilities(*, service_instance=None):
             "vmotionSupported": capability.vmotionSupported,
             "vmotionWithStorageVMotionSupported": capability.vmotionWithStorageVMotionSupported,
             "vrNfcNicSelectionSupported": capability.vrNfcNicSelectionSupported,
-            "vsanSupported": capability.vsanSupported
+            "vsanSupported": capability.vsanSupported,
         }
 
     return capabilities

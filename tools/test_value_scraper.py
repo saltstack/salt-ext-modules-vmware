@@ -11,6 +11,7 @@ integration suite.
 It's not an ideal way to test, but it does at least provide some automation
 to the process.
  """
+import argparse
 import json
 import pathlib
 import ssl
@@ -41,9 +42,7 @@ def do_it(*, config_file):
     config["esxi_datastore_disk_names"] = [
         extent.diskName for datastore in host.datastore for extent in datastore.info.vmfs.extent
     ]
-    config["esxi_capabilities"] = {
-        host.name: dict(host.capability.__dict__) for host in hosts
-    }
+    config["esxi_capabilities"] = {host.name: dict(host.capability.__dict__) for host in hosts}
     for host in hosts:
         for vm in host.vm:
             config["vm_facts"] = {}
@@ -56,38 +55,44 @@ def do_it(*, config_file):
                 "ip_address": vm.summary.guest.ipAddress,
                 "mac_address": None,
                 "power_state": vm.summary.runtime.powerState,
-                "uuid": vm.summary.config.uuid
+                "uuid": vm.summary.config.uuid,
             }
     json_config = json.dumps(config, indent=2, sort_keys=True)
     config_file.write_text(json_config)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        exit(
-            f"Usage: {sys.argv[-1]} [-c] CONFIG_FILE\n\n\t-c\tcreate config file if not exist.\n\n{__doc__}"
-        )
-    else:
-        config_file = pathlib.Path(sys.argv[-1])
-        if not config_file.is_file():
-            if "-c" in sys.argv:
-                host = input("vSphere host name/ip: ").strip()
-                user = (
-                    input("Admin username [administrator@vsphere.local]: ").strip()
-                    or "administrator@vsphere.local"
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        dest="create",
+        action="store_true",
+        default=False,
+        help="Create config file if not exists.",
+    )
+    parser.add_argument("CONFIG_FILE", type=pathlib.Path, help="Path to config file")
+    args = parser.parse_args()
+
+    config_file = args.CONFIG_FILE
+    if not config_file.is_file():
+        if args.create:
+            host = input("vSphere host name/ip: ").strip()
+            user = (
+                input("Admin username [administrator@vsphere.local]: ").strip()
+                or "administrator@vsphere.local"
+            )
+            password = input("Admin password [VMware1!]: ").strip() or "VMware1!"
+            config_file.write_text(
+                json.dumps(
+                    {
+                        "host": host,
+                        "user": user,
+                        "password": password,
+                    }
                 )
-                password = input("Admin password [VMware1!]: ").strip() or "VMware1!"
-                config_file.write_text(
-                    json.dumps(
-                        {
-                            "host": host,
-                            "user": user,
-                            "password": password,
-                        }
-                    )
-                )
-                do_it(config_file=config_file)
-            else:
-                exit(f"ERROR: {config_file} does not exist.")
-        else:
+            )
             do_it(config_file=config_file)
+        else:
+            exit(f"ERROR: {config_file} does not exist.")
+    else:
+        do_it(config_file=config_file)

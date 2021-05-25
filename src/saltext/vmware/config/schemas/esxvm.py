@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """
-    :codeauthor: :email:`Agnes Tevesz (agnes.tevesz@morganstanley.com)`
+    :codeauthor: `Agnes Tevesz (agnes.tevesz@morganstanley.com)`
 
     salt.config.schemas.esxvm
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
