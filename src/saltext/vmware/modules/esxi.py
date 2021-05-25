@@ -19,7 +19,7 @@ def get_lun_ids(*, service_instance):
     return ids
 
 
-@tools.get_si
+# @tools.get_si
 def get_capabilities(*, service_instance=None):
     """
     Return ESXi host's capability information.

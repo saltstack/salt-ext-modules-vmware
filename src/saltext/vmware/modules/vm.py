@@ -7,7 +7,7 @@ import saltext.vmware.utils.tools as tools
 import saltext.vmware.utils.datacenter as datacenter
 from pyVim.task import WaitForTask
 
-@tools.get_si
+# @tools.get_si
 def get_vm_facts(*, service_instance=None):
     """
     Return basic facts about a vSphere VM guest
@@ -55,7 +55,7 @@ def keep_lease_alive(lease):
             return
 
 
-@tools.get_si
+# @tools.get_si
 def create(*, service_instance):
     """
     Deploy a VMware VM from an OVF or OVA file
