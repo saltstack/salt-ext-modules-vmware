@@ -1,7 +1,9 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
+import saltext.vmware.utils.connect as connect
 
 
+# @connect.get_si
 def get_lun_ids(*, service_instance):
     """
     Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
@@ -17,10 +19,13 @@ def get_lun_ids(*, service_instance):
     return ids
 
 
-def get_capabilities(*, service_instance):
+# @connect.get_si
+def get_capabilities(*, service_instance=None):
     """
     Return ESXi host's capability information.
     """
+    if service_instance is None:
+        ...
     hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     capabilities = {}
     for host in hosts:
@@ -174,15 +179,7 @@ __virtualname__ = "esxi"
 
 
 def __virtual__():
-    """
-    Only work on proxy
-    """
-    if salt.utils.platform.is_proxy():
-        return __virtualname__
-    return (
-        False,
-        "The esxi execution module failed to load: only available on proxy minions.",
-    )
+    return __virtualname__
 
 
 def cmd(command, *args, **kwargs):
