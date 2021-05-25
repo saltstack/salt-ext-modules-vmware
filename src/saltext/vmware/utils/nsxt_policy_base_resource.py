@@ -4,7 +4,7 @@ from abc import abstractmethod
 
 import salt.utils.dictdiffer
 from salt.exceptions import SaltInvocationError
-from saltext.vmware.utils import nsxt_request
+from saltext.nsxt.utils import nsxt_request
 
 
 class NSXTPolicyBaseResource(ABC):
