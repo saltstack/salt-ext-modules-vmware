@@ -77,7 +77,6 @@ import errno
 import logging
 import ssl
 import time
-from os import sys
 from http.client import BadStatusLine
 
 import salt.exceptions
@@ -3980,90 +3979,3 @@ def _get_policy_dict(policy):
             subprofile_dicts.append(subprofile_dict)
     profile_dict["subprofiles"] = subprofile_dicts
     return profile_dict
-
-def get_vm_datacenter(*, vm):
-    """
-    Return a datacenter from vm
-    """
-    datacenter = None
-    while True:
-        if isinstance(vm, vim.Datacenter):
-            datacenter = vm
-            break
-        try:
-            vm = vm.parent
-        except AttributeError:
-            break
-    return datacenter
-
-
-def get_service_instance_datacenter(*, service_instance, datacenter_name):
-    """
-    Return a datacenter from service instance
-    """
-    datacenter = None
-    content = service_instance.content
-    for child in content.rootFolder.childEntity:
-        if child.name == datacenter_name:
-            datacenter = child
-            break
-    if datacenter == None:
-        sys.exit(f"Datacenter {datacenter_name} not found!")
-    return datacenter
-
-def get_si(f):
-    def wraps():
-        import ssl
-        from pyVim import connect
-        config = {
-            "esxi_host_name": "10.206.240.192",
-            "host": "10.206.240.167",
-            "password": "VMware1!",
-            "user": "administrator@vsphere.local",
-        }
-        ctx = ssl._create_unverified_context()
-        return f(service_instance=connect.SmartConnect( 
-        host=config["host"], user=config["user"], pwd=config["password"], sslContext=ctx
-    ))
-    return wraps
-
-
-def read_ovf_file(ovf_path):
-    """
-    Read in the OVF file.
-    """
-    try:
-        with open(ovf_path) as ovf_file:
-            return ovf_file.read()
-    except Exception:
-        exit(f"Could not read file: {ovf_path}")
-
-
-def get_destination_host(*, service_instance, host_name):
-    """
-    Return Destination Host
-    """
-    content = service_instance.content
-    container = content.viewManager.CreateContainerView(content.rootFolder, [vim.HostSystem], True)
-    destination_host = None
-    for obj in container.view:
-        if obj.name == host_name:
-            destination_host = obj
-            break
-    container.Destroy()
-    if destination_host == None:
-        sys.exit(f"Destination host {host_name} not found!")
-    return destination_host
-
-def get_cluster(*, datacenter, cluster_name):
-    cluster_list = datacenter.hostFolder.childEntity
-    cluster_obj = None
-    if cluster_name:
-        for cluster in cluster_list:
-            if cluster.name == cluster_name: 
-                cluster_obj = cluster
-    elif cluster_obj == None and len(cluster_list) > 0:
-        cluster_obj = cluster_list[0]
-    else:
-        exit(f"No clusters found in datacenter ({datacenter.name}).")
-    return cluster_obj

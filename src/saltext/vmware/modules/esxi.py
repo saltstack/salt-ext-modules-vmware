@@ -1,9 +1,9 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
-import saltext.vmware.utils.vmware as utils
+import saltext.vmware.utils.tools as tools
 
 
-# @utils.get_si
+# @tools.get_si
 def get_lun_ids(*, service_instance):
     """
     Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
@@ -19,7 +19,7 @@ def get_lun_ids(*, service_instance):
     return ids
 
 
-# @utils.get_si
+@tools.get_si
 def get_capabilities(*, service_instance=None):
     """
     Return ESXi host's capability information.

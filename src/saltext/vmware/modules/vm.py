@@ -3,10 +3,11 @@ from os import system
 from time import sleep
 from threading import Thread
 
-import saltext.vmware.utils.vmware as utils
+import saltext.vmware.utils.tools as tools
+import saltext.vmware.utils.datacenter as datacenter
 from pyVim.task import WaitForTask
 
-@utils.get_si
+@tools.get_si
 def get_vm_facts(*, service_instance=None):
     """
     Return basic facts about a vSphere VM guest
@@ -18,7 +19,7 @@ def get_vm_facts(*, service_instance=None):
         host_id = host.name
         vms[host_id] = {}
         for vm in virtual_machines:
-            dc = utils.get_datacenter(vm)
+            dc = datacenter.get_vm_datacenter(vm=vm)
             vms[host_id][vm.summary.config.name] = {
                 "cluster": vm.summary.runtime.host.parent.name,
                 "datacenter": dc.name,
@@ -54,8 +55,8 @@ def keep_lease_alive(lease):
             return
 
 
-@utils.get_si
-def deploy_vm(*, service_instance):
+@tools.get_si
+def create(*, service_instance):
     """
     Deploy a VMware VM from an OVF or OVA file
     """
@@ -66,17 +67,17 @@ def deploy_vm(*, service_instance):
     cluster_name = "Cluster"
     vmdk_path = "/vmfs/volumes"
     name = "joey2"
-    ovf = utils.read_ovf_file('../ovf/centos-7-114180-tools.ovf')
+    ovf = tools.read_ovf_file('../ovf/centos-7-114180-tools.ovf')
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
     
     # get destination host
-    destination_host = utils.get_destination_host(service_instance=service_instance, host_name=host_name)
+    destination_host = datacenter.get_destination_host(service_instance=service_instance, host_name=host_name)
 
     # get datacenter
-    datacenter = utils.get_service_instance_datacenter(service_instance=service_instance, datacenter_name=datacenter_name)
+    datacenter = datacenter.get_service_instance_datacenter(service_instance=service_instance, datacenter_name=datacenter_name)
     
     # Get cluster
-    cluster = utils.get_cluster(datacenter=datacenter, cluster_name=cluster_name)
+    cluster = datacenter.get_cluster(datacenter=datacenter, cluster_name=cluster_name)
     
     # Generate resource pool.
     resource_pool = cluster.resourcePool
@@ -105,25 +106,6 @@ def deploy_vm(*, service_instance):
         elif lease.state == vim.HttpNfcLease.State.error:
             print("Lease error: " + lease.state.error)
             exit(1)
-
-    # datastore_name = dest_host.datastore[0].name
-    # source_pool = dest_host.parent.resourcePool
-
-    # #config
-    # config = vim.vm.ConfigSpec()
-    # config.annotation = "Sample"
-    # config.memoryMB = 4
-    # config.guestId = "otherGuest"
-    # config.name = "joey"
-    # config.numCPUs = 1
-    # files = vim.vm.FileInfo()
-    # files.vmPathName = "["+datastore_name+"]"
-    # config.files = files
-
-
-    # WaitForTask(vm_folder.CreateVm(config, pool=source_pool, host=dest_host))
-    # print(dest_host)
-    return 'noob'
 
 
 # pylint: disable=C0302
