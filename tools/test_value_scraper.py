@@ -43,10 +43,10 @@ def do_it(*, config_file):
         extent.diskName for datastore in host.datastore for extent in datastore.info.vmfs.extent
     ]
     config["esxi_capabilities"] = {host.name: dict(host.capability.__dict__) for host in hosts}
+    config["vm_facts"] = {}
     for host in hosts:
+        config["vm_facts"][host.name] = {}
         for vm in host.vm:
-            config["vm_facts"] = {}
-            config["vm_facts"][host.name] = {}
             config["vm_facts"][host.name][vm.name] = {
                 "cluster": vm.summary.runtime.host.parent.name,
                 "esxi_hostname": vm.summary.runtime.host.summary.config.name,
