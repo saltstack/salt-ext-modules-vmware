@@ -1,0 +1,479 @@
+"""
+VMC Nat Rule state module
+================================================
+
+:maintainer: <VMware>
+:maturity: new
+
+Add new nat rule, update existing nat rule and delete existing nat rule from an SDDC.
+
+Example usage :
+
+.. code-block:: yaml
+    ensure_nat_rule:
+      vmc_nat_rules.present:
+        - hostname: sample-nsx.vmwarevmc.com
+        - refresh_key: 7jPSGSZpCa8e5Ouks4UY5cZyOtynAhF
+        - authorization_host: console-stg.cloud.vmware.com
+        - org_id: 10e1092f-51d0-473a-80f8-137652c39fd0
+        - sddc_id: b43da080-2626-f64c-88e8-7f31d9d2c306
+        - domain_id: mgw
+        - nat_rule: vCenter_Inbound_Rule_2
+        - verify_ssl: False
+        - cert: /path/to/client/certificate
+        - source_network: "10.117.5.73"
+        - translated_network: "192.168.1.1"
+
+
+.. warning::
+
+    It is recommended to pass the VMC authentication details using Pillars rather than specifying as plain text in SLS
+    files.
+
+
+"""
+
+# Import Python libs
+from __future__ import absolute_import, print_function, unicode_literals
+from saltext.vmware.utils import vmc_state, vmc_constants
+import logging
+
+log = logging.getLogger(__name__)
+NAT_RULE_NOT_FOUND_ERROR = "could not be found"
+
+
+def __virtual__():
+    """
+    Only load if the vmc_nat_rules module is available in __salt__
+    """
+    return (
+        "vmc_nat_rules" if "vmc_nat_rules.get" in __salt__ else False,
+        "'vmc_nat_rules' binary not found on system",
+    )
+
+
+def present(
+    name,
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    tier1,
+    nat,
+    nat_rule,
+    verify_ssl=True,
+    cert=None,
+    action=None,
+    destination_network=None,
+    source_network=None,
+    translated_network=None,
+    translated_ports=vmc_constants.VMC_NONE,
+    scope=None,
+    service=None,
+    enabled=None,
+    firewall_match=None,
+    logging=None,
+    description=None,
+    tags=vmc_constants.VMC_NONE,
+    sequence_number=None,
+    display_name=None
+):
+    """
+        Ensure a given nat rule exists for given SDDC
+
+        hostname
+            The host name of NSX-T manager
+
+        refresh_key
+            API Token of the user which is used to get the Access Token required for VMC operations
+
+        authorization_host
+            Hostname of the VMC cloud console
+
+        org_id
+            The Id of organization to which the SDDC belongs to
+
+        sddc_id
+            The Id of SDDC for which the nat rules should be added
+
+        domain_id
+            The domain_id for which the nat rules should belongs to. Possible values: mgw, cgw
+
+        nat_rule
+            Id of the security_rule to be added to SDDC
+
+        verify_ssl
+            (Optional) Option to enable/disable SSL verification. Enabled by default.
+            If set to False, the certificate validation is skipped.
+
+        cert
+            (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+            The certificate can be retrieved from browser.
+
+        action
+            specify type of NAT Rule it can have value REFLEXIVE, DNAT
+
+                REFLEXIVE NAT Rule require
+                    source_network
+                    translated_network
+                    service should be empty
+                    translated_ports  should be None
+
+                DNAT  Rule require
+                    service
+                    destination_network
+                    translated_network
+                    translated_ports
+                    source_network can be None or input network.
+
+        destination_network
+            Represents the destination network
+                This supports single IP address or comma separated list of single IP
+                addresses or CIDR. This does not support IP range or IP sets.
+
+        scope
+            Array of policy paths of labels, ProviderInterface, NetworkInterface
+
+        service
+            Represents the service on which the NAT rule will be applied
+
+        source_network
+            Represents the source network address
+                This supports single IP address or comma separated list of single IP
+                addresses or CIDR. This does not support IP range or IP sets.
+
+        translated_network
+            Represents the translated network address
+
+                This supports single IP address or comma separated list of single IP
+                addresses or CIDR. This does not support IP range or IP sets.
+
+        translated_ports
+            Port number or port range
+
+                Please note, if there is service configured in this NAT rule, the translated_port
+                will be realized on NSX Manager as the destination_port. If there is no sevice configured,
+                the port will be ignored.
+        enabled
+            (Optional) Policy NAT Rule enabled flag
+
+                The flag, which suggests whether the NAT rule is enabled or
+                disabled. The default is True.
+
+        firewall_match
+            (Optional) Represents the firewall match flag
+
+                It indicates how the firewall matches the address after NATing if firewall
+                stage is not skipped.
+                Choices
+                    MATCH_EXTERNAL_ADDRESS,
+                    MATCH_INTERNAL_ADDRESS
+                    Default: "MATCH_INTERNAL_ADDRESS"
+
+        logging
+            (Optional) Policy NAT Rule logging flag
+                default: False
+
+        description
+            (Optional) Description of of NAT Rule
+
+        tags
+            (Optional) Opaque identifiers meaningful to the API user. Maximum 30 tags can be associated:
+            tags='[
+                {
+                    "tag": "<tag-key-1>"
+                    "scope": "<tag-value-1>"
+                },
+                {
+                    "tag": "<tag-key-2>"
+                    "scope": "<tag-value-2>"
+                }
+            ]'
+
+
+        sequence_number
+            (Optional) Sequence number of the Nat Rule
+                The sequence_number decides the rule_priority of a NAT rule.
+                default: 0
+            type: int
+
+        display_name
+            Identifier to use when displaying entity in logs or GUI. This is applicable for only update scenario.
+            For create scenario, display_name would be same as rule_id.
+
+        following fields user need to enter  field with overriding values
+
+            {
+                "action": "REFLEXIVE",
+                "translated_network": "10.182.171.36",
+                "translated_ports": null,
+                "destination_network": "",
+                "source_network": "192.168.1.23",
+                "sequence_number": 0,
+                "service": "",
+                "logging": false,
+                "enabled": false,
+                "scope": [
+                    "/infra/labels/cgw-public"
+                ],
+                "tags": [
+                    {
+                        "tag": "tag1",
+                        "scope": "scope1"
+                    }
+                ],
+                "description": "",
+                "firewall_match": "MATCH_INTERNAL_ADDRESS"
+            }
+
+    """
+
+    input_dict = {
+        "action": action,
+        "description": description,
+        "destination_network": destination_network,
+        "scope": scope,
+        "service": service,
+        "source_network": source_network,
+        "tags": tags,
+        "translated_network": translated_network,
+        "translated_ports": translated_ports,
+        "enabled": enabled,
+        "firewall_match": firewall_match,
+        "logging": logging,
+        "sequence_number": sequence_number,
+        "display_name": display_name
+    }
+
+    get_nat_rule = __salt__["vmc_nat_rules.get_by_id"](
+        hostname=hostname,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        org_id=org_id,
+        sddc_id=sddc_id,
+        tier1=tier1,
+        nat=nat,
+        nat_rule=nat_rule,
+        verify_ssl=verify_ssl,
+        cert=cert
+    )
+
+    existing_nat_rule = None
+
+    if "error" in get_nat_rule and NAT_RULE_NOT_FOUND_ERROR not in get_nat_rule["error"]:
+        return vmc_state._create_state_response(name, None, None, False, get_nat_rule["error"])
+    elif "error" not in get_nat_rule:
+        log.info("Nat rule found with Id %s", nat_rule)
+        existing_nat_rule = get_nat_rule
+
+
+    if __opts__.get("test"):
+        log.info("present is called with test option")
+        if existing_nat_rule:
+            return vmc_state._create_state_response(name, None, None, None,
+                                          "State present will update Nat rule {}".format(nat_rule))
+        else:
+            return vmc_state._create_state_response(name, None, None, None,
+                                          "State present will create Nat rule {}".format(nat_rule))
+
+    if existing_nat_rule:
+        updatable_keys = input_dict.keys()
+        is_update_required = vmc_state._check_for_updates(existing_nat_rule, input_dict, updatable_keys, ["translated_ports", "tags"])
+
+        if is_update_required:
+            updated_nat_rule = __salt__["vmc_nat_rules.update"](
+                hostname=hostname,
+                refresh_key=refresh_key,
+                authorization_host=authorization_host,
+                org_id=org_id,
+                sddc_id=sddc_id,
+                tier1=tier1,
+                nat=nat,
+                nat_rule=nat_rule,
+                verify_ssl=verify_ssl,
+                cert=cert,
+                action=action,
+                destination_network=destination_network,
+                source_network=source_network,
+                translated_network=translated_network,
+                translated_ports=translated_ports,
+                scope=scope,
+                service=service,
+                enabled=enabled,
+                firewall_match=firewall_match,
+                logging=logging,
+                description=description,
+                tags=tags,
+                sequence_number=sequence_number,
+                display_name=display_name
+            )
+
+            if "error" in updated_nat_rule:
+                return vmc_state._create_state_response(name, None, None, False, updated_nat_rule["error"])
+
+            get_nat_rule_after_update = __salt__["vmc_nat_rules.get_by_id"](
+                hostname=hostname,
+                refresh_key=refresh_key,
+                authorization_host=authorization_host,
+                org_id=org_id,
+                sddc_id=sddc_id,
+                tier1=tier1,
+                nat=nat,
+                nat_rule=nat_rule,
+                verify_ssl=verify_ssl,
+                cert=cert
+            )
+
+            if "error" in get_nat_rule_after_update:
+                return vmc_state._create_state_response(name, None, None, False, get_nat_rule_after_update["error"])
+
+            return vmc_state._create_state_response(name, existing_nat_rule, get_nat_rule_after_update, True,
+                "Updated Nat rule {}".format(nat_rule))
+        else:
+            log.info("All fields are same as existing Nat rule %s", nat_rule)
+            return vmc_state._create_state_response(
+                name, None, None, True, "Nat rule exists already, no action to perform"
+            )
+    else:
+        log.info("No Nat rule found with Id %s", nat_rule)
+        created_nat_rule = __salt__["vmc_nat_rules.create"](
+            hostname=hostname,
+            refresh_key=refresh_key,
+            authorization_host=authorization_host,
+            org_id=org_id,
+            sddc_id=sddc_id,
+            tier1=tier1,
+            nat=nat,
+            nat_rule=nat_rule,
+            verify_ssl=verify_ssl,
+            cert=cert,
+            action=action,
+            destination_network=destination_network,
+            source_network=source_network,
+            translated_network=translated_network,
+            translated_ports=translated_ports,
+            scope=scope,
+            service=service,
+            enabled=enabled,
+            firewall_match=firewall_match,
+            logging=logging,
+            description=description,
+            tags=tags,
+            sequence_number=sequence_number
+        )
+
+        if "error" in created_nat_rule:
+            return vmc_state._create_state_response(name, None, None, False, created_nat_rule["error"])
+
+        return vmc_state._create_state_response(
+            name, None, created_nat_rule, True, "Created Nat rule {}".format(nat_rule)
+        )
+
+
+def absent(
+    name,
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    tier1,
+    nat,
+    nat_rule,
+    verify_ssl=True,
+    cert=None
+):
+    """
+        Ensure a given nat rule does not exist on given SDDC
+
+        hostname
+            The host name of NSX-T manager
+
+        refresh_key
+            API Token of the user which is used to get the Access Token required for VMC operations
+
+        authorization_host
+            Hostname of the VMC cloud console
+
+        org_id
+            The Id of organization to which the SDDC belongs to
+
+        sddc_id
+            The Id of SDDC from which the nat rule should be deleted
+
+        domain_id
+            The domain_id for which the nat rules should belongs to. Possible values: mgw, cgw
+
+        nat_rule
+            Id of the security_rule to be deleted from SDDC
+
+        verify_ssl
+            (Optional) Option to enable/disable SSL verification. Enabled by default.
+            If set to False, the certificate validation is skipped.
+
+        cert
+            (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+            The certificate can be retrieved from browser.
+
+    """
+
+    log.info("Checking if Nat rule with Id %s is present", nat_rule)
+    get_nat_rule = __salt__["vmc_nat_rules.get_by_id"](
+        hostname=hostname,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        org_id=org_id,
+        sddc_id=sddc_id,
+        tier1=tier1,
+        nat=nat,
+        nat_rule=nat_rule,
+        verify_ssl=verify_ssl,
+        cert=cert
+    )
+
+    existing_nat_rule = None
+
+    if "error" in get_nat_rule and NAT_RULE_NOT_FOUND_ERROR not in get_nat_rule["error"]:
+        return vmc_state._create_state_response(name, None, None, False, get_nat_rule["error"])
+    elif "error" not in get_nat_rule:
+        log.info("Nat rule found with Id %s", nat_rule)
+        existing_nat_rule = get_nat_rule
+
+    if __opts__.get("test"):
+        log.info("absent is called with test option")
+        if existing_nat_rule:
+            return vmc_state._create_state_response(name, None, None, None,
+                                          "State absent will delete Nat rule with Id {}".format(nat_rule))
+        else:
+            return vmc_state._create_state_response(name, None, None, None,
+                                          "State absent will do nothing as no Nat rule found with Id {}"
+                                                    .format(nat_rule))
+
+    if existing_nat_rule:
+        log.info("Security found with Id %s", nat_rule)
+        deleted_nat_rule = __salt__["vmc_nat_rules.delete"](
+            hostname=hostname,
+            refresh_key=refresh_key,
+            authorization_host=authorization_host,
+            org_id=org_id,
+            sddc_id=sddc_id,
+            tier1=tier1,
+            nat=nat,
+            nat_rule=nat_rule,
+            verify_ssl=verify_ssl,
+            cert=cert
+        )
+
+        if "error" in deleted_nat_rule:
+            return vmc_state._create_state_response(name, None, None, False, deleted_nat_rule["error"])
+
+        return vmc_state._create_state_response(
+            name, existing_nat_rule, None, True, "Deleted Nat rule {}".format(nat_rule)
+        )
+    else:
+        log.info("No Nat rule found with Id %s", nat_rule)
+        return vmc_state._create_state_response(
+            name, None, None, True, "No Nat rule found with Id {}".format(nat_rule)
+        )
+
