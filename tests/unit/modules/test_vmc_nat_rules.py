@@ -5,8 +5,6 @@
 # Import Python Libs
 from __future__ import absolute_import, print_function, unicode_literals
 
-from requests import Session
-
 import saltext.vmware.modules.vmc_nat_rules as vmc_nat_rules
 from saltext.vmware.utils import vmc_request
 from unittest.mock import patch
