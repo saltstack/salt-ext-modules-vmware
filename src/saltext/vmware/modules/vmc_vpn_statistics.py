@@ -5,10 +5,6 @@ Provides methods to Display VPN Statistics and Sessions.
 from __future__ import absolute_import
 
 import logging
-import urllib
-import requests
-import json
-import os
 
 from saltext.vmware.utils import vmc_request
 from saltext.vmware.utils import vmc_constants

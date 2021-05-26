@@ -5,11 +5,7 @@ Provides methods to Create, Update, Read and Delete Public IP.
 from __future__ import absolute_import
 
 import logging
-import requests
-import json
-import os
 
-from requests.exceptions import HTTPError, SSLError, RequestException
 from saltext.vmware.utils import vmc_request
 from saltext.vmware.utils import vmc_constants
 

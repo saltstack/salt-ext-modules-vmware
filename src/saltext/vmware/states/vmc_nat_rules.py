@@ -202,8 +202,7 @@ def present(
             Identifier to use when displaying entity in logs or GUI. This is applicable for only update scenario.
             For create scenario, display_name would be same as rule_id.
 
-        following fields user need to enter  field with overriding values
-
+        Example values:
             {
                 "action": "REFLEXIVE",
                 "translated_network": "10.182.171.36",
