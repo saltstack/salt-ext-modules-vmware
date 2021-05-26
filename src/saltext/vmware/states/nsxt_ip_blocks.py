@@ -8,10 +8,10 @@ Example:
     create_ip_block:
       nsxt_ip_blocks.present:
         - name: Create IP Block
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate path>
+          hostname: {{ pillar['nsxt_manager_hostname'] }}
+          username: {{ pillar['nsxt_manager_username'] }}
+          password: {{ pillar['nsxt_manager_password'] }}
+          cert: {{ pillar['nsxt_manager_certificate'] }}
           verify_ssl: <False/True>
           display_name: <ip block name>
           description: <ip block description>
@@ -61,10 +61,8 @@ def _check_for_updates(existing_ip_block, input_dict):
     for key in updatable_keys:
         existing_val = existing_ip_block.get(key)
         input_val = input_dict.get(key)
-        if not existing_val and input_val:
-            is_updatable = True
-        if existing_val and input_val and existing_val != input_val:
-            is_updatable = True
+        if existing_val != input_val and input_val:
+            return True
 
     return is_updatable
 
@@ -96,10 +94,10 @@ def present(
         create_ip_block:
           nsxt_ip_blocks.present:
             - name: Create IP Block
-              hostname: <hostname>
-              username: <username>
-              password: <password>
-              cert: <certificate>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               verify_ssl: <False/True>
               display_name: <ip block name>
               description: <ip block description>

@@ -17,7 +17,7 @@ def __virtual__():
     )
 
 
-def _check_for_update(
+def _needs_update(
     existing_compute_manager, thumbprint, server_origin_type, **compute_manager_params
 ):
     if thumbprint and thumbprint != existing_compute_manager["credential"]["thumbprint"]:
@@ -63,12 +63,12 @@ def present(
         register_compute_manager:
           nsxt_compute_manager.present:
             - name: Registration
-              hostname: <hostname>
-              username: <username>
-              password: <password>
-              certificate: <certificate>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               verify_ssl: <False/True>
-              compute_manager_server: <compute manager ip address or fqdn>
+              compute_manager_server: <compute manager IP address or FQDN>
               server_origin_type: <compute manager origin type>
               credential:
                 credential_type:  UsernamePasswordLoginCredential
@@ -92,7 +92,7 @@ def present(
         Password to connect to NSX-T manager
 
     compute_manager_server
-        Compute manager server ip address or fqdn
+        Compute manager server IP address or FQDN
 
     credential
         An object which contains credential details to validate compute manager
@@ -163,9 +163,9 @@ def present(
         )
         return ret
 
-    if compute_managers_result["result_count"] == 0:
-        existing_compute_manager = None
-    elif compute_managers_result["result_count"] == 1:
+    existing_compute_manager = None
+
+    if compute_managers_result["result_count"] == 1:
         existing_compute_manager = compute_managers_result["results"][0]
     else:
         ret["result"] = False
@@ -185,7 +185,9 @@ def present(
         thumbprint = credential.get("thumbprint", None)
     else:
         ret["result"] = False
-        ret["comment"] = "Parameter credential must be of type object. Please refer documentation"
+        ret[
+            "comment"
+        ] = "Parameter credential must be of type dictionary. Please refer documentation"
         return ret
 
     if existing_compute_manager is None:
@@ -220,7 +222,7 @@ def present(
             return ret
     else:
         log.info("Compute manager already exists. Going to check for updates")
-        is_update = _check_for_update(
+        is_update_required = _needs_update(
             existing_compute_manager=existing_compute_manager,
             thumbprint=thumbprint,
             server_origin_type=server_origin_type,
@@ -228,7 +230,7 @@ def present(
             description=description,
             set_as_oidc_provider=set_as_oidc_provider,
         )
-        if is_update:
+        if is_update_required:
             result = __salt__["nsxt_compute_manager.update"](
                 hostname=hostname,
                 username=username,
@@ -297,12 +299,12 @@ def absent(
         register_compute_manager:
           nsxt_compute_manager.absent:
             - name: Registration
-              hostname: <hostname>
-              username: <username>
-              password: <password>
-              certificate: <certificate>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               verify_ssl: <False/True>
-              compute_manager_server: <compute manager ip address or fqdn>
+              compute_manager_server: <compute manager IP address or FQDN>
 
     name
         Name of the operation to perform
@@ -317,7 +319,7 @@ def absent(
         Password to connect to NSX-T manager
 
     compute_manager_server
-        (Optional) Compute manager server ip address or fqdn
+        (Optional) Compute manager server IP address or FQDN
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.

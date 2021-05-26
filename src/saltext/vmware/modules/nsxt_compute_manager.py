@@ -40,17 +40,16 @@ def get(hostname, username, password, verify_ssl=True, cert=None, cert_common_na
         Password to connect to NSX-T manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
-        verification.
-        If the client certificate common name and hostname do not match (in case of self-signed certificates),
+        verification. If the client certificate common name and hostname do not match (in case of self-signed certificates),
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
 
@@ -139,17 +138,16 @@ def get_by_display_name(
         Display-name of the compute manager
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
-        verification.
-        If the client certificate common name and hostname do not match (in case of self-signed certificates),
+        verification. If the client certificate common name and hostname do not match (in case of self-signed certificates),
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
 
@@ -240,16 +238,19 @@ def register(
         Password to connect to NSX-T manager
 
     compute_manager_server
-        Compute manager server fqdn or ip
+        Compute manager server FQDN or IP
 
     credential
         An object which contains credential details to validate compute manager
         Sample usage in sls file:
-        credential:
-           credential_type: "UsernamePasswordLoginCredential"
-           username: "user"
-           password: "pass"
-           thumbprint: "36:XX:XX:XX:XX:XX:XX66"
+
+        .. code::
+
+            credential:
+               credential_type: "UsernamePasswordLoginCredential"
+               username: "user"
+               password: "pass"
+               thumbprint: "36:XX:XX:XX:XX:XX:XX66"
 
         credential_type
             Type of credential provided. For now only UsernamePasswordLoginCredential is supported.
@@ -277,11 +278,11 @@ def register(
         If the compute manager is VC and need to set set as OIDC provider for NSX then this flag should be set as true.
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -350,7 +351,7 @@ def update(
         Password to connect to NSX-T manager
 
     compute_manager_server
-        Compute manager server fqdn or ip
+        Compute manager server FQDN or IP
 
     compute_manager_id
         Unique Id of the compute manager provided by NSX-T
@@ -361,6 +362,9 @@ def update(
     credential
         An object which contains credential details to validate compute manager
         Sample usage in sls file:
+
+        .. code::
+
             credential:
                credential_type: "UsernamePasswordLoginCredential"
                username: "user"
@@ -393,11 +397,11 @@ def update(
         If the compute manager is VC and need to set set as OIDC provider for NSX then this flag should be set as true.
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name
@@ -466,11 +470,11 @@ def remove(
         NSX-T unique id for the compute manager. Needed in case of updating compute manager details
 
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
 
     cert
-        Path to the SSL certificate file to connect to NSX-T manager.
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
 
     cert_common_name

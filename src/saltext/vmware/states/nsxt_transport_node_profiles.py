@@ -21,16 +21,7 @@ def __virtual__():
     )
 
 
-def _compare_dict(obj1, obj2):
-    # returns True if objects are same, else False
-    changes_dict = salt.utils.dictdiffer.deep_diff(obj1, obj2)
-    if not changes_dict:
-        return True
-    else:
-        return False
-
-
-def _check_for_updates(existing_profile, new_profile_params):
+def _needs_update(existing_profile, new_profile_params):
     existing_profile_host_switch_spec = existing_profile.get("host_switch_spec")
     update_inputs_host_switch_spec = new_profile_params.get("host_switch_spec")
     if not existing_profile_host_switch_spec and update_inputs_host_switch_spec:
@@ -38,7 +29,9 @@ def _check_for_updates(existing_profile, new_profile_params):
     if (
         existing_profile_host_switch_spec
         and update_inputs_host_switch_spec
-        and not _compare_dict(existing_profile_host_switch_spec, update_inputs_host_switch_spec)
+        and salt.utils.dictdiffer.deep_diff(
+            existing_profile_host_switch_spec, update_inputs_host_switch_spec
+        )
     ):
         return True
 
@@ -78,7 +71,7 @@ def _get_by_display_name_result_from_module(
                 module_name, display_name
             )
         }
-    if len(result["results"]) < 1:
+    if not result["results"]:
         return {"error": "No results for {} with display_name {}".format(module_name, display_name)}
     return result["results"][0]
 
@@ -108,25 +101,25 @@ def _get_by_display_name(
                 object_type, display_name
             )
         }
-    if len(object_list) < 1:
+    if not object_list:
         return {"error": "No results for {} with display_name {}".format(object_type, display_name)}
 
     return object_list[0]
 
 
-def _get(url, username, password, **kwargs):
+def _get(url, username, password, cursor=None, cert_common_name=None, verify_ssl=True, cert=None):
     params = dict()
-    if kwargs.get("cursor"):
-        params["cursor"] = kwargs.get("cursor")
+    if cursor:
+        params["cursor"] = cursor
 
     return nsxt_request.call_api(
         method="get",
         url=url,
         username=username,
         password=password,
-        cert_common_name=kwargs.get("cert_common_name"),
-        verify_ssl=kwargs.get("verify_ssl", True),
-        cert=kwargs.get("cert"),
+        cert_common_name=cert_common_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
         params=params,
     )
 
@@ -143,9 +136,9 @@ def _update_params_with_id(
                     hostname,
                     username,
                     password,
-                    "fabric/virtual-switches",
-                    host_switch_type,
-                    host_switch_name,
+                    endpoint="fabric/virtual-switches",
+                    object_type=host_switch_type,
+                    display_name=host_switch_name,
                     cert=cert,
                     verify_ssl=verify_ssl,
                     cert_common_name=cert_common_name,
@@ -162,9 +155,9 @@ def _update_params_with_id(
                     hostname,
                     username,
                     password,
-                    "host-switch-profiles?include_system_owned=true",
-                    "host-switch-profiles",
-                    host_switch_profile["name"],
+                    endpoint="host-switch-profiles?include_system_owned=true",
+                    object_type="host-switch-profiles",
+                    display_name=host_switch_profile["name"],
                     cert=cert,
                     verify_ssl=verify_ssl,
                     cert_common_name=cert_common_name,
@@ -203,9 +196,9 @@ def _update_params_with_id(
                         hostname,
                         username,
                         password,
-                        "transport-zones",
-                        "transport zone",
-                        transport_zone_name,
+                        endpoint="transport-zones",
+                        object_type="transport zone",
+                        display_name=transport_zone_name,
                         cert=cert,
                         verify_ssl=verify_ssl,
                         cert_common_name=cert_common_name,
@@ -225,9 +218,9 @@ def _update_params_with_id(
                         hostname,
                         username,
                         password,
-                        "logical-switches",
-                        "destination network/logical switches",
-                        destination_network_name,
+                        endpoint="logical-switches",
+                        object_type="destination network/logical switches",
+                        display_name=destination_network_name,
                         cert=cert,
                         verify_ssl=verify_ssl,
                         cert_common_name=cert_common_name,
@@ -245,9 +238,9 @@ def _update_params_with_id(
                     hostname,
                     username,
                     password,
-                    "transport-zones",
-                    "transport zone",
-                    transport_zone_name,
+                    endpoint="transport-zones",
+                    object_type="transport zone",
+                    display_name=transport_zone_name,
                     cert=cert,
                     verify_ssl=verify_ssl,
                     cert_common_name=cert_common_name,
@@ -275,6 +268,7 @@ def present(
     description=None,
 ):
     """
+
     Creates or Updates(if present with same display_name) transport node profiles
     Fails if multiple transport node profiles are found with same display_name
 
@@ -289,10 +283,10 @@ def present(
         create_transport_node_profile:
           nsxt_transport_node_profiles.present:
             - name: Create uplink profile
-              hostname: <hostname>
-              username: <username>
-              password: <password>
-              cert: <certificate>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               verify_ssl: <False/True>
               display_name: <uplink profile name>
               description: <uplink profile description>
@@ -364,10 +358,10 @@ def present(
                 Specification for IPs to be used with host switch virtual tunnel endpoints
 
                 resource_type
-                    Resource type for ip assignment
+                    Resource type for IP assignment
 
                 ip_pool_name
-                    Name of the ip pool
+                    Name of the IP pool
 
             pnics
                 Array of Physical NICs connected to the host switch
@@ -402,6 +396,7 @@ def present(
 
     description
         (Optional) Description
+
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
     transport_node_profiles_result = __salt__["nsxt_transport_node_profiles.get_by_display_name"](
@@ -507,7 +502,7 @@ def present(
         ret["changes"]["new"] = json.dumps(create_result)
         return ret
     else:
-        update_required = _check_for_updates(
+        update_required = _needs_update(
             existing_transport_node_profile, current_transport_node_profile
         )
         if update_required:
@@ -575,11 +570,11 @@ def absent(
         delete_transport_node_profile:
           nsxt_transport_node_profiles.absent:
             - name: <Name of the operation>
-              hostname: <hostname>
-              username: <username>
-              password: <password>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               display_name: <display_name of the transport node profile>
-              cert: <certificate>
               verify_ssl: <False/True>
 
 

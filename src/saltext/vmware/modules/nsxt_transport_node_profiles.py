@@ -38,38 +38,53 @@ def get(
     sort_by=None,
 ):
     """
+
     Lists NSX-T transport node profiles
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_transport_node_profiles.get hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
-        verification.
-        If the client certificate common name and hostname do not match (in case of self-signed certificates),
+        verification. If the client certificate common name and hostname do not match (in case of self-signed certificates),
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
+
     cursor
         (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
+
     included_fields
         (Optional) Comma separated list of fields that should be included in query result
+
     page_size
         (Optional) Maximum number of results to return in this page
+
     sort_ascending
         (Optional) Boolean. Specifies sorting order
+
     sort_by
         (Optional) Field by which records are sorted
+
     """
     log.info("Fetching NSX-T transport node profiles")
     url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname)
@@ -104,29 +119,40 @@ def get_by_display_name(
     cert_common_name=None,
 ):
     """
+
     Gets nsxt transport node profiles present in the NSX-T Manager with given display_name.
+
     CLI Example:
     .. code-block:: bash
+
         salt vm_minion nsxt_transport_node_profiles.get_by_display_name hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     display_name
         The name of the transport node profile
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against certificate common name
+
     """
     log.info("Finding transport node profiles with display name: %s", display_name)
     transport_node_profiles = common_utils._read_paginated(
@@ -158,66 +184,86 @@ def create(
     ignore_overridden_hosts=None,
 ):
     """
+
     Creates transport node profile with the data payload provided.
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_transport_node_profiles.create hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     display_name
         The name of the transport node profile
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against certificate common name
+
     description
         (Optional) Description of this resource
+
     display_name
         (Optional) Display name for the transport node profile. Defaults to nsxt id, if not set
+
     host_switch_spec
         (Optional) Transport node host switch specification
         The HostSwitchSpec is the base class for standard and preconfigured host switch specifications.
         Only standard host switches are supported in the transport node profile.
+
     transport_zone_endpoints
         (Optional) This is deprecated. TransportZoneEndPoints should be specified per host switch at
         StandardHostSwitch through Transport Node or Transport Node Profile configuration. Array of transport zones.
+
     ignore_overridden_hosts
         (Optional) Boolean which determines if cluster-level configuration should be applied on overridden hosts. Default: False
-          hostname: <nsxt-hostname>
-          username: <nsxt-username>
-          password: <nsxt-password>
-          verify-ssl: <True/False>
-          display_name: <display_name>
-          description: <description>
-          host_switch_spec:
-            resource_type: StandardHostSwitchSpec
-            host_switches:
-              - host_switch_name: nvds1
-                host_switch_type: NVDS/VDS
-                host_switch_mode: STANDARD
-                host_switch_profile_ids:
-                  -  key: UplinkHostSwitchProfile
-                     value: <Respective nsxt id>
-                  -  key: LldpHostSwitchProfile
-                     value: <Respective nsxt id>
-                  -  key: NiocProfile
-                     value: <Respective nsxt id>
-                is_migrate_pnics: false
-                ip_assignment_spec:
-                  resource_type: AssignedByDhcp
-                transport_zone_endpoints:
-                  -  transport_zone_id: <Respective nsxt id>
+
+        .. code-block:: yaml
+
+            hostname: <nsxt-hostname>
+            username: <nsxt-username>
+            password: <nsxt-password>
+            verify-ssl: <True/False>
+            display_name: <display_name>
+            description: <description>
+            host_switch_spec:
+              resource_type: StandardHostSwitchSpec
+              host_switches:
+                - host_switch_name: nvds1
+                  host_switch_type: NVDS/VDS
+                  host_switch_mode: STANDARD
+                  host_switch_profile_ids:
+                    -  key: UplinkHostSwitchProfile
+                       value: <Respective nsxt id>
+                    -  key: LldpHostSwitchProfile
+                       value: <Respective nsxt id>
+                    -  key: NiocProfile
+                       value: <Respective nsxt id>
+                  is_migrate_pnics: false
+                  ip_assignment_spec:
+                    resource_type: AssignedByDhcp
+                  transport_zone_endpoints:
+                    -  transport_zone_id: <Respective nsxt id>
+
     """
     log.info("Creating nsxt transport node profile")
     url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname)
@@ -260,70 +306,92 @@ def update(
     ignore_overridden_hosts=None,
 ):
     """
+
     Updates transport node profile with the data payload provided.
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_transport_node_profiles.update hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     display_name
         (Optional) The name of the transport node profile
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against certificate common name
+
     transport_node_profile_id
         Unique id provided by NSX-T for transport node profile
+
     revision
         _revision property of the transport node profile provided by NSX-T
+
     description
         (Optional) Description of this resource
+
     display_name
         (Optional) Display name for the transport node profile. Defaults to nsxt id, if not set
+
     host_switch_spec
         (Optional) Transport node host switch specification
         The HostSwitchSpec is the base class for standard and preconfigured host switch specifications.
         Only standard host switches are supported in the transport node profile.
+
     transport_zone_endpoints
         (Optional) This is deprecated. TransportZoneEndPoints should be specified per host switch at
         StandardHostSwitch through Transport Node or Transport Node Profile configuration. Array of transport zones.
+
     ignore_overridden_hosts
         (Optional) Boolean which determines if cluster-level configuration should be applied on overridden hosts. Default: False
-          hostname: <nsxt-hostname>
-          username: <nsxt-username>
-          password: <nsxt-password>
-          verify-ssl: <True/False>
-          display_name: <display_name>
-          description: <description>
-          host_switch_spec:
-            resource_type: StandardHostSwitchSpec
-            host_switches:
-              - host_switch_name: nvds1
-                host_switch_type: NVDS/VDS
-                host_switch_mode: STANDARD
-                host_switch_profile_ids:
-                  -  key: UplinkHostSwitchProfile
-                     value: <Respective nsxt id>
-                  -  key: LldpHostSwitchProfile
-                     value: <Respective nsxt id>
-                  -  key: NiocProfile
-                     value: <Respective nsxt id>
-                is_migrate_pnics: false
-                ip_assignment_spec:
-                  resource_type: AssignedByDhcp
-                transport_zone_endpoints:
-                  -  transport_zone_id: <Respective nsxt id>
+
+        .. code-block:: yaml
+
+            hostname: <nsxt-hostname>
+            username: <nsxt-username>
+            password: <nsxt-password>
+            verify-ssl: <True/False>
+            display_name: <display_name>
+            description: <description>
+            host_switch_spec:
+              resource_type: StandardHostSwitchSpec
+              host_switches:
+                - host_switch_name: nvds1
+                  host_switch_type: NVDS/VDS
+                  host_switch_mode: STANDARD
+                  host_switch_profile_ids:
+                    -  key: UplinkHostSwitchProfile
+                       value: <Respective nsxt id>
+                    -  key: LldpHostSwitchProfile
+                       value: <Respective nsxt id>
+                    -  key: NiocProfile
+                       value: <Respective nsxt id>
+                  is_migrate_pnics: false
+                  ip_assignment_spec:
+                    resource_type: AssignedByDhcp
+                  transport_zone_endpoints:
+                    -  transport_zone_id: <Respective nsxt id>
+
     """
     log.info("Updating nsxt transport node profile")
     url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname) + "/{}".format(transport_node_profile_id)
@@ -361,29 +429,41 @@ def delete(
     cert_common_name=None,
 ):
     """
+
     Deletes transport node profile
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_transport_node_profiles.delete hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     transport_node_profile_id
         Existing transport node profile id
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against certificate common name
+
     """
     log.info("Deleting transport node profile with id %s", transport_node_profile_id)
     url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname) + "/{}".format(transport_node_profile_id)

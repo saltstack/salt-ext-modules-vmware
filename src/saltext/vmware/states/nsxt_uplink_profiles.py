@@ -113,10 +113,10 @@ def present(
         create_uplink_profile:
           nsxt_uplink_profiles.present:
             - name: Create uplink profile
-              hostname: <hostname>
-              username: <username>
-              password: <password>
-              cert: <certificate>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               verify_ssl: <False/True>
               display_name: <uplink profile name>
               description: <uplink profile description>
@@ -433,11 +433,11 @@ def absent(
         delete_uplink_profile:
           nsxt_uplink_profiles.absent:
             - name: <Name of the operation>
-              hostname: <hostname>
-              username: <username>
-              password: <password>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               display_name: <display_name of the uplink profile>
-              cert: <certificate>
               verify_ssl: <False/True>
 
 
