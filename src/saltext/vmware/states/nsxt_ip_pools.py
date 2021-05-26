@@ -8,10 +8,10 @@ Example:
     create_ip_pool:
       nsxt_ip_pools.present:
         - name: Create IP Pool
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate path>
+          hostname: {{ pillar['nsxt_manager_hostname'] }}
+          username: {{ pillar['nsxt_manager_username'] }}
+          password: {{ pillar['nsxt_manager_password'] }}
+          cert: {{ pillar['nsxt_manager_certificate'] }}
           verify_ssl: <False/True>
           display_name: <ip pool name>
           description: <ip pool description>
@@ -61,7 +61,7 @@ def _create_state_response(name, old_state, new_state, result, comment):
     return state_response
 
 
-def _check_for_updates(existing_ip_pool, input_dict):
+def _needs_update(existing_ip_pool, input_dict):
     updatable_keys = ["subnets", "description", "tags", "ip_release_delay"]
 
     is_updatable = False
@@ -106,10 +106,10 @@ def present(
         create_ip_pool:
           nsxt_ip_pools.present:
             - name: Create IP Pool
-              hostname: <hostname>
-              username: <username>
-              password: <password>
-              cert: <certificate>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               verify_ssl: <False/True>
               display_name: <ip pool name>
               description: <ip pool description>
@@ -247,7 +247,7 @@ def present(
                 "State present will create IP Pool with name {}".format(display_name),
             )
     if existing_ip_pool:
-        is_update_required = _check_for_updates(existing_ip_pool, input_dict)
+        is_update_required = _needs_update(existing_ip_pool, input_dict)
 
         if is_update_required:
             _fill_input_dict_with_existing_info(existing_ip_pool, input_dict)
@@ -326,10 +326,10 @@ def absent(
     delete_ip_pool:
       nsxt_ip_pools.absent:
         - name: Delete IP Pool
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate>
+          hostname: {{ pillar['nsxt_manager_hostname'] }}
+          username: {{ pillar['nsxt_manager_username'] }}
+          password: {{ pillar['nsxt_manager_password'] }}
+          cert: {{ pillar['nsxt_manager_certificate'] }}
           verify_ssl: <False/True>
           display_name: <ip pool name>
 

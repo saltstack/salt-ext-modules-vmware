@@ -3,7 +3,7 @@ Salt Module to perform CRUD operations for NSX-T transport node profiles
 """
 import logging
 
-from saltext.vmware.utils import common_utils
+from saltext.vmware.utils import common
 from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ def get(
     """
     log.info("Fetching NSX-T transport node profiles")
     url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname)
-    params = common_utils._filter_kwargs(
+    params = common._filter_kwargs(
         allowed_kwargs=["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"],
         default_dict=None,
         cursor=cursor,
@@ -155,7 +155,7 @@ def get_by_display_name(
 
     """
     log.info("Finding transport node profiles with display name: %s", display_name)
-    transport_node_profiles = common_utils._read_paginated(
+    transport_node_profiles = common._read_paginated(
         func=get,
         display_name=display_name,
         hostname=hostname,
@@ -267,7 +267,7 @@ def create(
     """
     log.info("Creating nsxt transport node profile")
     url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname)
-    req_data = common_utils._filter_kwargs(
+    req_data = common._filter_kwargs(
         allowed_kwargs=create_params_for_transport_profiles,
         default_dict={},
         transport_zone_endpoints=transport_zone_endpoints,
@@ -395,7 +395,7 @@ def update(
     """
     log.info("Updating nsxt transport node profile")
     url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname) + "/{}".format(transport_node_profile_id)
-    req_data = common_utils._filter_kwargs(
+    req_data = common._filter_kwargs(
         allowed_kwargs=create_params_for_transport_profiles,
         default_dict={},
         transport_zone_endpoints=transport_zone_endpoints,

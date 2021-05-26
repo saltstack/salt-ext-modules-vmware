@@ -3,7 +3,7 @@ Salt Module to perform CRUD operations for NSX-T uplink profiles
 """
 import logging
 
-from saltext.vmware.utils import common_utils
+from saltext.vmware.utils import common
 from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
@@ -49,49 +49,68 @@ def get(
 ):
     """
     Lists NSX-T up-link profiles
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_uplink_profiles.get hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification.
         If the client certificate common name and hostname do not match (in case of self-signed certificates),
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
+
     cursor
         (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
+
     deployment_type
         (Optional) Deployment type of EdgeNode or PublicCloudGatewayNode
         If the node_type is specified, then deployment_type may be specified to filter uplink profiles applicable to
         only PHYSICAL_MACHINE or VIRTUAL_MACHINE deployments of these nodes.
+
     hostswitch_profile_type
         (Optional) Type of host switch profile
+
     include_system_owned
         (Optional) Boolean. Whether the list result contains system resources
+
     included_fields
         (Optional) Comma separated list of fields that should be included in query result
+
     node_type
         (Optional) Fabric node type for which uplink profiles are to be listed. The fabric node type is the resource_type of the
         Node such as EdgeNode and PublicCloudGatewayNode. If a fabric node type is given, uplink profiles that apply
         for nodes of the given type will be returned.
+
     page_size
         (Optional) Maximum number of results to return in this page
+
     sort_ascending
         (Optional) Boolean
+
     sort_by
         (Optional) Field by which records are sorted
+
     uplink_teaming_policy_name
         (Optional) The host switch profile's uplink teaming policy name. If populated, only UplinkHostSwitchProfiles with the
         specified uplink teaming policy name are returned. Otherwise, any HostSwitchProfile can be returned.
@@ -146,23 +165,33 @@ def get_by_display_name(
 ):
     """
     Gets nsxt uplink profiles(UplinkHostSwitchProfile) present in the NSX-T Manager with given display_name.
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_uplink_profiles.get_by_display_name hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     display_name
         The name of the uplink profile
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
@@ -205,76 +234,113 @@ def create(
 ):
     """
     Creates uplink profile(resource_type: UplinkHostSwitchProfile)
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_uplink_profiles.create hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     display_name
         The name of the uplink profile
+
     teaming
         Default TeamingPolicy associated with this UplinkProfile. Object with following parameters:
         Example:
-        {'standby_list':[],'active_list':[{'uplink_name':'uplink3','uplink_type':'PNIC'}],'policy':'FAILOVER_ORDER'}
+
+        .. code::
+
+            {'standby_list':[],'active_list':[{'uplink_name':'uplink3','uplink_type':'PNIC'}],'policy':'FAILOVER_ORDER'}
+
         active_list
             List of Uplinks used in active list. Array of Uplink objects.
-             active_list='[
-                {
-                "uplink_name": "uplink3",
-                "uplink_type": "PNIC"
-                }
-            ]'
+
+            .. code::
+
+                 active_list='[
+                    {
+                        "uplink_name": "uplink3",
+                        "uplink_type": "PNIC"
+                    }
+                ]'
+
             Parameters as follows:
+
             uplink_name
                 Name of this uplink
+
             uplink_type
                 Type of the uplink. PNIC or LAG
+
         policy
             Teaming policy. Required field.
             Values could be one among FAILOVER_ORDER, LOADBALANCE_SRCID, LOADBALANCE_SRC_MAC
+
         standby_list
             List of Uplinks used in standby list. Array of Uplink objects.
-            standby_list='[
-                {
-                "uplink_name": "uplink2",
-                "uplink_type": "PNIC"
-                }
-            ]'
-           Parameters as follows:
+
+            .. code::
+
+                standby_list='[
+                    {
+                        "uplink_name": "uplink2",
+                        "uplink_type": "PNIC"
+                    }
+                ]'
+
+            Parameters as follows:
+
             uplink_name
                 Name of this uplink
+
             uplink_type
                 Type of the uplink. PNIC or LAG
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against certificate common name
+
     lags
         (Optional) list of LACP group
+
     mtu
         (Optional) Maximum Transmission Unit used for uplinks
+
     named_teamings
         (Optional) List of named uplink teaming policies that can be used by logical switches.
          Array of NamedTeamingPolicy
+
     overlay_encap
         (Optional) The protocol used to encapsulate overlay traffic
+
     required_capabilities
         (Optional) List of string
+
     tags
         (Optional) Opaque identifier meaninful to API user. Array of Tag
+
     transport_vlan
         (Optional) VLAN used for tagging Overlay traffic of associated HostSwitch. Type: integer
+
     description
         (Optional) Description for the resource
     """
@@ -329,79 +395,118 @@ def update(
 ):
     """
     Updates uplink profile(resource_type: UplinkHostSwitchProfile)
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_uplink_profiles.update hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     display_name
         The name of the uplink profile
+
     teaming
         Default TeamingPolicy associated with this UplinkProfile. Object with following parameters:
         Example:
-        {'standby_list':[],'active_list':[{'uplink_name':'uplink3','uplink_type':'PNIC'}],'policy':'FAILOVER_ORDER'}
+
+        .. code::
+
+            {'standby_list':[],'active_list':[{'uplink_name':'uplink3','uplink_type':'PNIC'}],'policy':'FAILOVER_ORDER'}
+
         active_list
             List of Uplinks used in active list. Array of Uplink objects.
-             active_list='[
-                {
-                "uplink_name": "uplink3",
-                "uplink_type": "PNIC"
-                }
-            ]'
+
+            .. code::
+
+                active_list='[
+                    {
+                        "uplink_name": "uplink3",
+                        "uplink_type": "PNIC"
+                    }
+                ]'
+
             Parameters as follows:
+
             uplink_name
                 Name of this uplink
+
             uplink_type
                 Type of the uplink. PNIC or LAG
+
         policy
             Teaming policy. Required field.
             Values could be one among FAILOVER_ORDER, LOADBALANCE_SRCID, LOADBALANCE_SRC_MAC
+
         standby_list
             List of Uplinks used in standby list. Array of Uplink objects.
-            standby_list='[
-                {
-                "uplink_name": "uplink2",
-                "uplink_type": "PNIC"
-                }
-            ]'
-           Parameters as follows:
+
+            .. code::
+
+                standby_list='[
+                    {
+                        "uplink_name": "uplink2",
+                        "uplink_type": "PNIC"
+                    }
+                ]'
+
+            Parameters as follows:
+
             uplink_name
                 Name of this uplink
+
             uplink_type
                 Type of the uplink. PNIC or LAG
+
     uplink_profile_id
         Unique id provided by NSX-T for uplink profile
+
     revision
         _revision property of the uplink profile provided by NSX-T
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against certificate common name
+
     lags
         (Optional) list of LACP group
+
     mtu
         (Optional) Maximum Transmission Unit used for uplinks
+
     named_teamings
         (Optional) List of named uplink teaming policies that can be used by logical switches. Array of NamedTeamingPolicy
+
     overlay_encap
         (Optional) The protocol used to encapsulate overlay traffic
+
     required_capabilities
         (Optional) List of string
+
     tags
         (Optional) Opaque identifier meaninful to API user. Array of Tag
+
     transport_vlan
         (Optional) VLAN used for tagging Overlay traffic of associated HostSwitch. Type: integer
+
     description
         (Optional) Description for the resource
     """
@@ -446,23 +551,33 @@ def delete(
 ):
     """
     Deletes uplink profile(UplinkHostSwitchProfile)
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_uplink_profiles.delete hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     uplink_profile_id
         Existing uplink profile id
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
