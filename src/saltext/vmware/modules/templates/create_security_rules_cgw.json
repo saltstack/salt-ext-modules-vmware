@@ -1,0 +1,18 @@
+{
+  "sequence_number": 0,
+  "source_groups": [
+    "ANY"
+  ],
+  "services": ["ANY"],
+  "logged": false,
+  "destination_groups": [
+    "ANY"
+  ],
+  "scope": [
+    "/infra/labels/cgw-all"
+  ],
+  "action": "ALLOW",
+  "tag": "",
+  "notes": "",
+  "tags": null
+}
