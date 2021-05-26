@@ -1,0 +1,16 @@
+{
+	"action": null,
+	"description": null,
+	"translated_network": null,
+	"translated_ports": null,
+	"destination_network": null,
+	"source_network": null,
+	"sequence_number": null,
+	"service": null,
+	"logging": null,
+	"enabled": null,
+	"scope": null,
+	"tags": null,
+	"firewall_match": null,
+	"display_name": null
+}

@@ -1,0 +1,7 @@
+{
+    "display_name": "dhcp-test",
+    "resource_type": "DhcpRelayConfig",
+    "server_addresses": null,
+    "id": "dhcp-test",
+    "tags": null
+}

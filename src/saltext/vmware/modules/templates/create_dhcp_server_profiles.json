@@ -1,0 +1,8 @@
+{
+    "display_name": "dhcp-test",
+    "resource_type": "DhcpServerConfig",
+    "server_addresses": null,
+    "lease_time": null,
+    "id": "dhcp-test",
+    "tags": null
+}
