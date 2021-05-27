@@ -3,10 +3,13 @@ from os import system
 from time import sleep
 from threading import Thread
 
+from pyVmomi.vim import ServiceInstance
+
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.common as common
 import saltext.vmware.utils.datacenter as datacenter
 from pyVim.task import WaitForTask
+from salt.exceptions import CommandExecutionError
 
 # @connect.get_si
 def get_vm_facts(*, service_instance=None):
@@ -56,19 +59,25 @@ def keep_lease_alive(lease):
             return
 
 
-# @connect.get_si
-def create(*, service_instance):
+def create(*,
+           name,
+           host_name,
+           ovf_file,
+           datacenter_name="Datacenter",
+           cluster_name="Cluster",
+           vmdk_path="/vmfs/volumes"):
     """
     Deploy a VMware VM from an OVF or OVA file
     """
+    service_instance = connect.get_si()
     content = service_instance.content
     manager = content.ovfManager
-    datacenter_name = "Datacenter"
-    host_name = "10.206.240.192"
-    cluster_name = "Cluster"
-    vmdk_path = "/vmfs/volumes"
-    name = "joey2"
-    ovf = common.read_ovf_file('../ovf/centos-7-114180-tools.ovf')
+    # datacenter_name = "Datacenter"
+    # host_name = "10.206.240.192"
+    # cluster_name = "Cluster"
+    # vmdk_path = "/vmfs/volumes"
+    # name = "joey2"
+    ovf = common.read_ovf_file(ovf_file)
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
     
     # get destination host
@@ -103,10 +112,9 @@ def create(*, service_instance):
             system(curl_cmd)
             lease.HttpNfcLeaseComplete()
             keepalive_thread.join()
-            return 0
+            return lease
         elif lease.state == vim.HttpNfcLease.State.error:
-            print("Lease error: " + lease.state.error)
-            exit(1)
+            raise CommandExecutionError("Lease error: " + lease.state.error)
 
 
 # pylint: disable=C0302

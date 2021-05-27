@@ -139,3 +139,6 @@ local/
 
 # Useful for command line args
 Saltfile
+
+# VScode
+.vscode/
