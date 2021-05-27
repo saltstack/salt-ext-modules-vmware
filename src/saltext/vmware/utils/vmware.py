@@ -1896,6 +1896,35 @@ def create_datacenter(service_instance, datacenter_name):
     return dc_obj
 
 
+def delete_datacenter(service_instance, datacenter_name):
+    """
+    Deletes a datacenter.
+
+    service_instance
+        The Service Instance Object
+
+    datacenter_name
+        The datacenter name
+    """
+    root_folder = get_root_folder(service_instance)
+    log.trace("Deleting datacenter '%s'", datacenter_name)
+    try:
+        dc_obj = get_datacenter(service_instance, datacenter_name)
+        task = dc_obj.Destroy_Task()
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    wait_for_task(task, datacenter_name, "DeleteDatacenterTask")
+
+
 def get_cluster(dc_ref, cluster):
     """
     Returns a cluster in a datacenter.
