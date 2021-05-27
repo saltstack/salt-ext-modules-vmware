@@ -1,54 +1,42 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
-import sys
 
+# Import salt libs
+import salt.exceptions
+
+# Import salt extension libs
 import saltext.vmware.utils.vmware
-from salt.utils.decorators import depends
-from salt.utils.decorators import ignores_kwargs
+from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
 try:
-    # pylint: disable=no-name-in-module
-    from pyVmomi import (
-        vim,
-        vmodl,
-        pbm,
-        VmomiSupport,
-    )
+    import pyVmomi
 
-    # pylint: enable=no-name-in-module
-
-    # We check the supported vim versions to infer the pyVmomi version
-    if (
-        "vim25/6.0" in VmomiSupport.versionMap
-        and sys.version_info > (2, 7)
-        and sys.version_info < (2, 7, 9)
-    ):
-
-        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
-        raise ImportError()
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
 
 
 __virtualname__ = "vmware_datacenter"
+__proxyenabled__ = ["vmware_datacenter"]
 
 
 def __virtual__():
+    if not HAS_PYVMOMI:
+        return False, "Unable to import pyVmomi module."
     return __virtualname__
 
 
 def list_datacenters():
     """
     Returns a list of datacenters for the specified host.
-    """
-    if salt.utils.platform.is_proxy():
-        service_instance = _get_service_instance_via_proxy()
-    else:
-        service_instance = _get_service_instance()
 
+    .. code-block:: bash
+
+        salt '*' vmware_datacenter.list_datacenters
+    """
+    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     return saltext.vmware.utils.vmware.list_datacenters(service_instance)
 
 
@@ -61,19 +49,34 @@ def create_datacenter(datacenter_name):
     datacenter_name
         The datacenter name
 
-    service_instance
-        Service instance (vim.ServiceInstance) of the vCenter.
-        Default is None.
+    .. code-block:: bash
+
+        salt '*' vmware_datacenter.create_datacenter dc1
+    """
+    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    try:
+        saltext.vmware.utils.vmware.create_datacenter(service_instance, datacenter_name)
+    except salt.exceptions.VMwareApiError as exc:
+        return {datacenter_name: False, "reason": str(exc)}
+    return {datacenter_name: True}
+
+
+def delete_datacenter(datacenter_name):
+    """
+    Deletes a datacenter.
+
+    Supported proxies: esxdatacenter
+
+    datacenter_name
+        The datacenter name
 
     .. code-block:: bash
 
-        salt '*' vsphere.create_datacenter dc1
+        salt '*' vmware_datacenter.delete_datacenter dc1
     """
-    service_instance = saltext.vmware.utils.vmware.get
-    if salt.utils.platform.is_proxy():
-        service_instance = _get_service_instance_via_proxy()
-    else:
-        service_instance = _get_service_instance()
-
-    saltext.vmware.utils.vmware.create_datacenter(service_instance, datacenter_name)
-    return {"create_datacenter": True}
+    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    try:
+        saltext.vmware.utils.vmware.delete_datacenter(service_instance, datacenter_name)
+    except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
+        return {datacenter_name: False, "reason": str(exc)}
+    return {datacenter_name: True}
