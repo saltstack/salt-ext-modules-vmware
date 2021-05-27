@@ -50,9 +50,8 @@ def test_get(nsxt_config, salt_call_cli):
         password=password,
         verify_ssl=False,
     )
-    assert ret is not None
-    result_as_json = ret.json
-    assert result_as_json["result_count"] >= 0
+
+    assert ret.json
 
 
 def test_register_update_and_remove(nsxt_config, salt_call_cli, delete_compute_manager):

@@ -438,14 +438,9 @@ def present(
     )
 
     # transport_node_profile_params dict will be populated appropriately and passed to execution module for create/updates
-    transport_node_profile_params = {
-        "display_name": display_name,
-        "host_switch_spec": host_switch_spec,
-    }
-
     transport_node_profile_params = common._filter_kwargs(
         allowed_kwargs=("description", "transport_zone_endpoints", "ignore_overridden_hosts"),
-        default_dict=transport_node_profile_params,
+        default_dict={"display_name": display_name, "host_switch_spec": host_switch_spec},
         description=description,
         transport_zone_endpoints=transport_zone_endpoints,
         ignore_overridden_hosts=ignore_overridden_hosts,

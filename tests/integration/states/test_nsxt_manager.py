@@ -62,7 +62,7 @@ def test_nsxt_manager(nsxt_config, salt_call_cli, publish_fqdns):
     Tests NSX-T Manager State module to verify publish_fqdns_enabled/publish_fqdns_disabled
     when it is enabled/disabled in NSX-T Manager
     """
-    if bool(publish_fqdns):
+    if publish_fqdns:
         changes, comment = _execute_publish_fqdns_enabled(nsxt_config, salt_call_cli)
         assert not changes
         assert comment == "publish_fqdns is already set to True"

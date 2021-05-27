@@ -3,24 +3,37 @@ Execution module for NSX-T compute manager registration and de-registration
 """
 import json
 import logging
+from urllib.parse import urljoin
 
-import requests
-from requests.exceptions import HTTPError
-from requests.exceptions import RequestException
-from requests.exceptions import SSLError
-from saltext.vmware.modules.ssl_adapter import HostHeaderSSLAdapter
+from saltext.vmware.utils import common
 from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
 
 __virtualname__ = "nsxt_compute_manager"
 
+BASR_URL = "https://{management_host}/api/v1/fabric/compute-managers"
+
 
 def __virtual__():
     return __virtualname__
 
 
-def get(hostname, username, password, verify_ssl=True, cert=None, cert_common_name=None, **kwargs):
+def get(
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    cursor=None,
+    included_fields=None,
+    origin_type=None,
+    page_size=None,
+    server=None,
+    sort_by=None,
+    sort_ascending=None,
+):
     """
     Lists compute managers registered to NSX Manager
 
@@ -76,23 +89,27 @@ def get(hostname, username, password, verify_ssl=True, cert=None, cert_common_na
 
     """
 
-    url = "https://{management_host}/api/v1/fabric/compute-managers".format(
-        management_host=hostname
-    )
+    url = BASE_URL.format(management_host=hostname)
     log.info("Retrieving compute managers from NSX Manager {}".format(hostname))
-    params = {}
-    optional_params = (
-        "server",
-        "cursor",
-        "included_fields",
-        "origin_type",
-        "page_size",
-        "sort_by",
-        "sort_ascending",
+
+    params = common._filter_kwargs(
+        allowed_kwargs=(
+            "server",
+            "cursor",
+            "included_fields",
+            "origin_type",
+            "page_size",
+            "sort_by",
+            "sort_ascending",
+        ),
+        server=server,
+        cursor=cursor,
+        included_fields=included_fields,
+        origin_type=origin_type,
+        page_size=page_size,
+        sort_by=sort_by,
+        sort_ascending=sort_ascending,
     )
-    for param in optional_params:
-        if kwargs.get(param):
-            params[param] = kwargs.get(param)
 
     return nsxt_request.call_api(
         method="get",
@@ -114,7 +131,13 @@ def get_by_display_name(
     verify_ssl=True,
     cert=None,
     cert_common_name=None,
-    **kwargs
+    cursor=None,
+    included_fields=None,
+    origin_type=None,
+    page_size=None,
+    server=None,
+    sort_by=None,
+    sort_ascending=None,
 ):
     """
     Lists compute managers registered to NSX Manager by given display_name
@@ -176,33 +199,26 @@ def get_by_display_name(
 
     log.info("Finding compute managers with display name: %s", display_name)
 
-    compute_managers = list()
-    page_cursor = None
+    compute_managers = common._read_paginated(
+        func=get,
+        display_name=display_name,
+        cursor=cursor,
+        included_fields=included_fields,
+        origin_type=origin_type,
+        page_size=page_size,
+        server=server,
+        sort_by=sort_by,
+        sort_ascending=sort_ascending,
+        hostname=hostname,
+        username=username,
+        password=password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+    )
 
-    while True:
-        compute_manager_paginated = get(
-            hostname,
-            username,
-            password,
-            cursor=page_cursor,
-            verify_ssl=verify_ssl,
-            cert=cert,
-            cert_common_name=cert_common_name,
-        )
-
-        if "error" in compute_manager_paginated:
-            return compute_manager_paginated
-
-        for compute_manager in compute_manager_paginated["results"]:
-            if (
-                compute_manager.get("display_name")
-                and compute_manager["display_name"] == display_name
-            ):
-                compute_managers.append(compute_manager)
-
-        if "cursor" not in compute_manager_paginated:
-            break
-        page_cursor = compute_manager_paginated["cursor"]
+    if "error" in compute_managers:
+        return compute_managers
 
     return {"results": compute_managers}
 
@@ -214,10 +230,12 @@ def register(
     compute_manager_server,
     credential,
     server_origin_type="vCenter",
+    display_name=None,
+    description=None,
+    set_as_oidc_provider=None,
     verify_ssl=True,
     cert=None,
     cert_common_name=None,
-    **kwargs
 ):
     """
     Lists compute managers registered to NSX Manager
@@ -291,20 +309,20 @@ def register(
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
     """
-    url = "https://{management_host}/api/v1/fabric/compute-managers".format(
-        management_host=hostname
-    )
+    url = BASE_URL.format(management_host=hostname)
     log.info("Going to register new compute manager")
-    data = {
-        "server": compute_manager_server,
-        "origin_type": server_origin_type,
-        "credential": credential,
-    }
 
-    optional_params = ("description", "display_name", "set_as_oidc_provider")
-    for param in optional_params:
-        if kwargs.get(param):
-            data[param] = kwargs.get(param)
+    data = common._filter_kwargs(
+        allowed_kwargs=("description", "display_name", "set_as_oidc_provider"),
+        default_dict={
+            "server": compute_manager_server,
+            "origin_type": server_origin_type,
+            "credential": credential,
+        },
+        display_name=display_name,
+        description=description,
+        set_as_oidc_provider=set_as_oidc_provider,
+    )
 
     return nsxt_request.call_api(
         method="post",
@@ -330,7 +348,9 @@ def update(
     verify_ssl=True,
     cert=None,
     cert_common_name=None,
-    **kwargs
+    display_name=None,
+    description=None,
+    set_as_oidc_provider=None,
 ):
     """
     Updates compute manager registered to NSX Manager
@@ -410,7 +430,7 @@ def update(
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
     """
-    url = "https://{management_host}/api/v1/fabric/compute-managers/{compute_manager_id}".format(
+    url = urljoin(BASE_URL, "/{compute_manager_id}").format(
         management_host=hostname, compute_manager_id=compute_manager_id
     )
 
@@ -423,9 +443,14 @@ def update(
         "_revision": compute_manager_revision,
     }
     optional_params = ("description", "display_name", "set_as_oidc_provider")
-    for param in optional_params:
-        if kwargs.get(param):
-            data[param] = kwargs.get(param)
+
+    data = common._filter_kwargs(
+        allowed_kwargs=optional_params,
+        default_dict=data,
+        display_name=display_name,
+        description=description,
+        set_as_oidc_provider=set_as_oidc_provider,
+    )
 
     return nsxt_request.call_api(
         method="put",
@@ -484,9 +509,7 @@ def remove(
         certificate common name.
     """
 
-    url = "https://{management_host}/api/v1/fabric/compute-managers/{id}".format(
-        management_host=hostname, id=compute_manager_id
-    )
+    url = urljoin(BASE_URL, "/{id}").format(management_host=hostname, id=compute_manager_id)
     log.info("Going to remove compute manager registration")
     result = nsxt_request.call_api(
         method="delete",
@@ -497,8 +520,5 @@ def remove(
         verify_ssl=verify_ssl,
         cert=cert,
     )
-    if result and "error" in result:
-        return result
-    else:
-        log.info("Removed compute manager successfully")
-        return {"message": "Removed compute manager successfully"}
+
+    return result or {"message": "Removed compute manager successfully"}
