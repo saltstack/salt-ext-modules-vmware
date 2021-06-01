@@ -4,6 +4,7 @@ Execution module to perform CRUD operations for NSX-T's Segment
 import logging
 
 from salt.exceptions import SaltInvocationError
+from saltext.vmware.utils import common
 from saltext.vmware.utils.nsxt_policy_base_resource import NSXTPolicyBaseResource
 from saltext.vmware.utils.nsxt_resource_urls import IP_POOL_URL
 from saltext.vmware.utils.nsxt_resource_urls import SEGMENT_PORT_URL
@@ -69,10 +70,7 @@ class NSXTSegment(NSXTPolicyBaseResource):
             "_revision",
         }
         resource_params = {}
-        for field in fields:
-            val = kwargs.get(field)
-            if val:
-                resource_params[field] = val
+        resource_params = common._filter_kwargs(fields, resource_params, **kwargs)
         resource_params["resource_type"] = "Segment"
         resource_params.setdefault("id", resource_params["display_name"])
         # Formation of the path for transport zone id
@@ -133,7 +131,6 @@ class NSXTSegment(NSXTPolicyBaseResource):
                 )
             if address_pool_id:
                 address_pool_paths = [IP_POOL_URL + "/" + address_pool_id]
-                advance_config.pop("address_pool_id")
                 resource_params["advanced_config"]["address_pool_paths"] = address_pool_paths
         self.multi_resource_params.append(resource_params)
 
@@ -280,8 +277,8 @@ def get_hierarchy(hostname, username, password, segment_id, **kwargs):
         compare against
     """
     result = {}
+    nsxt_segment = NSXTSegment()
     try:
-        nsxt_segment = NSXTSegment()
         nsxt_segment.get_hierarchy(
             hostname,
             username,
@@ -783,8 +780,8 @@ def delete(hostname, username, password, segment_id, **kwargs):
         compare against
     """
     execution_logs = []
+    nsxt_segment = NSXTSegment()
     try:
-        nsxt_segment = NSXTSegment()
         nsxt_segment.delete(
             hostname,
             username,
@@ -795,7 +792,7 @@ def delete(hostname, username, password, segment_id, **kwargs):
             kwargs.get("verify_ssl", True),
             execution_logs,
         )
-        return execution_logs
     except SaltInvocationError as e:
         execution_logs.append({"error": str(e)})
-        return execution_logs
+
+    return execution_logs
