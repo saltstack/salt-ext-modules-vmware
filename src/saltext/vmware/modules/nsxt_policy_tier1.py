@@ -1,6 +1,7 @@
 import logging
 
 from salt.exceptions import SaltInvocationError
+from saltext.vmware.utils import common
 from saltext.vmware.utils.nsxt_policy_base_resource import NSXTPolicyBaseResource
 from saltext.vmware.utils.nsxt_resource_urls import DHCP_RELAY_CONFIG_URL
 from saltext.vmware.utils.nsxt_resource_urls import EDGE_CLUSTER_URL
@@ -66,6 +67,7 @@ class NSXTTier1(NSXTPolicyBaseResource):
             "_revision",
         }
         resource_params = {}
+        resource_params = common._filter_kwargs(fields, resource_params, **kwargs)
         for field in fields:
             if kwargs.get(field):
                 resource_params[field] = kwargs[field]
