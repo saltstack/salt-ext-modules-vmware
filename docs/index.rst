@@ -23,6 +23,7 @@ What are you most interested in?
   release.rst
   vsphere.rst
   nsx.rst
+  vmc.rst
 
 
 .. toctree::
