@@ -1,19 +1,16 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-# Import python libs
 import json
 import os
 import ssl
 import uuid
+from configparser import ConfigParser
 from pathlib import Path
 
-# Import 3rd party libs
 import pytest
-from pyVim import connect
-
-# Import salt ext libs
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.states.datacenter as datacenter_st
+from pyVim import connect
 
 
 @pytest.fixture(scope="package")
@@ -101,3 +98,33 @@ def vmware_datacenter(patch_salt_globals):
     dc = datacenter_mod.create(name=dc_name)
     yield dc_name
     datacenter_mod.delete(name=dc_name)
+
+
+@pytest.fixture()
+def vmc_config():
+    def _get_config(section):
+        directory_path = os.path.dirname(__file__)  # <-- absolute dir the script is in
+        relative_path = "vmc_config.ini"
+        abs_file_path = os.path.join(directory_path, relative_path)
+        parser = ConfigParser()
+        parser.read(abs_file_path)
+        connect = {}
+        for name, value in parser.items(section):
+            connect[name] = value
+        return connect
+
+    return _get_config
+
+
+@pytest.fixture()
+def vmc_nsx_connect(vmc_config):
+    vmc_nsx_config = vmc_config("vmc_nsx_connect")
+    return (
+        vmc_nsx_config["_hostname"],
+        vmc_nsx_config["_refresh_key"],
+        vmc_nsx_config["_authorization_host"],
+        vmc_nsx_config["_org_id"],
+        vmc_nsx_config["_sddc_id"],
+        vmc_nsx_config["_verify_ssl"],
+        vmc_nsx_config["_cert"],
+    )
