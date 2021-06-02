@@ -156,29 +156,27 @@ def call_api(
         return result
 
 
-def create_payload_for_request(directory_path, relative_path, user_input_dict, existing_data=None):
+def create_payload_for_request(template_data, user_input_dict, existing_data=None):
     """
-    This function creates the payload using the user provided input based on the respective json template
+    This function creates the payload using the user provided input based on the respective template data
     and the existing data
 
-    directory_path
-        path of the directory which contains json templates
-
-    relative_path
-        relative path for the json templates
+    template_data
+        dict which contains the data required for the resource(security rule, Nat rule, Network etc..)
 
     user_input_dict
-        dict provided by user
-    """
-    abs_file_path = os.path.join(directory_path, relative_path)
-    with open(abs_file_path, encoding="utf-8") as fp:
-        template_data = json.load(fp)
-        if existing_data:
-            for key in template_data.keys():
-                template_data[key] = existing_data.get(key)
+        user provided data required for the resource(security rule, Nat rule, Network etc..)
 
-        template_data.update(user_input_dict)
-        return template_data
+    existing_data
+        existing data for the resource(security rule, Nat rule, Network etc..)
+
+    """
+    if existing_data:
+        for key in template_data.keys():
+            template_data[key] = existing_data.get(key)
+
+    template_data.update(user_input_dict)
+    return template_data
 
 
 def _filter_kwargs(allowed_kwargs, allow_none=[], default_dict=None, **kwargs):
