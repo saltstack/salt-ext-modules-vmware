@@ -1,15 +1,44 @@
 # SPDX-License-Identifier: Apache-2.0
-from os import system
+import logging
 from time import sleep
 from threading import Thread
 
-from pyVmomi.vim import ServiceInstance
-
+import salt.utils.platform
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.common as common
 import saltext.vmware.utils.datacenter as datacenter
+from salt.exceptions import InvalidConfigError
+from salt.utils.decorators import depends
+from salt.utils.dictdiffer import recursive_diff
+from salt.utils.listdiffer import list_diff
+from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineDeleteSchema
+from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineUnregisterSchema
 from pyVim.task import WaitForTask
 from salt.exceptions import CommandExecutionError
+
+log = logging.getLogger(__name__)
+
+try:
+    import jsonschema
+
+    HAS_JSONSCHEMA = True
+except ImportError:
+    HAS_JSONSCHEMA = False
+
+try:
+    from pyVmomi import vim
+
+    HAS_PYVMOMI = True
+except ImportError:
+    HAS_PYVMOMI = False
+
+__virtualname__ = "vm"
+__proxyenabled__ = ["vm"]
+
+
+def __virtual__():
+    return __virtualname__
+
 
 # @connect.get_si
 def get_vm_facts(*, service_instance=None):
@@ -42,7 +71,7 @@ def get_vm_facts(*, service_instance=None):
     return vms
 
 
-def keep_lease_alive(lease):
+def _keep_lease_alive(lease):
     """
     Keeps the lease alive while POSTing the VMDK.
     """
@@ -58,26 +87,20 @@ def keep_lease_alive(lease):
         except Exception:
             return
 
-
-def create(*,
-           name,
+def _deploy_ovf(name,
            host_name,
-           ovf_file,
-           datacenter_name="Datacenter",
-           cluster_name="Cluster",
-           vmdk_path="/vmfs/volumes"):
+           ovf,
+           datacenter_name,
+           cluster_name):
     """
-    Deploy a VMware VM from an OVF or OVA file
+    Deploy a virtual machine from an OVF
     """
-    service_instance = connect.get_si()
+    vms = list(host=host_name)
+    if name in vms:
+        raise CommandExecutionError("Duplicate virtual machine name")
+    service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     content = service_instance.content
     manager = content.ovfManager
-    # datacenter_name = "Datacenter"
-    # host_name = "10.206.240.192"
-    # cluster_name = "Cluster"
-    # vmdk_path = "/vmfs/volumes"
-    # name = "joey2"
-    ovf = common.read_ovf_file(ovf_file)
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
     
     # get destination host
@@ -93,28 +116,74 @@ def create(*,
     resource_pool = cluster.resourcePool
 
     import_spec = manager.CreateImportSpec(ovf, resource_pool, destination_host.datastore[0], spec_params)
+    if import_spec.importSpec == None:
+        return {"Create Import Spec error": import_spec.error[0].msg}
     lease = resource_pool.ImportVApp(import_spec.importSpec, dc.vmFolder)
 
     while True:
         if lease.state == vim.HttpNfcLease.State.ready:
-            # Assuming single VMDK.
-            url = lease.info.deviceUrl[0].url.replace('*', host_name)
             # Spawn a dawmon thread to keep the lease active while POSTing
             # VMDK.
-            keepalive_thread = Thread(target=keep_lease_alive, args=(lease,))
+            keepalive_thread = Thread(target=_keep_lease_alive, args=(lease,))
             keepalive_thread.start()
-            # POST the VMDK to the host via curl. Requests library would work
-            # too.
-            curl_cmd = (
-                "curl -Ss -X POST --insecure -T %s -H 'Content-Type: \
-                application/x-vnd.vmware-streamVmdk' %s" %
-                (vmdk_path, url))
-            system(curl_cmd)
             lease.HttpNfcLeaseComplete()
             keepalive_thread.join()
-            return lease
+            return {"state":lease.state}
         elif lease.state == vim.HttpNfcLease.State.error:
-            raise CommandExecutionError("Lease error: " + lease.state.error)
+            return {"state":lease.state, "Lease error":lease.error.msg}
+
+def deploy_ovf(name,
+           host_name,
+           ovf_path,
+           datacenter_name="Datacenter",
+           cluster_name="Cluster"):
+    """
+    Deploy a virtual machine from an OVF
+    """
+    ovf = common.read_ovf_file(ovf_path)
+    result = _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name)
+    return result
+
+
+def deploy_ova(name,
+               host_name,
+               ova_path,
+               datacenter_name="Datacenter",
+               cluster_name="Cluster"):
+    """
+    Deploy a virtual machine from an OVA
+    """
+    ovf = common.read_ovf_from_ova(ova_path)
+    result = _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name)
+    return result
+
+
+def list_all():
+    """
+    list virtual machines on 
+    """
+    service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    result = {}
+    for host in hosts:
+        result[host.name] = []
+        for vm in host.vm:
+            result[host.name].append(vm.name)
+    return result
+
+
+def list(host):
+    """
+    return virtual machines on a host
+    """
+    service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    result = []
+    for host_i in hosts:
+        if host_i.name == host:
+            for vm in host_i.vm:
+                result.append(vm.name)
+    return result
 
 
 # pylint: disable=C0302
@@ -293,55 +362,6 @@ connection credentials are used instead of vCenter credentials, the ``host_names
                 port:
                     6500
 """
-import logging
-import sys
-
-import salt.utils.platform
-import saltext.vmware.utils.vmware as utils
-from salt.exceptions import InvalidConfigError
-from salt.utils.decorators import depends
-from salt.utils.dictdiffer import recursive_diff
-from salt.utils.listdiffer import list_diff
-from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineDeleteSchema
-from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineUnregisterSchema
-
-log = logging.getLogger(__name__)
-
-try:
-    import jsonschema
-
-    HAS_JSONSCHEMA = True
-except ImportError:
-    HAS_JSONSCHEMA = False
-
-try:
-    # pylint: disable=no-name-in-module
-    from pyVmomi import (
-        vim,
-        VmomiSupport,
-    )
-
-    # pylint: enable=no-name-in-module
-
-    # We check the supported vim versions to infer the pyVmomi version
-    if (
-        "vim25/6.0" in VmomiSupport.versionMap
-        and sys.version_info > (2, 7)
-        and sys.version_info < (2, 7, 9)
-    ):
-
-        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
-        raise ImportError()
-    HAS_PYVMOMI = True
-except ImportError:
-    HAS_PYVMOMI = False
-
-
-__virtualname__ = "vm"
-__proxyenabled__ = ["vm"]
-
-def __virtual__():
-    return __virtualname__
 
 
 def _get_scsi_controller_key(bus_number, scsi_ctrls):

@@ -1,6 +1,8 @@
 """
 Common functions used across modules
 """
+import tarfile
+import os
 
 
 def _filter_kwargs(allowed_kwargs, default_dict=None, **kwargs):
@@ -34,3 +36,17 @@ def read_ovf_file(ovf_path):
             return ovf_file.read()
     except Exception:
         exit(f"Could not read file: {ovf_path}")
+
+
+def read_ovf_from_ova(ova_path):
+    """
+    Read in OVF file from OVA.
+    """
+    try:
+        with tarfile.open(ova_path) as tf:
+            for entry in tf:
+                if entry.name.endswith('.ovf'):
+                    ovf = tf.extractfile(entry)
+                    return ovf.read().decode()
+    except Exception:
+        exit(f"Could not read file: {ova_path}")
