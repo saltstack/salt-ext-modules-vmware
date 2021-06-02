@@ -38,7 +38,7 @@ def get_ipsec_statistics(
 
     .. code-block:: bash
 
-    salt vm_minion vmc_vpn_statistics.get_ipsec_statistics hostname=nsxt-manager.local  ...
+        salt vm_minion vmc_vpn_statistics.get_ipsec_statistics hostname=nsxt-manager.local  ...
 
 
     hostname
@@ -66,6 +66,7 @@ def get_ipsec_statistics(
         id of session
 
     Enter one of the tier0 or tier1 id
+
     tier0_id
         id of tier0 for example vmc
 
@@ -152,11 +153,12 @@ def get_ipsec_sessions(
     """
     Retrieves ipsec session from Given SDDC
         this also include l2vpn sessions
+
     CLI Example:
 
     .. code-block:: bash
 
-    salt vm_minion vmc_vpn_statistics.get_ipsec_sessions hostname=nsxt-manager.local  ...
+        salt vm_minion vmc_vpn_statistics.get_ipsec_sessions hostname=nsxt-manager.local  ...
 
     hostname
         The host name of NSX-T manager
@@ -180,6 +182,7 @@ def get_ipsec_sessions(
         id of service for example default
 
     Enter one of the tier0 or tier1 id
+
     tier0_id
         id of tier0 for example vmc
 
@@ -283,7 +286,7 @@ def get_l2vpn_statistics(
 
     .. code-block:: bash
 
-    salt vm_minion vmc_vpn_statistics.get_l2vpn_statistics hostname=nsxt-manager.local  ...
+        salt vm_minion vmc_vpn_statistics.get_l2vpn_statistics hostname=nsxt-manager.local  ...
 
 
     hostname
@@ -311,6 +314,7 @@ def get_l2vpn_statistics(
         id of session
 
     Enter one of the tier0 or tier1 id
+
     tier0_id
         id of tier0 for example vmc
 
@@ -407,7 +411,7 @@ def get_l2vpn_sessions(
 
     .. code-block:: bash
 
-    salt vm_minion vmc_vpn_statistics.get_l2vpn_sessions hostname=nsxt-manager.local  ...
+        salt vm_minion vmc_vpn_statistics.get_l2vpn_sessions hostname=nsxt-manager.local  ...
 
     hostname
         The host name of NSX-T manager
@@ -431,6 +435,7 @@ def get_l2vpn_sessions(
         id of service for example default
 
     Enter one of the tier0 or tier1 id
+
     tier0_id
         id of tier0 for example vmc
 
@@ -445,7 +450,6 @@ def get_l2vpn_sessions(
         (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
 
-    optional queryparameters
     cursor
         (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
 
