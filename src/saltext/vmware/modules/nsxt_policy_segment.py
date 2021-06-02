@@ -70,7 +70,7 @@ class NSXTSegment(NSXTPolicyBaseResource):
             "_revision",
         }
         resource_params = {}
-        resource_params = common._filter_kwargs(fields, resource_params, **kwargs)
+        resource_params = common_utils._filter_kwargs(fields, resource_params, **kwargs)
         resource_params["resource_type"] = "Segment"
         resource_params.setdefault("id", resource_params["display_name"])
         # Formation of the path for transport zone id
@@ -156,16 +156,13 @@ class NSXTSegment(NSXTPolicyBaseResource):
                 "vlan_id",
                 "mac_address",
                 "suboptions",
+                "id",
                 "state",
                 "_revision",
             }
             segment_ports = kwargs.get("segment_ports") or {}
             for segment_port in segment_ports:
-                resource_params = {}
-                for key in fields:
-                    val = segment_port.get(key)
-                    if val:
-                        resource_params[key] = val
+                resource_params = common_utils._filter_kwargs(allowed_kwargs=fields, **segment_port)
                 if not resource_params.get("id"):
                     resource_params["id"] = resource_params["display_name"]
                 self.multi_resource_params.append(resource_params)
