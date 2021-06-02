@@ -67,10 +67,7 @@ class NSXTTier1(NSXTPolicyBaseResource):
             "_revision",
         }
         resource_params = {}
-        resource_params = common._filter_kwargs(fields, resource_params, **kwargs)
-        for field in fields:
-            if kwargs.get(field):
-                resource_params[field] = kwargs[field]
+        resource_params = common_utils._filter_kwargs(fields, resource_params, **kwargs)
         resource_params["resource_type"] = "Tier1"
         ipv6_profile_paths = []
         ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
@@ -150,11 +147,7 @@ class NSXTTier1(NSXTPolicyBaseResource):
             static_routes = kwargs.get("static_routes") or {}
 
             for static_route in static_routes:
-                resource_params = {}
-                for key in fields:
-                    val = static_route.get(key)
-                    if val:
-                        resource_params[key] = val
+                resource_params = common_utils._filter_kwargs(allowed_kwargs=fields, **static_route)
                 if not resource_params.get("id"):
                     resource_params["id"] = resource_params["display_name"]
                 self.multi_resource_params.append(resource_params)
@@ -193,10 +186,9 @@ class NSXTTier1(NSXTPolicyBaseResource):
                 self.nsx_resource_params["hostname"]
             )
             for locale_service in locale_services:
-                resource_params = {}
-                for key in fields:
-                    if locale_service.get(key):
-                        resource_params[key] = locale_service.get(key)
+                resource_params = common_utils._filter_kwargs(
+                    allowed_kwargs=fields, **locale_service
+                )
                 resource_params["resource_type"] = "LocaleServices"
                 edge_cluster_info = locale_service.get("edge_cluster_info")
                 if edge_cluster_info:
@@ -372,12 +364,10 @@ class NSXTTier1(NSXTPolicyBaseResource):
                 if locale_service:
                     interfaces = locale_service.get("interfaces") or {}
                     for interface in interfaces:
-                        resource_params = {}
+                        resource_params = common_utils._filter_kwargs(
+                            allowed_kwargs=fields, **interface
+                        )
                         resource_params["resource_type"] = "Tier1Interface"
-                        for field in fields:
-                            val = interface.get(field)
-                            if val:
-                                resource_params[field] = val
                         # segment_id is a required attr
                         segment_id = interface.get("segment_id")
                         if not segment_id and interface.get("segment_display_name"):

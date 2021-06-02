@@ -72,7 +72,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
             "_revision",
         }
         resource_params = {}
-        resource_params = common._filter_kwargs(fields, resource_params, **kwargs)
+        resource_params = common_utils._filter_kwargs(fields, resource_params, **kwargs)
         resource_params["resource_type"] = "Tier0"
 
         resource_params.setdefault("id", resource_params["display_name"])
@@ -147,11 +147,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
             static_routes = kwargs.get("static_routes") or {}
 
             for static_route in static_routes:
-                resource_params = {}
-                for key in fields:
-                    val = static_route.get(key)
-                    if val:
-                        resource_params[key] = val
+                resource_params = common_utils._filter_kwargs(allowed_kwargs=fields, **static_route)
                 if not resource_params.get("id"):
                     resource_params["id"] = resource_params["display_name"]
                 self.multi_resource_params.append(resource_params)
@@ -193,10 +189,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
             self.multi_resource_params = []
             bfd_peers = kwargs.get("bfd_peers") or {}
             for bfd_peer in bfd_peers:
-                resource_params = {}
-                for key in fields:
-                    if bfd_peer.get(key):
-                        resource_params[key] = bfd_peer.get(key)
+                resource_params = common_utils._filter_kwargs(allowed_kwargs=fields, **bfd_peer)
                 if bfd_peer.get("bfd_profile_id"):
                     bfd_profile_id = bfd_peer.get("bfd_profile_id")
                     resource_params["bfd_profile_path"] = "/infra/bfd-profiles/{}".format(
@@ -233,10 +226,9 @@ class NSXTTier0(NSXTPolicyBaseResource):
             }
             locale_services = kwargs.get("locale_services") or {}
             for locale_service in locale_services:
-                resource_params = {}
-                for field in fields:
-                    if locale_service.get(field):
-                        resource_params[field] = locale_service[field]
+                resource_params = common_utils._filter_kwargs(
+                    allowed_kwargs=fields, **locale_service
+                )
                 resource_params["resource_type"] = "LocaleServices"
                 edge_cluster_info = locale_service.get("edge_cluster_info")
                 if edge_cluster_info:
@@ -330,11 +322,9 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 if locale_service:
                     interfaces = locale_service.get("interfaces") or {}
                     for interface in interfaces:
-                        resource_params = {}
-                        for field in fields:
-                            val = interface.get(field)
-                            if val:
-                                resource_params[field] = val
+                        resource_params = common_utils._filter_kwargs(
+                            allowed_kwargs=fields, **interface
+                        )
                         ipv6_profile_paths = []
                         ipv6_ndra_profile_id = interface.get("ipv6_ndra_profile_id")
                         if ipv6_ndra_profile_id:
@@ -398,7 +388,6 @@ class NSXTTier0(NSXTPolicyBaseResource):
 
             def update_resource_params(self, **kwargs):
                 self.multi_resource_params = []
-                resource_params = {}
                 fields = {
                     "description",
                     "display_name",
@@ -420,12 +409,10 @@ class NSXTTier0(NSXTPolicyBaseResource):
                     (ls for ls in locale_services if ls.get("display_name") == ls_display_name),
                     {},
                 )
+                resource_params = {}
                 bgp = locale_service.get("bgp") or {}
                 if bgp:
-                    for field in fields:
-                        val = bgp.get(field)
-                        if val:
-                            resource_params[field] = val
+                    resource_params = common_utils._filter_kwargs(allowed_kwargs=fields, **bgp)
                     resource_params["resource_type"] = "BgpRoutingConfig"
                     resource_params["id"] = "bgp"
                     self.multi_resource_params.append(resource_params)
@@ -475,11 +462,9 @@ class NSXTTier0(NSXTPolicyBaseResource):
                     if locale_service:
                         neighbors = locale_service.get("bgp").get("neighbors") or {}
                         for neighbor in neighbors:
-                            resource_params = {}
-                            for field in fields:
-                                val = neighbor.get(field)
-                                if val:
-                                    resource_params[field] = val
+                            resource_params = common_utils._filter_kwargs(
+                                allowed_kwargs=fields, **neighbor
+                            )
                             resource_params["resource_type"] = "BgpNeighborConfig"
                             if not resource_params.get("id"):
                                 resource_params["id"] = resource_params["display_name"]
