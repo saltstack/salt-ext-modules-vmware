@@ -14,6 +14,7 @@ from pyVim import connect
 # Import salt ext libs
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.states.datacenter as datacenter_st
+import saltext.vmware.modules.vm as virtual_machine
 
 
 @pytest.fixture(scope="package")
@@ -101,3 +102,11 @@ def vmware_datacenter(patch_salt_globals):
     dc = datacenter_mod.create(name=dc_name)
     yield dc_name
     datacenter_mod.delete(name=dc_name)
+
+@pytest.fixture
+def patch_salt_globals_vm():
+    """
+    Patch __opts__ and __pillar__
+    """
+    setattr(virtual_machine, "__opts__", {})
+    setattr(virtual_machine, "__pillar__", {})

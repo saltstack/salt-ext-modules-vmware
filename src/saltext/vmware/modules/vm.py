@@ -34,6 +34,7 @@ except ImportError:
 
 __virtualname__ = "vm"
 __proxyenabled__ = ["vm"]
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -95,7 +96,7 @@ def _deploy_ovf(name,
     """
     Deploy a virtual machine from an OVF
     """
-    vms = list(host=host_name)
+    vms = list_(host=host_name)
     if name in vms:
         raise CommandExecutionError("Duplicate virtual machine name")
     service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -172,7 +173,7 @@ def list_all():
     return result
 
 
-def list(host):
+def list_(host):
     """
     return virtual machines on a host
     """
