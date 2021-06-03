@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.vmc_security_rules as vmc_security_rules
-from saltext.vmware.utils import vmc_request
 
 
 @pytest.fixture

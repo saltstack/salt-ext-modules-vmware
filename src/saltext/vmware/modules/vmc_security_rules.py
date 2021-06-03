@@ -53,7 +53,7 @@ def get(
 
     .. code-block:: bash
 
-    salt vm_minion vmc_security_rules.get hostname=nsxt-manager.local domain_id=mgw ...
+        salt vm_minion vmc_security_rules.get hostname=nsxt-manager.local domain_id=mgw ...
 
     hostname
         The host name of NSX-T manager
@@ -142,7 +142,7 @@ def get_by_id(
 
     .. code-block:: bash
 
-    salt vm_minion vmc_security_rules.get_by_id hostname=nsxt-manager.local domain_id=mgw ...
+        salt vm_minion vmc_security_rules.get_by_id hostname=nsxt-manager.local domain_id=mgw ...
 
     hostname
         The host name of NSX-T manager
@@ -214,7 +214,7 @@ def delete(
 
     .. code-block:: bash
 
-    salt vm_minion vmc_security_rules.delete hostname=nsxt-manager.local domain_id=mgw ...
+        salt vm_minion vmc_security_rules.delete hostname=nsxt-manager.local domain_id=mgw ...
 
     hostname
         The host name of NSX-T manager
@@ -298,7 +298,7 @@ def create(
 
     .. code-block:: bash
 
-    salt vm_minion vmc_security_rules.create hostname=nsxt-manager.local domain_id=mgw ...
+        salt vm_minion vmc_security_rules.create hostname=nsxt-manager.local domain_id=mgw ...
 
     hostname
         The host name of NSX-T manager
@@ -490,7 +490,7 @@ def update(
 
     .. code-block:: bash
 
-    salt vm_minion vmc_security_rules.update hostname=nsxt-manager.local domain_id=mgw ...
+        salt vm_minion vmc_security_rules.update hostname=nsxt-manager.local domain_id=mgw ...
 
     hostname
         The host name of NSX-T manager

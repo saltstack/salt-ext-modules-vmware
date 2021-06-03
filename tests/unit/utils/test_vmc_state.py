@@ -1,4 +1,3 @@
-from saltext.vmware.utils import vmc_constants
 from saltext.vmware.utils import vmc_state
 
 _existing_data_1 = {"id": "id_1", "display": "id_1", "ip": "8.8.8.8", "tag": "debug", "port": "46"}
