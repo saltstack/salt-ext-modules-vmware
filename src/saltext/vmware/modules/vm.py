@@ -72,22 +72,6 @@ def get_vm_facts(*, service_instance=None):
     return vms
 
 
-def _keep_lease_alive(lease):
-    """
-    Keeps the lease alive while POSTing the VMDK.
-    """
-    while True:
-        sleep(5)
-        try:
-            # Choosing arbitrary percentage to keep the lease alive.
-            lease.HttpNfcLeaseProgress(50)
-            if lease.state == vim.HttpNfcLease.State.done:
-                return
-            # If the lease is released, we get an exception.
-            # Returning to kill the thread.
-        except Exception:
-            return
-
 def _deploy_ovf(name,
            host_name,
            ovf,
@@ -123,12 +107,7 @@ def _deploy_ovf(name,
 
     while True:
         if lease.state == vim.HttpNfcLease.State.ready:
-            # Spawn a dawmon thread to keep the lease active while POSTing
-            # VMDK.
-            keepalive_thread = Thread(target=_keep_lease_alive, args=(lease,))
-            keepalive_thread.start()
             lease.HttpNfcLeaseComplete()
-            keepalive_thread.join()
             return {"state":lease.state}
         elif lease.state == vim.HttpNfcLease.State.error:
             return {"state":lease.state, "Lease error":lease.error.msg}
@@ -159,29 +138,19 @@ def deploy_ova(name,
     return result
 
 
-def list_all():
-    """
-    list virtual machines on 
-    """
-    service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    result = {}
-    for host in hosts:
-        result[host.name] = []
-        for vm in host.vm:
-            result[host.name].append(vm.name)
-    return result
-
-
-def list_(host):
+def list_(host=None):
     """
     return virtual machines on a host
     """
     service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    result = []
+    result = [] if host else {}
     for host_i in hosts:
-        if host_i.name == host:
+        if host == None:
+            result[host_i.name] = []
+            for vm in host_i.vm:
+                result[host_i.name].append(vm.name)
+        elif host_i.name == host:
             for vm in host_i.vm:
                 result.append(vm.name)
     return result
