@@ -1,15 +1,12 @@
 """
 VMC Security Rule state module
-================================================
-
-:maintainer: <VMware>
-:maturity: new
 
 Add new security rule, update existing security rule and delete existing security rule from an SDDC.
 
 Example usage :
 
 .. code-block:: yaml
+
     ensure_security_rule:
       vmc_security_rules.present:
         - hostname: sample-nsx.vmwarevmc.com
@@ -162,37 +159,48 @@ def present(
 
     tags
         (Optional) Opaque identifiers meaningful to the user.
-        Array of tag where tag is of the format:
-        {
-            "tag": <tag>,
-            "scope": <scope>
-        }
+
+        .. code::
+
+            tags='[
+                {
+                    "tag": "<tag-key-1>"
+                    "scope": "<tag-value-1>"
+                },
+                {
+                    "tag": "<tag-key-2>"
+                    "scope": "<tag-value-2>"
+                }
+            ]'
 
     display_name
         Identifier to use when displaying entity in logs or GUI. This is applicable for only update scenario.
         For create scenario, display_name would be same as rule_id.
 
     Example values:
-        {
-            "display_name": "vCenter Inbound Rule"
-            "sequence_number": 0,
-            "source_groups": [
-                "ANY"
-            ],
-            "services": ["/infra/services/HTTPS"],
-            "logged": false,
-            "disabled": false,
-            "destination_groups": [
-                "/infra/domains/mgw/groups/VCENTER"
-            ],
-            "scope": [
-                "/infra/tier-1s/mgw"
-            ],
-            "action": "ALLOW",
-            "tag": "",
-            "notes": "",
-            "tags": null
-        }
+
+        .. code::
+
+            {
+                "display_name": "vCenter Inbound Rule"
+                "sequence_number": 0,
+                "source_groups": [
+                    "ANY"
+                ],
+                "services": ["/infra/services/HTTPS"],
+                "logged": false,
+                "disabled": false,
+                "destination_groups": [
+                    "/infra/domains/mgw/groups/VCENTER"
+                ],
+                "scope": [
+                    "/infra/tier-1s/mgw"
+                ],
+                "action": "ALLOW",
+                "tag": "",
+                "notes": "",
+                "tags": null
+            }
 
     """
 

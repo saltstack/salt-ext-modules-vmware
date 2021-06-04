@@ -387,37 +387,48 @@ def create(
 
     tags
         (Optional) Opaque identifiers meaningful to the user.
-        Array of tag where tag is of the format:
-        {
-            "tag": <tag>,
-            "scope": <scope>
-        }
+
+        .. code::
+
+            tags='[
+                {
+                    "tag": "<tag-key-1>"
+                    "scope": "<tag-value-1>"
+                },
+                {
+                    "tag": "<tag-key-2>"
+                    "scope": "<tag-value-2>"
+                }
+            ]'
 
     Example values:
-        {
-            "sequence_number": 0,
-            "source_groups": [
-                "ANY"
-            ],
-            "services": ["/infra/services/HTTPS"],
-            "logged": false,
-            "disabled": false,
-            "destination_groups": [
-                "/infra/domains/mgw/groups/VCENTER"
-            ],
-            "scope": [
-                "/infra/tier-1s/mgw"
-            ],
-            "action": "ALLOW",
-            "tag": "",
-            "notes": "",
-            "tags": [
-                {
-                    "tag": "tag1",
-                    "scope": "scope1"
-                }
-            ]
-        }
+
+        .. code::
+
+            {
+                "sequence_number": 0,
+                "source_groups": [
+                    "ANY"
+                ],
+                "services": ["/infra/services/HTTPS"],
+                "logged": false,
+                "disabled": false,
+                "destination_groups": [
+                    "/infra/domains/mgw/groups/VCENTER"
+                ],
+                "scope": [
+                    "/infra/tier-1s/mgw"
+                ],
+                "action": "ALLOW",
+                "tag": "",
+                "notes": "",
+                "tags": [
+                    {
+                        "tag": "tag1",
+                        "scope": "scope1"
+                    }
+                ]
+            }
 
     """
 
@@ -579,41 +590,52 @@ def update(
 
     tags
         (Optional) Opaque identifiers meaningful to the user.
-        Array of tag where tag is of the format:
-        {
-            "tag": <tag>,
-            "scope": <scope>
-        }
+
+        .. code::
+
+            tags='[
+                {
+                    "tag": "<tag-key-1>"
+                    "scope": "<tag-value-1>"
+                },
+                {
+                    "tag": "<tag-key-2>"
+                    "scope": "<tag-value-2>"
+                }
+            ]'
 
     display_name
         Identifier to use when displaying entity in logs or GUI
 
     Example values:
-        {
-            "display_name": "vCenter Inbound Rule"
-            "sequence_number": 0,
-            "source_groups": [
-                "ANY"
-            ],
-            "services": ["/infra/services/HTTPS"],
-            "logged": false,
-            "disabled": false,
-            "destination_groups": [
-                "/infra/domains/mgw/groups/VCENTER"
-            ],
-            "scope": [
-                "/infra/tier-1s/mgw"
-            ],
-            "action": "ALLOW",
-            "tag": "",
-            "notes": "",
-            "tags": [
-                {
-                    "tag": "tag1",
-                    "scope": "scope1"
-                }
-            ]
-        }
+
+        .. code::
+
+            {
+                "display_name": "vCenter Inbound Rule"
+                "sequence_number": 0,
+                "source_groups": [
+                    "ANY"
+                ],
+                "services": ["/infra/services/HTTPS"],
+                "logged": false,
+                "disabled": false,
+                "destination_groups": [
+                    "/infra/domains/mgw/groups/VCENTER"
+                ],
+                "scope": [
+                    "/infra/tier-1s/mgw"
+                ],
+                "action": "ALLOW",
+                "tag": "",
+                "notes": "",
+                "tags": [
+                    {
+                        "tag": "tag1",
+                        "scope": "scope1"
+                    }
+                ]
+            }
 
     """
 
