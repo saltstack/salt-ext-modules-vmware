@@ -103,6 +103,7 @@ def vmware_datacenter(patch_salt_globals):
     yield dc_name
     datacenter_mod.delete(name=dc_name)
 
+
 @pytest.fixture
 def patch_salt_globals_vm():
     """
