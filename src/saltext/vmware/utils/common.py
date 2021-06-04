@@ -1,8 +1,8 @@
 """
 Common functions used across modules
 """
-import tarfile
 import os
+import tarfile
 
 
 def _filter_kwargs(allowed_kwargs, default_dict=None, **kwargs):
@@ -45,7 +45,7 @@ def read_ovf_from_ova(ova_path):
     try:
         with tarfile.open(ova_path) as tf:
             for entry in tf:
-                if entry.name.endswith('.ovf'):
+                if entry.name.endswith(".ovf"):
                     ovf = tf.extractfile(entry)
                     return ovf.read().decode()
     except Exception:

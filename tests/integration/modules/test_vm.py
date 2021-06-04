@@ -1,11 +1,12 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-import saltext.vmware.modules.vm as virtual_machine
 import pytest
+import saltext.vmware.modules.vm as virtual_machine
 
 
 @pytest.mark.parametrize(
-    "arg_name", [
+    "arg_name",
+    [
         "cluster",
         "esxi_hostname",
         "guest_fullname",
@@ -13,7 +14,7 @@ import pytest
         "ip_address",
         "power_state",
         "uuid",
-    ]
+    ],
 )
 def test_vm_get_basic_facts(service_instance, integration_test_config, arg_name):
     """
@@ -51,12 +52,21 @@ def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
     """
     Test deploy virtual machine through an OVF
     """
-    res = virtual_machine.deploy_ovf(name="test1", host_name=integration_test_config["esxi_host_name"], ovf_path="tests/test_files/centos-7-tools.ovf")
+    res = virtual_machine.deploy_ovf(
+        name="test1",
+        host_name=integration_test_config["esxi_host_name"],
+        ovf_path="tests/test_files/centos-7-tools.ovf",
+    )
     assert res["state"] == "done"
+
 
 def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
     """
     Test deploy virtual machine through an OVA
     """
-    res = virtual_machine.deploy_ova(name="test2", host_name=integration_test_config["esxi_host_name"], ova_path="tests/test_files/ova-test-tar.tar.gz")
+    res = virtual_machine.deploy_ova(
+        name="test2",
+        host_name=integration_test_config["esxi_host_name"],
+        ova_path="tests/test_files/ova-test-tar.tar.gz",
+    )
     assert res["state"] == "done"

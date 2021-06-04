@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
-from time import sleep
 from threading import Thread
+from time import sleep
 
 import salt.utils.platform
-import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.common as common
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as datacenter
+from pyVim.task import WaitForTask
+from salt.exceptions import CommandExecutionError
 from salt.exceptions import InvalidConfigError
 from salt.utils.decorators import depends
 from salt.utils.dictdiffer import recursive_diff
 from salt.utils.listdiffer import list_diff
 from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineDeleteSchema
 from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineUnregisterSchema
-from pyVim.task import WaitForTask
-from salt.exceptions import CommandExecutionError
 
 log = logging.getLogger(__name__)
 
@@ -72,11 +72,7 @@ def get_vm_facts(*, service_instance=None):
     return vms
 
 
-def _deploy_ovf(name,
-           host_name,
-           ovf,
-           datacenter_name,
-           cluster_name):
+def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name):
     """
     Deploy a virtual machine from an OVF
     """
@@ -87,20 +83,26 @@ def _deploy_ovf(name,
     content = service_instance.content
     manager = content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
-    
+
     # get destination host
-    destination_host = datacenter.get_destination_host(service_instance=service_instance, host_name=host_name)
+    destination_host = datacenter.get_destination_host(
+        service_instance=service_instance, host_name=host_name
+    )
 
     # get datacenter
-    dc = datacenter.get_service_instance_datacenter(service_instance=service_instance, datacenter_name=datacenter_name)
-    
+    dc = datacenter.get_service_instance_datacenter(
+        service_instance=service_instance, datacenter_name=datacenter_name
+    )
+
     # Get cluster
     cluster = datacenter.get_cluster(datacenter=dc, cluster_name=cluster_name)
-    
+
     # Generate resource pool.
     resource_pool = cluster.resourcePool
 
-    import_spec = manager.CreateImportSpec(ovf, resource_pool, destination_host.datastore[0], spec_params)
+    import_spec = manager.CreateImportSpec(
+        ovf, resource_pool, destination_host.datastore[0], spec_params
+    )
     if import_spec.importSpec == None:
         return {"Create Import Spec error": import_spec.error[0].msg}
     lease = resource_pool.ImportVApp(import_spec.importSpec, dc.vmFolder)
@@ -108,15 +110,12 @@ def _deploy_ovf(name,
     while True:
         if lease.state == vim.HttpNfcLease.State.ready:
             lease.HttpNfcLeaseComplete()
-            return {"state":lease.state}
+            return {"state": lease.state}
         elif lease.state == vim.HttpNfcLease.State.error:
-            return {"state":lease.state, "Lease error":lease.error.msg}
+            return {"state": lease.state, "Lease error": lease.error.msg}
 
-def deploy_ovf(name,
-           host_name,
-           ovf_path,
-           datacenter_name="Datacenter",
-           cluster_name="Cluster"):
+
+def deploy_ovf(name, host_name, ovf_path, datacenter_name="Datacenter", cluster_name="Cluster"):
     """
     Deploy a virtual machine from an OVF
     """
@@ -125,11 +124,7 @@ def deploy_ovf(name,
     return result
 
 
-def deploy_ova(name,
-               host_name,
-               ova_path,
-               datacenter_name="Datacenter",
-               cluster_name="Cluster"):
+def deploy_ova(name, host_name, ova_path, datacenter_name="Datacenter", cluster_name="Cluster"):
     """
     Deploy a virtual machine from an OVA
     """

@@ -1,14 +1,10 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-# Import python libs
 import uuid
 
-# Import salt ext libs
-import saltext.vmware.states.datacenter as datacenter
-import saltext.vmware.modules.datacenter as datacenter_mod
-
-# Import 3rd party libs
 import pytest
+import saltext.vmware.modules.datacenter as datacenter_mod
+import saltext.vmware.states.datacenter as datacenter
 
 
 @pytest.fixture
