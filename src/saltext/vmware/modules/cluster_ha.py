@@ -27,6 +27,102 @@ def __virtual__():
     return __virtualname__
 
 
+def _set_slot_based_admission_control_params(cluster_spec, admission_control_policy):
+    """
+    Set slot based admission control params
+    """
+    cluster_spec.dasConfig.admissionControlPolicy = (
+        vim.cluster.FailoverLevelAdmissionControlPolicy()
+    )
+    cluster_spec.dasConfig.admissionControlPolicy.failoverLevel = admission_control_policy.get(
+        "slot_based_admission_control", {}
+    ).get("failover_level")
+    cluster_spec.dasConfig.admissionControlPolicy.resourceReductionToToleratePercent = (
+        admission_control_policy.get("slot_based_admission_control", {}).get(
+            "resource_reduction_to_tolerate_percent"
+        )
+    )
+    cluster_spec.dasConfig.admissionControlEnabled = True
+
+
+def _set_failover_host_admission_control_params(
+    cluster_spec, admission_control_policy, service_instance, datacenter, cluster
+):
+    """
+    Set failover host admission control params
+    """
+    cluster_spec.dasConfig.admissionControlPolicy = vim.cluster.FailoverHostAdmissionControlPolicy()
+    hosts = saltext.vmware.utils.vmware.get_hosts(
+        service_instance=service_instance,
+        datacenter_name=datacenter,
+        cluster_name=cluster,
+        host_names=admission_control_policy.get("failover_host_admission_control", {}).get(
+            "failover_hosts"
+        ),
+    )
+    cluster_spec.dasConfig.admissionControlPolicy.failoverHosts = hosts
+    cluster_spec.dasConfig.admissionControlPolicy.failoverLevel = admission_control_policy.get(
+        "failover_host_admission_control", {}
+    ).get("failover_level")
+    cluster_spec.dasConfig.admissionControlPolicy.resourceReductionToToleratePercent = (
+        admission_control_policy.get("failover_host_admission_control", {}).get(
+            "resource_reduction_to_tolerate_percent"
+        )
+    )
+    cluster_spec.dasConfig.admissionControlEnabled = True
+
+
+def _set_reservation_based_admission_control_params(cluster_spec, admission_control_policy):
+    """
+    Set reservation based admission control params
+    """
+    cluster_spec.dasConfig.admissionControlPolicy = (
+        vim.cluster.FailoverResourcesAdmissionControlPolicy()
+    )
+    cluster_spec.dasConfig.admissionControlPolicy.failoverLevel = admission_control_policy.get(
+        "reservation_based_admission_control", {}
+    ).get("failover_level")
+    autocompute_percentages = admission_control_policy.get(
+        "reservation_based_admission_control", {}
+    ).get("autocompute_percentages")
+    cluster_spec.dasConfig.admissionControlPolicy.autoComputePercentages = autocompute_percentages
+    if not autocompute_percentages:
+        cluster_spec.dasConfig.admissionControlPolicy.cpuFailoverResourcesPercent = (
+            admission_control_policy.get("reservation_based_admission_control", {}).get(
+                "cpu_failover_resources_percent"
+            )
+        )
+        cluster_spec.dasConfig.admissionControlPolicy.memoryFailoverResourcesPercent = (
+            admission_control_policy.get("reservation_based_admission_control", {}).get(
+                "memory_failover_resources_percent"
+            )
+        )
+    cluster_spec.dasConfig.admissionControlPolicy.resourceReductionToToleratePercent = (
+        admission_control_policy.get("reservation_based_admission_control", {}).get(
+            "resource_reduction_to_tolerate_percent"
+        )
+    )
+    cluster_spec.dasConfig.admissionControlEnabled = True
+
+
+def _set_admission_control_params(
+    cluster_spec, admission_control_policy, service_instance, datacenter, cluster
+):
+    """
+    Set admission control params
+    """
+    cluster_spec.dasConfig.admissionControlEnabled = False
+    if "slot_based_admission_control" in admission_control_policy:
+        _set_slot_based_admission_control_params(cluster_spec, admission_control_policy)
+    elif "failover_host_admission_control" in admission_control_policy:
+        _set_failover_host_admission_control_params(
+            cluster_spec, admission_control_policy, service_instance, datacenter, cluster
+        )
+
+    elif "reservation_based_admission_control" in admission_control_policy:
+        _set_reservation_based_admission_control_params(cluster_spec, admission_control_policy)
+
+
 def configure(
     cluster,
     datacenter,
@@ -160,6 +256,7 @@ def configure(
         salt '*' vmware_cluster_ha.configure cluster1 dc1 enable=True
     """
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    admission_control_policy = admission_control_policy or {}
     try:
         dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, datacenter)
         cluster_ref = saltext.vmware.utils.vmware.get_cluster(dc_ref=dc_ref, cluster=cluster)
@@ -191,86 +288,13 @@ def configure(
         component_protection_spec.vmTerminateDelayForAPDSec = vm_terminate_delay_for_apd_sec
         das_spec.vmComponentProtectionSettings = component_protection_spec
 
-        cluster_spec.dasConfig.admissionControlEnabled = False
-        if admission_control_policy and "slot_based_admission_control" in admission_control_policy:
-            cluster_spec.dasConfig.admissionControlPolicy = (
-                vim.cluster.FailoverLevelAdmissionControlPolicy()
-            )
-            cluster_spec.dasConfig.admissionControlPolicy.failoverLevel = (
-                admission_control_policy.get("slot_based_admission_control", {}).get(
-                    "failover_level"
-                )
-            )
-            cluster_spec.dasConfig.admissionControlPolicy.resourceReductionToToleratePercent = (
-                admission_control_policy.get("slot_based_admission_control", {}).get(
-                    "resource_reduction_to_tolerate_percent"
-                )
-            )
-            cluster_spec.dasConfig.admissionControlEnabled = True
-
-        elif (
-            admission_control_policy
-            and "failover_host_admission_control" in admission_control_policy
-        ):
-            cluster_spec.dasConfig.admissionControlPolicy = (
-                vim.cluster.FailoverHostAdmissionControlPolicy()
-            )
-            hosts = saltext.vmware.utils.vmware.get_hosts(
-                service_instance=service_instance,
-                datacenter_name=datacenter,
-                cluster_name=cluster,
-                host_names=admission_control_policy.get("failover_host_admission_control", {}).get(
-                    "failover_hosts"
-                ),
-            )
-            cluster_spec.dasConfig.admissionControlPolicy.failoverHosts = hosts
-            cluster_spec.dasConfig.admissionControlPolicy.failoverLevel = (
-                admission_control_policy.get("failover_host_admission_control", {}).get(
-                    "failover_level"
-                )
-            )
-            cluster_spec.dasConfig.admissionControlPolicy.resourceReductionToToleratePercent = (
-                admission_control_policy.get("failover_host_admission_control", {}).get(
-                    "resource_reduction_to_tolerate_percent"
-                )
-            )
-            cluster_spec.dasConfig.admissionControlEnabled = True
-
-        elif (
-            admission_control_policy
-            and "reservation_based_admission_control" in admission_control_policy
-        ):
-            cluster_spec.dasConfig.admissionControlPolicy = (
-                vim.cluster.FailoverResourcesAdmissionControlPolicy()
-            )
-            cluster_spec.dasConfig.admissionControlPolicy.failoverLevel = (
-                admission_control_policy.get("reservation_based_admission_control", {}).get(
-                    "failover_level"
-                )
-            )
-            autocompute_percentages = admission_control_policy.get(
-                "reservation_based_admission_control", {}
-            ).get("autocompute_percentages")
-            cluster_spec.dasConfig.admissionControlPolicy.autoComputePercentages = (
-                autocompute_percentages
-            )
-            if not autocompute_percentages:
-                cluster_spec.dasConfig.admissionControlPolicy.cpuFailoverResourcesPercent = (
-                    admission_control_policy.get("reservation_based_admission_control", {}).get(
-                        "cpu_failover_resources_percent"
-                    )
-                )
-                cluster_spec.dasConfig.admissionControlPolicy.memoryFailoverResourcesPercent = (
-                    admission_control_policy.get("reservation_based_admission_control", {}).get(
-                        "memory_failover_resources_percent"
-                    )
-                )
-            cluster_spec.dasConfig.admissionControlPolicy.resourceReductionToToleratePercent = (
-                admission_control_policy.get("reservation_based_admission_control", {}).get(
-                    "resource_reduction_to_tolerate_percent"
-                )
-            )
-            cluster_spec.dasConfig.admissionControlEnabled = True
+        _set_admission_control_params(
+            cluster_spec=cluster_spec,
+            admission_control_policy=admission_control_policy,
+            service_instance=service_instance,
+            datacenter=datacenter,
+            cluster=cluster,
+        )
 
         cluster_spec.dasConfig.defaultVmSettings = das_spec
 
