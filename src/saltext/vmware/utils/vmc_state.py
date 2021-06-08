@@ -5,15 +5,12 @@ from saltext.vmware.utils import vmc_constants
 
 
 def _create_state_response(name, old_state, new_state, result, comment):
-    state_response = dict()
-    state_response["name"] = name
-    state_response["result"] = result
-    state_response["comment"] = comment
-    state_response["changes"] = dict()
-    if new_state or old_state:
-        state_response["changes"]["old"] = old_state
-        state_response["changes"]["new"] = new_state
-
+    state_response = {
+        "name": name,
+        "result": result,
+        "comment": comment,
+        "changes": {"new": new_state, "old": old_state} if old_state or new_state else {}
+    }
     return state_response
 
 
