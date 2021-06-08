@@ -100,31 +100,23 @@ def vmware_datacenter(patch_salt_globals):
     datacenter_mod.delete(name=dc_name)
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def vmc_config():
-    def _get_config(section):
-        directory_path = os.path.dirname(__file__)  # <-- absolute dir the script is in
-        relative_path = "vmc_config.ini"
-        abs_file_path = os.path.join(directory_path, relative_path)
-        parser = ConfigParser()
-        parser.read(abs_file_path)
-        connect = {}
-        for name, value in parser.items(section):
-            connect[name] = value
-        return connect
-
-    return _get_config
+    abs_file_path = Path(__file__).parent / "vmc_config.ini"
+    parser = ConfigParser()
+    parser.read(abs_file_path)
+    return {s: dict(parser.items(s)) for s in parser.sections()}
 
 
 @pytest.fixture()
 def vmc_nsx_connect(vmc_config):
-    vmc_nsx_config = vmc_config("vmc_nsx_connect")
+    vmc_nsx_config = vmc_config["vmc_nsx_connect"]
     return (
-        vmc_nsx_config["_hostname"],
-        vmc_nsx_config["_refresh_key"],
-        vmc_nsx_config["_authorization_host"],
-        vmc_nsx_config["_org_id"],
-        vmc_nsx_config["_sddc_id"],
-        vmc_nsx_config["_verify_ssl"],
-        vmc_nsx_config["_cert"],
+        vmc_nsx_config["hostname"],
+        vmc_nsx_config["refresh_key"],
+        vmc_nsx_config["authorization_host"],
+        vmc_nsx_config["org_id"],
+        vmc_nsx_config["sddc_id"],
+        vmc_nsx_config["verify_ssl"],
+        vmc_nsx_config["cert"],
     )

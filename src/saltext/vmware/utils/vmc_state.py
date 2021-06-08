@@ -4,12 +4,12 @@
 from saltext.vmware.utils import vmc_constants
 
 
-def _create_state_response(name, old_state, new_state, result, comment):
+def _create_state_response(name, comment, old_state=None, new_state=None, result=None):
     state_response = {
         "name": name,
         "result": result,
         "comment": comment,
-        "changes": {"new": new_state, "old": old_state} if old_state or new_state else {}
+        "changes": {"new": new_state, "old": old_state} if old_state or new_state else {},
     }
     return state_response
 

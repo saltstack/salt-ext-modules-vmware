@@ -237,7 +237,9 @@ def present(
         "error" in get_security_rule
         and SECURITY_RULE_NOT_FOUND_ERROR not in get_security_rule["error"]
     ):
-        return vmc_state._create_state_response(name, None, None, False, get_security_rule["error"])
+        return vmc_state._create_state_response(
+            name=name, comment=get_security_rule["error"], result=False
+        )
     elif "error" not in get_security_rule:
         log.info("Security rule found with Id %s", rule_id)
         existing_security_rule = get_security_rule
@@ -246,11 +248,11 @@ def present(
         log.info("present is called with test option")
         if existing_security_rule:
             return vmc_state._create_state_response(
-                name, None, None, None, "State present will update Security rule {}".format(rule_id)
+                name=name, comment="State present will update Security rule {}".format(rule_id)
             )
         else:
             return vmc_state._create_state_response(
-                name, None, None, None, "State present will create Security rule {}".format(rule_id)
+                name=name, comment="State present will create Security rule {}".format(rule_id)
             )
 
     if existing_security_rule:
@@ -286,7 +288,7 @@ def present(
 
             if "error" in updated_security_rule:
                 return vmc_state._create_state_response(
-                    name, None, None, False, updated_security_rule["error"]
+                    name=name, comment=updated_security_rule["error"], result=False
                 )
 
             get_security_rule_after_update = __salt__["vmc_security_rules.get_by_id"](
@@ -303,20 +305,20 @@ def present(
 
             if "error" in get_security_rule_after_update:
                 return vmc_state._create_state_response(
-                    name, None, None, False, get_security_rule_after_update["error"]
+                    name=name, comment=get_security_rule_after_update["error"], result=False
                 )
 
             return vmc_state._create_state_response(
-                name,
-                existing_security_rule,
-                get_security_rule_after_update,
-                True,
-                "Updated Security rule {}".format(rule_id),
+                name=name,
+                comment="Updated Security rule {}".format(rule_id),
+                old_state=existing_security_rule,
+                new_state=get_security_rule_after_update,
+                result=True,
             )
         else:
             log.info("All fields are same as existing Security rule %s", rule_id)
             return vmc_state._create_state_response(
-                name, None, None, True, "Security rule exists already, no action to perform"
+                name=name, comment="Security rule exists already, no action to perform", result=True
             )
     else:
         log.info("No Security rule found with Id %s", rule_id)
@@ -345,11 +347,14 @@ def present(
 
         if "error" in created_security_rule:
             return vmc_state._create_state_response(
-                name, None, None, False, created_security_rule["error"]
+                name=name, comment=created_security_rule["error"], result=False
             )
 
         return vmc_state._create_state_response(
-            name, None, created_security_rule, True, "Created Security rule {}".format(rule_id)
+            name=name,
+            comment="Created Security rule {}".format(rule_id),
+            new_state=created_security_rule,
+            result=True,
         )
 
 
@@ -418,7 +423,9 @@ def absent(
         "error" in get_security_rule
         and SECURITY_RULE_NOT_FOUND_ERROR not in get_security_rule["error"]
     ):
-        return vmc_state._create_state_response(name, None, None, False, get_security_rule["error"])
+        return vmc_state._create_state_response(
+            name=name, comment=get_security_rule["error"], result=False
+        )
     elif "error" not in get_security_rule:
         log.info("Security rule found with Id %s", rule_id)
         existing_security_rule = get_security_rule
@@ -427,19 +434,15 @@ def absent(
         log.info("absent is called with test option")
         if existing_security_rule:
             return vmc_state._create_state_response(
-                name,
-                None,
-                None,
-                None,
-                "State absent will delete Security rule with Id {}".format(rule_id),
+                name=name,
+                comment="State absent will delete Security rule with Id {}".format(rule_id),
             )
         else:
             return vmc_state._create_state_response(
-                name,
-                None,
-                None,
-                None,
-                "State absent will do nothing as no Security rule found with Id {}".format(rule_id),
+                name=name,
+                comment="State absent will do nothing as no Security rule found with Id {}".format(
+                    rule_id
+                ),
             )
 
     if existing_security_rule:
@@ -458,14 +461,17 @@ def absent(
 
         if "error" in deleted_security_rule:
             return vmc_state._create_state_response(
-                name, None, None, False, deleted_security_rule["error"]
+                name=name, comment=deleted_security_rule["error"], result=False
             )
 
         return vmc_state._create_state_response(
-            name, existing_security_rule, None, True, "Deleted Security rule {}".format(rule_id)
+            name=name,
+            comment="Deleted Security rule {}".format(rule_id),
+            old_state=existing_security_rule,
+            result=True,
         )
     else:
         log.info("No Security rule found with Id %s", rule_id)
         return vmc_state._create_state_response(
-            name, None, None, True, "No Security rule found with Id {}".format(rule_id)
+            name=name, comment="No Security rule found with Id {}".format(rule_id), result=True
         )

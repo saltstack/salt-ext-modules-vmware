@@ -456,7 +456,9 @@ def create(
         "tags": tags,
     }
 
-    req_data = vmc_request._filter_kwargs(allowed_dict.keys(), ["tags"], **allowed_dict)
+    req_data = vmc_request._filter_kwargs(
+        allowed_kwargs=allowed_dict.keys(), allow_none=["tags"], **allowed_dict
+    )
 
     payload = _create_payload_for_security_rule(rule_id, domain_id, req_data)
     return vmc_request.call_api(
@@ -680,7 +682,9 @@ def update(
         "tags": tags,
     }
 
-    req_data = vmc_request._filter_kwargs(allowed_dict.keys(), ["tags"], **allowed_dict)
+    req_data = vmc_request._filter_kwargs(
+        allowed_kwargs=allowed_dict.keys(), allow_none=["tags"], **allowed_dict
+    )
 
     payload = vmc_request.create_payload_for_request(
         vmc_templates.update_security_rules, req_data, existing_data

@@ -13,7 +13,8 @@ def configure_loader_modules():
     return {vmc_security_rules: {}}
 
 
-def _get_mocked_data():
+@pytest.fixture
+def get_mocked_data():
     mocked_ok_response = {
         "action": "ALLOW",
         "resource_type": "Rule",
@@ -57,8 +58,8 @@ def _get_mocked_data():
     return mocked_hostname, mocked_ok_response, mocked_error_response
 
 
-def test_present_state_when_error_from_get_by_id():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_state_when_error_from_get_by_id(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
     mock_get_by_id = MagicMock(return_value=mocked_error_response)
 
     with patch.dict(vmc_security_rules.__salt__, {"vmc_security_rules.get_by_id": mock_get_by_id}):
@@ -82,8 +83,8 @@ def test_present_state_when_error_from_get_by_id():
     assert not result["result"]
 
 
-def test_present_state_when_error_from_create():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_state_when_error_from_create(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
     mock_get_by_id = MagicMock(return_value={})
     mock_create = MagicMock(return_value=mocked_error_response)
 
@@ -114,8 +115,8 @@ def test_present_state_when_error_from_create():
     assert not result["result"]
 
 
-def test_present_state_when_error_from_update():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_state_when_error_from_update(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
     mock_get_by_id = MagicMock(return_value=mocked_ok_response)
     mock_update = MagicMock(return_value=mocked_error_response)
 
@@ -147,8 +148,8 @@ def test_present_state_when_error_from_update():
     assert not result["result"]
 
 
-def test_present_state_during_update_to_add_a_new_field():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_state_during_update_to_add_a_new_field(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
     mocked_updated_response = mocked_ok_response.copy()
     mocked_ok_response.pop("display_name")
     mock_get_by_id = MagicMock(side_effect=[mocked_ok_response, mocked_updated_response])
@@ -182,8 +183,8 @@ def test_present_state_during_update_to_add_a_new_field():
     assert result["result"]
 
 
-def test_present_to_create_when_module_returns_success_response():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_to_create_when_module_returns_success_response(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id_response = MagicMock(return_value={})
     mock_create_response = MagicMock(return_value=mocked_ok_response)
@@ -214,8 +215,8 @@ def test_present_to_create_when_module_returns_success_response():
     assert result["result"]
 
 
-def test_present_to_update_when_module_returns_success_response():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_to_update_when_module_returns_success_response(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
     mocked_updated_security_rule = mocked_ok_response.copy()
     mocked_updated_security_rule["display_name"] = "rule-1"
 
@@ -251,8 +252,8 @@ def test_present_to_update_when_module_returns_success_response():
     assert result["result"]
 
 
-def test_present_to_update_when_get_by_id_after_update_returns_error():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_to_update_when_get_by_id_after_update_returns_error(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
     mocked_updated_security_rule = mocked_ok_response.copy()
     mocked_updated_security_rule["display_name"] = "rule-1"
 
@@ -288,8 +289,10 @@ def test_present_to_update_when_get_by_id_after_update_returns_error():
     assert not result["result"]
 
 
-def test_present_to_update_when_user_input_and_existing_security_rule_has_identical_fields():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_to_update_when_user_input_and_existing_security_rule_has_identical_fields(
+    get_mocked_data,
+):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id_response = MagicMock(return_value=mocked_ok_response)
 
@@ -314,8 +317,8 @@ def test_present_to_update_when_user_input_and_existing_security_rule_has_identi
     assert result["result"]
 
 
-def test_present_state_for_create_when_opts_test_is_true():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_state_for_create_when_opts_test_is_true(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id_response = MagicMock(return_value={})
     rule_id = mocked_ok_response["id"]
@@ -342,8 +345,8 @@ def test_present_state_for_create_when_opts_test_is_true():
     assert result["result"] is None
 
 
-def test_present_state_for_update_when_opts_test_is_true():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_present_state_for_update_when_opts_test_is_true(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id_response = MagicMock(return_value=mocked_ok_response)
     rule_id = mocked_ok_response["id"]
@@ -370,8 +373,8 @@ def test_present_state_for_update_when_opts_test_is_true():
     assert result["result"] is None
 
 
-def test_absent_state_to_delete_when_module_returns_success_response():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_absent_state_to_delete_when_module_returns_success_response(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id_response = MagicMock(return_value=mocked_ok_response)
     mock_delete_response = MagicMock(ok=True, return_value="Security rule Deleted Successfully")
@@ -401,8 +404,8 @@ def test_absent_state_to_delete_when_module_returns_success_response():
     assert result["result"]
 
 
-def test_absent_state_when_object_to_delete_does_not_exists():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_absent_state_when_object_to_delete_does_not_exists(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id_response = MagicMock(return_value={})
     rule_id = mocked_ok_response["id"]
@@ -428,8 +431,8 @@ def test_absent_state_when_object_to_delete_does_not_exists():
     assert result["result"]
 
 
-def test_absent_state_to_delete_when_opts_test_mode_is_true():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_absent_state_to_delete_when_opts_test_mode_is_true(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id_response = MagicMock(return_value={"results": [mocked_ok_response]})
     rule_id = mocked_ok_response["id"]
@@ -456,8 +459,10 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true():
     assert result["result"] is None
 
 
-def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_is_true():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_is_true(
+    get_mocked_data,
+):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id_response = MagicMock(return_value={})
     rule_id = mocked_ok_response["id"]
@@ -486,8 +491,8 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
     assert result["result"] is None
 
 
-def test_absent_with_error_from_delete():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_absent_with_error_from_delete(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
     mock_get_by_id = MagicMock(return_value={"results": [mocked_ok_response]})
     mock_delete = MagicMock(return_value=mocked_error_response)
@@ -519,8 +524,8 @@ def test_absent_with_error_from_delete():
     assert not result["result"]
 
 
-def test_absent_state_when_error_from_get_by_id():
-    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+def test_absent_state_when_error_from_get_by_id(get_mocked_data):
+    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
     mock_get_by_id = MagicMock(return_value=mocked_error_response)
 
     with patch.dict(vmc_security_rules.__salt__, {"vmc_security_rules.get_by_id": mock_get_by_id}):
