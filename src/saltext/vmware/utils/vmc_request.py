@@ -172,8 +172,7 @@ def create_payload_for_request(template_data, user_input_dict, existing_data=Non
 
     """
     if existing_data:
-        for key in template_data.keys():
-            template_data[key] = existing_data.get(key)
+        template_data.update((k, existing_data[k]) for k in template_data.keys() & existing_data.keys())
 
     template_data.update(user_input_dict)
     return template_data
