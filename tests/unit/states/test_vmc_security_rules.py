@@ -1,10 +1,11 @@
 """
     Unit tests for vmc_security_rules state module
 """
-from unittest.mock import MagicMock
+from unittest.mock import create_autospec
 from unittest.mock import patch
 
 import pytest
+import saltext.vmware.modules.vmc_security_rules as vmc_security_rules_exec
 import saltext.vmware.states.vmc_security_rules as vmc_security_rules
 
 
@@ -60,7 +61,9 @@ def get_mocked_data():
 
 def test_present_state_when_error_from_get_by_id(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-    mock_get_by_id = MagicMock(return_value=mocked_error_response)
+    mock_get_by_id = create_autospec(
+        vmc_security_rules_exec.get_by_id, return_value=mocked_error_response
+    )
 
     with patch.dict(vmc_security_rules.__salt__, {"vmc_security_rules.get_by_id": mock_get_by_id}):
         result = vmc_security_rules.present(
@@ -85,8 +88,10 @@ def test_present_state_when_error_from_get_by_id(get_mocked_data):
 
 def test_present_state_when_error_from_create(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-    mock_get_by_id = MagicMock(return_value={})
-    mock_create = MagicMock(return_value=mocked_error_response)
+    mock_get_by_id = create_autospec(vmc_security_rules_exec.get_by_id, return_value={})
+    mock_create = create_autospec(
+        vmc_security_rules_exec.create, return_value=mocked_error_response
+    )
 
     with patch.dict(
         vmc_security_rules.__salt__,
@@ -117,8 +122,12 @@ def test_present_state_when_error_from_create(get_mocked_data):
 
 def test_present_state_when_error_from_update(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-    mock_get_by_id = MagicMock(return_value=mocked_ok_response)
-    mock_update = MagicMock(return_value=mocked_error_response)
+    mock_get_by_id = create_autospec(
+        vmc_security_rules_exec.get_by_id, return_value=mocked_ok_response
+    )
+    mock_update = create_autospec(
+        vmc_security_rules_exec.update, return_value=mocked_error_response
+    )
 
     with patch.dict(
         vmc_security_rules.__salt__,
@@ -152,10 +161,14 @@ def test_present_state_during_update_to_add_a_new_field(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
     mocked_updated_response = mocked_ok_response.copy()
     mocked_ok_response.pop("display_name")
-    mock_get_by_id = MagicMock(side_effect=[mocked_ok_response, mocked_updated_response])
+    mock_get_by_id = create_autospec(
+        vmc_security_rules_exec.get_by_id, side_effect=[mocked_ok_response, mocked_updated_response]
+    )
 
     mocked_updated_response["display_name"] = "rule-1"
-    mock_update = MagicMock(return_value=mocked_updated_response)
+    mock_update = create_autospec(
+        vmc_security_rules_exec.update, return_value=mocked_updated_response
+    )
 
     with patch.dict(
         vmc_security_rules.__salt__,
@@ -186,8 +199,10 @@ def test_present_state_during_update_to_add_a_new_field(get_mocked_data):
 def test_present_to_create_when_module_returns_success_response(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id_response = MagicMock(return_value={})
-    mock_create_response = MagicMock(return_value=mocked_ok_response)
+    mock_get_by_id_response = create_autospec(vmc_security_rules_exec.get_by_id, return_value={})
+    mock_create_response = create_autospec(
+        vmc_security_rules_exec.create, return_value=mocked_ok_response
+    )
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -220,10 +235,13 @@ def test_present_to_update_when_module_returns_success_response(get_mocked_data)
     mocked_updated_security_rule = mocked_ok_response.copy()
     mocked_updated_security_rule["display_name"] = "rule-1"
 
-    mock_get_by_id_response = MagicMock(
-        side_effect=[mocked_ok_response, mocked_updated_security_rule]
+    mock_get_by_id_response = create_autospec(
+        vmc_security_rules_exec.get_by_id,
+        side_effect=[mocked_ok_response, mocked_updated_security_rule],
     )
-    mock_update_response = MagicMock(return_value=mocked_updated_security_rule)
+    mock_update_response = create_autospec(
+        vmc_security_rules_exec.update, return_value=mocked_updated_security_rule
+    )
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -257,8 +275,12 @@ def test_present_to_update_when_get_by_id_after_update_returns_error(get_mocked_
     mocked_updated_security_rule = mocked_ok_response.copy()
     mocked_updated_security_rule["display_name"] = "rule-1"
 
-    mock_get_by_id_response = MagicMock(side_effect=[mocked_ok_response, mocked_error_response])
-    mock_update_response = MagicMock(return_value=mocked_updated_security_rule)
+    mock_get_by_id_response = create_autospec(
+        vmc_security_rules_exec.get_by_id, side_effect=[mocked_ok_response, mocked_error_response]
+    )
+    mock_update_response = create_autospec(
+        vmc_security_rules_exec.update, return_value=mocked_updated_security_rule
+    )
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -294,7 +316,9 @@ def test_present_to_update_when_user_input_and_existing_security_rule_has_identi
 ):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id_response = MagicMock(return_value=mocked_ok_response)
+    mock_get_by_id_response = create_autospec(
+        vmc_security_rules_exec.get_by_id, return_value=mocked_ok_response
+    )
 
     with patch.dict(
         vmc_security_rules.__salt__,
@@ -320,7 +344,7 @@ def test_present_to_update_when_user_input_and_existing_security_rule_has_identi
 def test_present_state_for_create_when_opts_test_is_true(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id_response = MagicMock(return_value={})
+    mock_get_by_id_response = create_autospec(vmc_security_rules_exec.get_by_id, return_value={})
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -348,7 +372,9 @@ def test_present_state_for_create_when_opts_test_is_true(get_mocked_data):
 def test_present_state_for_update_when_opts_test_is_true(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id_response = MagicMock(return_value=mocked_ok_response)
+    mock_get_by_id_response = create_autospec(
+        vmc_security_rules_exec.get_by_id, return_value=mocked_ok_response
+    )
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -376,8 +402,12 @@ def test_present_state_for_update_when_opts_test_is_true(get_mocked_data):
 def test_absent_state_to_delete_when_module_returns_success_response(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id_response = MagicMock(return_value=mocked_ok_response)
-    mock_delete_response = MagicMock(ok=True, return_value="Security rule Deleted Successfully")
+    mock_get_by_id_response = create_autospec(
+        vmc_security_rules_exec.get_by_id, return_value=mocked_ok_response
+    )
+    mock_delete_response = create_autospec(
+        vmc_security_rules_exec.delete, ok=True, return_value="Security rule Deleted Successfully"
+    )
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -407,7 +437,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(get_mocked_
 def test_absent_state_when_object_to_delete_does_not_exists(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id_response = MagicMock(return_value={})
+    mock_get_by_id_response = create_autospec(vmc_security_rules_exec.get_by_id, return_value={})
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -434,7 +464,9 @@ def test_absent_state_when_object_to_delete_does_not_exists(get_mocked_data):
 def test_absent_state_to_delete_when_opts_test_mode_is_true(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id_response = MagicMock(return_value={"results": [mocked_ok_response]})
+    mock_get_by_id_response = create_autospec(
+        vmc_security_rules_exec.get_by_id, return_value={"results": [mocked_ok_response]}
+    )
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -464,7 +496,7 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
 ):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id_response = MagicMock(return_value={})
+    mock_get_by_id_response = create_autospec(vmc_security_rules_exec.get_by_id, return_value={})
     rule_id = mocked_ok_response["id"]
 
     with patch.dict(
@@ -494,8 +526,12 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
 def test_absent_with_error_from_delete(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
 
-    mock_get_by_id = MagicMock(return_value={"results": [mocked_ok_response]})
-    mock_delete = MagicMock(return_value=mocked_error_response)
+    mock_get_by_id = create_autospec(
+        vmc_security_rules_exec.get_by_id, return_value={"results": [mocked_ok_response]}
+    )
+    mock_delete = create_autospec(
+        vmc_security_rules_exec.delete, return_value=mocked_error_response
+    )
 
     with patch.dict(
         vmc_security_rules.__salt__,
@@ -526,7 +562,9 @@ def test_absent_with_error_from_delete(get_mocked_data):
 
 def test_absent_state_when_error_from_get_by_id(get_mocked_data):
     mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-    mock_get_by_id = MagicMock(return_value=mocked_error_response)
+    mock_get_by_id = create_autospec(
+        vmc_security_rules_exec.get_by_id, return_value=mocked_error_response
+    )
 
     with patch.dict(vmc_security_rules.__salt__, {"vmc_security_rules.get_by_id": mock_get_by_id}):
         result = vmc_security_rules.absent(
