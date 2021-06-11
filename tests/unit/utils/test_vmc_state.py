@@ -45,7 +45,13 @@ def input_dict_3():
 
 @pytest.fixture()
 def input_dict_4():
-    data = {"id": "id_1", "display": "id_1", "port": None}
+    data = {"id": "id_1", "display": "id_1", "port": "46"}
+    yield data
+
+
+@pytest.fixture()
+def input_dict_5():
+    data = {"id": "id_1", "display": "id_1", "ip": "8.8.8.8", "tag": None, "port": "46"}
     yield data
 
 
@@ -77,7 +83,7 @@ def test_check_for_update_returning_true_with_input_changed_for_not_none(
     existing_data_1, input_dict_2, updatable_keys, allowed_none
 ):
     """
-    existing data not same as input data display field is different
+    existing data not same as input data as display field is different
     """
     result = vmc_state._check_for_updates(
         existing_data_1, input_dict_2, updatable_keys, allowed_none
@@ -89,7 +95,7 @@ def test_check_for_update_returning_true_with_input_changed_for_allowed_none(
     existing_data_1, input_dict_3, updatable_keys, allowed_none
 ):
     """
-    existing data not same as input data port is None
+    existing data not same as input data as port is None and port is part of allowed none
     """
     result = vmc_state._check_for_updates(
         existing_data_1, input_dict_3, updatable_keys, allowed_none
@@ -101,7 +107,7 @@ def test_check_for_update_returning_true_with_field_not_in_existing_data_but_in_
     existing_data_2, input_dict_2, updatable_keys, allowed_none
 ):
     """
-    existing data does not have field tag
+    existing data does not have field tag, but input dict is having the value for tag and also tag is part of allowed none
     """
     result = vmc_state._check_for_updates(
         existing_data_2, input_dict_2, updatable_keys, allowed_none
@@ -113,9 +119,33 @@ def test_check_for_update_returning_true_with_field_not_in_existing_data_but_in_
     existing_data_3, input_dict_2, updatable_keys, allowed_none
 ):
     """
-    existing data does not have field ip
+    existing data does not have field ip, but input dict is having the field ip
     """
     result = vmc_state._check_for_updates(
         existing_data_3, input_dict_2, updatable_keys, allowed_none
     )
     assert result
+
+
+def test_check_for_update_returning_false_with_field_not_in_existing_data_but_in_input_data_allowed_none(
+    existing_data_2, input_dict_5, updatable_keys, allowed_none
+):
+    """
+    existing data does not have field tag and input_dict is having value as None, and allowed_none is true for tag, so it should return false
+    """
+    result = vmc_state._check_for_updates(
+        existing_data_2, input_dict_5, updatable_keys, allowed_none
+    )
+    assert not result
+
+
+def test_check_for_update_returning_false_with_field_in_existing_data_but_not_in_input_data_(
+    existing_data_2, input_dict_4, updatable_keys, allowed_none
+):
+    """
+    existing data has ip field and input_dict is not having ip field, so it should return false
+    """
+    result = vmc_state._check_for_updates(
+        existing_data_2, input_dict_4, updatable_keys, allowed_none
+    )
+    assert not result

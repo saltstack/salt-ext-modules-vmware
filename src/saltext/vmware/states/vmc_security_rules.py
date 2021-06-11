@@ -34,15 +34,18 @@ from saltext.vmware.utils import vmc_state
 log = logging.getLogger(__name__)
 SECURITY_RULE_NOT_FOUND_ERROR = "could not be found"
 
+try:
+    from saltext.vmware.modules import vmc_security_rules
+
+    HAS_SECURITY_RULES = True
+except ImportError:
+    HAS_SECURITY_RULES = False
+
 
 def __virtual__():
-    """
-    Only load if the vmc_security_rules module is available in __salt__
-    """
-    return (
-        "vmc_security_rules" if "vmc_security_rules.get" in __salt__ else False,
-        "'vmc_security_rules' binary not found on system",
-    )
+    if not HAS_SECURITY_RULES:
+        return False, "'vmc_security_rules' binary not found on system"
+    return "vmc_security_rules"
 
 
 def present(
@@ -233,16 +236,13 @@ def present(
 
     existing_security_rule = None
 
-    if (
-        "error" in get_security_rule
-        and SECURITY_RULE_NOT_FOUND_ERROR not in get_security_rule["error"]
-    ):
+    if "error" not in get_security_rule:
+        log.info("Security rule found with Id %s", rule_id)
+        existing_security_rule = get_security_rule
+    elif SECURITY_RULE_NOT_FOUND_ERROR not in get_security_rule["error"]:
         return vmc_state._create_state_response(
             name=name, comment=get_security_rule["error"], result=False
         )
-    elif "error" not in get_security_rule:
-        log.info("Security rule found with Id %s", rule_id)
-        existing_security_rule = get_security_rule
 
     if __opts__.get("test"):
         log.info("present is called with test option")
@@ -419,16 +419,13 @@ def absent(
 
     existing_security_rule = None
 
-    if (
-        "error" in get_security_rule
-        and SECURITY_RULE_NOT_FOUND_ERROR not in get_security_rule["error"]
-    ):
+    if "error" not in get_security_rule:
+        log.info("Security rule found with Id %s", rule_id)
+        existing_security_rule = get_security_rule
+    elif SECURITY_RULE_NOT_FOUND_ERROR not in get_security_rule["error"]:
         return vmc_state._create_state_response(
             name=name, comment=get_security_rule["error"], result=False
         )
-    elif "error" not in get_security_rule:
-        log.info("Security rule found with Id %s", rule_id)
-        existing_security_rule = get_security_rule
 
     if __opts__.get("test"):
         log.info("absent is called with test option")

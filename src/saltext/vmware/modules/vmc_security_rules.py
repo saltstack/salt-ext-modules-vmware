@@ -19,16 +19,13 @@ def __virtual__():
 
 def _create_payload_for_security_rule(rule_id, domain_id, user_input):
     """
-    This function creates the payload based on the json template and user input passed
+    This function creates the payload based on the template and user input passed
     """
-    if domain_id == "mgw":
-        template_data = vmc_templates.create_security_rules_mgw
-    else:
-        template_data = vmc_templates.create_security_rules_cgw
-
-    data = vmc_request.create_payload_for_request(template_data, user_input)
-    data["id"] = rule_id
-    data["display_name"] = rule_id
+    template_data = getattr(
+        vmc_templates, "create_security_rules_" + domain_id, vmc_templates.create_security_rules_cgw
+    )
+    data = vmc_request.create_payload_for_request_1(template_data, user_input)
+    data["id"] = data["display_name"] = rule_id
     return data
 
 

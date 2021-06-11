@@ -83,7 +83,7 @@ def test_vmc_security_rules_state_module(
         cert=cert,
     )
     response_json = response.json
-    result = dict(list(response_json.values())[0])
+    result = list(response_json.values())[0]
     changes = result["changes"]
 
     assert changes["old"] is None
@@ -106,7 +106,7 @@ def test_vmc_security_rules_state_module(
         cert=cert,
     )
     response_json = response.json
-    result = dict(list(response_json.values())[0])
+    result = list(response_json.values())[0]
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}
@@ -129,7 +129,7 @@ def test_vmc_security_rules_state_module(
         display_name=updated_display_name,
     )
     response_json = response.json
-    result = dict(list(response_json.values())[0])
+    result = list(response_json.values())[0]
     changes = result["changes"]
 
     assert changes["old"]["display_name"] != changes["new"]["display_name"]
@@ -153,7 +153,7 @@ def test_vmc_security_rules_state_module(
         tags=updated_tags,
     )
     response_json = response.json
-    result = dict(list(response_json.values())[0])
+    result = list(response_json.values())[0]
     changes = result["changes"]
 
     assert changes["new"]["tags"] == updated_tags
@@ -175,7 +175,7 @@ def test_vmc_security_rules_state_module(
         cert=cert,
     )
     response_json = response.json
-    result = dict(list(response_json.values())[0])
+    result = list(response_json.values())[0]
     changes = result["changes"]
 
     assert changes["new"] is None
@@ -198,7 +198,7 @@ def test_vmc_security_rules_state_module(
         cert=cert,
     )
     response_json = response.json
-    result = dict(list(response_json.values())[0])
+    result = list(response_json.values())[0]
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}

@@ -1,6 +1,7 @@
 """
     Util Module for VMC states.
 """
+from salt.utils import dictdiffer
 from saltext.vmware.utils import vmc_constants
 
 
@@ -15,9 +16,17 @@ def _create_state_response(name, comment, old_state=None, new_state=None, result
 
 
 def _check_for_updates(existing_data, input_dict, updatable_keys, allowed_none=[]):
-    is_updatable = False
+    diff = lambda l1, l2: [x for x in l1 if x not in l2]
 
-    # check if any updatable field has different value from the existing one
+    ignore_keys = diff(existing_data.keys(), updatable_keys) or []
+
+    for key in updatable_keys:
+        if key not in allowed_none and input_dict.get(key) is None:
+            ignore_keys.append(key)
+
+    ignore_keys.extend(allowed_none)
+
+    diff_with_out_allow_none = dictdiffer.deep_diff(existing_data, input_dict, ignore=ignore_keys)
 
     for key in allowed_none:
         if (
@@ -29,17 +38,4 @@ def _check_for_updates(existing_data, input_dict, updatable_keys, allowed_none=[
         if key not in existing_data and input_dict.get(key) not in [vmc_constants.VMC_NONE, None]:
             return True
 
-    for key in updatable_keys:
-        if key in allowed_none:
-            continue
-        if key not in existing_data and input_dict.get(key):
-            is_updatable = True
-            break
-        if (
-            key in existing_data
-            and input_dict.get(key) is not None
-            and existing_data[key] != input_dict[key]
-        ):
-            is_updatable = True
-
-    return is_updatable
+    return bool(diff_with_out_allow_none)
