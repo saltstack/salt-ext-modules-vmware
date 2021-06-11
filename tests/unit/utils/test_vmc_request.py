@@ -221,7 +221,7 @@ def test_create_payload_for_request_all_field_in_input(
         "port": "46",
         "tag": "info",
     }
-    response = vmc_request.create_payload_for_request_1(
+    response = vmc_request.create_payload_for_request(
         template_data_1, input_dict_1, existing_data_1
     )
     assert response == expected_data
@@ -235,7 +235,7 @@ def test_create_payload_for_request_tag_is_none(template_data_1, input_dict_2, e
         "port": "46",
         "tag": None,
     }
-    response = vmc_request.create_payload_for_request_1(
+    response = vmc_request.create_payload_for_request(
         template_data_1, input_dict_2, existing_data_2
     )
     assert response == expected_data
@@ -251,7 +251,7 @@ def test_create_payload_for_request_in_input_field_port_is_none(
         "port": None,
         "tag": "debug",
     }
-    response = vmc_request.create_payload_for_request_1(
+    response = vmc_request.create_payload_for_request(
         template_data_1, input_dict_3, existing_data_1
     )
     assert response == expected_data
@@ -265,5 +265,5 @@ def test_create_payload_for_request_existing_data_is_missing(template_data_1, in
         "port": "46",
         "tag": "info",
     }
-    response = vmc_request.create_payload_for_request_1(template_data_1, input_dict_1)
+    response = vmc_request.create_payload_for_request(template_data_1, input_dict_1)
     assert response == expected_data

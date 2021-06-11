@@ -24,7 +24,7 @@ def _create_payload_for_security_rule(rule_id, domain_id, user_input):
     template_data = getattr(
         vmc_templates, "create_security_rules_" + domain_id, vmc_templates.create_security_rules_cgw
     )
-    data = vmc_request.create_payload_for_request_1(template_data, user_input)
+    data = vmc_request.create_payload_for_request(template_data, user_input)
     data["id"] = data["display_name"] = rule_id
     return data
 
