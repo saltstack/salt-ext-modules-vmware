@@ -56,6 +56,12 @@ def input_dict_5():
 
 
 @pytest.fixture()
+def input_dict_6():
+    data = {"id": "id_1", "display": "id_1", "ip": "8.8.8.8", "port": "46", "tag": "debug"}
+    yield data
+
+
+@pytest.fixture()
 def updatable_keys():
     data = ["display", "ip", "tag", "port"]
     yield data
@@ -104,30 +110,30 @@ def test_check_for_update_returning_true_with_input_changed_for_allowed_none(
 
 
 def test_check_for_update_returning_true_with_field_not_in_existing_data_but_in_input_data_of_allowed_none(
-    existing_data_2, input_dict_2, updatable_keys, allowed_none
+    existing_data_2, input_dict_1, updatable_keys, allowed_none
 ):
     """
     existing data does not have field tag, but input dict is having the value for tag and also tag is part of allowed none
     """
     result = vmc_state._check_for_updates(
-        existing_data_2, input_dict_2, updatable_keys, allowed_none
+        existing_data_2, input_dict_1, updatable_keys, allowed_none
     )
     assert result
 
 
 def test_check_for_update_returning_true_with_field_not_in_existing_data_but_in_input_data(
-    existing_data_3, input_dict_2, updatable_keys, allowed_none
+    existing_data_3, input_dict_6, updatable_keys, allowed_none
 ):
     """
     existing data does not have field ip, but input dict is having the field ip
     """
     result = vmc_state._check_for_updates(
-        existing_data_3, input_dict_2, updatable_keys, allowed_none
+        existing_data_3, input_dict_6, updatable_keys, allowed_none
     )
     assert result
 
 
-def test_check_for_update_returning_false_with_field_not_in_existing_data_but_in_input_data_allowed_none(
+def test_check_for_update_returning_false_with_field_not_in_existing_data_but_in_input_data_and_field_is_allowed_none(
     existing_data_2, input_dict_5, updatable_keys, allowed_none
 ):
     """
@@ -139,7 +145,7 @@ def test_check_for_update_returning_false_with_field_not_in_existing_data_but_in
     assert not result
 
 
-def test_check_for_update_returning_false_with_field_in_existing_data_but_not_in_input_data_(
+def test_check_for_update_returning_false_with_field_in_existing_data_but_not_in_input_data(
     existing_data_2, input_dict_4, updatable_keys, allowed_none
 ):
     """

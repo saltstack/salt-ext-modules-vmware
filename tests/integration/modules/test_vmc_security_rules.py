@@ -132,8 +132,7 @@ def test_create_security_rule(
     )
     assert ret is not None
     result_as_json = ret.json
-    assert result_as_json["id"] == rule_id
-    assert result_as_json["display_name"] == rule_id
+    assert result_as_json["id"] == result_as_json["display_name"] == rule_id
 
 
 def test_get_security_rules(
