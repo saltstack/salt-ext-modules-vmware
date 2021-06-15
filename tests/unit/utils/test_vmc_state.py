@@ -62,6 +62,12 @@ def input_dict_6():
 
 
 @pytest.fixture()
+def input_dict_7():
+    data = {"id": "id_1", "display": "id_1", "port": "46", "ip": None}
+    yield data
+
+
+@pytest.fixture()
 def updatable_keys():
     data = ["display", "ip", "tag", "port"]
     yield data
@@ -153,5 +159,17 @@ def test_check_for_update_returning_false_with_field_in_existing_data_but_not_in
     """
     result = vmc_state._check_for_updates(
         existing_data_2, input_dict_4, updatable_keys, allowed_none
+    )
+    assert not result
+
+
+def test_check_for_update_returning_false_with_field_in_existing_data_but_none_in_input_data(
+    existing_data_2, input_dict_7, updatable_keys, allowed_none
+):
+    """
+    existing data has ip field and input_dict is having ip field as None, so it should return false as ip field cant be None
+    """
+    result = vmc_state._check_for_updates(
+        existing_data_2, input_dict_7, updatable_keys, allowed_none
     )
     assert not result

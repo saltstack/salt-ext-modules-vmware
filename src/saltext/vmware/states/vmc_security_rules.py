@@ -222,6 +222,8 @@ def present(
         "display_name": display_name,
     }
 
+    input_dict = {k: v for k, v in input_dict.items() if v != vmc_constants.VMC_NONE}
+
     get_security_rule = __salt__["vmc_security_rules.get_by_id"](
         hostname=hostname,
         refresh_key=refresh_key,
