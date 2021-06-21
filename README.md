@@ -25,6 +25,10 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     # On mac, you may need to upgrade pip
     python -m pip install --upgrade pip
 
+    # On WSL or some flavors of linux you may need to install the `enchant`
+    # library in order to build the docs
+    sudo apt-get install -y enchant
+
     # Install extension + test/dev/doc dependencies into your environment
     python -m pip install -e .[tests,dev,docs]
 
