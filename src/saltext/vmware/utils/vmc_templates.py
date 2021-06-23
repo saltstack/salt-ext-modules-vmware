@@ -1,5 +1,5 @@
 """
-  Data required for create and update of the resource(security rule, Nat rule, Network etc..) on VMC
+   Data required for create and update of the resource(security rule, Nat rule, Network etc..) on VMC
 """
 
 create_sddc = {
@@ -20,7 +20,7 @@ create_sddc = {
     "storage_capacity": 0,
     "vpc_cidr": None,
     "vxlan_subnet": None,
-    "region": "us-west-2"
+    "region": "us-west-2",
 }
 
 
@@ -78,7 +78,7 @@ create_networks = {
     "tags": None,
     "advanced_config": None,
     "l2_extension": None,
-    "dhcp_config_path": None
+    "dhcp_config_path": None,
 }
 
 
@@ -91,7 +91,7 @@ update_networks = {
     "tags": None,
     "advanced_config": None,
     "l2_extension": None,
-    "dhcp_config_path": None
+    "dhcp_config_path": None,
 }
 
 
@@ -99,7 +99,7 @@ create_dhcp_server_profiles = {
     "resource_type": "DhcpServerConfig",
     "server_addresses": None,
     "lease_time": None,
-    "tags": None
+    "tags": None,
 }
 
 
@@ -108,45 +108,33 @@ update_dhcp_server_profiles = {
     "server_addresses": None,
     "server_address": None,
     "lease_time": None,
-    "tags": None
+    "tags": None,
 }
 
 
 create_dhcp_relay_profiles = {
     "resource_type": "DhcpRelayConfig",
     "server_addresses": None,
-    "tags": None
+    "tags": None,
 }
 
 
-update_dhcp_relay_profiles = {
-    "display_name": None,
-    "server_addresses": None,
-    "tags": None
-}
+update_dhcp_relay_profiles = {"display_name": None, "server_addresses": None, "tags": None}
 
 
 create_distributed_firewall_rules = {
     "sequence_number": 1,
-    "source_groups": [
-        "ANY"
-    ],
-    "destination_groups": [
-        "ANY"
-    ],
-    "scope": [
-        "ANY"
-    ],
+    "source_groups": ["ANY"],
+    "destination_groups": ["ANY"],
+    "scope": ["ANY"],
     "action": "DROP",
-    "services": [
-        "ANY"
-    ],
+    "services": ["ANY"],
     "description": " common entry",
     "disabled": False,
     "logged": False,
     "direction": "IN_OUT",
     "tag": "",
-    "notes": ""
+    "notes": "",
 }
 
 update_distributed_firewall_rules = {
@@ -163,7 +151,7 @@ update_distributed_firewall_rules = {
     "direction": None,
     "notes": None,
     "tag": None,
-    "tags": None
+    "tags": None,
 }
 
 
@@ -178,11 +166,9 @@ create_nat_rules = {
     "service": "",
     "logging": False,
     "enabled": True,
-    "scope": [
-        "/infra/labels/cgw-public"
-    ],
+    "scope": ["/infra/labels/cgw-public"],
     "tags": None,
-    "firewall_match": "MATCH_INTERNAL_ADDRESS"
+    "firewall_match": "MATCH_INTERNAL_ADDRESS",
 }
 
 update_nat_rules = {
@@ -199,26 +185,18 @@ update_nat_rules = {
     "scope": None,
     "tags": None,
     "firewall_match": None,
-    "display_name": None
+    "display_name": None,
 }
 
 
-create_security_groups_cgw = {
-    "expression": [],
-    "tags": [],
-    "description": ""
-}
+create_security_groups_cgw = {"expression": [], "tags": [], "description": ""}
 
 
-create_security_groups_mgw = {
-    "expression":[],
-    "tags": [],
-    "description": ""
-}
+create_security_groups_mgw = {"expression": [], "tags": [], "description": ""}
 
 update_security_groups = {
     "expression": None,
     "tags": None,
     "display_name": None,
-    "description": None
+    "description": None,
 }
