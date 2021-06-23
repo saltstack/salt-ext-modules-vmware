@@ -200,3 +200,12 @@ update_security_groups = {
     "display_name": None,
     "description": None,
 }
+
+create_vm_disks = {
+    "backing": None,
+    "ide": None,
+    "new_vmdk": None,
+    "sata": None,
+    "scsi": None,
+    "type": None,
+}
