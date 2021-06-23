@@ -3,11 +3,20 @@
 Managing VMC Sddc with Salt
 ================================
 
-Modules and States for controlling VMC Sddc:
+Modules and States for controlling VMC SDDC:
 
 .. toctree::
    :glob:
    :maxdepth: 2
-   :caption: VMC Sddc Execution Modules
+   :caption: VMC Execution Modules
 
    ref/modules/saltext.vmware.modules.vmc*
+
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+   :caption: VMC State Modules
+
+   ref/states/saltext.vmware.states.vmc*

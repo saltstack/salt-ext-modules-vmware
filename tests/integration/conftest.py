@@ -1,19 +1,16 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-# Import python libs
 import json
 import os
 import ssl
 import uuid
+from configparser import ConfigParser
 from pathlib import Path
 
-# Import 3rd party libs
 import pytest
-from pyVim import connect
-
-# Import salt ext libs
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.states.datacenter as datacenter_st
+from pyVim import connect
 
 
 @pytest.fixture(scope="package")
@@ -30,7 +27,7 @@ def minion(minion):
 
 @pytest.fixture
 def salt_run_cli(master):
-    return master.get_salt_run_cli()
+    return master.salt_run_cli()
 
 
 @pytest.fixture
@@ -40,7 +37,7 @@ def salt_cli(master):
 
 @pytest.fixture
 def salt_call_cli(minion):
-    return minion.get_salt_call_cli()
+    return minion.salt_call_cli()
 
 
 @pytest.fixture(scope="session")
@@ -101,3 +98,29 @@ def vmware_datacenter(patch_salt_globals):
     dc = datacenter_mod.create(name=dc_name)
     yield dc_name
     datacenter_mod.delete(name=dc_name)
+
+
+@pytest.fixture(scope="session")
+def vmc_config():
+    abs_file_path = Path(__file__).parent / "vmc_config.ini"
+    parser = ConfigParser()
+    parser.read(abs_file_path)
+    return {s: dict(parser.items(s)) for s in parser.sections()}
+
+
+@pytest.fixture()
+def vmc_nsx_connect(vmc_config):
+    vmc_nsx_config = vmc_config["vmc_nsx_connect"]
+    verify_ssl = True
+    if vmc_nsx_config["verify_ssl"].lower() == "false":
+        verify_ssl = False
+
+    return (
+        vmc_nsx_config["hostname"],
+        vmc_nsx_config["refresh_key"],
+        vmc_nsx_config["authorization_host"],
+        vmc_nsx_config["org_id"],
+        vmc_nsx_config["sddc_id"],
+        verify_ssl,
+        vmc_nsx_config["cert"],
+    )

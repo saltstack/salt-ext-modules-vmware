@@ -48,7 +48,9 @@ def mock_http_error_response():
     error_obj_response = mock.Mock()
     error_obj_response.json.return_value = auth_err_json
     error_obj_response.text.return_value = json.dumps(auth_err_json)
+    error_obj_request = mock.Mock()
     http_error_obj.response = error_obj_response
+    http_error_obj.request = error_obj_request
     mock_resp.raise_for_status.side_effect = http_error_obj
     yield mock_resp
 
@@ -59,5 +61,8 @@ def mock_http_error():
     error_obj_response = mock.Mock()
     error_obj_response.json.return_value = None
     error_obj_response.text = ""
+    error_obj_request = mock.Mock()
+    error_obj_request.url = "mock_url"
     http_error_obj.response = error_obj_response
+    http_error_obj.request = error_obj_request
     yield http_error_obj

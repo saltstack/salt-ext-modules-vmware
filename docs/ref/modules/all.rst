@@ -32,6 +32,7 @@ Execution Modules
     saltext.vmware.modules.vm
     saltext.vmware.modules.vmc_direct_connect
     saltext.vmware.modules.vmc_dns_forwarder
+    saltext.vmware.modules.vmc_security_rules
     saltext.vmware.modules.vmc_vpn_statistics
     saltext.vmware.modules.vmotion
     saltext.vmware.modules.vsan
