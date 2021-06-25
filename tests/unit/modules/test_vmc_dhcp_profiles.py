@@ -59,7 +59,7 @@ def test_get_dhcp_profiles_should_return_api_response(dhcp_profile_data):
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            dhcp_profile_type="server",
+            type="server",
             verify_ssl=False,
         )
         == dhcp_profile_data
@@ -78,7 +78,7 @@ def test_get_dhcp_profiles_called_with_url():
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            dhcp_profile_type="server",
+            type="server",
             verify_ssl=False,
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]

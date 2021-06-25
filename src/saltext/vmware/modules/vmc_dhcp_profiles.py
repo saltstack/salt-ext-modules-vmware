@@ -19,7 +19,7 @@ def get(
     authorization_host,
     org_id,
     sddc_id,
-    dhcp_profile_type,
+    type,
     verify_ssl=True,
     cert=None,
     sort_by=None,
@@ -34,7 +34,7 @@ def get(
 
     .. code-block:: bash
 
-        salt vm_minion vmc_dhcp_profiles.get hostname=nsxt-manager.local dhcp_profile_type=server ...
+        salt vm_minion vmc_dhcp_profiles.get hostname=nsxt-manager.local type=server ...
 
     hostname
         The host name of NSX-T manager
@@ -51,7 +51,7 @@ def get(
     sddc_id
         The Id of SDDC for which the DHCP profiles should be retrieved
 
-    dhcp_profile_type
+    type
         The type of DHCP profiles to be retrieved. Possible values: server, relay
 
     verify_ssl
@@ -76,8 +76,8 @@ def get(
 
     """
 
-    log.info("Retrieving DHCP %s profiles for SDDC %s", dhcp_profile_type, sddc_id)
-    profile_type = vmc_constants.DHCP_CONFIGS.format(dhcp_profile_type)
+    log.info("Retrieving DHCP %s profiles for SDDC %s", type, sddc_id)
+    profile_type = vmc_constants.DHCP_CONFIGS.format(type)
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = (
         "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
