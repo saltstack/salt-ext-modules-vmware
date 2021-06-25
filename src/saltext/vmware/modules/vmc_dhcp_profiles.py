@@ -13,14 +13,6 @@ log = logging.getLogger(__name__)
 __virtualname__ = "vmc_dhcp_profiles"
 
 
-def _get_profile_type(dhcp_profile_type):
-    return (
-        vmc_constants.DHCP_SERVER_CONFIGS
-        if dhcp_profile_type == vmc_constants.SERVER
-        else vmc_constants.DHCP_RELAY_CONFIGS
-    )
-
-
 def get(
     hostname,
     refresh_key,
@@ -85,7 +77,7 @@ def get(
     """
 
     log.info("Retrieving DHCP %s profiles for SDDC %s", dhcp_profile_type, sddc_id)
-    profile_type = _get_profile_type(dhcp_profile_type)
+    profile_type = vmc_constants.DHCP_CONFIGS.format(dhcp_profile_type)
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = (
         "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
