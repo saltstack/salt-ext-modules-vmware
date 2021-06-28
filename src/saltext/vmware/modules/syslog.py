@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 import sys
-import logging
 
 import saltext.vmware.utils.vmware
 from salt.utils.decorators import depends

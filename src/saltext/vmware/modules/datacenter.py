@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
-# Import salt libs
 import salt.exceptions
-
-# Import salt extension libs
 import saltext.vmware.utils.vmware
 from saltext.vmware.utils.connect import get_service_instance
 

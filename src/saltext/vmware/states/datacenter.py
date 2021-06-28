@@ -1,10 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
-
 import logging
 
-# Import salt libs
-
-# Import salt extension libs
 
 log = logging.getLogger(__name__)
 

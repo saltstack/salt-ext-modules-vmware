@@ -1,13 +1,9 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-# Import python libs
 import uuid
 from unittest.mock import patch
 
-# Import salt ext libs
 import saltext.vmware.modules.datacenter as datacenter
-
-# Import 3rd party libs
 
 
 def test_get(vmware_datacenter):

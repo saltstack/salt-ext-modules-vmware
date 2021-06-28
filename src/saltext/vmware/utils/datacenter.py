@@ -64,7 +64,7 @@ def get_cluster(*, datacenter, cluster_name):
     cluster_obj = None
     if cluster_name:
         for cluster in cluster_list:
-            if cluster.name == cluster_name: 
+            if cluster.name == cluster_name:
                 cluster_obj = cluster
     elif cluster_obj == None and len(cluster_list) > 0:
         cluster_obj = cluster_list[0]
