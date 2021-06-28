@@ -83,3 +83,39 @@ def test_get_dhcp_profiles_called_with_url():
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
+
+
+def test_get_dhcp_profile_by_id_should_return_single_dhcp_profile(dhcp_profile_data_by_id):
+    assert (
+        vmc_dhcp_profiles.get_by_id(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            type="server",
+            dhcp_profile_id="dhcp_profile_id",
+            verify_ssl=False,
+        )
+        == dhcp_profile_data_by_id
+    )
+
+
+def test_get_dhcp_profile_by_id_called_with_url():
+    expected_url = (
+        "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/policy/api/"
+        "v1/infra/dhcp-server-configs/dhcp_profile_id"
+    )
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        vmc_dhcp_profiles.get_by_id(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            type="server",
+            dhcp_profile_id="dhcp_profile_id",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url

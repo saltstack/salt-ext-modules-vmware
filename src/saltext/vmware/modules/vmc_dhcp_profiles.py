@@ -105,3 +105,80 @@ def get(
         cert=cert,
         params=params,
     )
+
+
+def get_by_id(
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    type,
+    dhcp_profile_id,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Retrieves given DHCP profile of given profile type for given SDDC
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt vm_minion vmc_dhcp_profiles.get_by_id hostname=nsxt-manager.local type=server ...
+
+    hostname
+        The host name of NSX-T manager
+
+    refresh_key
+        API Token of the user which is used to get the Access Token required for VMC operations
+
+    authorization_host
+        Hostname of the VMC cloud console
+
+    org_id
+        The Id of organization to which the SDDC belongs to
+
+    sddc_id
+        The Id of SDDC for which the DHCP profile should be retrieved
+
+    type
+        The type of DHCP profile for which the given DHCP belongs to. Possible values: server, relay
+
+    dhcp_profile_id
+        Id of the DHCP profile to be retrieved from SDDC.
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+        The certificate can be retrieved from browser.
+
+    """
+
+    log.info("Retrieving DHCP profile %s for SDDC %s", dhcp_profile_id, sddc_id)
+    profile_type = vmc_constants.DHCP_CONFIGS.format(type)
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = (
+        "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
+        "policy/api/v1/infra/{profile_type}/{profile_id}"
+    )
+    api_url = api_url.format(
+        base_url=api_url_base,
+        org_id=org_id,
+        sddc_id=sddc_id,
+        profile_type=profile_type,
+        profile_id=dhcp_profile_id,
+    )
+
+    return vmc_request.call_api(
+        method=vmc_constants.GET_REQUEST_METHOD,
+        url=api_url,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        description="vmc_dhcp_profiles.get_by_id",
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
