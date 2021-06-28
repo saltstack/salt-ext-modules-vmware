@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 from os import system
-from time import sleep
 from threading import Thread
+from time import sleep
 
-import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.common as common
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as datacenter
 from pyVim.task import WaitForTask
 
@@ -54,59 +54,6 @@ def keep_lease_alive(lease):
             # Returning to kill the thread.
         except Exception:
             return
-
-
-# @connect.get_si
-def create(*, service_instance):
-    """
-    Deploy a VMware VM from an OVF or OVA file
-    """
-    content = service_instance.content
-    manager = content.ovfManager
-    datacenter_name = "Datacenter"
-    host_name = "10.206.240.192"
-    cluster_name = "Cluster"
-    vmdk_path = "/vmfs/volumes"
-    name = "joey2"
-    ovf = common.read_ovf_file('../ovf/centos-7-114180-tools.ovf')
-    spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
-    
-    # get destination host
-    destination_host = datacenter.get_destination_host(service_instance=service_instance, host_name=host_name)
-
-    # get datacenter
-    dc = datacenter.get_service_instance_datacenter(service_instance=service_instance, datacenter_name=datacenter_name)
-    
-    # Get cluster
-    cluster = datacenter.get_cluster(datacenter=dc, cluster_name=cluster_name)
-    
-    # Generate resource pool.
-    resource_pool = cluster.resourcePool
-
-    import_spec = manager.CreateImportSpec(ovf, resource_pool, destination_host.datastore[0], spec_params)
-    lease = resource_pool.ImportVApp(import_spec.importSpec, dc.vmFolder)
-
-    while True:
-        if lease.state == vim.HttpNfcLease.State.ready:
-            # Assuming single VMDK.
-            url = lease.info.deviceUrl[0].url.replace('*', host_name)
-            # Spawn a dawmon thread to keep the lease active while POSTing
-            # VMDK.
-            keepalive_thread = Thread(target=keep_lease_alive, args=(lease,))
-            keepalive_thread.start()
-            # POST the VMDK to the host via curl. Requests library would work
-            # too.
-            curl_cmd = (
-                "curl -Ss -X POST --insecure -T %s -H 'Content-Type: \
-                application/x-vnd.vmware-streamVmdk' %s" %
-                (vmdk_path, url))
-            system(curl_cmd)
-            lease.HttpNfcLeaseComplete()
-            keepalive_thread.join()
-            return 0
-        elif lease.state == vim.HttpNfcLease.State.error:
-            print("Lease error: " + lease.state.error)
-            exit(1)
 
 
 # pylint: disable=C0302
@@ -331,6 +278,7 @@ except ImportError:
 
 __virtualname__ = "vm"
 __proxyenabled__ = ["vm"]
+
 
 def __virtual__():
     return __virtualname__
