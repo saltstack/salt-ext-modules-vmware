@@ -7,7 +7,6 @@ import sys
 from saltext.vmware.utils import vmc_constants
 from saltext.vmware.utils import vmc_request
 from saltext.vmware.utils import vmc_templates
-from saltext.vmware.utils import vmc_vcenter_request
 
 
 log = logging.getLogger(__name__)
@@ -36,7 +35,9 @@ def get(
     Retrieves list of SDDCs for the given organization
 
     CLI Example:
+
     .. code-block:: bash
+
         salt minion-key-id vmc_sddc.get hostname=vmc.vmware.com  ...
 
     hostname
@@ -48,7 +49,7 @@ def get(
     authorization_host
         Hostname of the Cloud Services Platform (CSP)
 
-    org_id:
+    org_id
         The Id of organization from which SDDCs are retrieved
 
     include_deleted: Boolean
