@@ -18,10 +18,6 @@ def __virtual__():
     return __virtualname__
 
 
-def des():
-    return "vmc_sddc contains methods to Create, Read, Update and Delete the SDDC and to get vcenter detail and VMs of a SDDC"
-
-
 def get(
     hostname,
     refresh_key,
