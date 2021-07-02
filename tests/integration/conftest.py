@@ -4,10 +4,14 @@ import json
 import os
 import ssl
 import uuid
+from collections import namedtuple
 from configparser import ConfigParser
 from pathlib import Path
 
 import pytest
+import saltext.vmware.modules.cluster as cluster_mod
+import saltext.vmware.modules.cluster_drs as cluster_drs_mod
+import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.states.datacenter as datacenter_st
 from pyVim import connect
@@ -71,6 +75,12 @@ def patch_salt_globals():
     """
     setattr(datacenter_mod, "__opts__", {})
     setattr(datacenter_mod, "__pillar__", {})
+    setattr(cluster_mod, "__opts__", {})
+    setattr(cluster_mod, "__pillar__", {})
+    setattr(cluster_ha_mod, "__opts__", {})
+    setattr(cluster_ha_mod, "__pillar__", {})
+    setattr(cluster_drs_mod, "__opts__", {})
+    setattr(cluster_drs_mod, "__pillar__", {})
     setattr(
         datacenter_st,
         "__salt__",
@@ -98,6 +108,19 @@ def vmware_datacenter(patch_salt_globals):
     dc = datacenter_mod.create(name=dc_name)
     yield dc_name
     datacenter_mod.delete(name=dc_name)
+
+
+@pytest.fixture(scope="function")
+def vmware_cluster(vmware_datacenter):
+    """
+    Return a vmware_cluster during start of a test and tear it down once the test ends
+    """
+    cluster_name = str(uuid.uuid4())
+    _ = cluster_mod.create(name=cluster_name, datacenter=vmware_datacenter)
+    Cluster = namedtuple("Cluster", ["name", "datacenter"])
+    cluster = Cluster(name=cluster_name, datacenter=vmware_datacenter)
+    yield cluster
+    cluster_mod.delete(name=cluster_name, datacenter=vmware_datacenter)
 
 
 @pytest.fixture(scope="session")

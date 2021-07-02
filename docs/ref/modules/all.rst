@@ -9,6 +9,8 @@ Execution Modules
     :toctree:
 
     saltext.vmware.modules.cluster
+    saltext.vmware.modules.cluster_drs
+    saltext.vmware.modules.cluster_ha
     saltext.vmware.modules.coredump
     saltext.vmware.modules.datacenter
     saltext.vmware.modules.datastore
@@ -34,6 +36,7 @@ Execution Modules
     saltext.vmware.modules.vmc_direct_connect
     saltext.vmware.modules.vmc_dns_forwarder
     saltext.vmware.modules.vmc_sddc
+    saltext.vmware.modules.vmc_nat_rules
     saltext.vmware.modules.vmc_security_rules
     saltext.vmware.modules.vmc_vpn_statistics
     saltext.vmware.modules.vmotion
