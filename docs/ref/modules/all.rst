@@ -9,6 +9,8 @@ Execution Modules
     :toctree:
 
     saltext.vmware.modules.cluster
+    saltext.vmware.modules.cluster_drs
+    saltext.vmware.modules.cluster_ha
     saltext.vmware.modules.coredump
     saltext.vmware.modules.datacenter
     saltext.vmware.modules.datastore
