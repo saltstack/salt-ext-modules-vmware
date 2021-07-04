@@ -240,7 +240,7 @@ def delete(
     """
 
     log.info("Deleting DHCP profile %s for SDDC %s", dhcp_profile_id, sddc_id)
-    profile_type = _get_profile_type(type)
+    profile_type = vmc_constants.DHCP_CONFIGS.format(type)
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = (
         "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"

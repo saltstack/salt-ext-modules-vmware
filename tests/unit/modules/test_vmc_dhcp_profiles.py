@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.vmc_dhcp_profiles as vmc_dhcp_profiles
+from saltext.vmware.utils import vmc_constants
 
 
 @pytest.fixture
@@ -83,6 +84,7 @@ def test_get_dhcp_profiles_called_with_url():
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
 
 
 def test_get_dhcp_profile_by_id_should_return_single_dhcp_profile(dhcp_profile_data_by_id):
@@ -119,6 +121,7 @@ def test_get_dhcp_profile_by_id_called_with_url():
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
 
 
 def test_delete_dhcp_profile_when_api_should_return_successfully_deleted_message(
@@ -159,3 +162,4 @@ def test_delete_dhcp_profile_called_with_url():
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.DELETE_REQUEST_METHOD
