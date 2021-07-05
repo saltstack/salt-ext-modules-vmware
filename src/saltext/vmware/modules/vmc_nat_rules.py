@@ -115,3 +115,82 @@ def get(
         cert=cert,
         params=params,
     )
+
+
+def get_by_id(
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    tier1,
+    nat,
+    nat_rule,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Retrieves specific nat rule for Given SDDC
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt vm_minion vmc_nat_rules.get_by_id hostname=nsxt-manager.local tier1=cgw ...
+
+    hostname
+        The host name of NSX-T manager
+
+    refresh_key
+        refresh_key to get access token
+
+    authorization_host
+        hostname to get access token
+
+    org_id
+        org_id of the SDDC
+
+    sddc_id
+        sddc_id for which nat rules should be retrieved
+
+    tier1
+        tier1 option are cgw and user defined tier1
+
+    nat
+        nat option are USER/default/Internal
+
+    nat_rule
+        id of specific nat rule
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
+        The certificate can be retrieved from browser.
+    """
+    log.info("Retrieving Nat rule %s for SDDC %s", nat_rule, sddc_id)
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = (
+        "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
+        "policy/api/v1/infra/tier-1s/{tier1}/nat/{nat}/nat-rules/{nat_rule}"
+    )
+    api_url = api_url.format(
+        base_url=api_url_base,
+        org_id=org_id,
+        sddc_id=sddc_id,
+        tier1=tier1,
+        nat=nat,
+        nat_rule=nat_rule,
+    )
+
+    return vmc_request.call_api(
+        method=vmc_constants.GET_REQUEST_METHOD,
+        url=api_url,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        description="vmc_nat_rule.get_by_id",
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )

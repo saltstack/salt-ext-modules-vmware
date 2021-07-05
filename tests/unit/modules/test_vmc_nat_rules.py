@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.vmc_nat_rules as vmc_nat_rules
+import saltext.vmware.utils.vmc_constants as vmc_constants
 
 
 @pytest.fixture
@@ -81,3 +82,41 @@ def test_get_nat_rules_called_with_url():
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+def test_get_nat_rule_by_id_should_return_single_nat_rule(nat_rule_data_by_id):
+    result = vmc_nat_rules.get_by_id(
+        hostname="hostname",
+        refresh_key="refresh_key",
+        authorization_host="authorization_host",
+        org_id="org_id",
+        sddc_id="sddc_id",
+        tier1="tier1",
+        nat="nat",
+        nat_rule="nat_rule",
+        verify_ssl=False,
+    )
+    assert result == nat_rule_data_by_id
+
+
+def test_get_nat_rules_by_id_called_with_url():
+    expected_url = (
+        "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/policy/api/"
+        "v1/infra/tier-1s/tier1/nat/nat/nat-rules/nat_rule"
+    )
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        result = vmc_nat_rules.get_by_id(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            tier1="tier1",
+            nat="nat",
+            nat_rule="nat_rule",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
