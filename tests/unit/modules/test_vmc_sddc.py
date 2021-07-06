@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.vmc_sddc as vmc_sddc
+from saltext.vmware.utils import vmc_constants
 
 log = logging.getLogger(__name__)
 
@@ -108,3 +109,32 @@ def test_get_sddc_called_with_url():
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+def test_get_sddc_by_id_should_return_single_sddc(sddc_data_by_id):
+    result = vmc_sddc.get_by_id(
+        hostname="hostname",
+        refresh_key="refresh_key",
+        authorization_host="authorization_host",
+        org_id="org_id",
+        sddc_id="sddc_id",
+        verify_ssl=False,
+    )
+    assert result == sddc_data_by_id
+
+
+def test_get_sddc_by_id_called_with_url():
+    expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs/sddc_id"
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        vmc_sddc.get_by_id(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
