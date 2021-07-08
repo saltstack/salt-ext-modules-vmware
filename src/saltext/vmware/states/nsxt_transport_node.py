@@ -280,7 +280,7 @@ def inject_vcenter_info(hostname, username, password, ret, **kwargs):
 
         cluster_id = vm_deployment_config.pop("compute", None)
         storage_id = vm_deployment_config.pop("storage", None)
-        management_network_id = node_deployment_info.pop("management_network", None)
+        management_network_id = vm_deployment_config.pop("management_network", None)
         data_network_ids = vm_deployment_config.pop("data_networks", None)
 
         vm_deployment_config["compute_id"] = cluster_id
