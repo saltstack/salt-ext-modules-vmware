@@ -4,7 +4,6 @@ Execution module to perform CRUD operations for NSX-T's Segment
 import logging
 
 from salt.exceptions import SaltInvocationError
-from saltext.vmware.utils import common
 from saltext.vmware.utils.nsxt_policy_base_resource import NSXTPolicyBaseResource
 from saltext.vmware.utils.nsxt_resource_urls import IP_POOL_URL
 from saltext.vmware.utils.nsxt_resource_urls import SEGMENT_PORT_URL
@@ -17,11 +16,6 @@ log = logging.getLogger(__name__)
 
 def __virtual__():
     return "nsxt_policy_segment"
-
-
-"""
-Class to represent schema of NSXT segment with its segment-port
-"""
 
 
 class NSXTSegment(NSXTPolicyBaseResource):
@@ -70,7 +64,10 @@ class NSXTSegment(NSXTPolicyBaseResource):
             "_revision",
         }
         resource_params = {}
-        resource_params = common_utils._filter_kwargs(fields, resource_params, **kwargs)
+        for field in fields:
+            val = kwargs.get(field)
+            if val:
+                resource_params[field] = val
         resource_params["resource_type"] = "Segment"
         resource_params.setdefault("id", resource_params["display_name"])
         # Formation of the path for transport zone id
@@ -131,6 +128,7 @@ class NSXTSegment(NSXTPolicyBaseResource):
                 )
             if address_pool_id:
                 address_pool_paths = [IP_POOL_URL + "/" + address_pool_id]
+                advance_config.pop("address_pool_id")
                 resource_params["advanced_config"]["address_pool_paths"] = address_pool_paths
         self.multi_resource_params.append(resource_params)
 
@@ -156,13 +154,16 @@ class NSXTSegment(NSXTPolicyBaseResource):
                 "vlan_id",
                 "mac_address",
                 "suboptions",
-                "id",
                 "state",
                 "_revision",
             }
             segment_ports = kwargs.get("segment_ports") or {}
             for segment_port in segment_ports:
-                resource_params = common_utils._filter_kwargs(allowed_kwargs=fields, **segment_port)
+                resource_params = {}
+                for key in fields:
+                    val = segment_port.get(key)
+                    if val:
+                        resource_params[key] = val
                 if not resource_params.get("id"):
                     resource_params["id"] = resource_params["display_name"]
                 self.multi_resource_params.append(resource_params)
@@ -173,7 +174,19 @@ class NSXTSegment(NSXTPolicyBaseResource):
             return SEGMENT_PORT_URL.format(segment_id)
 
 
-def get(hostname, username, password, **kwargs):
+def get(
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    cursor=None,
+    included_fields=None,
+    page_size=None,
+    sort_ascending=None,
+    sort_by=None,
+):
     """
     Lists NSXT Segment present in the NSX-T Manager
     CLI Example:
@@ -214,10 +227,24 @@ def get(hostname, username, password, **kwargs):
     url = (
         NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_segment.get_resource_base_url()
     ).format(hostname)
-    return nsxt_segment.get(url, username, password, **kwargs)
+    return nsxt_segment.get(
+        url,
+        username,
+        password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+        cursor=cursor,
+        included_fields=included_fields,
+        page_size=page_size,
+        sort_ascending=sort_ascending,
+        sort_by=sort_by,
+    )
 
 
-def get_by_display_name(hostname, username, password, display_name, **kwargs):
+def get_by_display_name(
+    hostname, username, password, display_name, verify_ssl=True, cert=None, cert_common_name=None
+):
     """
     Gets NSXT Segment present in the NSX-T Manager with given name.
     CLI Example:
@@ -247,10 +274,20 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
     url = (
         NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_segment.get_resource_base_url()
     ).format(hostname)
-    return nsxt_segment.get_by_display_name(url, username, password, display_name, **kwargs)
+    return nsxt_segment.get_by_display_name(
+        url,
+        username,
+        password,
+        display_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+    )
 
 
-def get_hierarchy(hostname, username, password, segment_id, **kwargs):
+def get_hierarchy(
+    hostname, username, password, segment_id, cert=None, cert_common_name=None, verify_ssl=True
+):
     """
     Returns entire hieararchy of segment and its sub-resources
     hostname
@@ -277,14 +314,7 @@ def get_hierarchy(hostname, username, password, segment_id, **kwargs):
     nsxt_segment = NSXTSegment()
     try:
         nsxt_segment.get_hierarchy(
-            hostname,
-            username,
-            password,
-            segment_id,
-            kwargs.get("cert"),
-            kwargs.get("cert_common_name"),
-            kwargs.get("verify_ssl", True),
-            result,
+            hostname, username, password, segment_id, cert, cert_common_name, verify_ssl, result
         )
         log.info("Hierarchy result for tier 0 gateway: {}".format(result))
         return result
@@ -293,7 +323,35 @@ def get_hierarchy(hostname, username, password, segment_id, **kwargs):
 
 
 def create_or_update(
-    hostname, username, password, cert=None, cert_common_name=None, verify_ssl=True, **kwargs
+    hostname,
+    username,
+    password,
+    cert=None,
+    cert_common_name=None,
+    verify_ssl=True,
+    display_name=None,
+    tags=None,
+    description=None,
+    address_bindings=None,
+    admin_state=None,
+    advanced_config=None,
+    bridge_profiles=None,
+    connectivity_path=None,
+    dhcp_config_path=None,
+    extra_configs=None,
+    l2_extension=None,
+    tier0_display_name=None,
+    tier0_id=None,
+    tier1_display_name=None,
+    tier1_id=None,
+    domain_name=None,
+    transport_zone_display_name=None,
+    transport_zone_id=None,
+    enforcementpoint_id=None,
+    site_id=None,
+    vlan_ids=None,
+    subnets=None,
+    segment_ports=None,
 ):
     """
     Creates a Segment and its sub-resources with given specifications
@@ -735,25 +793,48 @@ def create_or_update(
                         type: str
     """
     execution_logs = []
+    nsxt_segment = NSXTSegment()
     try:
-        nsxt_segment = NSXTSegment()
         nsxt_segment.create_or_update(
-            hostname,
-            username,
-            password,
-            cert,
-            cert_common_name,
-            verify_ssl,
-            execution_logs,
-            **kwargs
+            hostname=hostname,
+            username=username,
+            password=password,
+            execution_logs=execution_logs,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            verify_ssl=verify_ssl,
+            display_name=display_name,
+            tags=tags,
+            description=description,
+            address_bindings=address_bindings,
+            admin_state=admin_state,
+            advanced_config=advanced_config,
+            bridge_profiles=bridge_profiles,
+            connectivity_path=connectivity_path,
+            dhcp_config_path=dhcp_config_path,
+            extra_configs=extra_configs,
+            l2_extension=l2_extension,
+            tier0_display_name=tier0_display_name,
+            tier0_id=tier0_id,
+            tier1_display_name=tier1_display_name,
+            tier1_id=tier1_id,
+            domain_name=domain_name,
+            transport_zone_display_name=transport_zone_display_name,
+            transport_zone_id=transport_zone_id,
+            enforcementpoint_id=enforcementpoint_id,
+            site_id=site_id,
+            vlan_ids=vlan_ids,
+            subnets=subnets,
+            segment_ports=segment_ports,
         )
-        return execution_logs
     except SaltInvocationError as e:
         execution_logs.append({"error": str(e)})
-        return execution_logs
+    return execution_logs
 
 
-def delete(hostname, username, password, segment_id, **kwargs):
+def delete(
+    hostname, username, password, segment_id, cert=None, cert_common_name=None, verify_ssl=True
+):
     """
     Deletes a segment and it sub-resources
     hostname
@@ -784,12 +865,11 @@ def delete(hostname, username, password, segment_id, **kwargs):
             username,
             password,
             segment_id,
-            kwargs.get("cert"),
-            kwargs.get("cert_common_name"),
-            kwargs.get("verify_ssl", True),
+            cert,
+            cert_common_name,
+            verify_ssl,
             execution_logs,
         )
     except SaltInvocationError as e:
         execution_logs.append({"error": str(e)})
-
     return execution_logs

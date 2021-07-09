@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
-import saltext.vmware.states.nsxt_policy_tier0 as nsxt_policy_tier0
+import saltext.nsxt.states.nsxt_policy_tier0 as nsxt_policy_tier0
 
 _mocked_hostname = "nsxt-vmware.local"
 _mocked_username = "username"
@@ -153,7 +153,7 @@ def test_present_create_new_tier0():
             ret["comment"] = "Created Tier-0 gateway {display_name} successfully".format(
                 display_name=_mocked_tier0["display_name"]
             )
-            ret["changes"]["new"] = json.dumps(_mocked_tier0)
+            ret["changes"]["new"] = _mocked_tier0
             assert (
                 nsxt_policy_tier0.present(
                     name="create tier0",
@@ -248,8 +248,8 @@ def test_present_update_tier0():
             ret["comment"] = "Updated Tier-0 gateway {display_name} successfully".format(
                 display_name=_mocked_tier0["display_name"]
             )
-            ret["changes"]["new"] = json.dumps(_mocked_tier0)
-            ret["changes"]["old"] = json.dumps(_mocked_tier0)
+            ret["changes"]["new"] = _mocked_tier0
+            ret["changes"]["old"] = _mocked_tier0
             assert (
                 nsxt_policy_tier0.present(
                     name="update tier0",
@@ -584,7 +584,7 @@ def test_absent():
                 _mocked_tier0["display_name"]
             )
             ret["changes"]["new"] = {}
-            ret["changes"]["old"] = json.dumps(_mocked_tier0)
+            ret["changes"]["old"] = _mocked_tier0
             assert (
                 nsxt_policy_tier0.absent(
                     name="delete tier0",

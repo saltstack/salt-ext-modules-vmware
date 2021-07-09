@@ -1,7 +1,6 @@
 """
     Unit Tests for nsxt_policy_segment state
 """
-import json
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -153,7 +152,7 @@ def test_present_create_new_segment():
             ret["comment"] = "Created segment {display_name} successfully".format(
                 display_name=_mock_segment["display_name"]
             )
-            ret["changes"]["new"] = json.dumps(_mock_segment)
+            ret["changes"]["new"] = _mock_segment
             assert (
                 nsxt_policy_segment.present(
                     name="create segment",
@@ -243,8 +242,8 @@ def test_present_update_segment():
             ret["comment"] = "Updated segment {display_name} successfully".format(
                 display_name=_mock_segment["display_name"]
             )
-            ret["changes"]["new"] = json.dumps(_mock_segment_response)
-            ret["changes"]["old"] = json.dumps(_mock_segment_response)
+            ret["changes"]["new"] = _mock_segment_response
+            ret["changes"]["old"] = _mock_segment_response
             assert (
                 nsxt_policy_segment.present(
                     name="update segment",
@@ -574,7 +573,7 @@ def test_absent():
                 _mock_segment["display_name"]
             )
             ret["changes"]["new"] = {}
-            ret["changes"]["old"] = json.dumps(_mock_segment)
+            ret["changes"]["old"] = _mock_segment
             assert (
                 nsxt_policy_segment.absent(
                     name="delete segment",

@@ -1,7 +1,6 @@
 import logging
 
 from salt.exceptions import SaltInvocationError
-from saltext.vmware.utils import common
 from saltext.vmware.utils.nsxt_policy_base_resource import NSXTPolicyBaseResource
 from saltext.vmware.utils.nsxt_resource_urls import DHCP_RELAY_CONFIG_URL
 from saltext.vmware.utils.nsxt_resource_urls import EDGE_CLUSTER_URL
@@ -18,9 +17,10 @@ from saltext.vmware.utils.nsxt_resource_urls import TIER_1_STATIC_ROUTE_URL
 from saltext.vmware.utils.nsxt_resource_urls import TIER_1_URL
 
 log = logging.getLogger(__name__)
-"""
-Class to represent schema of NSXT Tier 1 Gateway with its sub-resources
-"""
+
+
+def __virtual__():
+    return "nsxt_policy_tier1"
 
 
 class NSXTTier1(NSXTPolicyBaseResource):
@@ -67,7 +67,9 @@ class NSXTTier1(NSXTPolicyBaseResource):
             "_revision",
         }
         resource_params = {}
-        resource_params = common_utils._filter_kwargs(fields, resource_params, **kwargs)
+        for field in fields:
+            if kwargs.get(field):
+                resource_params[field] = kwargs[field]
         resource_params["resource_type"] = "Tier1"
         ipv6_profile_paths = []
         ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
@@ -147,7 +149,11 @@ class NSXTTier1(NSXTPolicyBaseResource):
             static_routes = kwargs.get("static_routes") or {}
 
             for static_route in static_routes:
-                resource_params = common_utils._filter_kwargs(allowed_kwargs=fields, **static_route)
+                resource_params = {}
+                for key in fields:
+                    val = static_route.get(key)
+                    if val:
+                        resource_params[key] = val
                 if not resource_params.get("id"):
                     resource_params["id"] = resource_params["display_name"]
                 self.multi_resource_params.append(resource_params)
@@ -186,9 +192,10 @@ class NSXTTier1(NSXTPolicyBaseResource):
                 self.nsx_resource_params["hostname"]
             )
             for locale_service in locale_services:
-                resource_params = common_utils._filter_kwargs(
-                    allowed_kwargs=fields, **locale_service
-                )
+                resource_params = {}
+                for key in fields:
+                    if locale_service.get(key):
+                        resource_params[key] = locale_service.get(key)
                 resource_params["resource_type"] = "LocaleServices"
                 edge_cluster_info = locale_service.get("edge_cluster_info")
                 if edge_cluster_info:
@@ -364,10 +371,12 @@ class NSXTTier1(NSXTPolicyBaseResource):
                 if locale_service:
                     interfaces = locale_service.get("interfaces") or {}
                     for interface in interfaces:
-                        resource_params = common_utils._filter_kwargs(
-                            allowed_kwargs=fields, **interface
-                        )
+                        resource_params = {}
                         resource_params["resource_type"] = "Tier1Interface"
+                        for field in fields:
+                            val = interface.get(field)
+                            if val:
+                                resource_params[field] = val
                         # segment_id is a required attr
                         segment_id = interface.get("segment_id")
                         if not segment_id and interface.get("segment_display_name"):
@@ -420,7 +429,9 @@ class NSXTTier1(NSXTPolicyBaseResource):
                         self.multi_resource_params.append(resource_params)
 
 
-def get_by_display_name(hostname, username, password, display_name, **kwargs):
+def get_by_display_name(
+    hostname, username, password, display_name, verify_ssl=True, cert=None, cert_common_name=None
+):
     """
     Gets Tier 1 Gateway present in the NSX-T Manager with given name.
     CLI Example:
@@ -450,10 +461,30 @@ def get_by_display_name(hostname, username, password, display_name, **kwargs):
     url = (NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_tier1.get_resource_base_url()).format(
         hostname
     )
-    return nsxt_tier1.get_by_display_name(url, username, password, display_name, **kwargs)
+    return nsxt_tier1.get_by_display_name(
+        url,
+        username,
+        password,
+        display_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+    )
 
 
-def get(hostname, username, password, **kwargs):
+def get(
+    hostname,
+    username,
+    password,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
+    cursor=None,
+    included_fields=None,
+    page_size=None,
+    sort_ascending=None,
+    sort_by=None,
+):
     """
     Lists NSXT Tier 1 Gateways present in the NSX-T Manager
     CLI Example:
@@ -494,11 +525,54 @@ def get(hostname, username, password, **kwargs):
     url = (NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_tier1.get_resource_base_url()).format(
         hostname
     )
-    return nsxt_tier1.get(url, username, password, **kwargs)
+    return nsxt_tier1.get(
+        url,
+        username,
+        password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+        cursor=cursor,
+        included_fields=included_fields,
+        page_size=page_size,
+        sort_ascending=sort_ascending,
+        sort_by=sort_by,
+    )
 
 
 def create_or_update(
-    hostname, username, password, cert=None, cert_common_name=None, verify_ssl=True, **kwargs
+    hostname,
+    username,
+    password,
+    cert=None,
+    cert_common_name=None,
+    verify_ssl=True,
+    display_name=None,
+    tags=None,
+    id=None,
+    description=None,
+    default_rule_logging=None,
+    disable_firewall=None,
+    failover_mode=None,
+    enable_standby_relocation=None,
+    force_whitelisting=None,
+    intersite_config=None,
+    ipv6_ndra_profile_id=None,
+    ipv6_ndra_profile_display_name=None,
+    ipv6_dad_profile_id=None,
+    ipv6_dad_profile_display_name=None,
+    dhcp_config_id=None,
+    dhcp_config_display_name=None,
+    pool_allocation=None,
+    qos_profile=None,
+    route_advertisement_rules=None,
+    route_advertisement_types=None,
+    tier0_id=None,
+    tier0_display_name=None,
+    static_routes=None,
+    locale_services=None,
+    arp_limit=None,
+    type=None,
 ):
     """
     Creates a Tier 1 Gateway and its sub-resources with given specifications
@@ -1218,22 +1292,46 @@ def create_or_update(
                         default: STRICT
     """
     execution_logs = []
+    nsxt_tier1 = NSXTTier1()
     try:
-        nsxt_tier1 = NSXTTier1()
         nsxt_tier1.create_or_update(
-            hostname,
-            username,
-            password,
-            cert,
-            cert_common_name,
-            verify_ssl,
-            execution_logs,
-            **kwargs
+            hostname=hostname,
+            username=username,
+            password=password,
+            execution_logs=execution_logs,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            verify_ssl=verify_ssl,
+            display_name=display_name,
+            tags=tags,
+            id=id,
+            description=description,
+            default_rule_logging=default_rule_logging,
+            disable_firewall=disable_firewall,
+            failover_mode=failover_mode,
+            enable_standby_relocation=enable_standby_relocation,
+            force_whitelisting=force_whitelisting,
+            intersite_config=intersite_config,
+            ipv6_ndra_profile_id=ipv6_ndra_profile_id,
+            ipv6_ndra_profile_display_name=ipv6_ndra_profile_display_name,
+            ipv6_dad_profile_id=ipv6_dad_profile_id,
+            ipv6_dad_profile_display_name=ipv6_dad_profile_display_name,
+            dhcp_config_id=dhcp_config_id,
+            dhcp_config_display_name=dhcp_config_display_name,
+            pool_allocation=pool_allocation,
+            qos_profile=qos_profile,
+            route_advertisement_rules=route_advertisement_rules,
+            route_advertisement_types=route_advertisement_types,
+            tier0_id=tier0_id,
+            tier0_display_name=tier0_display_name,
+            static_routes=static_routes,
+            locale_services=locale_services,
+            arp_limit=arp_limit,
+            type=type,
         )
-        return execution_logs
     except SaltInvocationError as e:
         execution_logs.append({"error": str(e)})
-        return execution_logs
+    return execution_logs
 
 
 def delete(
@@ -1262,8 +1360,8 @@ def delete(
         compare against
     """
     execution_logs = []
+    nsxt_tier1 = NSXTTier1()
     try:
-        nsxt_tier1 = NSXTTier1()
         nsxt_tier1.delete(
             hostname,
             username,
@@ -1274,10 +1372,9 @@ def delete(
             verify_ssl,
             execution_logs,
         )
-        return execution_logs
     except SaltInvocationError as e:
         execution_logs.append({"error": str(e)})
-        return execution_logs
+    return execution_logs
 
 
 def get_hierarchy(
@@ -1306,8 +1403,8 @@ def get_hierarchy(
         compare against
     """
     result = {}
+    nsxt_tier1 = NSXTTier1()
     try:
-        nsxt_tier1 = NSXTTier1()
         nsxt_tier1.get_hierarchy(
             hostname, username, password, tier1_id, cert, cert_common_name, verify_ssl, result
         )

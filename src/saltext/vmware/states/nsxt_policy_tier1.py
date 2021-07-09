@@ -1,20 +1,22 @@
 """
 State module for NSX-T tier1 gateway
 """
-import json
 import logging
 
 log = logging.getLogger(__name__)
 
+try:
+    from saltext.nsxt.modules import nsxt_policy_tier1
+
+    HAS_POLICY_TIER1 = True
+except ImportError:
+    HAS_POLICY_TIER1 = False
+
 
 def __virtual__():
-    """
-    Only load if module nsxt_policy_tier1 is available
-    """
-    return (
-        "nsxt_policy_tier1" if "nsxt_policy_tier1.get" in __salt__ else False,
-        "'nsxt_policy_tier1' binary not found on system",
-    )
+    if not HAS_POLICY_TIER1:
+        return False, "'nsxt_policy_tier1' binary not found on system"
+    return "nsxt_policy_tier1"
 
 
 def present(
@@ -916,7 +918,6 @@ def present(
             cert=cert,
             cert_common_name=cert_common_name,
             display_name=display_name,
-            state=state,
             tags=tags,
             id=id,
             description=description,
@@ -980,7 +981,7 @@ def present(
         ret["comment"] = "Created Tier-1 gateway {display_name} successfully".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = json.dumps(tier1_hierarchy)
+        ret["changes"]["new"] = tier1_hierarchy
         return ret
     else:
         tier1_id = tier_1_result.get("results")[0].get("id")
@@ -1010,7 +1011,6 @@ def present(
             cert=cert,
             cert_common_name=cert_common_name,
             display_name=display_name,
-            state=state,
             tags=tags,
             id=id,
             description=description,
@@ -1071,8 +1071,8 @@ def present(
         ret["comment"] = "Updated Tier-1 gateway {display_name} successfully".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = json.dumps(tier1_hierarchy_after_update)
-        ret["changes"]["old"] = json.dumps(tier1_hierarchy_before_update)
+        ret["changes"]["new"] = tier1_hierarchy_after_update
+        ret["changes"]["old"] = tier1_hierarchy_before_update
         return ret
 
 
@@ -1206,6 +1206,6 @@ def absent(
             ] = "tier1 gateway with display_name: {} and its sub-resources deleted successfully".format(
                 display_name
             )
-            ret["changes"]["old"] = json.dumps(tier1_hierarchy)
+            ret["changes"]["old"] = tier1_hierarchy
             ret["changes"]["new"] = {}
             return ret
