@@ -224,30 +224,34 @@ def configure(
 
     admission_control_policy
         Specify the admission control policy for the cluster as a dictionary.
-        {
-            "slot_based_admission_control": {
-                "failover_level": int,
-                "resource_reduction_to_tolerate_percent": int
-            }
-        }
 
-        {
-            "failover_host_admission_control": {
-                "failover_level": int,
-                "resource_reduction_to_tolerate_percent": int,
-                "failover_hosts": List[str]
-            }
-        }
+        .. code-block:: json
 
-        {
-            "reservation_based_admission_control": {
-                "failover_level": int,
-                "resource_reduction_to_tolerate_percent": int,
-                "autocompute_percentages": bool,
-                "cpu_failover_resources_percent": int,
-                "memory_failover_resources_percent": int
+            {
+              "slot_based_admission_control": {
+                "failover_level": 1,
+                "resource_reduction_to_tolerate_percent": 20
+              }
             }
-        }
+
+            {
+              "failover_host_admission_control": {
+                "failover_level": 10,
+                "resource_reduction_to_tolerate_percent": 30,
+                "failover_hosts": ["host1", "host2"]
+              }
+            }
+
+            {
+                "reservation_based_admission_control": {
+                    "failover_level": 22,
+                    "resource_reduction_to_tolerate_percent": 33,
+                    "autocompute_percentages": false,
+                    "cpu_failover_resources_percent": 45,
+                    "memory_failover_resources_percent": 56
+                }
+            }
+
     advanced_settings
         Advanced options for the cluster, to be passed in as a dictionary.
 
