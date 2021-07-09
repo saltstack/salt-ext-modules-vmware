@@ -1,20 +1,23 @@
 """
 State module for NSX-T segment
 """
-import json
 import logging
 
 log = logging.getLogger(__name__)
 
 
+try:
+    from saltext.nsxt.modules import nsxt_policy_segment
+
+    HAS_POLICY_SEGMENT = True
+except ImportError:
+    HAS_POLICY_SEGMENT = False
+
+
 def __virtual__():
-    """
-    Only load if module nsxt_policy_segment is available
-    """
-    return (
-        "nsxt_policy_segment" if "nsxt_policy_segment.get" in __salt__ else False,
-        "'nsxt_policy_segment' not found on ",
-    )
+    if not HAS_POLICY_SEGMENT:
+        return False, "'nsxt_policy_segment' binary not found on system"
+    return "nsxt_policy_segment"
 
 
 def present(
@@ -636,7 +639,6 @@ def present(
             cert=cert,
             cert_common_name=cert_common_name,
             display_name=display_name,
-            state=state,
             tags=tags,
             description=description,
             address_bindings=address_bindings,
@@ -698,7 +700,7 @@ def present(
         ret["comment"] = "Created segment {display_name} successfully".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = json.dumps(segment_hierarchy)
+        ret["changes"]["new"] = segment_hierarchy
         return ret
 
     else:
@@ -729,7 +731,6 @@ def present(
             cert=cert,
             cert_common_name=cert_common_name,
             display_name=display_name,
-            state=state,
             tags=tags,
             description=description,
             address_bindings=address_bindings,
@@ -781,8 +782,8 @@ def present(
         ret["comment"] = "Updated segment {display_name} successfully".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = json.dumps(segment_hierarchy_response_after_update)
-        ret["changes"]["old"] = json.dumps(segment_hierarchy_response)
+        ret["changes"]["new"] = segment_hierarchy_response_after_update
+        ret["changes"]["old"] = segment_hierarchy_response
         return ret
 
 
@@ -931,6 +932,6 @@ def absent(
         ] = "Segment with display_name: {} and its sub-resources deleted successfully".format(
             display_name
         )
-        ret["changes"]["old"] = json.dumps(segment_hierarchy)
+        ret["changes"]["old"] = segment_hierarchy
         ret["changes"]["new"] = {}
         return ret

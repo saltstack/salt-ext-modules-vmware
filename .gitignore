@@ -136,3 +136,8 @@ artifacts/
 
 # Just a dir for local whatever
 local/
+
+.DS_Store
+.idea/
+src/.DS_Store
+src/saltext/.DS_Store
