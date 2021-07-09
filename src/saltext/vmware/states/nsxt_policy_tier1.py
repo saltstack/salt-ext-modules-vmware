@@ -1,553 +1,36 @@
+"""
+State module for NSX-T tier1 gateway
+"""
 import logging
-
-from salt.exceptions import SaltInvocationError
-from saltext.vmware.utils.nsxt_policy_base_resource import NSXTPolicyBaseResource
-from saltext.vmware.utils.nsxt_resource_urls import DHCP_RELAY_CONFIG_URL
-from saltext.vmware.utils.nsxt_resource_urls import EDGE_CLUSTER_URL
-from saltext.vmware.utils.nsxt_resource_urls import EDGE_NODE_URL
-from saltext.vmware.utils.nsxt_resource_urls import IPV6_DAD_PROFILE_URL
-from saltext.vmware.utils.nsxt_resource_urls import IPV6_NDRA_PROFILE_URL
-from saltext.vmware.utils.nsxt_resource_urls import SEGMENT_URL
-from saltext.vmware.utils.nsxt_resource_urls import TIER_0_LOCALE_SERVICE_URL
-from saltext.vmware.utils.nsxt_resource_urls import TIER_0_LS_INTERFACE_URL
-from saltext.vmware.utils.nsxt_resource_urls import TIER_0_URL
-from saltext.vmware.utils.nsxt_resource_urls import TIER_1_LOCALE_SERVICE_URL
-from saltext.vmware.utils.nsxt_resource_urls import TIER_1_LS_INTERFACE_URL
-from saltext.vmware.utils.nsxt_resource_urls import TIER_1_STATIC_ROUTE_URL
-from saltext.vmware.utils.nsxt_resource_urls import TIER_1_URL
 
 log = logging.getLogger(__name__)
 
+try:
+    from saltext.nsxt.modules import nsxt_policy_tier1
+
+    HAS_POLICY_TIER1 = True
+except ImportError:
+    HAS_POLICY_TIER1 = False
+
 
 def __virtual__():
+    if not HAS_POLICY_TIER1:
+        return False, "'nsxt_policy_tier1' binary not found on system"
     return "nsxt_policy_tier1"
 
 
-class NSXTTier1(NSXTPolicyBaseResource):
-    @classmethod
-    def get_spec_identifier(cls):
-        return "tier1"
-
-    @staticmethod
-    def get_resource_base_url(baseline_args=None):
-        return TIER_1_URL
-
-    @staticmethod
-    def get_resource_base_query_params():
-        return (
-            "cursor",
-            "include_mark_for_delete_objects",
-            "included_fields",
-            "page_size",
-            "sort_ascending",
-            "sort_by",
-        )
-
-    def update_resource_params(self, **kwargs):
-        self.multi_resource_params = []
-        fields = {
-            "arp_limit",
-            "default_rule_logging",
-            "description",
-            "disable_firewall",
-            "display_name",
-            "federation_config",
-            "enable_standby_relocation",
-            "failover_mode",
-            "force_whitelisting",
-            "intersite_config",
-            "id",
-            "pool_allocation",
-            "qos_profile",
-            "route_advertisement_rules",
-            "route_advertisement_types",
-            "state",
-            "tags",
-            "type",
-            "_revision",
-        }
-        resource_params = {}
-        for field in fields:
-            if kwargs.get(field):
-                resource_params[field] = kwargs[field]
-        resource_params["resource_type"] = "Tier1"
-        ipv6_profile_paths = []
-        ipv6_ndra_profile_id = kwargs.get("ipv6_ndra_profile_id")
-        if not ipv6_ndra_profile_id and kwargs.get("ipv6_ndra_profile_display_name"):
-            ipv6_ndra_profile_id = self.get_id_using_display_name(
-                url=(
-                    NSXTTier1.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
-                    + IPV6_NDRA_PROFILE_URL
-                ),
-                display_name=kwargs.get("ipv6_ndra_profile_display_name"),
-            )
-        if ipv6_ndra_profile_id:
-            ipv6_profile_paths.append(IPV6_NDRA_PROFILE_URL + "/" + ipv6_ndra_profile_id)
-        ipv6_dad_profile_id = kwargs.get("ipv6_dad_profile_id")
-        if not ipv6_dad_profile_id and kwargs.get("ipv6_dad_profile_display_name"):
-            ipv6_dad_profile_id = self.get_id_using_display_name(
-                url=(
-                    NSXTTier1.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
-                    + IPV6_DAD_PROFILE_URL
-                ),
-                display_name=kwargs.get("ipv6_dad_profile_display_name"),
-            )
-        if ipv6_dad_profile_id:
-            ipv6_profile_paths.append(IPV6_DAD_PROFILE_URL + "/" + ipv6_dad_profile_id)
-        if ipv6_profile_paths:
-            resource_params["ipv6_profile_paths"] = ipv6_profile_paths
-        dhcp_config_id = kwargs.get("dhcp_config_id")
-        if not dhcp_config_id and kwargs.get("dhcp_config_display_name"):
-            dhcp_config_id = self.get_id_using_display_name(
-                url=(
-                    NSXTTier1.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
-                    + DHCP_RELAY_CONFIG_URL
-                ),
-                display_name=kwargs.get("dhcp_config_display_name"),
-            )
-        if dhcp_config_id:
-            resource_params["dhcp_config_paths"] = [DHCP_RELAY_CONFIG_URL + "/" + dhcp_config_id]
-        tier0_id = kwargs.get("tier0_id")
-        if not tier0_id and kwargs.get("tier0_display_name"):
-            tier0_id = self.get_id_using_display_name(
-                url=(
-                    NSXTTier1.get_nsxt_base_url().format(self.nsx_resource_params["hostname"])
-                    + TIER_0_URL
-                ),
-                display_name=kwargs.get("tier0_display_name"),
-            )
-        if tier0_id:
-            resource_params["tier0_path"] = TIER_0_URL + "/" + tier0_id
-        if not resource_params.get("id"):
-            resource_params["id"] = resource_params["display_name"]
-        self.multi_resource_params.append(resource_params)
-
-    def update_parent_info(self, parent_info):
-        parent_info["tier1_id"] = self.resource_params.get("id")
-
-    class NSXTTier1StaticRoutes(NSXTPolicyBaseResource):
-        def get_spec_identifier(self):
-            return NSXTTier1.NSXTTier1StaticRoutes.get_spec_identifier()
-
-        @classmethod
-        def get_spec_identifier(cls):
-            return "static_routes"
-
-        def update_resource_params(self, **kwargs):
-            self.multi_resource_params = []
-            fields = {
-                "description",
-                "display_name",
-                "enabled_on_secondary",
-                "id",
-                "network",
-                "next_hops",
-                "state",
-                "tags",
-                "_revision",
-            }
-            static_routes = kwargs.get("static_routes") or {}
-
-            for static_route in static_routes:
-                resource_params = {}
-                for key in fields:
-                    val = static_route.get(key)
-                    if val:
-                        resource_params[key] = val
-                if not resource_params.get("id"):
-                    resource_params["id"] = resource_params["display_name"]
-                self.multi_resource_params.append(resource_params)
-
-        @staticmethod
-        def get_resource_base_url(parent_info):
-            tier1_id = parent_info.get("tier1_id", "default")
-            return TIER_1_STATIC_ROUTE_URL.format(tier1_id)
-
-    class NSXTTier1LocaleService(NSXTPolicyBaseResource):
-        def get_spec_identifier(self):
-            return NSXTTier1.NSXTTier1LocaleService.get_spec_identifier()
-
-        @classmethod
-        def get_spec_identifier(cls):
-            return "locale_services"
-
-        @staticmethod
-        def get_resource_base_url(parent_info):
-            tier1_id = parent_info.get("tier1_id", "default")
-            return TIER_1_LOCALE_SERVICE_URL.format(tier1_id)
-
-        def update_resource_params(self, **kwargs):
-            self.multi_resource_params = []
-            fields = {
-                "description",
-                "display_name",
-                "id",
-                "route_redistribution_config",
-                "state",
-                "tags",
-                "_revision",
-            }
-            locale_services = kwargs.get("locale_services") or {}
-            base_url = NSXTPolicyBaseResource.get_nsxt_base_url().format(
-                self.nsx_resource_params["hostname"]
-            )
-            for locale_service in locale_services:
-                resource_params = {}
-                for key in fields:
-                    if locale_service.get(key):
-                        resource_params[key] = locale_service.get(key)
-                resource_params["resource_type"] = "LocaleServices"
-                edge_cluster_info = locale_service.get("edge_cluster_info")
-                if edge_cluster_info:
-                    site_id = edge_cluster_info["site_id"]
-                    enforcementpoint_id = edge_cluster_info["enforcementpoint_id"]
-                    edge_cluster_base_url = EDGE_CLUSTER_URL.format(site_id, enforcementpoint_id)
-                    edge_cluster_id = edge_cluster_info.get("edge_cluster_id")
-                    if not edge_cluster_info and edge_cluster_info.get("edge_cluster_display_name"):
-                        edge_cluster_id = self.get_id_using_display_name(
-                            url=(base_url + edge_cluster_base_url),
-                            display_name=edge_cluster_info.get("edge_cluster_display_name"),
-                        )
-                    if edge_cluster_id:
-                        resource_params["edge_cluster_path"] = (
-                            edge_cluster_base_url + "/" + edge_cluster_id
-                        )
-                preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
-                if preferred_edge_nodes_info:
-                    resource_params["preferred_edge_paths"] = []
-                    for preferred_edge_node_info in preferred_edge_nodes_info:
-                        site_id = preferred_edge_node_info.get("site_id", "default")
-                        enforcementpoint_id = preferred_edge_node_info.get(
-                            "enforcementpoint_id", "default"
-                        )
-                        edge_cluster_base_url = EDGE_CLUSTER_URL.format(
-                            site_id, enforcementpoint_id
-                        )
-                        edge_cluster_id = preferred_edge_node_info.get("edge_cluster_id")
-                        if not edge_cluster_id and preferred_edge_node_info.get(
-                            "edge_cluster_display_name"
-                        ):
-                            edge_cluster_id = self.get_id_using_display_name(
-                                url=(
-                                    NSXTTier1.get_nsxt_base_url().format(
-                                        self.nsx_resource_params["hostname"]
-                                    )
-                                    + edge_cluster_base_url
-                                ),
-                                display_name=preferred_edge_node_info.get(
-                                    "edge_cluster_display_name"
-                                ),
-                            )
-                        if edge_cluster_id:
-                            edge_node_base_url = EDGE_NODE_URL.format(
-                                site_id, enforcementpoint_id, edge_cluster_id
-                            )
-                            edge_node_id = preferred_edge_node_info.get("edge_node_id")
-                            if not edge_node_id and preferred_edge_node_info.get(
-                                "edge_node_display_name"
-                            ):
-                                edge_node_id = self.get_id_using_display_name(
-                                    url=(
-                                        NSXTTier1.get_nsxt_base_url().format(
-                                            self.nsx_resource_params["hostname"]
-                                        )
-                                        + edge_node_base_url
-                                    ),
-                                    display_name=preferred_edge_node_info.get(
-                                        "edge_node_display_name"
-                                    ),
-                                )
-                            if edge_node_id:
-                                resource_params["preferred_edge_paths"].append(
-                                    edge_node_base_url + "/" + edge_node_id
-                                )
-                bfd_profile_id = locale_service.get("bfd_profile_id")
-                if not bfd_profile_id and locale_service.get("bfd_profile_display_name"):
-                    bfd_profile_id = self.get_id_using_display_name(
-                        url=(
-                            NSXTTier1.get_nsxt_base_url().format(
-                                self.nsx_resource_params["hostname"]
-                            )
-                            + "/infra/bfd-profiles"
-                        ),
-                        display_name=locale_service.get("bfd_profile_display_name"),
-                    )
-                if bfd_profile_id:
-                    resource_params["bfd_profile_path"] = "/infra/bfd-profiles/{}".format(
-                        bfd_profile_id
-                    )
-                ha_vip_configs = locale_service.get("ha_vip_configs")
-                if ha_vip_configs:
-                    resource_params["ha_vip_configs"] = []
-                    for ha_vip_config in ha_vip_configs:
-                        external_interface_info = ha_vip_config.pop("external_interface_info")
-                        external_interface_paths = []
-                        for external_interface in external_interface_info:
-                            external_interface_path = external_interface.get(
-                                "external_interface_path"
-                            )
-                            if not external_interface_path:
-                                tier0_id = self.get_id_using_display_name(
-                                    url=(
-                                        NSXTTier1.get_nsxt_base_url().format(
-                                            self.nsx_resource_params["hostname"]
-                                        )
-                                        + TIER_0_URL
-                                    ),
-                                    display_name=external_interface.get("tier0_display_name"),
-                                )
-                            tier0_ls_id = self.get_id_using_display_name(
-                                url=(
-                                    (
-                                        NSXTTier1.get_nsxt_base_url().format(
-                                            self.nsx_resource_params["hostname"]
-                                        )
-                                        + TIER_0_LOCALE_SERVICE_URL
-                                    ).format(tier0_id)
-                                ),
-                                display_name=external_interface.get("locale_service_display_name"),
-                            )
-                            tier0_ls_inf_id = self.get_id_using_display_name(
-                                url=(
-                                    (
-                                        NSXTTier1.get_nsxt_base_url().format(
-                                            self.nsx_resource_params["hostname"]
-                                        )
-                                        + TIER_0_LS_INTERFACE_URL
-                                    ).format(tier0_id, tier0_ls_id)
-                                ),
-                                display_name=external_interface.get("ls_interface_display_name"),
-                            )
-                            external_interface_path = (
-                                TIER_0_LS_INTERFACE_URL.format(tier0_id, tier0_ls_id)
-                                + "/"
-                                + tier0_ls_inf_id
-                            )
-                            external_interface_paths.append(external_interface_path)
-                        ha_vip_config["external_interface_paths"] = external_interface_paths
-                        ha_vip_config["vip_subnets"] = ha_vip_config.pop("vip_subnets")
-                        resource_params["ha_vip_configs"].append(ha_vip_config)
-                if not resource_params.get("id"):
-                    resource_params["id"] = resource_params["display_name"]
-                self.multi_resource_params.append(resource_params)
-
-        def update_parent_info(self, parent_info):
-            parent_info["locale_services_id"] = self.resource_params["id"]
-            parent_info["ls_display_name"] = self.resource_params["display_name"]
-
-        class NSXTTier1Interface(NSXTPolicyBaseResource):
-            def get_spec_identifier(self):
-                return NSXTTier1.NSXTTier1LocaleService.NSXTTier1Interface.get_spec_identifier()
-
-            @classmethod
-            def get_spec_identifier(cls):
-                return "interfaces"
-
-            @staticmethod
-            def get_resource_base_url(parent_info):
-                tier1_id = parent_info.get("tier1_id", "default")
-                locale_service_id = parent_info.get("locale_services_id", "default")
-                return TIER_1_LS_INTERFACE_URL.format(tier1_id, locale_service_id)
-
-            def update_resource_params(self, **kwargs):
-                self.multi_resource_params = []
-                fields = {
-                    "description",
-                    "display_name",
-                    "id",
-                    "mtu",
-                    "state",
-                    "subnets",
-                    "tags",
-                    "urpf_mode",
-                    "_revision",
-                }
-                locale_services = kwargs.get("locale_services") or {}
-                ls_display_name = self._parent_info.get("ls_display_name")
-                locale_service = next(
-                    (ls for ls in locale_services if ls.get("display_name") == ls_display_name),
-                    None,
-                )
-                if locale_service:
-                    interfaces = locale_service.get("interfaces") or {}
-                    for interface in interfaces:
-                        resource_params = {}
-                        resource_params["resource_type"] = "Tier1Interface"
-                        for field in fields:
-                            val = interface.get(field)
-                            if val:
-                                resource_params[field] = val
-                        # segment_id is a required attr
-                        segment_id = interface.get("segment_id")
-                        if not segment_id and interface.get("segment_display_name"):
-                            segment_id = self.get_id_using_display_name(
-                                url=(
-                                    NSXTTier1.get_nsxt_base_url().format(
-                                        self.nsx_resource_params["hostname"]
-                                    )
-                                    + SEGMENT_URL
-                                ),
-                                display_name=interface.get("segment_display_name"),
-                            )
-                        if segment_id:
-                            resource_params["segment_path"] = SEGMENT_URL + "/" + segment_id
-                        ipv6_ndra_profile_id = interface.get("ipv6_ndra_profile_id")
-                        ipv6_ndra_profile_display_name = interface.get(
-                            "ipv6_ndra_profile_display_name"
-                        )
-                        if not ipv6_ndra_profile_id and ipv6_ndra_profile_display_name:
-                            ipv6_ndra_profile_id = self.get_id_using_display_name(
-                                url=(
-                                    NSXTTier1.get_nsxt_base_url().format(
-                                        self.nsx_resource_params["hostname"]
-                                    )
-                                    + IPV6_NDRA_PROFILE_URL
-                                ),
-                                display_name=ipv6_ndra_profile_display_name,
-                            )
-                        if ipv6_ndra_profile_id:
-                            resource_params["ipv6_profile_paths"] = [
-                                IPV6_NDRA_PROFILE_URL + "/" + ipv6_ndra_profile_id
-                            ]
-                        dhcp_config_id = interface.get("segment_id")
-                        if not dhcp_config_id and interface.get("dhcp_config_display_name"):
-                            dhcp_config_id = self.get_id_using_display_name(
-                                url=(
-                                    NSXTTier1.get_nsxt_base_url().format(
-                                        self.nsx_resource_params["hostname"]
-                                    )
-                                    + DHCP_RELAY_CONFIG_URL
-                                ),
-                                display_name=interface.get("dhcp_config_display_name"),
-                            )
-                        if dhcp_config_id:
-                            resource_params["dhcp_relay_path"] = (
-                                DHCP_RELAY_CONFIG_URL + "/" + dhcp_config_id
-                            )
-                        if not resource_params.get("id"):
-                            resource_params["id"] = resource_params["display_name"]
-                        self.multi_resource_params.append(resource_params)
-
-
-def get_by_display_name(
-    hostname, username, password, display_name, verify_ssl=True, cert=None, cert_common_name=None
-):
-    """
-    Gets Tier 1 Gateway present in the NSX-T Manager with given name.
-    CLI Example:
-    .. code-block:: bash
-        salt vm_minion nsxt_policy_tier1.get_by_display_name hostname=nsxt-manager.local username=admin ...
-    hostname
-        The host name of NSX-T manager
-    username
-        Username to connect to NSX-T manager
-    password
-        Password to connect to NSX-T manager
-    display_name
-        The name of tier 1 gateway to fetch
-    verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
-        If set to False, the certificate validation is skipped.
-    cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
-        The certificate can be retrieved from browser.
-    cert_common_name
-        (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
-        verification. If the client certificate common name and hostname do not match (in case of self-signed
-        certificates), specify the certificate common name as part of this parameter. This value is then used to
-        compare against
-    """
-    nsxt_tier1 = NSXTTier1()
-    url = (NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_tier1.get_resource_base_url()).format(
-        hostname
-    )
-    return nsxt_tier1.get_by_display_name(
-        url,
-        username,
-        password,
-        display_name,
-        verify_ssl=verify_ssl,
-        cert=cert,
-        cert_common_name=cert_common_name,
-    )
-
-
-def get(
+def present(
+    name,
     hostname,
     username,
     password,
+    display_name,
     verify_ssl=True,
     cert=None,
+    arp_limit=None,
+    type=None,
     cert_common_name=None,
-    cursor=None,
-    included_fields=None,
-    page_size=None,
-    sort_ascending=None,
-    sort_by=None,
-):
-    """
-    Lists NSXT Tier 1 Gateways present in the NSX-T Manager
-    CLI Example:
-    .. code-block:: bash
-        salt vm_minion nsxt_policy_tier1.get hostname=nsxt-manager.local username=admin ...
-    hostname
-        The host name of NSX-T manager
-    username
-        Username to connect to NSX-T manager
-    password
-        Password to connect to NSX-T manager
-    verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
-        If set to False, the certificate validation is skipped.
-    cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
-        The certificate can be retrieved from browser.
-    cert_common_name
-        (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
-        verification. If the client certificate common name and hostname do not match (in case of self-signed
-        certificates), specify the certificate common name as part of this parameter. This value is then used to
-        compare against
-    cursor
-        (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
-    include_mark_for_delete_objects
-        (Optional) Include objects that are marked for deletion in results. If true, resources that are marked for
-        deletion will be included in the results. By default, these resources are not included.
-    included_fields
-        (Optional) Comma separated list of fields that should be included in query result
-    page_size
-        (Optional) Maximum number of results to return in this page
-    sort_by
-        (Optional) Field by which records are sorted
-    sort_ascending
-        (Optional) Boolean value to sort result in ascending order
-    """
-    nsxt_tier1 = NSXTTier1()
-    url = (NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_tier1.get_resource_base_url()).format(
-        hostname
-    )
-    return nsxt_tier1.get(
-        url,
-        username,
-        password,
-        verify_ssl=verify_ssl,
-        cert=cert,
-        cert_common_name=cert_common_name,
-        cursor=cursor,
-        included_fields=included_fields,
-        page_size=page_size,
-        sort_ascending=sort_ascending,
-        sort_by=sort_by,
-    )
-
-
-def create_or_update(
-    hostname,
-    username,
-    password,
-    cert=None,
-    cert_common_name=None,
-    verify_ssl=True,
-    display_name=None,
+    state=None,
     tags=None,
     id=None,
     description=None,
@@ -571,14 +54,82 @@ def create_or_update(
     tier0_display_name=None,
     static_routes=None,
     locale_services=None,
-    arp_limit=None,
-    type=None,
 ):
     """
-    Creates a Tier 1 Gateway and its sub-resources with given specifications
+    Creates or Updates(if present with same display_name) tier 1 gateway and its sub-resources with the given
+    specifications.
+    Note: To delete any subresource of tier 1 provide state parameter as absent
     CLI Example:
     .. code-block:: bash
-        salt vm_minion nsxt_policy_tier1.create hostname=nsxt-manager.local username=admin ...
+        salt vm_minion nsxt_policy_tier1.present hostname=nsxt-manager.local username=admin ...
+    .. code-block:: yaml example
+    create_tier1:
+      nsxt_policy_tier1.present:
+        - name: Create tier 1 gateway
+          hostname: <hostname>
+          username: <username>
+          password: <password>
+          cert: <certificate>
+          verify_ssl: <False/True>
+          arp_limit: <arp-limit>
+          default_rule_logging: True/False
+          description: <description>
+          dhcp_config_id/dhcp_config_display_name: <dhcp-config-relay id or display-name>
+          disable_firewall: False/True
+          display_name: <display-name-for-tier-1>
+          enable_standby_relocation: True/False
+          failover_mode: <failover-mode>
+          force_whitelisting: False/True
+          id: <tier-1-id>
+          ipv6_ndra_profile_id/ipv6_ndra_profile_display_name: <ipv6-ndra-profile-id or display-name>
+          ipv6_dad_profile_id/ipv6_dad_profile_display_name: <ipv6-dad-profile-id or display-name>
+          tier0_display_name/tier0_id: <tier0 to attach>
+          pool_allocation: <pool allocation enum>
+          type: <type enum>
+          static_routes:
+            - id: <static-route-id>
+              network: <static-route-network-cidr>
+              display_name: <static-route display name>
+              description: <static route description>
+              enabled_on_secondary: True/False
+              next_hops:
+                - admin_distance: <admin-distance-number>
+                  ip_address: <next-ho-ip-address
+          locale_services:
+            - id: <locale-service-id>
+              display_name: <locale-service-display_name>,
+              description: LS_By_Salt,
+              route_redistribution_config:
+                bgp_enabled: true/false
+                ospf_enabled: true/false
+                redistribution_rules:
+                  - name: <redestribution-rule-name>,
+                    route_redistribution_types:
+                      - <redestribution types enum>
+              bfd_profile_display_name/bfd_profile_id: <bfd-profile-id or display name>
+              edge_cluster_info:
+                site_id: <infra-site-id>
+                enforcementpoint_id: <infra-enforcement-id>
+                edge_cluster_id/edge_cluster_display_name: <edge cluster id or display name>
+                preferred_edge_nodes_info:
+                  - site_id: <infra-site-id>
+                    enforcementpoint_id: <infra-enforcement-id>
+                    edge_cluster_id/edge_cluster_display_name: <edge-cluster-id or display-name>
+                    edge_node_id/edge_hone_display_name: <edge-node-id or display-name>
+              interfaces:
+                - segment_id: T0GW_By_Salt1
+                  ipv6_ndra_profile_display_name/ipv6_ndra_profile_id: <ipv6-ndra-profile-id or display-name>
+                  dhcp_config_id/dhcp_config_display_name: <dhcp-relay-config-id or display name>
+                  display_name: <interface display name>
+                  id: <interface id>
+                  description: <interface description
+                  mtu: <mtu number>
+                  subnets:
+                    - ip_addresses:
+                        - <ip-address>
+                      prefix_len: <prefix-len-number>
+                  urpf_mode: <urpf-mode-enum>
+    .. code-block:: all parameters present
     hostname
         The host name of NSX-T manager
     username
@@ -586,7 +137,7 @@ def create_or_update(
     password
         Password to connect to NSX-T manager
     verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
@@ -597,12 +148,14 @@ def create_or_update(
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
     display_name:
+        required: true
         description:
             - Display name.
             - If resource ID is not specified, display_name will be used as ID.
         required: true
         type: str
     state:
+        required: false
         choices:
         - present
         - absent
@@ -613,6 +166,7 @@ def create_or_update(
             - If not provided then it will be considered as present
         required: false
     tags:
+        required: false
         description: Opaque identifiers meaningful to the API user.
         type: dict
         suboptions:
@@ -625,22 +179,27 @@ def create_or_update(
                 required: true
                 type: str
     id:
+        required: false
         description: Tier-1 ID
         required: false
         type: str
     description:
+        required: false
         description: Tier-1 description
         type: str
     default_rule_logging:
+        required: false
         description: Enable logging for whitelisted rule.
                      Indicates if logging should be enabled for the default
                      whitelisting rule.
         default: false
     disable_firewall:
+        required: false
         description: Disable or enable gateway fiewall.
         default: False
         type: bool
     failover_mode:
+        required: false
         description: Determines the behavior when a Tier-1 instance in
                      ACTIVE-STANDBY high-availability mode restarts
                      after a failure. If set to PREEMPTIVE, the preferred node
@@ -655,6 +214,7 @@ def create_or_update(
         default: 'NON_PREEMPTIVE'
         type: str
     enable_standby_relocation:
+        required: false
         description:
             - Flag to enable standby service router relocation.
             - Standby relocation is not enabled until edge cluster is
@@ -662,11 +222,13 @@ def create_or_update(
         type: bool
         default: false
     force_whitelisting:
+        required: false
         description: Flag to add whitelisting FW rule during
                      realization.
         default: False
         type: bool
     intersite_config:
+        required: false
         description: Inter site routing configuration when the gateway is
                      streched.
         type: dict
@@ -714,34 +276,41 @@ def create_or_update(
                       T1 gateway with no services
                 type: str
     ipv6_ndra_profile_id:
+        required: false
         description: IPv6 NDRA profile configuration on Tier1.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_dad_profile_id.
         type: str
     ipv6_ndra_profile_display_name:
+        required: false
         description: Same as ipv6_ndra_profile_id. Either one can be specified.
                      If both are specified, ipv6_ndra_profile_id takes
                      precedence.
         type: str
     ipv6_dad_profile_id:
+        required: false
         description: IPv6 DRA profile configuration on Tier1.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_ndra_profile_id.
         type: str
     ipv6_dad_profile_display_name:
+        required: false
         description: Same as ipv6_dad_profile_id. Either one can be specified.
                      If both are specified, ipv6_dad_profile_id takes
                      precedence.
         type: str
     dhcp_config_id:
+        required: false
         description: DHCP configuration for Segments connected to
                      Tier-1. DHCP service is configured in relay mode.
         type: str
     dhcp_config_display_name:
+        required: false
         description: Same as dhcp_config_id. Either one can be specified.
                      If both are specified, dhcp_config_id takes precedence.
         type: str
     pool_allocation:
+        required: false
         description:
             - Edge node allocation size
             - Supports edge node allocation at different sizes for routing and
@@ -757,8 +326,9 @@ def create_or_update(
             - LB_MEDIUM
             - LB_LARGE
             - LB_XLARGE
-        default: ROUTING
+        default: ROUTING (default value is provide by NSX-T product)
     qos_profile:
+        required: false
         description: QoS Profile configuration for Tier1 router link connected
                      to Tier0 gateway.
         type: dict
@@ -772,6 +342,7 @@ def create_or_update(
                              direction.
                 type: str
     route_advertisement_rules:
+        required: false
         description: Route advertisement rules and filtering
         type: list
         suboptions:
@@ -818,6 +389,7 @@ def create_or_update(
                 description: Network CIDRs to be routed.
                 type: list
     route_advertisement_types:
+        required: false
         description:
             - Enable different types of route advertisements.
             - By default, Routes to IPSec VPN local-endpoint subnets
@@ -833,13 +405,16 @@ def create_or_update(
             - 'TIER1_DNS_FORWARDER_IP'
             - 'TIER1_IPSEC_LOCAL_ENDPOINT'
     tier0_id:
+        required: false
         description: Tier-1 connectivity to Tier-0
         type: str
     tier0_display_name:
+        required: false
         description: Same as tier0_id. Either one can be specified.
                     If both are specified, tier0_id takes precedence.
         type: str
     static_routes:
+        required: false
         type: list
         element: dict
         description: This is a list of Static Routes that need to be created,
@@ -904,6 +479,7 @@ def create_or_update(
                         required: true
                         type: str
     locale_services:
+        required: false
         type: list
         element: dict
         description: This is a list of Locale Services that need to be created,
@@ -1285,23 +861,62 @@ def create_or_update(
                     urpf_mode:
                         description: Unicast Reverse Path Forwarding mode
                         type: str
-                        requires: False
                         choices:
                             - NONE
                             - STRICT
                         default: STRICT
     """
-    execution_logs = []
-    nsxt_tier1 = NSXTTier1()
-    try:
-        nsxt_tier1.create_or_update(
+    ret = {"name": name, "result": True, "comment": "", "changes": {}}
+    if state and state.lower() == "absent":
+        ret["result"] = False
+        ret["comment"] = (
+            "Use absent method to delete tier1 resource. "
+            "Only tier1 sub-resources are allowed to be deleted here."
+        )
+        return ret
+    tier_1_result = __salt__["nsxt_policy_tier1.get_by_display_name"](
+        hostname=hostname,
+        username=username,
+        password=password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+        display_name=display_name,
+    )
+    if "error" in tier_1_result:
+        ret["result"] = False
+        ret["comment"] = "Failed to get tier-1 gateways from NSX-T Manager : {}".format(
+            tier_1_result["error"]
+        )
+        return ret
+    result_count = len(tier_1_result.get("results"))
+    if result_count > 1:
+        ret["result"] = False
+        ret["comment"] = (
+            "Found multiple results(result_count={count}) for Tier-1 gateway with "
+            "display_name {display_name}".format(count=result_count, display_name=display_name)
+        )
+        return ret
+    if __opts__["test"]:
+        ret["result"] = None
+        if result_count == 0:
+            ret["comment"] = "Tier-1 gateway will be created in NSX-T Manager"
+        else:
+            ret["comment"] = "Tier-1 gateway would be updated in NSX-T Manager"
+        return ret
+    if result_count == 0:
+        # create flow
+        log.info(
+            "Creating new tier1 gateway as no results were found in NSX-T with display_name %s",
+            display_name,
+        )
+        create_execution_logs = __salt__["nsxt_policy_tier1.create_or_update"](
             hostname=hostname,
             username=username,
             password=password,
-            execution_logs=execution_logs,
+            verify_ssl=verify_ssl,
             cert=cert,
             cert_common_name=cert_common_name,
-            verify_ssl=verify_ssl,
             display_name=display_name,
             tags=tags,
             id=id,
@@ -1329,86 +944,268 @@ def create_or_update(
             arp_limit=arp_limit,
             type=type,
         )
-    except SaltInvocationError as e:
-        execution_logs.append({"error": str(e)})
-    return execution_logs
+        log.info("Execution logs for creating tier 1 : {}".format(create_execution_logs))
+        if "error" in create_execution_logs[len(create_execution_logs) - 1]:
+            ret["result"] = False
+            ret[
+                "comment"
+            ] = "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
+                create_execution_logs[len(create_execution_logs) - 1]["error"],
+                create_execution_logs,
+            )
+            return ret
+        tier1_execution_log = next(
+            (
+                execution_log
+                for execution_log in create_execution_logs
+                if execution_log.get("resourceType") == "tier1"
+            ),
+            None,
+        )
+        tier_1_id = tier1_execution_log.get("results").get("id")
+        tier1_hierarchy = __salt__["nsxt_policy_tier1.get_hierarchy"](
+            hostname=hostname,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            tier1_id=tier_1_id,
+        )
+        if "error" in tier1_hierarchy:
+            ret["result"] = False
+            ret["comment"] = "Failed while querying tier1 gateway and its sub-resources: {}".format(
+                tier1_hierarchy["error"]
+            )
+            return ret
+        ret["comment"] = "Created Tier-1 gateway {display_name} successfully".format(
+            display_name=display_name
+        )
+        ret["changes"]["new"] = tier1_hierarchy
+        return ret
+    else:
+        tier1_id = tier_1_result.get("results")[0].get("id")
+        log.info("Updating existing tier1 gateway with display_name %s", display_name)
+        tier1_hierarchy_before_update = __salt__["nsxt_policy_tier1.get_hierarchy"](
+            hostname=hostname,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            tier1_id=tier1_id,
+        )
+        if "error" in tier1_hierarchy_before_update:
+            ret["result"] = False
+            ret[
+                "comment"
+            ] = "Failed while querying tier1 gateway and its sub-resources.: {}".format(
+                tier1_hierarchy_before_update["error"]
+            )
+            return ret
+        update_execution_logs = __salt__["nsxt_policy_tier1.create_or_update"](
+            hostname=hostname,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            display_name=display_name,
+            tags=tags,
+            id=id,
+            description=description,
+            default_rule_logging=default_rule_logging,
+            disable_firewall=disable_firewall,
+            failover_mode=failover_mode,
+            enable_standby_relocation=enable_standby_relocation,
+            force_whitelisting=force_whitelisting,
+            intersite_config=intersite_config,
+            ipv6_ndra_profile_id=ipv6_ndra_profile_id,
+            ipv6_ndra_profile_display_name=ipv6_ndra_profile_display_name,
+            ipv6_dad_profile_id=ipv6_dad_profile_id,
+            ipv6_dad_profile_display_name=ipv6_dad_profile_display_name,
+            dhcp_config_id=dhcp_config_id,
+            dhcp_config_display_name=dhcp_config_display_name,
+            pool_allocation=pool_allocation,
+            qos_profile=qos_profile,
+            route_advertisement_rules=route_advertisement_rules,
+            route_advertisement_types=route_advertisement_types,
+            tier0_id=tier0_id,
+            tier0_display_name=tier0_display_name,
+            static_routes=static_routes,
+            locale_services=locale_services,
+            arp_limit=arp_limit,
+            type=type,
+        )
+        log.info("Execution logs for updating tier 1 : {}".format(update_execution_logs))
+        # update execution logs can come empty if there is nothing to update
+        if (
+            update_execution_logs
+            and "error" in update_execution_logs[len(update_execution_logs) - 1]
+        ):
+            ret["result"] = False
+            ret[
+                "comment"
+            ] = "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
+                update_execution_logs[len(update_execution_logs) - 1]["error"],
+                update_execution_logs,
+            )
+            return ret
+        tier1_hierarchy_after_update = __salt__["nsxt_policy_tier1.get_hierarchy"](
+            hostname=hostname,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            tier1_id=tier1_id,
+        )
+        if "error" in tier1_hierarchy_after_update:
+            ret["result"] = False
+            ret[
+                "comment"
+            ] = "Failure while querying tier1 gateway and its sub-resources: {}".format(
+                tier1_hierarchy_after_update["error"]
+            )
+            return ret
+        ret["comment"] = "Updated Tier-1 gateway {display_name} successfully".format(
+            display_name=display_name
+        )
+        ret["changes"]["new"] = tier1_hierarchy_after_update
+        ret["changes"]["old"] = tier1_hierarchy_before_update
+        return ret
 
 
-def delete(
-    hostname, username, password, tier1_id, cert=None, cert_common_name=None, verify_ssl=True
+def absent(
+    name,
+    hostname,
+    username,
+    password,
+    display_name,
+    verify_ssl=True,
+    cert=None,
+    cert_common_name=None,
 ):
     """
-    Deletes a Tier 1 gateway and it sub-resources
-    hostname
-        The host name of NSX-T manager
-    username
-        Username to connect to NSX-T manager
-    password
-        Password to connect to NSX-T manager
-    tier1_id
-        id of the tier 1 to be deleted
-    verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
-        If set to False, the certificate validation is skipped.
-    cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
-        The certificate can be retrieved from browser.
-    cert_common_name
-        (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
-        verification. If the client certificate common name and hostname do not match (in case of self-signed
-        certificates), specify the certificate common name as part of this parameter. This value is then used to
-        compare against
+    Deletes tier1 gateway with the given display_name and all its sub-resources
+    CLI Example:
+        .. code-block:: bash
+            salt vm_minion nsxt_policy_tier1.absent hostname=nsxt-manager.local username=admin ...
+        delete_tier1:
+          nsxt_policy_tier1.absent:
+            - name: <Name of the operation>
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              display_name: <display name of tier1 gateway>
+              cert: <certificate>
+              verify_ssl: <False/True>
+        name
+            Name of the operation to perform
+        hostname
+            The host name of NSX-T manager
+        username
+            Username to connect to NSX-T manager
+        password
+            Password to connect to NSX-T manager
+        display_name
+            Display name of the tier1 gateway to delete
+        cert
+            (Optional) Path to the SSL certificate file to connect to NSX-T manager
+        verify_ssl
+            (Optional) Option to enable/disable SSL verification. Enabled by default.
+            If set to False, the certificate validation is skipped.
+        cert
+            (Optional) Path to the SSL certificate file to connect to NSX-T manager.
+            The certificate can be retrieved from browser.
+        cert_common_name
+            (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
+             verification. If the client certificate common name and hostname do not match (in case of self-signed
+             certificates), specify the certificate common name as part of this parameter. This value is then used to
+             compare against certificate common name.
     """
-    execution_logs = []
-    nsxt_tier1 = NSXTTier1()
-    try:
-        nsxt_tier1.delete(
-            hostname,
-            username,
-            password,
-            tier1_id,
-            cert,
-            cert_common_name,
-            verify_ssl,
-            execution_logs,
+    ret = {"name": name, "result": True, "comment": "", "changes": {}}
+    tier_1_result = __salt__["nsxt_policy_tier1.get_by_display_name"](
+        hostname=hostname,
+        username=username,
+        password=password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+        cert_common_name=cert_common_name,
+        display_name=display_name,
+    )
+    if "error" in tier_1_result:
+        ret["result"] = False
+        ret["comment"] = "Failed to get tier1 gateways from NSX-T Manager : {}".format(
+            tier_1_result["error"]
         )
-    except SaltInvocationError as e:
-        execution_logs.append({"error": str(e)})
-    return execution_logs
-
-
-def get_hierarchy(
-    hostname, username, password, tier1_id, cert=None, cert_common_name=None, verify_ssl=True
-):
-    """
-    Returns entire hieararchy of Tier 1 gateway and its sub-resources
-    hostname
-        The host name of NSX-T manager
-    username
-        Username to connect to NSX-T manager
-    password
-        Password to connect to NSX-T manager
-    tier1_id
-        id of the tier 1 gateway
-    verify_ssl
-        Option to enable/disable SSL verification. Enabled by default.
-        If set to False, the certificate validation is skipped.
-    cert
-        (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
-        The certificate can be retrieved from browser.
-    cert_common_name
-        (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
-        verification. If the client certificate common name and hostname do not match (in case of self-signed
-        certificates), specify the certificate common name as part of this parameter. This value is then used to
-        compare against
-    """
-    result = {}
-    nsxt_tier1 = NSXTTier1()
-    try:
-        nsxt_tier1.get_hierarchy(
-            hostname, username, password, tier1_id, cert, cert_common_name, verify_ssl, result
+        return ret
+    result_count = len(tier_1_result.get("results"))
+    if result_count > 1:
+        ret["result"] = False
+        ret["comment"] = (
+            "Found multiple results(result_count={count}) for tier1 gateway with "
+            "display_name {display_name}".format(count=result_count, display_name=display_name)
         )
-        log.info("Hierarchy result for tier 1 gateway: {}".format(result))
-        return result
-    except SaltInvocationError as e:
-        return {"error": str(e)}
+        return ret
+    if __opts__["test"]:
+        ret["result"] = None
+        if result_count == 0:
+            ret["comment"] = "No tier1 gateway with display_name: {} found in NSX-T Manager".format(
+                display_name
+            )
+        else:
+            ret["comment"] = "tier1 gateway with display_name: {} will be deleted".format(
+                display_name
+            )
+        return ret
+    if result_count == 0:
+        ret["comment"] = "No tier1 gateway with display_name: {} found in NSX-T Manager".format(
+            display_name
+        )
+        return ret
+    else:
+        tier1_to_delete = tier_1_result.get("results")[0]
+        tier1_hierarchy = __salt__["nsxt_policy_tier1.get_hierarchy"](
+            hostname=hostname,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+            cert=cert,
+            cert_common_name=cert_common_name,
+            tier1_id=tier1_to_delete["id"],
+        )
+        if "error" in tier1_hierarchy:
+            ret["result"] = False
+            ret[
+                "comment"
+            ] = "Failure while querying tier1 gateway and its sub-resources: {}".format(
+                tier1_hierarchy["error"]
+            )
+            return ret
+        delete_execution_logs = __salt__["nsxt_policy_tier1.delete"](
+            hostname=hostname,
+            username=username,
+            password=password,
+            tier1_id=tier1_to_delete["id"],
+            verify_ssl=verify_ssl,
+            cert=cert,
+            cert_common_name=cert_common_name,
+        )
+        log.info("Execution logs for deleting tier 1 : {}".format(delete_execution_logs))
+        if "error" in delete_execution_logs[len(delete_execution_logs) - 1]:
+            ret["result"] = False
+            ret["comment"] = "Failed to delete tier1 gateway : {} \n Execution logs: {}".format(
+                delete_execution_logs[len(delete_execution_logs) - 1]["error"],
+                delete_execution_logs,
+            )
+            return ret
+        else:
+            ret[
+                "comment"
+            ] = "tier1 gateway with display_name: {} and its sub-resources deleted successfully".format(
+                display_name
+            )
+            ret["changes"]["old"] = tier1_hierarchy
+            ret["changes"]["new"] = {}
+            return ret

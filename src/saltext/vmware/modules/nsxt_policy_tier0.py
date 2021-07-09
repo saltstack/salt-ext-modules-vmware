@@ -4,8 +4,8 @@ Execution module to perform CRUD operations for NSX-T's Tier 0 Gateway
 import logging
 
 from salt.exceptions import SaltInvocationError
-from saltext.vmware.utils import common
 from saltext.vmware.utils.nsxt_policy_base_resource import NSXTPolicyBaseResource
+from saltext.vmware.utils.nsxt_resource_urls import BFD_PROFILE_URL
 from saltext.vmware.utils.nsxt_resource_urls import DHCP_RELAY_CONFIG_URL
 from saltext.vmware.utils.nsxt_resource_urls import EDGE_CLUSTER_URL
 from saltext.vmware.utils.nsxt_resource_urls import EDGE_NODE_URL
@@ -23,11 +23,6 @@ log = logging.getLogger(__name__)
 
 def __virtual__():
     return "nsxt_policy_tier0"
-
-
-"""
-Class to represent schema of NSXT Tier 0 Gateway with its sub-resources
-"""
 
 
 class NSXTTier0(NSXTPolicyBaseResource):
@@ -72,7 +67,10 @@ class NSXTTier0(NSXTPolicyBaseResource):
             "_revision",
         }
         resource_params = {}
-        resource_params = common._filter_kwargs(fields, resource_params, **kwargs)
+        for field in fields:
+            val = kwargs.get(field)
+            if val:
+                resource_params[field] = val
         resource_params["resource_type"] = "Tier0"
 
         resource_params.setdefault("id", resource_params["display_name"])
@@ -197,12 +195,12 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 for key in fields:
                     if bfd_peer.get(key):
                         resource_params[key] = bfd_peer.get(key)
-                if bfd_peer.get("bfd_profile_id"):
-                    bfd_profile_id = bfd_peer.get("bfd_profile_id")
+                bfd_profile_id = bfd_peer.get("bfd_profile_id")
+                if bfd_profile_id:
                     resource_params["bfd_profile_path"] = "/infra/bfd-profiles/{}".format(
                         bfd_profile_id
                     )
-                if not hasattr(bfd_peer, "id"):
+                if not "id" in bfd_peer:
                     resource_params["id"] = resource_params["display_name"]
                 resource_params["resource_type"] = "StaticRouteBfdPeer"
                 self.multi_resource_params.append(resource_params)
@@ -250,14 +248,16 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
                 if locale_service.get("preferred_edge_nodes_info"):
                     resource_params["preferred_edge_paths"] = []
-                    for node_info in preferred_edge_nodes_info:
-                        site_id = node_info.get("site_id", "default")
-                        enforcementpoint_id = node_info.get("enforcementpoint_id", "default")
-                        edge_cluster_id = node_info.get("edge_cluster_id")
+                    for preferred_edge_node_info in preferred_edge_nodes_info:
+                        site_id = preferred_edge_node_info.get("site_id", "default")
+                        enforcementpoint_id = preferred_edge_node_info.get(
+                            "enforcementpoint_id", "default"
+                        )
+                        edge_cluster_id = preferred_edge_node_info.get("edge_cluster_id")
                         edge_node_base_url = EDGE_NODE_URL.format(
                             site_id, enforcementpoint_id, edge_cluster_id
                         )
-                        edge_node_id = node_info.get("edge_node_id")
+                        edge_node_id = preferred_edge_node_info.get("edge_node_id")
                         resource_params["preferred_edge_paths"].append(
                             edge_node_base_url + "/" + edge_node_id
                         )
@@ -277,7 +277,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
                             )
                         ha_vip_config["external_interface_paths"] = external_interface_paths
                         resource_params["ha_vip_configs"].append(ha_vip_config)
-                if not hasattr(locale_service, "id"):
+                if not "id" in locale_service:
                     resource_params["id"] = resource_params["display_name"]
                 self.multi_resource_params.append(resource_params)
 
@@ -362,12 +362,11 @@ class NSXTTier0(NSXTPolicyBaseResource):
                                 }
                             )
                         edge_node_info = interface.get("edge_node_info")
-                        site_id = edge_node_info.get("site_id")
-                        enforcementpoint_id = edge_node_info.get("enforcementpoint_id")
-                        edge_cluster_id = edge_node_info.get("edge_cluster_id")
                         edge_node_id = edge_node_info.get("edge_node_id")
                         edge_node_base_url = EDGE_NODE_URL.format(
-                            site_id, enforcementpoint_id, edge_cluster_id
+                            edge_node_info["site_id"],
+                            edge_node_info["enforcementpoint_id"],
+                            edge_node_info["edge_cluster_id"],
                         )
                         resource_params["edge_path"] = edge_node_base_url + "/" + edge_node_id
                         resource_params["resource_type"] = "ServiceInterface"
@@ -627,7 +626,6 @@ def create_or_update(
     ipv6_dad_profile_id=None,
     locale_services=None,
     rd_admin_field=None,
-    state=None,
     static_routes=None,
     tags=None,
     transit_subnets=None,
@@ -1570,7 +1568,6 @@ def create_or_update(
             ipv6_dad_profile_id=ipv6_dad_profile_id,
             locale_services=locale_services,
             rd_admin_field=rd_admin_field,
-            state=state,
             static_routes=static_routes,
             tags=tags,
             transit_subnets=transit_subnets,
