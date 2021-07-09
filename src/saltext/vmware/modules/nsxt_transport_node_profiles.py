@@ -85,6 +85,8 @@ def get(
     sort_by
         (Optional) Field by which records are sorted
 
+    For more information see :ref: https://code.vmware.com/apis/1163/nsx-t
+
     """
     log.info("Fetching NSX-T transport node profiles")
     url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname)

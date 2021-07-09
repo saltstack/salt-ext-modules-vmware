@@ -1,4 +1,3 @@
-import json
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -161,7 +160,7 @@ def test_present_state_for_new_compute_manager_registration_during_create():
         },
     ):
         ret["comment"] = "Compute manager another-server.local successfully registered with NSX-T"
-        ret["changes"]["new"] = json.dumps(new_compute_manager)
+        ret["changes"]["new"] = new_compute_manager
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
                 nsxt_compute_manager.present(
@@ -234,8 +233,8 @@ def test_present_state_to_update_existing_compute_manager_registration_during_up
         ret[
             "comment"
         ] = "Compute manager existing-server.local registration successfully updated with NSX-T"
-        ret["changes"]["new"] = json.dumps(updated_compute_manager)
-        ret["changes"]["old"] = json.dumps(old_compute_manager)
+        ret["changes"]["new"] = updated_compute_manager
+        ret["changes"]["old"] = old_compute_manager
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
                 nsxt_compute_manager.present(
@@ -327,7 +326,9 @@ def test_present_state_error_with_wrong_compute_manager_credential():
             "nsxt_compute_manager.get": MagicMock(return_value=existing_compute_managers),
         },
     ):
-        ret["comment"] = "Parameter credential must be of type object. Please refer documentation"
+        ret[
+            "comment"
+        ] = "Parameter credential must be of type dictionary. Please refer documentation"
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
                 nsxt_compute_manager.present(
@@ -498,7 +499,7 @@ def test_absent_state_to_deregister_existing_compute_manager():
     ):
         ret["comment"] = "Compute manager registration removed successfully from NSX-T manager"
         ret["changes"]["new"] = {}
-        ret["changes"]["old"] = json.dumps(compute_manager_to_delete)
+        ret["changes"]["old"] = compute_manager_to_delete
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
                 nsxt_compute_manager.absent(

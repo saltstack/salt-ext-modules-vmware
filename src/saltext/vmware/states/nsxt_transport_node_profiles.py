@@ -1,7 +1,6 @@
 """
 State module for NSX-T transport node profiles
 """
-import json
 import logging
 
 import salt.utils.dictdiffer
@@ -10,15 +9,18 @@ from saltext.vmware.utils import nsxt_request
 
 log = logging.getLogger(__name__)
 
+try:
+    from saltext.vmware.modules import nsxt_transport_node_profiles
+
+    HAS_NSXT_TRANSPORT_NODE_PROFILES = True
+except ImportError:
+    HAS_NSXT_TRANSPORT_NODE_PROFILES = False
+
 
 def __virtual__():
-    """
-    Only load if module nsxt_transport_node_profiles is available
-    """
-    return (
-        "nsxt_transport_node_profiles" if "nsxt_transport_node_profiles.get" in __salt__ else False,
-        "'nsxt_transport_node_profiles' binary not found on system",
-    )
+    if not HAS_NSXT_TRANSPORT_NODE_PROFILES:
+        return False, "'nsxt_transport_node_profiles' binary not found on system"
+    return "nsxt_transport_node_profiles"
 
 
 def _needs_update(existing_profile, new_profile_params):
@@ -494,7 +496,7 @@ def present(
         ret["comment"] = "Created transport node profile {display_name}".format(
             display_name=display_name
         )
-        ret["changes"]["new"] = json.dumps(create_result)
+        ret["changes"]["new"] = create_result
         return ret
     else:
         update_required = _needs_update(
@@ -526,8 +528,8 @@ def present(
             ret["comment"] = "Updated transport node profile {display_name} successfully".format(
                 display_name=display_name
             )
-            ret["changes"]["old"] = json.dumps(existing_transport_node_profile)
-            ret["changes"]["new"] = json.dumps(update_result)
+            ret["changes"]["old"] = existing_transport_node_profile
+            ret["changes"]["new"] = update_result
             return ret
         else:
             log.info(
@@ -677,6 +679,6 @@ def absent(
             ] = "Transport node profile with display_name: {} successfully deleted".format(
                 display_name
             )
-            ret["changes"]["old"] = json.dumps(transport_node_profile_to_delete)
+            ret["changes"]["old"] = transport_node_profile_to_delete
             ret["changes"]["new"] = {}
             return ret

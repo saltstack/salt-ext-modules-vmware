@@ -106,7 +106,7 @@ def test_nsxt_ip_pools_present_and_absent_states(nsxt_config, salt_call_cli):
     in NSX-T Manager
     """
 
-    hostname, username, password = _get_server_info(nsxt_config)
+    hostname, username, password, cert = _get_server_info(nsxt_config)
     display_name = "IP_Pool_Salt_State_FT"
     description = "Created from IP Pool Salt State FT"
 

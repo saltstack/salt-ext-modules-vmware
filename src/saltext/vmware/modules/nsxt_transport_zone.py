@@ -24,7 +24,8 @@ create_params_for_transport_zones = [
     "host_switch_mode",
     "uplink_teaming_policy_names",
     "tags",
-    "is_default" "display_name",
+    "is_default",
+    "display_name",
 ]
 
 
@@ -442,6 +443,9 @@ def delete(
         If the client certificate common name and hostname do not match (in case of self-signed certificates),
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
+
+    For more information see :ref: https://code.vmware.com/apis/1163/nsx-t
+
     """
     log.info("Deleting transport zones for %s", transport_zone_id)
     url = TRANSPORT_ZONE_BASE_URL.format(hostname) + "/{}".format(transport_zone_id)

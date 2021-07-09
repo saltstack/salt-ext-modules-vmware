@@ -70,11 +70,11 @@ def test_nsxt_licenses_state_module(nsxt_config, salt_call_cli, delete_license):
         assert license_entry["license_key"] != license_key
 
     # assert new array contains the license to be added
-    license_present = False
     for license_entry in changes["new"]["results"]:
-        if license_entry["license_key"] == license_key:
-            license_present = True
-    assert license_present is True
+        if license_entry["license_key"] == nsxt_config["license_key"]:
+            break
+    else:
+        assert False, "No license key present in results"
 
     assert result["comment"] == "License added successfully"
 
@@ -112,20 +112,18 @@ def test_nsxt_licenses_state_module(nsxt_config, salt_call_cli, delete_license):
     changes = result["changes"]
 
     # assert old array contains the license to be removed
-    license_present = False
     for license_entry in changes["old"]["results"]:
-        if license_entry["license_key"] == license_key:
-            license_present = True
+        if license_entry["license_key"] == nsxt_config["license_key"]:
             break
-    assert license_present is True
+    else:
+        assert False, "No license key present in results"
 
     # assert new array doesn't contains the license to be removed
-    license_absent = True
     for license_entry in changes["new"]["results"]:
-        if license_entry["license_key"] == license_key:
-            license_absent = False
+        if license_entry["license_key"] == nsxt_config["license_key"]:
             break
-    assert license_absent is True
+    else:
+        assert True, "License was removed"
 
     # Invoke absent when license is not present
     response = salt_call_cli.run(

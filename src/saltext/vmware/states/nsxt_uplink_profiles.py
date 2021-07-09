@@ -1,25 +1,27 @@
 """
 State module for NSX-T uplink profiles
 """
-import json
 import logging
 
 import salt.utils.dictdiffer
 
 log = logging.getLogger(__name__)
 
+try:
+    from saltext.vmware.modules import nsxt_uplink_profiles
+
+    HAS_NSXT_UPLINK_PROFILES = True
+except ImportError:
+    HAS_NSXT_UPLINK_PROFILES = False
+
 
 def __virtual__():
-    """
-    Only load if module nsxt_uplink_profiles is available
-    """
-    return (
-        "nsxt_uplink_profiles" if "nsxt_uplink_profiles.get" in __salt__ else False,
-        "'nsxt_uplink_profiles' binary not found on system",
-    )
+    if not HAS_NSXT_UPLINK_PROFILES:
+        return False, "'nsxt_uplink_profiles' binary not found on system"
+    return "nsxt_uplink_profiles"
 
 
-def _check_for_updates(existing_profile, new_teaming, **new_profile_params):
+def _needs_update(existing_profile, new_teaming, **new_profile_params):
     non_complex_params = ("mtu", "overlay_encap", "required_capabilities", "transport_vlan", "tags")
     for param in non_complex_params:
         param_existing_value = existing_profile.get(param)
@@ -329,7 +331,6 @@ def present(
             tags=tags,
             transport_vlan=transport_vlan,
             description=description,
-            resource_type=None,
         )
 
         if "error" in create_result:
@@ -338,12 +339,12 @@ def present(
             return ret
 
         ret["comment"] = "Created uplink profile {display_name}".format(display_name=display_name)
-        ret["changes"]["new"] = json.dumps(create_result)
+        ret["changes"]["new"] = create_result
         return ret
     else:
         # update uplink profile
         existing_uplink_profile = uplink_profiles_result.get("results")[0]
-        update_required = _check_for_updates(
+        update_required = _needs_update(
             existing_profile=existing_uplink_profile,
             new_teaming=teaming,
             lags=lags,
@@ -396,8 +397,8 @@ def present(
             ret["comment"] = "Updated uplink profile {display_name} successfully".format(
                 display_name=display_name
             )
-            ret["changes"]["old"] = json.dumps(existing_uplink_profile)
-            ret["changes"]["new"] = json.dumps(update_result)
+            ret["changes"]["old"] = existing_uplink_profile
+            ret["changes"]["new"] = update_result
             return ret
         else:
             log.info("Update is not required. Uplink profile with same params already exists")
@@ -536,6 +537,6 @@ def absent(
             ret["comment"] = "Uplink profile with display_name: {} successfully deleted".format(
                 display_name
             )
-            ret["changes"]["old"] = json.dumps(uplink_profile_to_delete)
+            ret["changes"]["old"] = uplink_profile_to_delete
             ret["changes"]["new"] = {}
             return ret

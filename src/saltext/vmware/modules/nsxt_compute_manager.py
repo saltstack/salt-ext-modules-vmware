@@ -3,7 +3,6 @@ Execution module for NSX-T compute manager registration and de-registration
 """
 import json
 import logging
-from urllib.parse import urljoin
 
 from saltext.vmware.utils import common
 from saltext.vmware.utils import nsxt_request
@@ -12,7 +11,7 @@ log = logging.getLogger(__name__)
 
 __virtualname__ = "nsxt_compute_manager"
 
-BASR_URL = "https://{management_host}/api/v1/fabric/compute-managers"
+BASE_URL = "https://{management_host}/api/v1/fabric/compute-managers"
 
 
 def __virtual__():
@@ -430,7 +429,7 @@ def update(
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
     """
-    url = urljoin(BASE_URL, "/{compute_manager_id}").format(
+    url = (BASE_URL + "/{compute_manager_id}").format(
         management_host=hostname, compute_manager_id=compute_manager_id
     )
 
@@ -509,7 +508,7 @@ def remove(
         certificate common name.
     """
 
-    url = urljoin(BASE_URL, "/{id}").format(management_host=hostname, id=compute_manager_id)
+    url = (BASE_URL + "/{id}").format(management_host=hostname, id=compute_manager_id)
     log.info("Going to remove compute manager registration")
     result = nsxt_request.call_api(
         method="delete",

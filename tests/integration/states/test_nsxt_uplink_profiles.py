@@ -1,7 +1,6 @@
 """
     Integration Tests for nsxt_uplink_profiles state module
 """
-import json
 from urllib.parse import urljoin
 
 import pytest
@@ -84,7 +83,7 @@ def _delete_uplink_profile_using_nsxt_api(nsxt_config, uplink_profile_id):
     response.raise_for_status()
 
 
-def _get_uplink_profiles_from_nsxt_api(hostname, username, password, cursor):
+def _get_uplink_profiles_from_nsxt_api(hostname, username, password, cursor=None):
     url = BASE_URL.format(hostname)
 
     params = {}
@@ -127,7 +126,7 @@ def test_nsxt_uplink_profiles_present_and_absent_states(nsxt_config, setup, salt
     assert result_as_json["comment"] == "Created uplink profile {display_name}".format(
         display_name=_display_name
     )
-    new_changes_json = json.loads(result_as_json["changes"]["new"])
+    new_changes_json = result_as_json["changes"]["new"]
     assert new_changes_json["display_name"] == _display_name
     assert new_changes_json["description"] == "Created by Salt IT"
     assert new_changes_json["teaming"]["policy"] == "FAILOVER_ORDER"
@@ -147,12 +146,12 @@ def test_nsxt_uplink_profiles_present_and_absent_states(nsxt_config, setup, salt
         display_name=_display_name
     )
 
-    new_changes_json = json.loads(result_as_json["changes"]["new"])
+    new_changes_json = result_as_json["changes"]["new"]
     assert new_changes_json["display_name"] == _display_name
     assert new_changes_json["description"] == "Updated by Salt IT"
     assert new_changes_json["teaming"]["policy"] == "LOADBALANCE_SRCID"
 
-    old_changes_json = json.loads(result_as_json["changes"]["old"])
+    old_changes_json = result_as_json["changes"]["old"]
     assert old_changes_json["display_name"] == _display_name
     assert old_changes_json["description"] == "Created by Salt IT"
     assert old_changes_json["teaming"]["policy"] == "FAILOVER_ORDER"
@@ -165,7 +164,7 @@ def test_nsxt_uplink_profiles_present_and_absent_states(nsxt_config, setup, salt
         "comment"
     ] == "Uplink profile with display_name: {} successfully deleted".format(_display_name)
 
-    old_changes_json = json.loads(result_as_json["changes"]["old"])
+    old_changes_json = result_as_json["changes"]["old"]
     assert old_changes_json["display_name"] == _display_name
     assert old_changes_json["description"] == "Updated by Salt IT"
     assert old_changes_json["teaming"]["policy"] == "LOADBALANCE_SRCID"

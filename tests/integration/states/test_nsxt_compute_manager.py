@@ -1,6 +1,4 @@
-import json
 import time
-from urllib.parse import urljoin
 
 import pytest
 import requests
@@ -34,9 +32,8 @@ def delete_compute_manager(nsxt_config):
             if compute_manager["server"] == compute_manager_server:
                 compute_manager_id_to_delete = compute_manager["id"]
     if compute_manager_id_to_delete is not None:
-        url = urljoin(BASE_URL, "/{id}").format(
-            management_host=hostname, id=compute_manager_id_to_delete
-        )
+
+        url = (url + "/{id}").format(management_host=hostname, id=compute_manager_id_to_delete)
         response = requests.delete(url=url, auth=(username, password), verify=cert)
         response.raise_for_status()
 
@@ -71,7 +68,7 @@ def test_register_update_and_delete(nsxt_config, salt_call_cli, delete_compute_m
     assert result_as_json[
         "comment"
     ] == "Compute manager {} successfully registered with NSX-T".format(compute_manager_server)
-    new_changes_json = json.loads(result_as_json["changes"]["new"])
+    new_changes_json = result_as_json["changes"]["new"]
     assert new_changes_json["server"] == compute_manager_server
     assert new_changes_json["description"] == "compute manager registered by IT"
     # Update existing compute manager
@@ -99,12 +96,12 @@ def test_register_update_and_delete(nsxt_config, salt_call_cli, delete_compute_m
     ] == "Compute manager {} registration successfully updated with NSX-T".format(
         compute_manager_server
     )
-    new_changes_json = json.loads(result_as_json["changes"]["new"])
+    new_changes_json = result_as_json["changes"]["new"]
     assert new_changes_json["server"] == compute_manager_server
     assert new_changes_json["description"] == "compute manager registration updated by IT"
     assert new_changes_json["display_name"] == "Updated display name"
 
-    old_changes_json = json.loads(result_as_json["changes"]["old"])
+    old_changes_json = result_as_json["changes"]["old"]
     assert old_changes_json["description"] == "compute manager registered by IT"
 
     # De-register compute manager

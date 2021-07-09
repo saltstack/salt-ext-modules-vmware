@@ -205,7 +205,7 @@ def test_present_state_to_create_new_transport_node_profile(mock_call_api):
     ):
         with patch.dict(nsxt_transport_node_profiles.__opts__, {"test": False}):
             ret["comment"] = "Created transport node profile Sample TNP"
-            ret["changes"]["new"] = json.dumps(json_response)
+            ret["changes"]["new"] = json_response
             assert (
                 nsxt_transport_node_profiles.present(
                     name="create transport node profile",
@@ -311,8 +311,8 @@ def test_present_state_to_update_existing_tnp(mock_call_api):
         },
     ):
         ret["comment"] = "Updated transport node profile Sample TNP successfully"
-        ret["changes"]["new"] = json.dumps(json_response)
-        ret["changes"]["old"] = json.dumps(_mock_transport_node_profile)
+        ret["changes"]["new"] = json_response
+        ret["changes"]["old"] = _mock_transport_node_profile
         with patch.dict(nsxt_transport_node_profiles.__opts__, {"test": False}):
             assert (
                 nsxt_transport_node_profiles.present(
@@ -691,7 +691,7 @@ def test_absent_state_to_delete_existing_transport_node_profile():
                 _mock_transport_node_profile["display_name"]
             )
             ret["changes"]["new"] = {}
-            ret["changes"]["old"] = json.dumps(_mock_transport_node_profile)
+            ret["changes"]["old"] = _mock_transport_node_profile
             assert (
                 nsxt_transport_node_profiles.absent(
                     name="delete transport node profile",

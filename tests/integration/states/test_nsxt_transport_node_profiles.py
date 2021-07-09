@@ -94,7 +94,7 @@ def _delete_transport_node_profile_using_nsxt_api(
     transport_node_profile_id,
     cert,
 ):
-    url = urljoin(TRANSPORT_NODE_PROFILE_URL, "{}")
+    url = TRANSPORT_NODE_PROFILE_URL + "{}"
     response = requests.delete(
         url=url.format(hostname, transport_node_profile_id), auth=(username, password), verify=cert
     )
@@ -130,7 +130,7 @@ def _get_transport_zones_by_display_name_using_nsxt_api(hostname, username, pass
 
 
 def _delete_transport_zone_using_nsxt_api(hostname, username, password, transport_zone_id, cert):
-    url = urljoin(TRANSPORT_ZONE_URL, "{}")
+    url = TRANSPORT_ZONE_URL + "{}"
     response = requests.delete(
         url=url.format(hostname, transport_zone_id), auth=(username, password), verify=cert
     )
@@ -226,7 +226,7 @@ def test_nsxt_transport_node_profiles_present_and_absent_states(nsxt_config, set
     assert result_as_json["comment"] == "Created transport node profile {display_name}".format(
         display_name=_display_name
     )
-    new_changes_json = json.loads(result_as_json["changes"]["new"])
+    new_changes_json = result_as_json["changes"]["new"]
     assert new_changes_json["display_name"] == _display_name
     assert new_changes_json["description"] == _create_description
     assert (
@@ -266,7 +266,7 @@ def test_nsxt_transport_node_profiles_present_and_absent_states(nsxt_config, set
     ] == "Updated transport node profile {display_name} successfully".format(
         display_name=_display_name
     )
-    new_changes_json = json.loads(result_as_json["changes"]["new"])
+    new_changes_json = result_as_json["changes"]["new"]
     assert new_changes_json["display_name"] == _display_name
     assert new_changes_json["description"] == _update_description
     assert (
@@ -276,7 +276,7 @@ def test_nsxt_transport_node_profiles_present_and_absent_states(nsxt_config, set
         == tz2["id"]
     )
 
-    old_changes_json = json.loads(result_as_json["changes"]["old"])
+    old_changes_json = result_as_json["changes"]["old"]
     assert old_changes_json["display_name"] == _display_name
     assert old_changes_json["description"] == _create_description
     assert (
@@ -294,7 +294,7 @@ def test_nsxt_transport_node_profiles_present_and_absent_states(nsxt_config, set
     assert result_as_json[
         "comment"
     ] == "Transport node profile with display_name: {} successfully deleted".format(_display_name)
-    old_changes_json = json.loads(result_as_json["changes"]["old"])
+    old_changes_json = result_as_json["changes"]["old"]
     assert old_changes_json["display_name"] == _display_name
     assert old_changes_json["description"] == _update_description
     assert result_as_json["changes"]["new"] == {}

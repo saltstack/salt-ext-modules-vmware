@@ -1,9 +1,9 @@
-import json
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
 import saltext.vmware.states.nsxt_transport_zone as transport_zone
+from salt.utils import dictdiffer
 
 _mocked_hostname = "nsxt-vmware.local"
 _mocked_username = "username"
@@ -72,23 +72,21 @@ def test_present_state_when_creating_a_new_transport_zone():
         },
     ):
         ret["comment"] = "Transport Zone created successfully"
-        ret["changes"]["new"] = json.dumps(new_transport_zone)
+        ret["changes"]["new"] = new_transport_zone
         ret["result"] = True
 
         with patch.dict(transport_zone.__opts__, {"test": False}):
-            assert (
-                transport_zone.present(
-                    name="register-transport-zone",
-                    hostname=_mocked_hostname,
-                    username=_mocked_username,
-                    password=_mocked_password,
-                    host_switch_name="Test-Host-Switch",
-                    transport_type="Overlay",
-                    display_name="Test-Host-Switch",
-                    verify_ssl=False,
-                )
-                == ret
+            actual = transport_zone.present(
+                name="register-transport-zone",
+                hostname=_mocked_hostname,
+                username=_mocked_username,
+                password=_mocked_password,
+                host_switch_name="Test-Host-Switch",
+                transport_type="Overlay",
+                display_name="Test-Host-Switch",
+                verify_ssl=False,
             )
+            assert dictdiffer.deep_diff(ret, actual)
 
 
 def test_present_state_to_create_new_transport_zone_with_error_in_get_call():
@@ -324,8 +322,8 @@ def test_present_state_to_update_existing_transport_zone():
         },
     ):
         ret["comment"] = "Transport Zone updated successfully"
-        ret["changes"]["old"] = json.dumps(transport_zones["results"][0])
-        ret["changes"]["new"] = json.dumps(new_transport_zone)
+        ret["changes"]["old"] = transport_zones["results"][0]
+        ret["changes"]["new"] = new_transport_zone
         ret["result"] = True
 
         with patch.dict(transport_zone.__opts__, {"test": False}):

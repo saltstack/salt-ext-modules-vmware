@@ -171,7 +171,7 @@ def test_present_state_to_create_a_new_uplink_profile():
             ret["comment"] = "Created uplink profile {display_name}".format(
                 display_name=_mock_uplink_profile["display_name"]
             )
-            ret["changes"]["new"] = json.dumps(_mock_uplink_profile)
+            ret["changes"]["new"] = _mock_uplink_profile
             assert (
                 nsxt_uplink_profiles.present(
                     name="create uplink profile",
@@ -271,8 +271,8 @@ def test_present_state_when_updating_uplink_profile_teaming():
             ret["comment"] = "Updated uplink profile {display_name} successfully".format(
                 display_name=_mock_uplink_profile["display_name"]
             )
-            ret["changes"]["old"] = json.dumps(_mock_uplink_profile)
-            ret["changes"]["new"] = json.dumps(uplink_profile_post_update)
+            ret["changes"]["old"] = _mock_uplink_profile
+            ret["changes"]["new"] = uplink_profile_post_update
             assert (
                 nsxt_uplink_profiles.present(
                     name="create uplink profile",
@@ -315,8 +315,8 @@ def test_present_state_when_updating_uplink_profile_named_teamings():
             ret["comment"] = "Updated uplink profile {display_name} successfully".format(
                 display_name=_mock_uplink_profile["display_name"]
             )
-            ret["changes"]["old"] = json.dumps(_mock_uplink_profile)
-            ret["changes"]["new"] = json.dumps(uplink_profile_post_update)
+            ret["changes"]["old"] = _mock_uplink_profile
+            ret["changes"]["new"] = uplink_profile_post_update
             assert (
                 nsxt_uplink_profiles.present(
                     name="create uplink profile",
@@ -399,8 +399,8 @@ def test_present_state_to_update_uplink_profile_with_lags():
             ret["comment"] = "Updated uplink profile {display_name} successfully".format(
                 display_name=_mock_uplink_profile["display_name"]
             )
-            ret["changes"]["old"] = json.dumps(_mock_uplink_profile)
-            ret["changes"]["new"] = json.dumps(uplink_profile_post_update)
+            ret["changes"]["old"] = _mock_uplink_profile
+            ret["changes"]["new"] = uplink_profile_post_update
             assert (
                 nsxt_uplink_profiles.present(
                     name="create uplink profile",
@@ -589,7 +589,7 @@ def test_absent_state_to_delete_an_existing_uplink_profile():
                 _mock_uplink_profile["display_name"]
             )
             ret["changes"]["new"] = {}
-            ret["changes"]["old"] = json.dumps(_mock_uplink_profile)
+            ret["changes"]["old"] = _mock_uplink_profile
             assert (
                 nsxt_uplink_profiles.absent(
                     name="delete uplink profile",

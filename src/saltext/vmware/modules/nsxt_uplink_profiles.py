@@ -117,7 +117,7 @@ def get(
     """
     log.info("Fetching NSX-T uplink profiles")
     url = UPLINK_PROFILES_BASE_URL.format(hostname)
-    params = common_utils._filter_kwargs(
+    params = common._filter_kwargs(
         allowed_kwargs=[
             "cursor",
             "deployment_type",
@@ -199,7 +199,7 @@ def get_by_display_name(
         compare against certificate common name
     """
     log.info("Finding uplink profiles with display name: %s", display_name)
-    uplink_profiles = common_utils._read_paginated(
+    uplink_profiles = common._read_paginated(
         func=get,
         display_name=display_name,
         hostname=hostname,
@@ -346,7 +346,7 @@ def create(
     """
     log.info("Creating nsxt uplink profile")
     url = UPLINK_PROFILES_BASE_URL.format(hostname)
-    req_data = common_utils._filter_kwargs(
+    req_data = common._filter_kwargs(
         allowed_kwargs=create_params_for_uplink_profies,
         default_dict={},
         lags=lags,
@@ -512,7 +512,7 @@ def update(
     """
     log.info("Updating nsxt uplink profile %s", display_name)
     url = UPLINK_PROFILES_BASE_URL.format(hostname) + "/{}".format(uplink_profile_id)
-    req_data = common_utils._filter_kwargs(
+    req_data = common._filter_kwargs(
         allowed_kwargs=create_params_for_uplink_profies,
         default_dict={},
         lags=lags,

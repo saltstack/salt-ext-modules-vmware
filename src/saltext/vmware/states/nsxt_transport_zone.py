@@ -1,25 +1,27 @@
 """
 NSX-T Transport_Zone state module
 """
-import json
 import logging
 
 log = logging.getLogger(__name__)
 
 __virtualname__ = "nsxt_transport_zone"
 
+try:
+    from saltext.vmware.modules import nsxt_transport_zone
+
+    HAS_NSXT_TRANSPORT_ZONE = True
+except ImportError:
+    HAS_NSXT_TRANSPORT_ZONE = False
+
 
 def __virtual__():
-    """
-    Only load if nsxt_transport_zone is available in __salt__
-    """
-    return {
-        "nsxt_transport_zone" if "nsxt_transport_zone.get" in __salt__ else False,
-        " 'nsxt_transport_zone' not found ",
-    }
+    if not HAS_NSXT_TRANSPORT_ZONE:
+        return False, "'nsxt_transport_zone' binary not found on system"
+    return "nsxt_transport_zone"
 
 
-def _check_for_update(transport_zone_dict, **transport_zone_param):
+def _needs_update(transport_zone_dict, **transport_zone_param):
     updatable_params = {
         "is_default",
         "description",
@@ -177,7 +179,7 @@ def present(
         return ret
 
     if transport_zone_dict is not None:
-        is_update = _check_for_update(
+        is_update = _needs_update(
             transport_zone_dict,
             host_switch_name=host_switch_name,
             transport_type=transport_type,
@@ -236,7 +238,7 @@ def present(
 
         ret["comment"] = "Transport Zone created successfully"
         ret["result"] = True
-        ret["changes"]["new"] = json.dumps(create_transport_zone)
+        ret["changes"]["new"] = create_transport_zone
         return ret
     else:
         log.info("Start of the update of the transport zone")
@@ -269,8 +271,8 @@ def present(
 
         ret["comment"] = "Transport Zone updated successfully"
         ret["result"] = True
-        ret["changes"]["old"] = json.dumps(transport_zone_dict)
-        ret["changes"]["new"] = json.dumps(update_transport_zone)
+        ret["changes"]["old"] = transport_zone_dict
+        ret["changes"]["new"] = update_transport_zone
         return ret
 
 
@@ -379,7 +381,6 @@ def absent(
         username=username,
         password=password,
         transport_zone_id=id,
-        display_name=display_name,
         verify_ssl=verify_ssl,
         cert=cert,
         cert_common_name=cert_common_name,
@@ -393,7 +394,7 @@ def absent(
         return ret
 
     ret["comment"] = "Transport zone deleted successfully"
-    ret["changes"]["old"] = json.dumps(transport_zone_dict)
+    ret["changes"]["old"] = transport_zone_dict
     ret["changes"]["new"] = {}
     ret["result"] = True
 

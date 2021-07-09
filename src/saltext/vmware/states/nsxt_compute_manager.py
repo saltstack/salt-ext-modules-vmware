@@ -1,20 +1,22 @@
 """
 State module for NSX-T compute manager registration and de-registration
 """
-import json
 import logging
 
 log = logging.getLogger(__name__)
 
+try:
+    from saltext.vmware.modules import nsxt_compute_manager
+
+    HAS_NSXT_COMPUTE_MANAGER = True
+except ImportError:
+    HAS_NSXT_COMPUTE_MANAGER = False
+
 
 def __virtual__():
-    """
-    Only load if module compute_manager is available
-    """
-    return (
-        "nsxt_compute_manager" if "nsxt_compute_manager.get" in __salt__ else False,
-        "'nsxt_compute_manager' binary not found on system",
-    )
+    if not HAS_NSXT_COMPUTE_MANAGER:
+        return False, "'nsxt_compute_manager' binary not found on system"
+    return "nsxt_compute_manager"
 
 
 def _needs_update(
@@ -72,9 +74,9 @@ def present(
               server_origin_type: <compute manager origin type>
               credential:
                 credential_type:  UsernamePasswordLoginCredential
-                username: <compute manager username>
-                password: <compute manager password>
-                thumbprint: <compute manager thumbprint>
+                username: {{ pillar['compute manager username'] }}
+                password: {{ pillar['compute manager password'] }}
+                thumbprint: {{ pillar['compute manager thumbprint'] }}
               display_name: <compute manager name>
               description: <compute manager description>
               set_as_oidc_provider: <False/True>
@@ -145,6 +147,8 @@ def present(
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
 
+    For more information see :ref: https://code.vmware.com/apis/1163/nsx-t
+
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
     compute_managers_result = __salt__["nsxt_compute_manager.get"](
@@ -163,14 +167,16 @@ def present(
         )
         return ret
 
-    existing_compute_manager = None
-
-    if compute_managers_result["result_count"] == 1:
-        existing_compute_manager = compute_managers_result["results"][0]
-    else:
+    if compute_managers_result["result_count"] > 1:
         ret["result"] = False
         ret["comment"] = "Found multiple results for the provided compute manager in NSX-T"
         return ret
+    else:
+        existing_compute_manager = (
+            compute_managers_result["results"][0]
+            if compute_managers_result["result_count"] == 1
+            else None
+        )
 
     if __opts__["test"]:
         if existing_compute_manager is None:
@@ -218,7 +224,7 @@ def present(
             ] = "Compute manager {compute_manager_server} successfully registered with NSX-T".format(
                 compute_manager_server=compute_manager_server
             )
-            ret["changes"]["new"] = json.dumps(result)
+            ret["changes"]["new"] = result
             return ret
     else:
         log.info("Compute manager already exists. Going to check for updates")
@@ -261,8 +267,8 @@ def present(
                 ] = "Compute manager {compute_manager_server} registration successfully updated with NSX-T".format(
                     compute_manager_server=compute_manager_server
                 )
-                ret["changes"]["old"] = json.dumps(existing_compute_manager)
-                ret["changes"]["new"] = json.dumps(result)
+                ret["changes"]["old"] = existing_compute_manager
+                ret["changes"]["new"] = result
                 return ret
         else:
             ret["comment"] = (
@@ -393,6 +399,6 @@ def absent(
             return ret
         else:
             ret["comment"] = "Compute manager registration removed successfully from NSX-T manager"
-            ret["changes"]["old"] = json.dumps(compute_manager_to_delete)
+            ret["changes"]["old"] = compute_manager_to_delete
             ret["changes"]["new"] = {}
             return ret

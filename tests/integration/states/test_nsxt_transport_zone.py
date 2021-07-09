@@ -1,4 +1,3 @@
-import json
 import logging
 
 log = logging.getLogger(__name__)
@@ -25,12 +24,12 @@ def test_state_transport_zone_verify(nsxt_config, salt_call_cli):
 
     result_create = dict(list(response_create.json.values())[0])["result"]
     comment_create = dict(list(response_create.json.values())[0])["comment"]
-    display_name_response = json.loads(
-        dict(dict(list(response_create.json.values())[0])["changes"])["new"]
-    )["display_name"]
-    description_create = json.loads(
-        dict(dict(list(response_create.json.values())[0])["changes"])["new"]
-    )["description"]
+    display_name_response = dict(dict(list(response_create.json.values())[0])["changes"])["new"][
+        "display_name"
+    ]
+    description_create = dict(dict(list(response_create.json.values())[0])["changes"])["new"][
+        "description"
+    ]
 
     assert result_create is True
     assert display_name_response == _display_name
@@ -53,9 +52,9 @@ def test_state_transport_zone_verify(nsxt_config, salt_call_cli):
 
     result_update = dict(list(response_update.json.values())[0])["result"]
     comment_update = dict(list(response_update.json.values())[0])["comment"]
-    description_update = json.loads(
-        dict(dict(list(response_update.json.values())[0])["changes"])["new"]
-    )["description"]
+    description_update = dict(dict(list(response_update.json.values())[0])["changes"])["new"][
+        "description"
+    ]
 
     assert result_update is True
     assert comment_update == "Transport Zone updated successfully"

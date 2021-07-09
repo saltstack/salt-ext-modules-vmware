@@ -18,12 +18,13 @@ def _read_paginated(func, display_name, **kwargs):
     results = []
     paginated = {"cursor": None}
     while "cursor" in paginated:
-        paginated = func(**kwargs, cursor=paginated["cursor"])
+        paginated = func(**kwargs)
         if "error" in paginated:
             return paginated
         results.extend(
             result for result in paginated["results"] if result.get("display_name") == display_name
         )
+        kwargs["cursor"] = paginated.get("cursor")
     return results
 
 
