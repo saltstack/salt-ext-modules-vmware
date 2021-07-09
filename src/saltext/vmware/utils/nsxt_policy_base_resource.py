@@ -77,31 +77,21 @@ class NSXTPolicyBaseResource(ABC):
                 return response_page
 
             # filter support based on the display name
-            if self.resource_params["display_name"] is not None:
-                if response_page.get("results") is not None:
-                    for result in response_page["results"]:
-                        if (
-                            result.get("display_name")
-                            and result["display_name"] == self.resource_params["display_name"]
-                        ):
-                            results.append(result)
-                else:
-                    if (
-                        response_page.get("display_name")
-                        and response_page["display_name"] == self.resource_params["display_name"]
-                    ):
-                        results.append(response_page)
+            display_name = self.resource_params["display_name"]
+            id = self.resource_params["id"]
+            if display_name is not None:
+                results.extend(
+                    result
+                    for result in response_page.get("results", [response_page])
+                    if result.get("display_name") == display_name
+                )
+
             else:
-                if response_page.get("results") is not None:
-                    for result in response_page["results"]:
-                        if result.get("id") and result["id"] == self.resource_params["id"]:
-                            results.append(result)
-                else:
-                    if (
-                        response_page.get("id")
-                        and response_page["id"] == self.resource_params["id"]
-                    ):
-                        results.append(response_page)
+                results.extend(
+                    result
+                    for result in response_page.get("results", [response_page])
+                    if result.get("id") == id
+                )
 
             # if cursor is not present then we are on the last page, end loop
             if "cursor" not in response_page:
@@ -137,7 +127,7 @@ class NSXTPolicyBaseResource(ABC):
                 }
             )
 
-        if len(results.get("results")) > 1:
+        if len(results.get("results", [])) > 1:
             raise SaltInvocationError(
                 {
                     "resourceType": self.get_spec_identifier(),
@@ -147,9 +137,7 @@ class NSXTPolicyBaseResource(ABC):
                 }
             )
 
-        objects = results.get("results")
-
-        return objects[0].get("id")
+        return results["results"][0]["id"]
 
     def create_or_update(
         self,
@@ -185,8 +173,8 @@ class NSXTPolicyBaseResource(ABC):
         self.update_resource_params(**kwargs)
 
         if self.multi_resource_params and len(self.multi_resource_params) > 0:
-            for index in range(len(self.multi_resource_params)):
-                self.resource_params = self.multi_resource_params[index]
+            for param in self.multi_resource_params:
+                self.resource_params = param
 
                 if self.create_or_update_subresource_first(**kwargs):
                     self._patch_subresource(execution_logs, **kwargs)
@@ -214,7 +202,7 @@ class NSXTPolicyBaseResource(ABC):
 
                 existing_resource = get_by_display_name_response["results"]
 
-                if existing_resource.__len__() > 1:
+                if len(existing_resource) > 1:
                     raise SaltInvocationError(
                         {
                             "resourceType": self.get_spec_identifier(),
@@ -223,7 +211,7 @@ class NSXTPolicyBaseResource(ABC):
                     )
                 else:
                     self.existing_resource_param = (
-                        existing_resource[0] if existing_resource.__len__() > 0 else None
+                        existing_resource[0] if len(existing_resource) > 0 else None
                     )
 
                 if self.existing_resource_param is not None:
@@ -330,14 +318,14 @@ class NSXTPolicyBaseResource(ABC):
         self._parent_info["_parent"] = my_parent
 
     def _get_nsx_access_argument_spec(self):
-        return dict(
-            hostname=dict(type="str", required=True),
-            username=dict(type="str", required=True),
-            password=dict(type="str", required=True),
-            verify_ssl=dict(type="bool", requried=False, default=True),
-            cert=dict(type="str", requried=False),
-            cert_common_name=dict(type="str", required=False),
-        )
+        return {
+            "hostname": {"type": "str", "required": True},
+            "username": {"type": "str", "required": True},
+            "password": {"type": "str", "required": True},
+            "verify_ssl": {"type": "bool", "requried": False, "default": True},
+            "cert": {"type": "str", "required": False},
+            "cert_common_name": {"type": "str", "required": False},
+        }
 
     def _get_sub_resources_class_of(self, resource_class):
         subresources = []
@@ -496,7 +484,7 @@ class NSXTPolicyBaseResource(ABC):
                 + sub_resource.get_resource_base_url(self.get_parent_info())
             ).format(self.nsx_resource_params["hostname"])
             response = self._send_request_to_API(resource_base_url=url, suffix="", method="GET")
-            if response and "error" in response:
+            if "error" in response:
                 raise SaltInvocationError(
                     {"resourceType": sub_resource.get_spec_identifier(), "error": response["error"]}
                 )
@@ -616,11 +604,7 @@ class NSXTPolicyBaseResource(ABC):
 
     def _check_for_update(self, existing_params, resource_params):
         diff = salt.utils.dictdiffer.deep_diff(existing_params, resource_params)
-
-        if not diff:
-            return False
-        else:
-            return True
+        return bool(diff)
 
     def _fill_missing_resource_params(self, existing_params, resource_params):
         """
@@ -635,5 +619,5 @@ class NSXTPolicyBaseResource(ABC):
         for k, v in existing_params.items():
             if k not in resource_params:
                 resource_params[k] = v
-            elif type(v).__name__ == "dict":
+            elif type(v) == "dict":
                 self._fill_missing_resource_params(v, resource_params[k])

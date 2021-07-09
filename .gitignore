@@ -137,11 +137,7 @@ artifacts/
 # Just a dir for local whatever
 local/
 
-# Useful for command line args
-Saltfile
-
-# VSCode
-.vscode/
-
-# Pycharm
+.DS_Store
 .idea/
+src/.DS_Store
+src/saltext/.DS_Store
