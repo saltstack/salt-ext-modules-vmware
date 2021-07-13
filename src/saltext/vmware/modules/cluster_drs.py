@@ -59,10 +59,13 @@ def configure(
     default_vm_behavior
         Specifies the cluster-wide default DRS behavior for virtual machines.
         Valid Values:
+
         - fullyAutomated : Specifies that VirtualCenter should automate both the migration of virtual machines
         and their placement with a host at power on.
+
         - manual : Specifies that VirtualCenter should generate recommendations for virtual machine migration
         and for placement with a host, but should not implement the recommendations automatically.
+
         - partiallyAutomated : Specifies that VirtualCenter should generate recommendations for virtual
         machine migration and for placement with a host, but should automatically
         implement only the placement at power on.
