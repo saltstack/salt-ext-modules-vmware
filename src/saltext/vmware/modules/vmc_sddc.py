@@ -88,7 +88,9 @@ def get_by_id(
     Returns a SDDC detail for the given SDDC Id
 
     CLI Example:
+
     .. code-block:: bash
+
         salt minion-key-id vmc_sddc.get hostname=vmc.vmware.com sddc_id=sddc_id...
 
     hostname
