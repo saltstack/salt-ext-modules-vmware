@@ -212,7 +212,7 @@ def create(
 
          AccountLinkSddcConfig has two parameters connected_account_id  and customer_subnet_ids
             connected_account_id:String
-            (Optional)The ID of the customer connected account to work with.
+            (Optional) The ID of the customer connected account to work with.
 
             customer_subnet_ids: Array of String
             (Optional) List of subnet Ids
@@ -229,16 +229,16 @@ def create(
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
 
     sddc_id: String As UUID
-        (Optional)If provided, will be assigned as SDDC id of the provisioned SDDC.
+        (Optional) If provided, will be assigned as SDDC id of the provisioned SDDC.
 
     sddc_template_id : String As UUID
         (Optional) If provided, configuration from the template will applied to the provisioned SDDC.
 
     sddc_type: String
-        (Optional)Denotes the sddc type , if the value is null or empty, the type is considered as default.
+        (Optional) Denotes the sddc type , if the value is null or empty, the type is considered as default.
 
     size:String
-        (Optional)The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter appliance and ‘large’ NSX appliance. ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and ‘medium’ NSX appliance. Value defaults to ‘medium’.
+        (Optional) The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter appliance and ‘large’ NSX appliance. ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and ‘medium’ NSX appliance. Value defaults to ‘medium’.
         Possible values are: nsx_small , medium , large , nsx_large
 
     skip_creating_vxlan : Boolean
@@ -257,7 +257,7 @@ def create(
         (Optional) VXLAN IP subnet in CIDR for compute gateway
 
     validateOnly: Boolean
-        (Optional)When true, only validates the given sddc configuration without provisioning
+        (Optional) When true, only validates the given sddc configuration without provisioning
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
