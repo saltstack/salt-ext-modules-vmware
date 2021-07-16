@@ -470,6 +470,9 @@ def create(
                 "firewall_match": "MATCH_INTERNAL_ADDRESS"
             }
 
+    For More info refer to this
+    `Nat Rule <https://developer.vmware.com/docs/nsx-vmc-policy/latest/data-structures/SyntheticClass/PolicyNatRule/allOf1/>`_
+
     """
     log.info("Creating nat rule %s for SDDC %s ", nat_rule, sddc_id)
     api_url_base = vmc_request.set_base_url(hostname)
