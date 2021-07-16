@@ -74,7 +74,7 @@ def get(
         url=api_url,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
-        description=__virtualname__ + "." + sys._getframe().f_code.co_name,
+        description="vmc_sddc.get",
         params=params,
         verify_ssl=verify_ssl,
         cert=cert,
@@ -127,7 +127,7 @@ def get_by_id(
         url=api_url,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
-        description=__virtualname__ + "." + sys._getframe().f_code.co_name,
+        description="vmc_sddc.get_by_id",
         verify_ssl=verify_ssl,
         cert=cert,
     )
@@ -256,7 +256,7 @@ def create(
     vxlan_subnet : String
         (Optional) VXLAN IP subnet in CIDR for compute gateway
 
-    validateOnly: Boolean
+    validate_only: Boolean
         (Optional) When true, only validates the given sddc configuration without provisioning
 
     verify_ssl
@@ -336,7 +336,7 @@ def create(
         url=api_url,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
-        description=__virtualname__ + "." + sys._getframe().f_code.co_name,
+        description="vmc_sddc.create",
         data=request_data,
         params=params,
         verify_ssl=verify_ssl,
