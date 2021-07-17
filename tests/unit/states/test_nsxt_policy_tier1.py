@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
-import saltext.nsxt.states.nsxt_policy_tier1 as nsxt_policy_tier1
+import saltext.vmware.states.nsxt_policy_tier1 as nsxt_policy_tier1
 
 _mocked_hostname = "nsxt-vmware.local"
 _mocked_username = "username"
