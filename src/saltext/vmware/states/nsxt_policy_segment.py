@@ -4,10 +4,8 @@ State module for NSX-T segment
 import logging
 
 log = logging.getLogger(__name__)
-
-
 try:
-    from saltext.nsxt.modules import nsxt_policy_segment
+    from saltext.vmware.modules import nsxt_policy_segment
 
     HAS_POLICY_SEGMENT = True
 except ImportError:
@@ -54,16 +52,16 @@ def present(
     segment_ports=None,
 ):
     """
-      Creates or Updates(if present with same display_name) segment and its sub-resources with the given
-      specifications.
-      Note: To delete any subresource of segment state parameter as absent
-      CLI Example:
+    Creates or Updates(if present with same display_name) segment and its sub-resources with the given
+    specifications.
+    Note: To delete any subresource of segment state parameter as absent
+    CLI Example:
 
-      .. code-block:: bash
+    .. code-block:: bash
 
-          salt vm_minion nsxt_policy_segment.present hostname=nsxt-manager.local username=admin ...
+       salt vm_minion nsxt_policy_segment.present hostname=nsxt-manager.local username=admin ...
 
-      .. code-block:: yaml
+    .. code-block:: yaml
 
     create_segment:
     nsxt_policy_segment.present:
