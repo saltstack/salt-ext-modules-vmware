@@ -6,7 +6,7 @@ import logging
 log = logging.getLogger(__name__)
 
 try:
-    from saltext.nsxt.modules import nsxt_policy_tier1
+    from saltext.vmware.modules import nsxt_policy_tier1
 
     HAS_POLICY_TIER1 = True
 except ImportError:
