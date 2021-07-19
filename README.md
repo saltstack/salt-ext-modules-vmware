@@ -91,3 +91,5 @@ that's where you'll find the rest of the documentation.
 [PRs]: https://github.com/saltstack/salt-ext-modules-vmware/pulls
 [discussions]: https://github.com/saltstack/salt-ext-modules-vmware/discussions
 [comments]: https://conventionalcomments.org/
+
+Just testing the cla bot, do not merge
