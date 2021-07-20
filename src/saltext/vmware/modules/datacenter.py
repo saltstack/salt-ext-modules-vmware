@@ -9,7 +9,7 @@ from saltext.vmware.utils.connect import get_service_instance
 log = logging.getLogger(__name__)
 
 try:
-    import pyVmomi
+    from pyVmomi import vim
 
     HAS_PYVMOMI = True
 except ImportError:
@@ -78,7 +78,7 @@ def get_(name):
     try:
         dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, name)
         dc = saltext.vmware.utils.vmware.get_mors_with_properties(
-            service_instance, pyVmomi.vim.Datacenter, container_ref=dc_ref, local_properties=True
+            service_instance, vim.Datacenter, container_ref=dc_ref, local_properties=True
         )
         if dc:
             ret = dc[0]

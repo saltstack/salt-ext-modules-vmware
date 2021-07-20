@@ -32,13 +32,19 @@ def get_access_token(refresh_key, authorization_host):
     authorization_host
         Hostname of the VMC cloud console
     """
+
     url = set_base_url(authorization_host) + vmc_constants.CSP_AUTHORIZATION_URL
     params = {vmc_constants.REFRESH_TOKEN: refresh_key}
     headers = {vmc_constants.CONTENT_TYPE: vmc_constants.APPLICATION_JSON}
-    response = requests.post(url, params=params, headers=headers)
-    json_response = response.json()
-    access_token = json_response[vmc_constants.ACCESS_TOKEN]
-    return access_token
+    try:
+        response = requests.post(url, params=params, headers=headers)
+        response.raise_for_status()
+        json_response = response.json()
+        access_token = json_response[vmc_constants.ACCESS_TOKEN]
+        return access_token
+    except HTTPError as e:
+        log.error("Failed to get access token %s , please check the refresh_key", e.response.text)
+        raise e
 
 
 def get_headers(refresh_key, authorization_host):
@@ -107,9 +113,6 @@ def call_api(
         Path to the SSL certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
     """
-    headers = get_headers(refresh_key, authorization_host)
-    session = requests.Session()
-
     verify = verify_ssl
     if verify_ssl:
         if cert:
@@ -118,6 +121,8 @@ def call_api(
             return {vmc_constants.ERROR: vmc_constants.NO_CERTIFICATE_ERROR_MSG}
 
     try:
+        headers = get_headers(refresh_key, authorization_host)
+        session = requests.Session()
         response = session.request(
             method=method, url=url, headers=headers, params=params, verify=verify, json=data
         )
@@ -132,7 +137,9 @@ def call_api(
 
     except HTTPError as e:
         log.error(e)
-        result = {vmc_constants.ERROR: vmc_constants.HTTP_ERROR_MSG.format(url, description)}
+        result = {
+            vmc_constants.ERROR: vmc_constants.HTTP_ERROR_MSG.format(e.request.url, description)
+        }
         # if response contains json, extract error message from it
         if e.response.text:
             log.error("Response from VMC %s for %s", e.response.text, description)
@@ -152,33 +159,36 @@ def call_api(
         return result
     except RequestException as re:
         log.error(re)
-        result = {vmc_constants.ERROR: vmc_constants.REQUEST_EXCEPTION_MSG.format(url, description)}
+        result = {
+            vmc_constants.ERROR: vmc_constants.REQUEST_EXCEPTION_MSG.format(
+                re.request.url, description
+            )
+        }
         return result
 
 
-def create_payload_for_request(directory_path, relative_path, user_input_dict, existing_data=None):
+def create_payload_for_request(template_data, user_input_dict, existing_data=None):
     """
-    This function creates the payload using the user provided input based on the respective json template
+    This function creates the payload using the user provided input based on the respective template data
     and the existing data
 
-    directory_path
-        path of the directory which contains json templates
-
-    relative_path
-        relative path for the json templates
+    template_data
+        dict which contains the data required for the resource(security rule, Nat rule, Network etc..)
 
     user_input_dict
-        dict provided by user
-    """
-    abs_file_path = os.path.join(directory_path, relative_path)
-    with open(abs_file_path, encoding="utf-8") as fp:
-        template_data = json.load(fp)
-        if existing_data:
-            for key in template_data.keys():
-                template_data[key] = existing_data.get(key)
+        user provided data required for the resource(security rule, Nat rule, Network etc..)
 
-        template_data.update(user_input_dict)
-        return template_data
+    existing_data
+        existing data for the resource(security rule, Nat rule, Network etc..)
+
+    """
+    if existing_data:
+        template_data.update(
+            (k, existing_data[k]) for k in template_data.keys() & existing_data.keys()
+        )
+
+    template_data.update(user_input_dict)
+    return template_data
 
 
 def _filter_kwargs(allowed_kwargs, allow_none=[], default_dict=None, **kwargs):

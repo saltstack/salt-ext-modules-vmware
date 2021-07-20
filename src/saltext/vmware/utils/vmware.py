@@ -2026,6 +2026,39 @@ def update_cluster(cluster_ref, cluster_spec):
     wait_for_task(task, cluster_name, "ClusterUpdateTask")
 
 
+def delete_cluster(service_instance, cluster_name, datacenter_name):
+    """
+    Deletes a datacenter.
+
+    service_instance
+        The Service Instance Object
+
+    cluster_name
+        The name of the cluster to delete
+
+    datacenter_name
+        The datacenter name to which the cluster belongs
+    """
+    root_folder = get_root_folder(service_instance)
+    log.trace("Deleting cluster '%s' in '%s'", cluster_name, datacenter_name)
+    try:
+        dc_obj = get_datacenter(service_instance, datacenter_name)
+        cluster_obj = get_cluster(dc_ref=dc_obj, cluster=cluster_name)
+        task = cluster_obj.Destroy_Task()
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    wait_for_task(task, cluster_name, "DeleteClusterTask")
+
+
 def list_clusters(service_instance):
     """
     Returns a list of clusters associated with a given service instance.

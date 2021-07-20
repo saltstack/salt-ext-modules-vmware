@@ -4,9 +4,17 @@ import json
 import os
 import ssl
 import uuid
+from collections import namedtuple
+from configparser import ConfigParser
 from pathlib import Path
 
 import pytest
+<<<<<<< HEAD
+=======
+import saltext.vmware.modules.cluster as cluster_mod
+import saltext.vmware.modules.cluster_drs as cluster_drs_mod
+import saltext.vmware.modules.cluster_ha as cluster_ha_mod
+>>>>>>> ef36fec916b79bc133381ae78b02953531a36949
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
@@ -27,7 +35,7 @@ def minion(minion):
 
 @pytest.fixture
 def salt_run_cli(master):
-    return master.get_salt_run_cli()
+    return master.salt_run_cli()
 
 
 @pytest.fixture
@@ -37,7 +45,7 @@ def salt_cli(master):
 
 @pytest.fixture
 def salt_call_cli(minion):
-    return minion.get_salt_call_cli()
+    return minion.salt_call_cli()
 
 
 @pytest.fixture(scope="session")
@@ -71,6 +79,12 @@ def patch_salt_globals():
     """
     setattr(datacenter_mod, "__opts__", {})
     setattr(datacenter_mod, "__pillar__", {})
+    setattr(cluster_mod, "__opts__", {})
+    setattr(cluster_mod, "__pillar__", {})
+    setattr(cluster_ha_mod, "__opts__", {})
+    setattr(cluster_ha_mod, "__pillar__", {})
+    setattr(cluster_drs_mod, "__opts__", {})
+    setattr(cluster_drs_mod, "__pillar__", {})
     setattr(
         datacenter_st,
         "__salt__",
@@ -107,3 +121,42 @@ def patch_salt_globals_vm():
     """
     setattr(virtual_machine, "__opts__", {})
     setattr(virtual_machine, "__pillar__", {})
+
+
+@pytest.fixture(scope="function")
+def vmware_cluster(vmware_datacenter):
+    """
+    Return a vmware_cluster during start of a test and tear it down once the test ends
+    """
+    cluster_name = str(uuid.uuid4())
+    _ = cluster_mod.create(name=cluster_name, datacenter=vmware_datacenter)
+    Cluster = namedtuple("Cluster", ["name", "datacenter"])
+    cluster = Cluster(name=cluster_name, datacenter=vmware_datacenter)
+    yield cluster
+    cluster_mod.delete(name=cluster_name, datacenter=vmware_datacenter)
+
+
+@pytest.fixture(scope="session")
+def vmc_config():
+    abs_file_path = Path(__file__).parent / "vmc_config.ini"
+    parser = ConfigParser()
+    parser.read(abs_file_path)
+    return {s: dict(parser.items(s)) for s in parser.sections()}
+
+
+@pytest.fixture()
+def vmc_nsx_connect(vmc_config):
+    vmc_nsx_config = vmc_config["vmc_nsx_connect"]
+    verify_ssl = True
+    if vmc_nsx_config["verify_ssl"].lower() == "false":
+        verify_ssl = False
+
+    return (
+        vmc_nsx_config["hostname"],
+        vmc_nsx_config["refresh_key"],
+        vmc_nsx_config["authorization_host"],
+        vmc_nsx_config["org_id"],
+        vmc_nsx_config["sddc_id"],
+        verify_ssl,
+        vmc_nsx_config["cert"],
+    )

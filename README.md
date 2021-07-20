@@ -10,6 +10,8 @@ If you think you've found a security vulnerability, see [Salt's security guide][
 
 ## Contributing
 
+The salt-ext-modules-vmware project team welcomes contributions from the community. If you wish to contribute code and you have not signed our contributor license agreement (CLA), our bot will update the issue when you open a Pull Request. For any questions about the CLA process, please refer to our [FAQ](https://cla.vmware.com/faq).
+
 The [Salt Contributing guide][salt-contributing] has a lot of relevant information, but if you'd like to jump right in here's how to get started:
 
     # Clone the repo
@@ -24,6 +26,10 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
 
     # On mac, you may need to upgrade pip
     python -m pip install --upgrade pip
+
+    # On WSL or some flavors of linux you may need to install the `enchant`
+    # library in order to build the docs
+    sudo apt-get install -y enchant
 
     # Install extension + test/dev/doc dependencies into your environment
     python -m pip install -e .[tests,dev,docs]
