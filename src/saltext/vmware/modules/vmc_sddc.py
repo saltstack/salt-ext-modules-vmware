@@ -2,7 +2,6 @@
 Manage VMware VMC SDDC
 """
 import logging
-import sys
 
 from saltext.vmware.utils import vmc_constants
 from saltext.vmware.utils import vmc_request
@@ -29,6 +28,8 @@ def get(
 ):
     """
     Retrieves list of SDDCs for the given organization
+
+    Please refer the `VMC SDDC get documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/get/>`_ to get insight of functionality and input parameters
 
     CLI Example:
 
@@ -86,6 +87,8 @@ def get_by_id(
 ):
     """
     Returns a SDDC detail for the given SDDC Id
+
+    Please refer the `VMC SDDC get_by_id documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/get/>`_ to get insight of functionality and input parameters
 
     CLI Example:
 
@@ -162,6 +165,8 @@ def create(
 ):
     """
     Create a SDDC for given org
+
+    Please refer the `VMC SDDC create documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/post/>`_ to get insight of functionality and input parameters
 
     CLI Example:
 
@@ -338,6 +343,89 @@ def create(
         authorization_host=authorization_host,
         description="vmc_sddc.create",
         data=request_data,
+        params=params,
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
+
+
+def delete(
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    force_delete=False,
+    retain_configuration=False,
+    template_name=None,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Deletes the Given SDDC
+
+    Please refer the `VMC SDDC delete documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/delete/>`_ to get insight of functionality and input parameters
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt minion-key-id vmc_sddc.delete hostname=vmc.vmware.com sddc_id=sddc_id ...
+
+    hostname
+        The host name of VMC
+
+    refresh_key
+        API Token of the user which is used to get the Access Token required for VMC operations
+
+    authorization_host
+        Hostname of the Cloud Services Platform (CSP)
+
+    org_id
+        The Id of organization to which the SDDC belongs to
+
+    sddc_id
+        sddc_id which will be deleted
+
+    force_delete: Boolean
+        (Optional) If = true, will delete forcefully.
+        Beware: do not use the force flag if there is a chance an active provisioning or deleting task is running against this SDDC. This option is restricted.
+
+    retain_configuration: Boolean
+        (Optional) If = 'true', the SDDC's configuration is retained as a template for later use.
+        This flag is applicable only to SDDCs in ACTIVE state.
+
+    template_name: String
+        (Optional) Only applicable when retainConfiguration is also set to 'true'. When set, this value will be used as the name of the SDDC configuration template generated.
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+        The certificate can be retrieved from browser.
+
+    """
+    log.info("Deleting the given SDDC %s", sddc_id)
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = "{base_url}vmc/api/orgs/{org_id}/sddcs/{sddc_id}".format(
+        base_url=api_url_base, org_id=org_id, sddc_id=sddc_id
+    )
+
+    params = vmc_request._filter_kwargs(
+        allowed_kwargs=["force", "retain_configuration", "template_name"],
+        force=force_delete,
+        retain_configuration=retain_configuration,
+        template_name=template_name,
+    )
+
+    return vmc_request.call_api(
+        method=vmc_constants.DELETE_REQUEST_METHOD,
+        url=api_url,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        description="vmc_sddc.delete",
         params=params,
         verify_ssl=verify_ssl,
         cert=cert,
