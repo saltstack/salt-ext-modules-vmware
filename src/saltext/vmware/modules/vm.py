@@ -1,16 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-<<<<<<< HEAD
 import logging
 from threading import Thread
 from time import sleep
 
 import salt.utils.platform
-=======
-from os import system
-from threading import Thread
-from time import sleep
-
->>>>>>> ef36fec916b79bc133381ae78b02953531a36949
 import saltext.vmware.utils.common as common
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as datacenter
@@ -79,7 +72,6 @@ def get_vm_facts(*, service_instance=None):
     return vms
 
 
-<<<<<<< HEAD
 def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name):
     """
     Deploy a virtual machine from an OVF
@@ -157,23 +149,6 @@ def list_(host=None):
             for vm in host_i.vm:
                 result.append(vm.name)
     return result
-=======
-def keep_lease_alive(lease):
-    """
-    Keeps the lease alive while POSTing the VMDK.
-    """
-    while True:
-        sleep(5)
-        try:
-            # Choosing arbitrary percentage to keep the lease alive.
-            lease.HttpNfcLeaseProgress(50)
-            if lease.state == vim.HttpNfcLease.State.done:
-                return
-            # If the lease is released, we get an exception.
-            # Returning to kill the thread.
-        except Exception:
-            return
->>>>>>> ef36fec916b79bc133381ae78b02953531a36949
 
 
 # pylint: disable=C0302
@@ -352,59 +327,6 @@ connection credentials are used instead of vCenter credentials, the ``host_names
                 port:
                     6500
 """
-<<<<<<< HEAD
-=======
-import logging
-import sys
-
-import salt.utils.platform
-import saltext.vmware.utils.vmware as utils
-from salt.exceptions import InvalidConfigError
-from salt.utils.decorators import depends
-from salt.utils.dictdiffer import recursive_diff
-from salt.utils.listdiffer import list_diff
-from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineDeleteSchema
-from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineUnregisterSchema
-
-log = logging.getLogger(__name__)
-
-try:
-    import jsonschema
-
-    HAS_JSONSCHEMA = True
-except ImportError:
-    HAS_JSONSCHEMA = False
-
-try:
-    # pylint: disable=no-name-in-module
-    from pyVmomi import (
-        vim,
-        VmomiSupport,
-    )
-
-    # pylint: enable=no-name-in-module
-
-    # We check the supported vim versions to infer the pyVmomi version
-    if (
-        "vim25/6.0" in VmomiSupport.versionMap
-        and sys.version_info > (2, 7)
-        and sys.version_info < (2, 7, 9)
-    ):
-
-        log.debug("pyVmomi not loaded: Incompatible versions " "of Python. See Issue #29537.")
-        raise ImportError()
-    HAS_PYVMOMI = True
-except ImportError:
-    HAS_PYVMOMI = False
-
-
-__virtualname__ = "vm"
-__proxyenabled__ = ["vm"]
-
-
-def __virtual__():
-    return __virtualname__
->>>>>>> ef36fec916b79bc133381ae78b02953531a36949
 
 
 def _get_scsi_controller_key(bus_number, scsi_ctrls):

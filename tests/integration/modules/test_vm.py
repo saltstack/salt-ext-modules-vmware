@@ -32,7 +32,7 @@ def test_vm_list_all(integration_test_config, patch_salt_globals_vm):
     """
     Test vm list_all()
     """
-    all = virtual_machine.list_all()
+    all = virtual_machine.list_()
     for host in all:
         for vm in all[host]:
             assert vm in integration_test_config["virtual_machines"][host]

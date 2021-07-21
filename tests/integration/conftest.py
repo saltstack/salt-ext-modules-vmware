@@ -9,12 +9,9 @@ from configparser import ConfigParser
 from pathlib import Path
 
 import pytest
-<<<<<<< HEAD
-=======
 import saltext.vmware.modules.cluster as cluster_mod
 import saltext.vmware.modules.cluster_drs as cluster_drs_mod
 import saltext.vmware.modules.cluster_ha as cluster_ha_mod
->>>>>>> ef36fec916b79bc133381ae78b02953531a36949
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
