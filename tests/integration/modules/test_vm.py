@@ -1,8 +1,10 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
+import os
+import tarfile
+
 import pytest
 import saltext.vmware.modules.vm as virtual_machine
-import tarfile, os
 
 
 @pytest.mark.parametrize(
