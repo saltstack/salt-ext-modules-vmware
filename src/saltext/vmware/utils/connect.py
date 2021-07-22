@@ -20,8 +20,8 @@ def get_si(f):
         from pyVim import connect
 
         config = {
-            "esxi_host_name": "10.206.240.192",
-            "host": "10.206.240.210",
+            "esxi_host_name": "10.206.246.77",
+            "host": "10.206.246.55",
             "password": "VMware1!",
             "user": "administrator@vsphere.local",
         }
@@ -44,7 +44,7 @@ def get_service_instance(opts=None, pillar=None):
 
     ctx = ssl._create_unverified_context()
     config = {
-        "host": "10.206.240.210",
+        "host": "10.206.246.55",
         "password": "VMware1!",
         "user": "administrator@vsphere.local",
     }

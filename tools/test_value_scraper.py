@@ -43,10 +43,13 @@ def do_it(*, config_file):
         extent.diskName for datastore in host.datastore for extent in datastore.info.vmfs.extent
     ]
     config["esxi_capabilities"] = {host.name: dict(host.capability.__dict__) for host in hosts}
+    config["virtual_machines"] = {}
     config["vm_facts"] = {}
     for host in hosts:
+        config["virtual_machines"][host.name] = []
         config["vm_facts"][host.name] = {}
         for vm in host.vm:
+            config["virtual_machines"][host.name].append(vm.name)
             config["vm_facts"][host.name][vm.name] = {
                 "cluster": vm.summary.runtime.host.parent.name,
                 "esxi_hostname": vm.summary.runtime.host.summary.config.name,
@@ -57,6 +60,7 @@ def do_it(*, config_file):
                 "power_state": vm.summary.runtime.powerState,
                 "uuid": vm.summary.config.uuid,
             }
+
     json_config = json.dumps(config, indent=2, sort_keys=True)
     config_file.write_text(json_config)
 
