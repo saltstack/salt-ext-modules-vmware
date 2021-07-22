@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 import saltext.vmware.modules.vm as virtual_machine
+import tarfile, os
 
 
 @pytest.mark.parametrize(
@@ -64,9 +65,13 @@ def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
     """
     Test deploy virtual machine through an OVA
     """
+    tar = tarfile.open("tests/test_files/sample.tar", "w")
+    tar.add("tests/test_files/centos-7-tools.ovf")
+    tar.close()
     res = virtual_machine.deploy_ova(
         name="test2",
         host_name=integration_test_config["esxi_host_name"],
-        ova_path="tests/test_files/ova-test-tar.tar.gz",
+        ova_path="tests/test_files/sample.tar",
     )
+    os.remove("tests/test_files/sample.tar")
     assert res["state"] == "done"
