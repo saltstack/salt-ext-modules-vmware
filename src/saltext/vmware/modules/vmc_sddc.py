@@ -29,7 +29,7 @@ def get(
     """
     Retrieves list of SDDCs for the given organization
 
-    Please refer the `VMC SDDC get documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/get/>`_ to get insight of functionality and input parameters
+    Please refer the `VMC List All SDDCs documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/get/>`_ to get insight of functionality and input parameters
 
     CLI Example:
 
@@ -88,7 +88,7 @@ def get_by_id(
     """
     Returns a SDDC detail for the given SDDC Id
 
-    Please refer the `VMC SDDC get_by_id documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/get/>`_ to get insight of functionality and input parameters
+    Please refer the `VMC Get SDDC documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/get/>`_ to get insight of functionality and input parameters
 
     CLI Example:
 
@@ -166,7 +166,7 @@ def create(
     """
     Create a SDDC for given org
 
-    Please refer the `VMC SDDC create documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/post/>`_ to get insight of functionality and input parameters
+    Please refer the `VMC Create A New SDDC documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/post/>`_ to get insight of functionality and input parameters
 
     CLI Example:
 
@@ -364,7 +364,7 @@ def delete(
     """
     Deletes the Given SDDC
 
-    Please refer the `VMC SDDC delete documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/delete/>`_ to get insight of functionality and input parameters
+    Please refer the `VMC Delete SDDC documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/delete/>`_ to get insight of functionality and input parameters
 
     CLI Example:
 
