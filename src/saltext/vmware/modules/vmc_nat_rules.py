@@ -548,167 +548,167 @@ def update(
     display_name=None,
 ):
     """
-        Update nat rule for Given SDDC
+    Update nat rule for Given SDDC
 
-        CLI Example:
+    CLI Example:
 
-        .. code-block:: bash
+    .. code-block:: bash
 
-            salt vm_minion vmc_nat_rules.update hostname=nsxt-manager.local tier1=cgw ...
+        salt vm_minion vmc_nat_rules.update hostname=nsxt-manager.local tier1=cgw ...
 
 
-        hostname
-            The host name of NSX-T manager
+    hostname
+        The host name of NSX-T manager
 
-        refresh_key
-            refresh_key to get access token
+    refresh_key
+        refresh_key to get access token
 
-        authorization_host
-            hostname to get access token
+    authorization_host
+        hostname to get access token
 
-        org_id
-            org_id of the SDDC
+    org_id
+        org_id of the SDDC
 
-        sddc_id
-            sddc_id for which nat rules should be updated
+    sddc_id
+        sddc_id for which nat rules should be updated
 
-        tier1
-            tier1 option are cgw and user defined tier1
+    tier1
+        tier1 option are cgw and user defined tier1
 
-        nat
-            nat option are USER/default/Internal
+    nat
+        nat option are USER/default/Internal
 
-        nat_rule
-            id of specific nat rule
+    nat_rule
+        id of specific nat rule
 
-        verify_ssl
-            (Optional) Option to enable/disable SSL verification. Enabled by default.
-            If set to False, the certificate validation is skipped.
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
 
-        cert
-            (Optional) Path to the SSL certificate file to connect to NSX-T manager.
-            The certificate can be retrieved from browser.
+    cert
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
+        The certificate can be retrieved from browser.
 
-        action
-            specify type of nat rule it can have value REFLEXIVE, DNAT
+    action
+        specify type of nat rule it can have value REFLEXIVE, DNAT
 
-                REFLEXIVE nat rule require
-                    source_network
-                    translated_network
-                    service should be empty
-                    translated_ports  should be None
-                    destination_network should be none
+            REFLEXIVE nat rule require
+                source_network
+                translated_network
+                service should be empty
+                translated_ports  should be None
+                destination_network should be none
 
-                DNAT  Rule require
-                    destination_network
-                    translated_network
-                    translated_ports can be none
-                    service can be none
-                    source_network can be None or input network.
+            DNAT  Rule require
+                destination_network
+                translated_network
+                translated_ports can be none
+                service can be none
+                source_network can be None or input network.
 
-        destination_network
-            Represents the destination network
-                This supports single IP address or comma separated list of single IP
-                addresses or CIDR. This does not support IP range or IP sets.
+    destination_network
+        Represents the destination network
+            This supports single IP address or comma separated list of single IP
+            addresses or CIDR. This does not support IP range or IP sets.
 
-        source_network
-            Represents the source network address
-                This supports single IP address or comma separated list of single IP
-                addresses or CIDR. This does not support IP range or IP sets.
+    source_network
+        Represents the source network address
+            This supports single IP address or comma separated list of single IP
+            addresses or CIDR. This does not support IP range or IP sets.
 
-        translated_network
-            Represents the translated network address
+    translated_network
+        Represents the translated network address
 
-                This supports single IP address or comma separated list of single IP
-                addresses or CIDR. This does not support IP range or IP sets.
+            This supports single IP address or comma separated list of single IP
+            addresses or CIDR. This does not support IP range or IP sets.
 
-        translated_ports
-            Port number or port range
+    translated_ports
+        Port number or port range
 
-                Please note, if there is service configured in this nat rule, the translated_port
-                will be realized on NSX Manager as the destination_port. If there is no sevice configured,
-                the port will be ignored.
+            Please note, if there is service configured in this nat rule, the translated_port
+            will be realized on NSX Manager as the destination_port. If there is no sevice configured,
+            the port will be ignored.
 
-        scope
-            (Optional) Array of policy paths of labels, ProviderInterface, NetworkInterface
-            If this value is not passed, then ["/infra/labels/cgw-public"] will be used by default.
+    scope
+        (Optional) Array of policy paths of labels, ProviderInterface, NetworkInterface
+        If this value is not passed, then ["/infra/labels/cgw-public"] will be used by default.
 
-        service
-            (Optional) Represents the service on which the nat rule will be applied
-            If this value is not passed, then empty string will be used by default.
+    service
+        (Optional) Represents the service on which the nat rule will be applied
+        If this value is not passed, then empty string will be used by default.
 
-        enabled
-            (Optional) Policy nat rule enabled flag
+    enabled
+        (Optional) Policy nat rule enabled flag
 
-                The flag, which suggests whether the nat rule is enabled or
-                disabled. The default is True.
+            The flag, which suggests whether the nat rule is enabled or
+            disabled. The default is True.
 
-        firewall_match
-            (Optional) Represents the firewall match flag
+    firewall_match
+        (Optional) Represents the firewall match flag
 
-                It indicates how the firewall matches the address after nating if firewall
-                stage is not skipped.
-                possible values: MATCH_EXTERNAL_ADDRESS, MATCH_INTERNAL_ADDRESS
-                Default: "MATCH_INTERNAL_ADDRESS"
+            It indicates how the firewall matches the address after nating if firewall
+            stage is not skipped.
+            possible values: MATCH_EXTERNAL_ADDRESS, MATCH_INTERNAL_ADDRESS
+            Default: "MATCH_INTERNAL_ADDRESS"
 
-        logging
-            (Optional) Policy nat rule logging flag
-                default: False
+    logging
+        (Optional) Policy nat rule logging flag
+            default: False
 
-        description
-            (Optional) Description of nat rule
+    description
+        (Optional) Description of nat rule
 
-        tags
-            (Optional) Opaque identifiers meaningful to the API user. Maximum 30 tags can be associated:
+    tags
+        (Optional) Opaque identifiers meaningful to the API user. Maximum 30 tags can be associated:
 
-            .. code-block::
+        .. code-block::
 
-                tags='[
-                    {
-                        "tag": "<tag-key-1>"
-                        "scope": "<tag-value-1>"
-                    },
-                    {
-                        "tag": "<tag-key-2>"
-                        "scope": "<tag-value-2>"
-                    }
-                ]'
-
-        sequence_number
-            (Optional) Sequence number of the Nat Rule
-                The sequence_number decides the rule_priority of a nat rule.
-                default: 0
-                type: int
-
-        display_name
-            Identifier to use when displaying entity in logs or GUI
-
-        Example values:
-
-            .. code-block::
-
+            tags='[
                 {
-                    "action": "REFLEXIVE",
-                    "translated_network": "10.182.171.36",
-                    "translated_ports": null,
-                    "destination_network": "",
-                    "source_network": "192.168.1.23",
-                    "sequence_number": 0,
-                    "service": "",
-                    "logging": false,
-                    "enabled": false,
-                    "scope": [
-                        "/infra/labels/cgw-public"
-                    ],
-                    "tags": [
-                        {
-                            "tag": "tag1",
-                            "scope": "scope1"
-                        }
-                    ],
-                    "description": "",
-                    "firewall_match": "MATCH_INTERNAL_ADDRESS"
+                    "tag": "<tag-key-1>"
+                    "scope": "<tag-value-1>"
+                },
+                {
+                    "tag": "<tag-key-2>"
+                    "scope": "<tag-value-2>"
                 }
+            ]'
+
+    sequence_number
+        (Optional) Sequence number of the Nat Rule
+            The sequence_number decides the rule_priority of a nat rule.
+            default: 0
+            type: int
+
+    display_name
+        Identifier to use when displaying entity in logs or GUI
+
+    Example values:
+
+        .. code-block::
+
+            {
+                "action": "REFLEXIVE",
+                "translated_network": "10.182.171.36",
+                "translated_ports": null,
+                "destination_network": "",
+                "source_network": "192.168.1.23",
+                "sequence_number": 0,
+                "service": "",
+                "logging": false,
+                "enabled": false,
+                "scope": [
+                    "/infra/labels/cgw-public"
+                ],
+                "tags": [
+                    {
+                        "tag": "tag1",
+                        "scope": "scope1"
+                    }
+                ],
+                "description": "",
+                "firewall_match": "MATCH_INTERNAL_ADDRESS"
+            }
 
     Please refer the `Nat Rule <https://developer.vmware.com/docs/nsx-vmc-policy/latest/data-structures/SyntheticClass/PolicyNatRule/allOf1/>`_ to get insight of input parameters
 

@@ -248,3 +248,103 @@ def test_update_nat_rule_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[5][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.PATCH_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_payload",
+    [
+        # all actual args are None
+        (
+            {},
+            {
+                "action": None,
+                "description": None,
+                "translated_network": None,
+                "translated_ports": None,
+                "destination_network": None,
+                "source_network": None,
+                "sequence_number": None,
+                "service": None,
+                "logging": None,
+                "enabled": None,
+                "scope": None,
+                "tags": None,
+                "firewall_match": None,
+                "display_name": None,
+            },
+        ),
+        # allow none have values
+        (
+            {"tags": [{"tag": "tag1", "scope": "scope1"}], "translated_ports": 8082},
+            {
+                "action": None,
+                "description": None,
+                "translated_network": None,
+                "translated_ports": 8082,
+                "destination_network": None,
+                "source_network": None,
+                "sequence_number": None,
+                "service": None,
+                "logging": None,
+                "enabled": None,
+                "scope": None,
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+                "firewall_match": None,
+                "display_name": None,
+            },
+        ),
+        # all args have values
+        (
+            {
+                "action": "REFLEXIVE",
+                "description": "description of nat rule",
+                "translated_network": "10.10.10.10",
+                "translated_ports": 8082,
+                "destination_network": "8.8.8.8",
+                "source_network": "192.168.1.3",
+                "sequence_number": 1,
+                "service": "http",
+                "logging": True,
+                "enabled": True,
+                "scope": ["/infra/labels/cgw-public"],
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+                "firewall_match": "MATCH_INTERNAL_ADDRESS",
+                "display_name": "UPDATED_DISPLAY_NAME",
+            },
+            {
+                "action": "REFLEXIVE",
+                "description": "description of nat rule",
+                "translated_network": "10.10.10.10",
+                "translated_ports": 8082,
+                "destination_network": "8.8.8.8",
+                "source_network": "192.168.1.3",
+                "sequence_number": 1,
+                "service": "http",
+                "logging": True,
+                "enabled": True,
+                "scope": ["/infra/labels/cgw-public"],
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+                "firewall_match": "MATCH_INTERNAL_ADDRESS",
+                "display_name": "UPDATED_DISPLAY_NAME",
+            },
+        ),
+    ],
+)
+def test_assert_nat_rules_update_should_correctly_filter_args(actual_args, expected_payload):
+    common_actual_args = {
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "authorization_host": "authorization_host",
+        "org_id": "org_id",
+        "sddc_id": "sddc_id",
+        "tier1": "tier1",
+        "nat": "nat",
+        "nat_rule": "nat_rule",
+        "verify_ssl": False,
+    }
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        actual_args.update(common_actual_args)
+        vmc_nat_rules.update(**actual_args)
+
+    call_kwargs = vmc_call_api.mock_calls[5][-1]
+    assert call_kwargs["data"] == expected_payload
