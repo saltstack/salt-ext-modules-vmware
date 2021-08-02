@@ -14,4 +14,7 @@ State Modules
     saltext.vmware.states.nsxt_ip_pools
     saltext.vmware.states.nsxt_license
     saltext.vmware.states.nsxt_manager
+    saltext.vmware.states.nsxt_policy_segment
+    saltext.vmware.states.nsxt_policy_tier0
+    saltext.vmware.states.nsxt_policy_tier1
     saltext.vmware.states.vmc_security_rules
