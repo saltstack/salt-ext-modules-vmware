@@ -76,17 +76,19 @@ def test_present_state_when_creating_a_new_transport_zone():
         ret["result"] = True
 
         with patch.dict(transport_zone.__opts__, {"test": False}):
-            actual = transport_zone.present(
-                name="register-transport-zone",
-                hostname=_mocked_hostname,
-                username=_mocked_username,
-                password=_mocked_password,
-                host_switch_name="Test-Host-Switch",
-                transport_type="Overlay",
-                display_name="Test-Host-Switch",
-                verify_ssl=False,
+            assert (
+                transport_zone.present(
+                    name="register-transport-zone",
+                    hostname=_mocked_hostname,
+                    username=_mocked_username,
+                    password=_mocked_password,
+                    host_switch_name="Test-Host-Switch",
+                    transport_type="Overlay",
+                    display_name="Test-Host-Switch",
+                    verify_ssl=False,
+                )
+                == ret
             )
-            assert dictdiffer.deep_diff(ret, actual)
 
 
 def test_present_state_to_create_new_transport_zone_with_error_in_get_call():
