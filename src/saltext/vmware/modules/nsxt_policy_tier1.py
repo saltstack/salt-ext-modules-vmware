@@ -603,15 +603,8 @@ def create_or_update(
         required: true
         type: str
     state:
-        choices:
-        - present
-        - absent
-        description:
-            - "State can be either 'present' or 'absent'.
-            - 'present' is used to create or update resource.
-            - 'absent' is used to delete resource."
-            - If not provided then it will be considered as present
-        required: false
+        description: present or absent keyword is used as an indetifier, default value is present.
+                    If a user has provided absent that resource/sub-resource will be deleted
     tags:
         description: Opaque identifiers meaningful to the API user.
         type: dict
@@ -652,7 +645,6 @@ def create_or_update(
         choices:
             - 'NON_PREEMPTIVE'
             - 'PREEMPTIVE'
-        default: 'NON_PREEMPTIVE'
         type: str
     enable_standby_relocation:
         description:
@@ -678,7 +670,7 @@ def create_or_update(
                              API/UI. Fallback site configuration is
                              supported only for T0 gateway. T1 gateway
                              will follow T0 gateway's primary site
-                             during disaster recovery
+                             during disaster recovery.
                 type: list
             intersite_transit_subnet:
                 description:
@@ -842,8 +834,7 @@ def create_or_update(
     static_routes:
         type: list
         element: dict
-        description: This is a list of Static Routes that need to be created,
-                     updated, or deleted
+        description: This is a list of Static Routes that need to be created,updated, or deleted
         suboptions:
             id:
                 description: Tier-1 Static Route ID.
@@ -906,8 +897,7 @@ def create_or_update(
     locale_services:
         type: list
         element: dict
-        description: This is a list of Locale Services that need to be created,
-                     updated, or deleted
+        description: This is a list of Locale Services that need to be created,updated, or deleted
         suboptions:
             id:
                 description: Tier-1 Locale Service ID
@@ -1061,8 +1051,7 @@ def create_or_update(
                         configured on Segments connected to
                         Tier1.
                     - TIER1_IPSEC_LOCAL_ENDPOINT - Redistribute
-                        IPSec VPN local-endpoint subnets
-                        advertised by TIER1.
+                        IPSec VPN local-endpoint subnets advertised by TIER1.
                 type: list
             route_redistribution_config:
                 description: Configure all route redistribution properties like
@@ -1157,8 +1146,7 @@ def create_or_update(
                     external_interface_info:
                         type: list
                         elements: dict
-                        description:
-                            - Array of external interface info
+                        description: Array of external interface info
                         external_interface_paths:
                             description:
                                 - Policy paths to Tier0 external interfaces for
@@ -1198,8 +1186,6 @@ def create_or_update(
                 type: list
                 element: dict
                 description: Specify the interfaces associated with the Gateway
-                             in this section that need to be created, updated,
-                             or deleted
                 suboptions:
                     id:
                         description: Tier-1 Interface ID
