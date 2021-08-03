@@ -837,8 +837,7 @@ def create_or_update(
     static_routes:
         type: list
         element: dict
-        description: This is a list of Static Routes that need to be created,
-                     updated, or deleted
+        description: This is a list of Static Routes that need to be created, updated, or deleted
         suboptions:
             id:
                 description: Tier-0 Static Route ID.
@@ -895,8 +894,7 @@ def create_or_update(
     bfd_peers:
         type: list
         element: dict
-        description: This is a list of BFD Peers that need to be created,
-                     updated, or deleted
+        description: This is a list of BFD Peers that need to be created, updated, or deleted
         suboptions:
             id:
                 description: Tier-0 BFD Peer ID.
@@ -926,7 +924,7 @@ def create_or_update(
                 description: Flag to enable BFD peer.
                 type: boolean
             peer_address:
-                description: IP Address of static route next hop peer. Only IPv4 addresses are supported.
+                description: IP Address of static route next hop peer. Only IPv4 addresses are supported
                              Only a single BFD config per peer address is allowed.
                 type: str
             source_addresses:
@@ -956,8 +954,7 @@ def create_or_update(
     locale_services:
         type: list
         element: dict
-        description: This is a list of Locale Services that need to be created,
-                     updated, or deleted
+        description: This is a list of Locale Services that need to be created,updated, or deleted
         suboptions:
             id:
                 description: Tier-0 Locale Service ID.
@@ -1000,8 +997,7 @@ def create_or_update(
                         default: default
                         type: str
                     enforcementpoint_id:
-                        description: enforcementpoint_id where edge cluster is
-                                    located
+                        description: enforcementpoint_id where edge cluster is located
                         default: default
                         type: str
                     edge_cluster_id:
@@ -1019,13 +1015,11 @@ def create_or_update(
                         default: default
                         type: str
                     enforcementpoint_id:
-                        description: enforcementpoint_id where edge node is
-                                    located
+                        description: enforcementpoint_id where edge node is located
                         default: default
                         type: str
                     edge_cluster_id:
-                        description: edge_cluster_id where edge node is
-                                    located
+                        description: edge_cluster_id where edge node is located
                         type: str
                     edge_node_id:
                         description: ID of the edge node
@@ -1148,8 +1142,8 @@ def create_or_update(
                 description: Specify the BGP spec in this section
                 type: dict
                 state:
-                    description: present or absent keyword is used as an indetifier, default value is present.
-                                 If a user has provided absent that resource/sub-resource will be deleted
+                    description: present or absent keyword is used as an indetifier, default value is present,
+                                 If a user has provided absent that resource/sub-resource will be deleted.
                 suboptions:
                     ecmp:
                         description: Flag to enable ECMP.
@@ -1272,7 +1266,7 @@ def create_or_update(
                         suboptions:
                             allow_as_in:
                                 description: Flag to enable allowas_in option
-                                             for BGP neighbor
+                                             for BGP neighbor.
                                 type: bool
                                 default: False
                             bfd:
@@ -1285,14 +1279,14 @@ def create_or_update(
                                 suboptions:
                                     enabled:
                                         description: Flag to enable BFD
-                                                     cofiguration
+                                                     cofiguration.
                                         type: bool
                                         required: False
                                     interval:
                                         description: Time interval between
                                                      heartbeat packets in
                                                      milliseconds. Min 300 and
-                                                     Max 60000
+                                                     Max 60000.
                                         type: int
                                         default: 1000
                                     multiple:
@@ -1301,7 +1295,7 @@ def create_or_update(
                                             - Number of times heartbeat packet
                                               is missed before BFD declares the
                                               neighbor is down.
-                                              Min 2 and Max 16
+                                              Min 2 and Max 16.
                                         type: int
                                         default: 3
                             graceful_restart_mode:
@@ -1328,7 +1322,7 @@ def create_or_update(
                             hold_down_time:
                                 description: Wait time in seconds before
                                              declaring peer dead. Min 1 and Max
-                                             65535
+                                             65535.
                                 type: int
                                 default: 180
                             keep_alive_time:
@@ -1340,7 +1334,7 @@ def create_or_update(
                             maximum_hop_limit:
                                 description: Maximum number of hops allowed to
                                              reach BGP neighbor. Min 1 and Max
-                                             255
+                                             255.
                                 type: int
                                 default: 1
                             address:
@@ -1355,12 +1349,12 @@ def create_or_update(
                                 required: False
                             remote_as_num:
                                 description: 4 Byte ASN of the neighbor in
-                                             ASPLAIN Format
+                                             ASPLAIN Format.
                                 type: str
                                 required: True
                             route_filtering:
                                 description: Enable address families and route
-                                             filtering in each direction
+                                             filtering in each direction.
                                 type: list
                                 elements: dict
                                 required: False
@@ -1375,7 +1369,7 @@ def create_or_update(
                                             - 'VPN'
                                     enabled:
                                         description: Flag to enable address
-                                                     family
+                                                     family.
                                         type: bool
                                         default: True
                                     in_route_filters:
@@ -1445,7 +1439,7 @@ def create_or_update(
                             - absent
                     tags:
                         description: Opaque identifiers meaningful to the API
-                                     user
+                                     user.
                         type: dict
                         suboptions:
                             scope:
@@ -1488,7 +1482,6 @@ def create_or_update(
                         choices:
                             - NONE
                             - STRICT
-                        default: STRICT
                     segment_id:
                         description: Specify Segment to which this interface is
                                      connected to. Required if id is specified.
@@ -1505,7 +1498,6 @@ def create_or_update(
                             - "EXTERNAL"
                             - "LOOPBACK"
                             - "SERVICE"
-                        default: "EXTERNAL"
                         type: str
                     edge_node_info:
                         description:
@@ -1521,7 +1513,7 @@ def create_or_update(
                                 type: str
                             enforcementpoint_id:
                                 description: enforcementpoint_id where edge
-                                             node is located
+                                             node is located.
                                 default: default
                                 type: str
                             edge_cluster_id:

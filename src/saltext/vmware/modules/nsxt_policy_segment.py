@@ -376,17 +376,13 @@ def create_or_update(
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
     display_name:
-        description:
-            - Display name.
-            - If resource ID is not specified, display_name will be used as ID.
+        description: Display name.If resource ID is not specified, display_name will be used as ID.
         type: str
     state:
         choices:
         - present
         - absent
-        description: "State can be either 'present' or 'absent'.
-                    'present' is used to create or update resource.
-                    'absent' is used to delete resource."
+        description: State can be either 'present' or 'absent'.'present' is used to create or update resource.'absent' is used to delete resource.
     tags:
         description: Opaque identifiers meaningful to the API user.
         required: False
@@ -412,8 +408,8 @@ def create_or_update(
         required: False
         type: str
         choices:
-            - UP
-            - DOWN
+        - UP
+        - DOWN
         default: UP
     advanced_config:
         description: Advanced configuration for Segment.
@@ -421,17 +417,10 @@ def create_or_update(
         type: dict
         suboptions:
             address_pool_id:
-                description:
-                    - IP address pool ID
-                    - Either this or address_pool_display_name must be
-                      specified. If both are specified, address_pool_id takes
-                      precedence
+                description: IP address pool ID
                 type: str
             address_pool_name:
-                description:
-                    - IP address pool display name
-                    - Either this or address_pool_id must be specified. If both
-                      are specified, address_pool_id takes precedence
+                description: IP address pool display name
                 type: str
             connectivity:
                 description: Connectivity configuration to manually connect
@@ -471,8 +460,7 @@ def create_or_update(
                     prefix_list_paths:
                         required: true
                         description:
-                            - Policy path to prefix lists
-                            - max 1 element
+                            - Policy path to prefix lists, max 1 element
                             - The destination address of traffic matching a
                               prefix-list is forwarded to the nexthop_address.
                               Traffic matching a prefix list with Action DENY
@@ -579,8 +567,7 @@ def create_or_update(
                suboptions:
                    optimized_ips:
                        description: Gateway IP for Local Egress. Local egress
-                                    is enabled only when this list is not
-                                    empty
+                                    is enabled only when this list is not empty
                        type: list
                        elements: str
             tunnel_id:
@@ -657,9 +644,7 @@ def create_or_update(
                 type: str
     segment_ports:
         type: list
-        description:
-            - Add the Segment Ports to be create, updated, or deleted in this
-              section
+        description: Add the Segment Ports to be create, updated, or deleted in this section
         element: dict
         suboptions:
             address_bindings:

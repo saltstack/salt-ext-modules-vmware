@@ -54,14 +54,9 @@ def present(
     specifications.
     Note: To delete any subresource of tier 0 provide state parameter as absent
     CLI Example:
-
     .. code-block:: bash
-
         salt vm_minion nsxt_policy_tier0.present hostname=nsxt-manager.local username=admin ...
-
     .. code-block:: yaml
-
-    create_tier0:
       nsxt_policy_tier0.present:
         - name: Create tier 0 gateway
           hostname: <hostname>
@@ -113,7 +108,6 @@ def present(
                bgp:
                  local_as_num: '1211'
                  inter_sr_ibgp: False
-                 graceful_restart_config:
                  mode: "GR_AND_HELPER"
                  timer:
                    restart_timer: 12
@@ -140,44 +134,30 @@ def present(
                    multicast:
                      enabled: True
                    ipv6_ndra_profile_display_name: test
-
     hostname
         The host name of NSX-T manager
-
     username
         Username to connect to NSX-T manager
-
     password
         Password to connect to NSX-T manager
-
     verify_ssl
-        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
-
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
-
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
-
     display_name:
-        required: false
         description:
-            - Display name for tier 0.
-        required: true
+            - Display name.
+            - If resource ID is not specified, display_name will be used as ID.
+        required: false
         type: str
-
-    arp_limit:
-        required: false
-        description:
-            - arp_limitARP limit per transport node. Maximum number of ARP entries per transport node.
-
     tags:
-        required: false
         description: Opaque identifiers meaningful to the API user.
         type: dict
         suboptions:
@@ -189,36 +169,33 @@ def present(
                 description: Tag value.
                 required: true
                 type: str
-
-    description:
+    id:
+        description: Tier-0 ID
         required: false
+        type: str
+    description:
         description: Tier-0 description
         type: str
-
+    state:
+        description: present or absent keyword is used as an indetifier, default value is present.
+                    If a user has provided absent that resource/sub-resource will be deleted
     default_rule_logging:
-        required: false
         description: Enable logging for whitelisted rule.
                      Indicates if logging should be enabled for the default
                      whitelisting rule.
         default: false
-
     ha_mode:
-        required: false
         description: High-availability Mode for Tier-0
         choices:
             - 'ACTIVE_STANDBY'
             - 'ACTIVE_ACTIVE'
         default: 'ACTIVE_ACTIVE'
         type: str
-
     disable_firewall:
-        required: false
         description: Disable or enable gateway fiewall.
         default: False
         type: bool
-
     failover_mode:
-        required: false
         description: Determines the behavior when a Tier-0 instance in
                      ACTIVE-STANDBY high-availability mode restarts
                      after a failure. If set to PREEMPTIVE, the preferred node
@@ -232,16 +209,12 @@ def present(
             - 'PREEMPTIVE'
         default: 'NON_PREEMPTIVE'
         type: str
-
     force_whitelisting:
-        required: false
         description: Flag to add whitelisting FW rule during
                      realization.
         default: False
         type: bool
-
     internal_transit_subnets:
-        required: false
         description: Internal transit subnets in CIDR format.
                      Specify subnets that are used to assign addresses
                      to logical links connecting service routers and
@@ -251,9 +224,7 @@ def present(
                      or 169.254.0.0/28 in ACTIVE_STANDBY mode.
         default: False
         type: list
-
     intersite_config:
-        required: false
         description: Inter site routing configuration when the gateway is
                      streched.
         type: dict
@@ -300,31 +271,23 @@ def present(
                       locally learned routes. This field is not applicable for
                       T1 gateway with no services
                 type: str
-
     ipv6_ndra_profile_id:
-        required: false
         description: IPv6 NDRA profile configuration on Tier0.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_dad_profile_id.
         type: str
-
     ipv6_dad_profile_id:
-        required: false
         description: IPv6 DRA profile configuration on Tier0.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_ndra_profile_id.
-
     rd_admin_field:
-        required: false
         description:
             - Route distinguisher administrator address
             - If you are using EVPN service, then route distinguisher
               administrator address should be defined if you need auto
               generation of route distinguisher on your VRF configuration
         type: str
-
     transit_subnets:
-        required: false
         description: Transit subnets in CIDR format.
                      Specify transit subnets that are used to assign
                      addresses to logical links connecting tier-0 and
@@ -333,15 +296,11 @@ def present(
                      When not specified, subnet 100.64.0.0/16 is
                      configured by default.
         type: list
-
     dhcp_config_id:
-        required: false
         description: DHCP configuration for Segments connected to
                      Tier-0. DHCP service is configured in relay mode.
         type: str
-
     vrf_config:
-        required: false
         type: dict
         description: VRF config, required for VRF Tier0
         suboptions:
@@ -350,11 +309,9 @@ def present(
                     - L3 VNI associated with the VRF for overlay traffic.
                     - VNI must be unique and belong to configured VNI pool.
                 type: int
-
             route_distinguisher:
                 description: Route distinguisher. 'ASN:<>' or 'IPAddress:<>'.
                 type: str
-
             route_targets:
                 description: Route targets
                 type: list
@@ -370,18 +327,15 @@ def present(
                                      'IPAddress:<>'
                         type: list
                         element: str
-
             tier0_id:
                 description: Default tier0 id. Cannot be modified after
                              realization. Either this or tier0_id must
                              be specified
                 type: str
     static_routes:
-        required: false
         type: list
         element: dict
-        description: This is a list of Static Routes that need to be created,
-                     updated, or deleted
+        description: This is a list of Static Routes that need to be created, updated, or deleted
         suboptions:
             id:
                 description: Tier-0 Static Route ID.
@@ -398,6 +352,9 @@ def present(
                 description:
                     - Tier-0 Static Route description.
                 type: str
+            state:
+                description: present or absent keyword is used as an indetifier, default value is present.
+                             If a user has provided absent that resource/sub-resource will be deleted
             network:
                 description: Network address in CIDR format
                 required: true
@@ -411,18 +368,15 @@ def present(
                         description: Cost associated with next hop route
                         type: int
                         default: 1
-
                     ip_address:
                         description: Next hop gateway IP address
                         type: str
-
                     scope:
                         description:
                             - Interface path associated with current route
                             - For example, specify a policy path referencing the
                               IPSec VPN Session
                         type: list
-
             tags:
                 description: Opaque identifiers meaningful to the API user
                 type: dict
@@ -435,19 +389,15 @@ def present(
                         description: Tag value.
                         required: true
                         type: str
-
     bfd_peers:
-        required: false
         type: list
         element: dict
-        description: This is a list of BFD Peers that need to be created,
-                     updated, or deleted
+        description: This is a list of BFD Peers that need to be created, updated, or deleted
         suboptions:
             id:
                 description: Tier-0 BFD Peer ID.
                 required: false
                 type: str
-
             display_name:
                 description:
                     - Tier-0 BFD Peer display name.
@@ -455,43 +405,38 @@ def present(
                       specified, id takes precedence.
                 required: false
                 type: str
-
             description:
                 description:
                     - Tier-0 BFD Peer description. config
                 type: str
-
+            state:
+                description: present or absent keyword is used as an indetifier, default value is present.
+                             If a user has provided absent that resource/sub-resource will be deleted
             bfd_profile_id:
                 description:
                     - The associated BFD Profile ID
                     - Either this or bfd_profile_display_name must be specified
                     - BFD Profile is not supported for IPv6 networks.
                 type: str
-
             enabled:
                 description: Flag to enable BFD peer.
                 type: boolean
-
             peer_address:
-                description: IP Address of static route next hop peer. Only IPv4 addresses are supported.
+                description: IP Address of static route next hop peer. Only IPv4 addresses are supported
                              Only a single BFD config per peer address is allowed.
                 type: str
-
             source_addresses:
                 description: List of source IP addresses. Array of Tier0 external interface IP addresses. BFD peering
                              is established from all these source addresses to the neighbor specified in peer_address.
                              Only IPv4 addresses are supported.(Minimum-0, Maximum-8 values are allowed)
                 type: list
                 elements: IPv4 addresse strings
-
             scope:
                 description: Array of policy paths of locale services. Represents the array of policy paths of
                              locale services where this BFD peer should get relalized on. The locale service service
                              and this BFD peer must belong to the same router. Default scope is empty.
-
                 type: list
                 elements: policy path string of locale services
-
             tags:
                 description: Opaque identifiers meaningful to the API user
                 type: dict
@@ -505,17 +450,14 @@ def present(
                         required: true
                         type: str
     locale_services:
-        required: false
         type: list
         element: dict
-        description: This is a list of Locale Services that need to be created,
-                     updated, or deleted
+        description: This is a list of Locale Services that need to be created,updated, or deleted
         suboptions:
             id:
                 description: Tier-0 Locale Service ID.
                 required: false
                 type: str
-
             display_name:
                 description:
                     - Tier-0 Locale Service display name.
@@ -523,12 +465,13 @@ def present(
                       specified, id takes precedence
                 required: false
                 type: str
-
             description:
                 description:
                     - Tier-0 Locale Service  description.
                 type: str
-
+            state:
+                description: present or absent keyword is used as an indetifier, default value is present.
+                             If a user has provided absent that resource/sub-resource will be deleted
             tags:
                 description: Opaque identifiers meaningful to the API user
                 type: dict
@@ -541,7 +484,6 @@ def present(
                         description: Tag value.
                         required: true
                         type: str
-
             edge_cluster_info:
                 description: Used to create path to edge cluster. Auto-assigned
                             if associated enforcement-point has only one edge
@@ -552,17 +494,13 @@ def present(
                         description: site_id where edge cluster is located
                         default: default
                         type: str
-
                     enforcementpoint_id:
-                        description: enforcementpoint_id where edge cluster is
-                                    located
+                        description: enforcementpoint_id where edge cluster is located
                         default: default
                         type: str
-
                     edge_cluster_id:
                         description: ID of the edge cluster
                         type: str
-
             preferred_edge_nodes_info:
                 description: Used to create paths to edge nodes. Specified edge
                             is used as preferred edge cluster member when
@@ -574,22 +512,16 @@ def present(
                         description: site_id where edge node is located
                         default: default
                         type: str
-
                     enforcementpoint_id:
-                        description: enforcementpoint_id where edge node is
-                                    located
+                        description: enforcementpoint_id where edge node is located
                         default: default
                         type: str
-
                     edge_cluster_id:
-                        description: edge_cluster_id where edge node is
-                                    located
+                        description: edge_cluster_id where edge node is located
                         type: str
-
                     edge_node_id:
                         description: ID of the edge node
                         type: str
-
             route_redistribution_config:
                 description: Configure all route redistribution properties like
                              enable/disable redistributon, redistribution rule
@@ -600,7 +532,6 @@ def present(
                         description: Flag to enable route redistribution.
                         type: bool
                         default: false
-
                     redistribution_rules:
                         description: List of redistribution rules.
                         type: list
@@ -609,12 +540,10 @@ def present(
                             name:
                                 description: Rule name
                                 type: str
-
                             route_map_path:
                                 description: Route map to be associated with
                                              the redistribution rule
                                 type: str
-
                             route_redistribution_types:
                                 description: Tier-0 route redistribution types
                                 choices:
@@ -710,6 +639,9 @@ def present(
             bgp:
                 description: Specify the BGP spec in this section
                 type: dict
+                state:
+                    description: present or absent keyword is used as an indetifier, default value is present,
+                                 If a user has provided absent that resource/sub-resource will be deleted.
                 suboptions:
                     ecmp:
                         description: Flag to enable ECMP.
@@ -826,10 +758,13 @@ def present(
                                      deleted
                         type: list
                         element: dict
+                        state:
+                            description: present or absent keyword is used as an indetifier, default value is present.
+                                         If a user has provided absent that resource/sub-resource will be deleted
                         suboptions:
                             allow_as_in:
                                 description: Flag to enable allowas_in option
-                                             for BGP neighbor
+                                             for BGP neighbor.
                                 type: bool
                                 default: False
                             bfd:
@@ -842,14 +777,14 @@ def present(
                                 suboptions:
                                     enabled:
                                         description: Flag to enable BFD
-                                                     cofiguration
+                                                     cofiguration.
                                         type: bool
                                         required: False
                                     interval:
                                         description: Time interval between
                                                      heartbeat packets in
                                                      milliseconds. Min 300 and
-                                                     Max 60000
+                                                     Max 60000.
                                         type: int
                                         default: 1000
                                     multiple:
@@ -858,7 +793,7 @@ def present(
                                             - Number of times heartbeat packet
                                               is missed before BFD declares the
                                               neighbor is down.
-                                              Min 2 and Max 16
+                                              Min 2 and Max 16.
                                         type: int
                                         default: 3
                             graceful_restart_mode:
@@ -885,7 +820,7 @@ def present(
                             hold_down_time:
                                 description: Wait time in seconds before
                                              declaring peer dead. Min 1 and Max
-                                             65535
+                                             65535.
                                 type: int
                                 default: 180
                             keep_alive_time:
@@ -897,7 +832,7 @@ def present(
                             maximum_hop_limit:
                                 description: Maximum number of hops allowed to
                                              reach BGP neighbor. Min 1 and Max
-                                             255
+                                             255.
                                 type: int
                                 default: 1
                             address:
@@ -912,12 +847,12 @@ def present(
                                 required: False
                             remote_as_num:
                                 description: 4 Byte ASN of the neighbor in
-                                             ASPLAIN Format
+                                             ASPLAIN Format.
                                 type: str
                                 required: True
                             route_filtering:
                                 description: Enable address families and route
-                                             filtering in each direction
+                                             filtering in each direction.
                                 type: list
                                 elements: dict
                                 required: False
@@ -932,7 +867,7 @@ def present(
                                             - 'VPN'
                                     enabled:
                                         description: Flag to enable address
-                                                     family
+                                                     family.
                                         type: bool
                                         default: True
                                     in_route_filters:
@@ -974,6 +909,9 @@ def present(
                 description: Specify the interfaces associated with the Gateway
                              in this section that need to be created, updated,
                              or deleted
+                state:
+                    description: present or absent keyword is used as an indetifier, default value is present.
+                                 If a user has provided absent that resource/sub-resource will be deleted
                 suboptions:
                     id:
                         description: Tier-0 Interface ID
@@ -999,7 +937,7 @@ def present(
                             - absent
                     tags:
                         description: Opaque identifiers meaningful to the API
-                                     user
+                                     user.
                         type: dict
                         suboptions:
                             scope:
@@ -1042,7 +980,6 @@ def present(
                         choices:
                             - NONE
                             - STRICT
-                        default: STRICT
                     segment_id:
                         description: Specify Segment to which this interface is
                                      connected to. Required if id is specified.
@@ -1059,7 +996,6 @@ def present(
                             - "EXTERNAL"
                             - "LOOPBACK"
                             - "SERVICE"
-                        default: "EXTERNAL"
                         type: str
                     edge_node_info:
                         description:
@@ -1075,7 +1011,7 @@ def present(
                                 type: str
                             enforcementpoint_id:
                                 description: enforcementpoint_id where edge
-                                             node is located
+                                             node is located.
                                 default: default
                                 type: str
                             edge_cluster_id:
@@ -1091,6 +1027,7 @@ def present(
                             - Specify IP address and network prefix for
                               interface.
                             - Required if I(id != null).
+                        required: False
                         type: list
     """
 
@@ -1317,13 +1254,9 @@ def absent(
 ):
     """
     Deletes tier0 gateway with the given display_name and all its sub-resources
-
     CLI Example:
-
-        .. code-block:: bash
-
+    .. code-block:: bash
             salt vm_minion nsxt_policy_tier0.absent hostname=nsxt-manager.local username=admin ...
-
         delete_tier0:
           nsxt_policy_tier0.absent:
             - name: <Name of the operation>
@@ -1333,40 +1266,29 @@ def absent(
               display_name: <display name of tier0 gateway>
               cert: <certificate>
               verify_ssl: <False/True>
-
-
         name
             Name of the operation to perform
-
         hostname
             The host name of NSX-T manager
-
         username
             Username to connect to NSX-T manager
-
         password
             Password to connect to NSX-T manager
-
         display_name
             Display name of the tier0 gateway to delete
-
         cert
             Path to the SSL certificate file to connect to NSX-T manager
-
         verify_ssl
             Option to enable/disable SSL verification. Enabled by default.
             If set to False, the certificate validation is skipped.
-
         cert
             Path to the SSL certificate file to connect to NSX-T manager.
             The certificate can be retrieved from browser.
-
         cert_common_name
             (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
              verification. If the client certificate common name and hostname do not match (in case of self-signed
              certificates), specify the certificate common name as part of this parameter. This value is then used to
              compare against certificate common name.
-
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
     tier_0_result = __salt__["nsxt_policy_tier0.get_by_display_name"](
