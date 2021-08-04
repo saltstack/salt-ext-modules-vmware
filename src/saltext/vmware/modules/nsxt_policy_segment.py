@@ -160,6 +160,7 @@ class NSXTSegment(NSXTPolicyBaseResource):
             segment_ports = kwargs.get("segment_ports") or {}
             for segment_port in segment_ports:
                 resource_params = {}
+                # This block can be refactored
                 for key in fields:
                     val = segment_port.get(key)
                     if val:
