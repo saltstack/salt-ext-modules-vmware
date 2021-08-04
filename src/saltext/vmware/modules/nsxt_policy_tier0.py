@@ -101,6 +101,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 )
             vrf_resource_params["tier0_path"] = NSXTTier0.get_resource_base_url() + "/" + tier0_id
             vrf_fields = {"evpn_l2_vni_config", "evpn_transit_vni", "route_distinguisher"}
+            # This block cab be refactored
             for field in vrf_fields:
                 val = vrf_config.get(field)
                 if val:
@@ -146,11 +147,13 @@ class NSXTTier0(NSXTPolicyBaseResource):
 
             for static_route in static_routes:
                 resource_params = {}
+                # This block cab be refactored
                 for key in fields:
                     val = static_route.get(key)
                     if val:
                         resource_params[key] = val
                 if not resource_params.get("id"):
+                    # In case of default display name set default can be used and refactor can be done.
                     resource_params["id"] = resource_params["display_name"]
                 self.multi_resource_params.append(resource_params)
 
@@ -192,6 +195,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
             bfd_peers = kwargs.get("bfd_peers") or {}
             for bfd_peer in bfd_peers:
                 resource_params = {}
+                # This block cab be refactored
                 for key in fields:
                     if bfd_peer.get(key):
                         resource_params[key] = bfd_peer.get(key)
@@ -232,6 +236,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
             locale_services = kwargs.get("locale_services") or {}
             for locale_service in locale_services:
                 resource_params = {}
+                # This block cab be refactored
                 for field in fields:
                     if locale_service.get(field):
                         resource_params[field] = locale_service[field]
@@ -246,7 +251,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
                         edge_cluster_base_url + "/" + edge_cluster_id
                     )
                 preferred_edge_nodes_info = locale_service.get("preferred_edge_nodes_info")
-                if locale_service.get("preferred_edge_nodes_info"):
+                if preferred_edge_nodes_info:
                     resource_params["preferred_edge_paths"] = []
                     for preferred_edge_node_info in preferred_edge_nodes_info:
                         site_id = preferred_edge_node_info.get("site_id", "default")
@@ -329,6 +334,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 )
                 if locale_service:
                     interfaces = locale_service.get("interfaces") or {}
+                    # This block cab be refactored
                     for interface in interfaces:
                         resource_params = {}
                         for field in fields:
@@ -421,6 +427,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 )
                 bgp = locale_service.get("bgp") or {}
                 if bgp:
+                    # This pattern of code is identical in pattern and can be refactored.
                     for field in fields:
                         val = bgp.get(field)
                         if val:
@@ -475,6 +482,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
                         neighbors = locale_service.get("bgp").get("neighbors") or {}
                         for neighbor in neighbors:
                             resource_params = {}
+                            # This pattern of code is identical in pattern and can be refactored.
                             for field in fields:
                                 val = neighbor.get(field)
                                 if val:
