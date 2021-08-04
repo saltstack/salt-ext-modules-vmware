@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
-import ssl
 import os
+import ssl
 
 # pylint: disable=no-name-in-module
 try:
@@ -26,9 +26,21 @@ def get_service_instance(opts=None, pillar=None):
 
     """
     ctx = ssl._create_unverified_context()
-    host = os.environ.get('VMWARE_CONFIG_HOST') or opts.get('vmware_config', {}).get('host') or pillar.get('vmware_config', {}).get('host')
-    password = os.environ.get('VMWARE_CONFIG_PASSWORD') or opts.get('vmware_config', {}).get('password') or pillar.get('vmware_config', {}).get('password')
-    user = os.environ.get('VMWARE_CONFIG_USER') or opts.get('vmware_config', {}).get('user') or pillar.get('vmware_config', {}).get('user')
+    host = (
+        os.environ.get("VMWARE_CONFIG_HOST")
+        or opts.get("vmware_config", {}).get("host")
+        or pillar.get("vmware_config", {}).get("host")
+    )
+    password = (
+        os.environ.get("VMWARE_CONFIG_PASSWORD")
+        or opts.get("vmware_config", {}).get("password")
+        or pillar.get("vmware_config", {}).get("password")
+    )
+    user = (
+        os.environ.get("VMWARE_CONFIG_USER")
+        or opts.get("vmware_config", {}).get("user")
+        or pillar.get("vmware_config", {}).get("user")
+    )
     config = {
         "host": host,
         "password": password,
