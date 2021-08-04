@@ -139,17 +139,17 @@ def list_(host=None):
     return virtual machines on a host
     """
     service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    # hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    # result = [] if host else {}
-    # for host_i in hosts:
-    #     if host == None:
-    #         result[host_i.name] = []
-    #         for vm in host_i.vm:
-    #             result[host_i.name].append(vm.name)
-    #     elif host_i.name == host:
-    #         for vm in host_i.vm:
-    #             result.append(vm.name)
-    # return result
+    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    result = [] if host else {}
+    for host_i in hosts:
+        if host == None:
+            result[host_i.name] = []
+            for vm in host_i.vm:
+                result[host_i.name].append(vm.name)
+        elif host_i.name == host:
+            for vm in host_i.vm:
+                result.append(vm.name)
+    return result
 
 
 # pylint: disable=C0302
