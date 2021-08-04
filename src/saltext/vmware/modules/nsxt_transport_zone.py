@@ -444,7 +444,7 @@ def delete(
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
 
-    For more information, see `here <https://code.vmware.com/apis/1163/nsx-t>`_
+    For more information, see `VMware API docs for NSX-T <https://code.vmware.com/apis/1163/nsx-t>`_
 
     """
     log.info("Deleting transport zones for %s", transport_zone_id)

@@ -85,7 +85,7 @@ def get(
     sort_by
         (Optional) Field by which records are sorted
 
-    For more information, see `here <https://code.vmware.com/apis/1163/nsx-t>`_
+    For more information, see `VMware API docs for NSX-T <https://code.vmware.com/apis/1163/nsx-t>`_
 
     """
     log.info("Fetching NSX-T transport node profiles")

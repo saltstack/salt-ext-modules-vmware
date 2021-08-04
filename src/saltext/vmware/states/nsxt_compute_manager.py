@@ -147,7 +147,7 @@ def present(
         specify the certificate common name as part of this parameter. This value is then used to compare against
         certificate common name.
 
-    For more information see :ref: https://code.vmware.com/apis/1163/nsx-t
+    For more information, see `VMware API docs for NSX-T <https://code.vmware.com/apis/1163/nsx-t>`_
 
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
