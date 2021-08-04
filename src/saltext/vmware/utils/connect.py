@@ -13,40 +13,26 @@ except ImportError:
     HAS_PYVMOMI = False
 
 
-def get_si(f):
-    @functools.wraps(f)
-    def wraps(*args, **kwargs):
-        import ssl
-        from pyVim import connect
-
-        config = {
-            "esxi_host_name": "10.206.246.77",
-            "host": "10.206.246.55",
-            "password": "VMware1!",
-            "user": "administrator@vsphere.local",
-        }
-        ctx = ssl._create_unverified_context()
-        f(
-            service_instance=connect.SmartConnect(
-                host=config["host"],
-                user=config["user"],
-                pwd=config["password"],
-                sslContext=ctx,
-            ),
-            *args,
-            **kwargs
-        )
-
-    return wraps
-
-
 def get_service_instance(opts=None, pillar=None):
+    """
+    Connect to VMware service instance
 
+    Pillar Example:
+        vmware_config:
+            esxi_host_name: 10.100.100.100
+            host: 10.100.100.100
+            password: ****
+            user: you@you.com
+
+    """
     ctx = ssl._create_unverified_context()
+    host = pillar["vmware_config"]["host"]
+    password = pillar["vmware_config"]["password"]
+    user = pillar["vmware_config"]["user"]
     config = {
-        "host": "10.206.246.55",
-        "password": "VMware1!",
-        "user": "administrator@vsphere.local",
+        "host": host,
+        "password": password,
+        "user": user,
     }
     service_instance = connect.SmartConnect(
         host=config["host"],

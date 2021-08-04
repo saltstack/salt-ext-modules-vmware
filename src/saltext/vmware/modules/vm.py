@@ -42,11 +42,12 @@ def __virtual__():
 
 
 # @connect.get_si
-def get_vm_facts(*, service_instance=None):
+def get_vm_facts():
     """
     Return basic facts about a vSphere VM guest
     """
     vms = {}
+    service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     for host in hosts:
         virtual_machines = host.vm
