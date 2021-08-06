@@ -42,12 +42,13 @@ def __virtual__():
 
 
 # @connect.get_si
-def get_vm_facts():
+def get_vm_facts(service_instance=None):
     """
     Return basic facts about a vSphere VM guest
     """
     vms = {}
-    service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     for host in hosts:
         virtual_machines = host.vm
@@ -73,14 +74,17 @@ def get_vm_facts():
     return vms
 
 
-def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name):
+def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name, service_instance=None):
     """
     Deploy a virtual machine from an OVF
     """
+    
     vms = list_(host=host_name)
     if name in vms:
         raise CommandExecutionError("Duplicate virtual machine name")
-    service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     content = service_instance.content
     manager = content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
@@ -134,11 +138,13 @@ def deploy_ova(name, host_name, ova_path, datacenter_name="Datacenter", cluster_
     return result
 
 
-def list_(host=None):
+def list_(host=None, service_instance=None):
     """
     return virtual machines on a host
     """
-    service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     result = [] if host else {}
     for host_i in hosts:
