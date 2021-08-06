@@ -18,11 +18,13 @@ def get_service_instance(opts=None, pillar=None):
     Connect to VMware service instance
 
     Pillar Example:
+
+    .. code-block::
+
         vmware_config:
-            esxi_host_name: 10.100.100.100
-            host: 10.100.100.100
+            host: 198.51.100.100
             password: ****
-            user: you@you.com
+            user: @example.com
 
     """
     ctx = ssl._create_unverified_context()
