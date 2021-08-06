@@ -15,7 +15,6 @@ import argparse
 import json
 import pathlib
 import ssl
-import sys
 
 from pyVim import connect
 

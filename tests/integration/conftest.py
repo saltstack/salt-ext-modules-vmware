@@ -112,12 +112,13 @@ def vmware_datacenter(patch_salt_globals):
 
 
 @pytest.fixture
-def patch_salt_globals_vm():
+def patch_salt_globals_vm(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
+
     setattr(virtual_machine, "__opts__", {})
-    setattr(virtual_machine, "__pillar__", {})
+    setattr(virtual_machine, "__pillar__", vmware_conf)
 
 
 @pytest.fixture(scope="function")
@@ -157,3 +158,15 @@ def vmc_nsx_connect(vmc_config):
         verify_ssl,
         vmc_nsx_config["cert"],
     )
+
+
+@pytest.fixture()
+def vmware_conf(integration_test_config):
+    config = integration_test_config
+    return {
+        "vmware_config": {
+            "host": config["host"],
+            "password": config["password"],
+            "user": config["user"],
+        }
+    }
