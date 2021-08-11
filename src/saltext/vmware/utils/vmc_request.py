@@ -182,6 +182,7 @@ def create_payload_for_request(template_data, user_input_dict, existing_data=Non
         existing data for the resource(security rule, Nat rule, Network etc..)
 
     """
+    template_data = template_data.copy()
     if existing_data:
         template_data.update(
             (k, existing_data[k]) for k in template_data.keys() & existing_data.keys()
