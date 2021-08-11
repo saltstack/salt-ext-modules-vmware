@@ -19,12 +19,12 @@ import saltext.vmware.modules.vm as virtual_machine
         "uuid",
     ],
 )
-def test_vm_get_basic_facts(service_instance, integration_test_config, arg_name):
+def test_vm_get_basic_facts(integration_test_config, arg_name, patch_salt_globals_vm):
     """
     Test we are returning the same values from get_vm_facts
     as our connected vcenter instance.
     """
-    vm_facts = virtual_machine.get_vm_facts(service_instance=service_instance)
+    vm_facts = virtual_machine.get_vm_facts()
     for host_id in vm_facts:
         for vm_name in vm_facts[host_id]:
             expected_value = integration_test_config["vm_facts"][host_id][vm_name][arg_name]
