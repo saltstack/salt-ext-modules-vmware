@@ -38,6 +38,7 @@ Execution Modules
     saltext.vmware.modules.vmc_nat_rules
     saltext.vmware.modules.vmc_networks
     saltext.vmware.modules.vmc_sddc
+    saltext.vmware.modules.vmc_security_groups
     saltext.vmware.modules.vmc_security_rules
     saltext.vmware.modules.vmc_vpn_statistics
     saltext.vmware.modules.vmotion
