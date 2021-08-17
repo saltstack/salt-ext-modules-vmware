@@ -91,3 +91,38 @@ def test_get_security_groups_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+def test_get_security_group_by_id_should_return_single_security_group(security_groups_data_by_id):
+    result = vmc_security_groups.get_by_id(
+        hostname="hostname",
+        refresh_key="refresh_key",
+        authorization_host="authorization_host",
+        org_id="org_id",
+        sddc_id="sddc_id",
+        domain_id="domain_id",
+        security_group_id="security_group_id",
+        verify_ssl=False,
+    )
+    assert result == security_groups_data_by_id
+
+
+def test_get_security_groups_by_id_called_with_url():
+    expected_url = (
+        "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/policy/api/"
+        "v1/infra/domains/domain_id/groups/security_group_id"
+    )
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        result = vmc_security_groups.get_by_id(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            domain_id="domain_id",
+            security_group_id="security_group_id",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
