@@ -113,3 +113,43 @@ def test_get_network_by_id_called_with_url():
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+def test_delete_network_when_api_should_return_successfully_deleted_message(
+    mock_vmc_request_call_api,
+):
+    expected_response = {"message": "Network deleted successfully"}
+    mock_vmc_request_call_api.return_value = expected_response
+    assert (
+        vmc_networks.delete(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            network_id="network_id",
+            verify_ssl=False,
+        )
+        == expected_response
+    )
+
+
+def test_delete_network_called_with_url():
+    expected_url = (
+        "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/policy/api/"
+        "v1/infra/tier-1s/cgw/segments/network_id"
+    )
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        vmc_networks.delete(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            network_id="network_id",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.DELETE_REQUEST_METHOD
