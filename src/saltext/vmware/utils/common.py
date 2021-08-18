@@ -24,6 +24,7 @@ def _read_paginated(func, display_name, **kwargs):
         results.extend(
             result for result in paginated["results"] if result.get("display_name") == display_name
         )
+        kwargs["cursor"] = paginated.get("cursor")
     return results
 
 

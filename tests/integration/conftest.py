@@ -160,6 +160,20 @@ def vmc_nsx_connect(vmc_config):
     )
 
 
+NSXT_CONFIG_FILE_NAME = "nsxt_config.json"
+
+
+@pytest.fixture(scope="session")
+def nsxt_config():
+    # Read the JSON config file and returns it as a parsed dict
+    dir_path = os.path.dirname(__file__)  # get current dir path
+    config_file = NSXT_CONFIG_FILE_NAME
+    abs_file_path = os.path.join(dir_path, config_file)
+    with open(abs_file_path) as config_file:
+        data = json.load(config_file)
+    return data
+
+
 @pytest.fixture()
 def vmware_conf(integration_test_config):
     config = integration_test_config

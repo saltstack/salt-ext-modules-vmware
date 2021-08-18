@@ -8,10 +8,10 @@ Example:
     create_ip_block:
       nsxt_ip_blocks.present:
         - name: Create IP Block
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          cert: <certificate path>
+          hostname: {{ pillar['nsxt_manager_hostname'] }}
+          username: {{ pillar['nsxt_manager_username'] }}
+          password: {{ pillar['nsxt_manager_password'] }}
+          cert: {{ pillar['nsxt_manager_certificate'] }}
           verify_ssl: <False/True>
           display_name: <ip block name>
           description: <ip block description>
@@ -59,14 +59,10 @@ def _check_for_updates(existing_ip_block, input_dict):
 
     # check if any updatable field has different value from the existing one
     for key in updatable_keys:
-        if key not in existing_ip_block and input_dict.get(key):
-            is_updatable = True
-        if (
-            key in existing_ip_block
-            and existing_ip_block[key]
-            and existing_ip_block[key] != input_dict.get(key)
-        ):
-            is_updatable = True
+        existing_val = existing_ip_block.get(key)
+        input_val = input_dict.get(key)
+        if existing_val != input_val and input_val:
+            return True
 
     return is_updatable
 
@@ -98,10 +94,10 @@ def present(
         create_ip_block:
           nsxt_ip_blocks.present:
             - name: Create IP Block
-              hostname: <hostname>
-              username: <username>
-              password: <password>
-              cert: <certificate>
+              hostname: {{ pillar['nsxt_manager_hostname'] }}
+              username: {{ pillar['nsxt_manager_username'] }}
+              password: {{ pillar['nsxt_manager_password'] }}
+              cert: {{ pillar['nsxt_manager_certificate'] }}
               verify_ssl: <False/True>
               display_name: <ip block name>
               description: <ip block description>

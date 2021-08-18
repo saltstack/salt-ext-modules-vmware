@@ -21,10 +21,14 @@ Execution Modules
     saltext.vmware.modules.firewall
     saltext.vmware.modules.info
     saltext.vmware.modules.license
+    saltext.vmware.modules.nsxt_compute_manager
     saltext.vmware.modules.nsxt_ip_blocks
     saltext.vmware.modules.nsxt_ip_pools
     saltext.vmware.modules.nsxt_license
     saltext.vmware.modules.nsxt_manager
+    saltext.vmware.modules.nsxt_transport_node_profiles
+    saltext.vmware.modules.nsxt_transport_zone
+    saltext.vmware.modules.nsxt_uplink_profiles
     saltext.vmware.modules.ntp
     saltext.vmware.modules.service
     saltext.vmware.modules.ssl_adapter
