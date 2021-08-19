@@ -2,9 +2,9 @@
 import logging
 
 import salt.utils.platform
-import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as utils_datacenter
 import saltext.vmware.utils.vm as utils_vm
 from salt.exceptions import CommandExecutionError
@@ -54,7 +54,6 @@ def _deployment_resources(host_name, datacenter_name, cluster_name, service_inst
         container_ref=datacenter_ref,
     )
 
-
     # Get cluster
     cluster = utils_cluster.get_cluster(datacenter_ref, cluster_name)
 
@@ -65,16 +64,15 @@ def _deployment_resources(host_name, datacenter_name, cluster_name, service_inst
         "destination_host": destination_host_ref,
         "datacenter": datacenter_ref,
         "cluster": cluster,
-        "resource_pool": resource_pool
+        "resource_pool": resource_pool,
     }
-    
 
 
 def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name, service_instance=None):
     """
     Deploy a virtual machine from an OVF
     """
-    
+
     vms = list_(host=host_name)
     if name in vms:
         raise CommandExecutionError("Duplicate virtual machine name")
@@ -92,7 +90,9 @@ def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name, service_ins
     )
     if import_spec.importSpec == None:
         return {"Create Import Spec error": import_spec.error[0].msg}
-    lease = resources["resource_pool"].ImportVApp(import_spec.importSpec, resources["datacenter"].vmFolder)
+    lease = resources["resource_pool"].ImportVApp(
+        import_spec.importSpec, resources["datacenter"].vmFolder
+    )
 
     while True:
         if lease.state == vim.HttpNfcLease.State.ready:
@@ -164,7 +164,7 @@ def get_vm_facts(service_instance=None):
 def list_(host=None, datacenter_name="Datacenter", cluster_name="Cluster", service_instance=None):
     """
     return virtual machines on a host
-    """ 
+    """
 
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)

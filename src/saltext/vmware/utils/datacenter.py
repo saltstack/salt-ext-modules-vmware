@@ -2,13 +2,12 @@
 # pylint: disable=no-name-in-module
 import logging
 
-import saltext.vmware.utils.common as utils_common
-
 import salt.exceptions
 import salt.modules.cmdmod
 import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
+import saltext.vmware.utils.common as utils_common
 
 try:
     from pyVmomi import vim, vmodl
@@ -46,7 +45,9 @@ def get_datacenters(service_instance, datacenter_names=None, get_all_datacenters
     """
     items = [
         i["object"]
-        for i in utils_common.get_mors_with_properties(service_instance, vim.Datacenter, property_list=["name"])
+        for i in utils_common.get_mors_with_properties(
+            service_instance, vim.Datacenter, property_list=["name"]
+        )
         if get_all_datacenters or (datacenter_names and i["name"] in datacenter_names)
     ]
     return items

@@ -3,8 +3,8 @@
 import logging
 
 import salt.exceptions
-import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -40,9 +40,7 @@ def list_():
     ret = {}
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        datacenters = utils_datacenter.get_datacenters(
-            service_instance, get_all_datacenters=True
-        )
+        datacenters = utils_datacenter.get_datacenters(service_instance, get_all_datacenters=True)
         for datacenter in datacenters:
             clusters = utils_common.get_mors_with_properties(
                 service_instance,
@@ -77,9 +75,7 @@ def create(name, datacenter):
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_spec = vim.cluster.ConfigSpecEx()
-        utils_cluster.create_cluster(
-            cluster_name=name, dc_ref=dc_ref, cluster_spec=cluster_spec
-        )
+        utils_cluster.create_cluster(cluster_name=name, dc_ref=dc_ref, cluster_spec=cluster_spec)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareRuntimeError) as exc:
         return {name: False, "reason": str(exc)}
     return {name: True}

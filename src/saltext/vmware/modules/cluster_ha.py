@@ -3,9 +3,9 @@
 import logging
 
 import salt.exceptions
-import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.esxi as utils_esxi
 from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
@@ -309,9 +309,7 @@ def configure(
             cluster_spec.dasConfig.option.append(
                 vim.OptionValue(key=key, value=advanced_options[key])
             )
-        utils_cluster.update_cluster(
-            cluster_ref=cluster_ref, cluster_spec=cluster_spec
-        )
+        utils_cluster.update_cluster(cluster_ref=cluster_ref, cluster_spec=cluster_spec)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareRuntimeError) as exc:
         return {cluster: False, "reason": str(exc)}
     return {cluster: True}

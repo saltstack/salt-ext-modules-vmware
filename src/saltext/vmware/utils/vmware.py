@@ -74,7 +74,6 @@ import salt.modules.cmdmod
 import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
-
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
@@ -1534,7 +1533,9 @@ def get_datastore_files(service_instance, directory, datastores, container_objec
             raise salt.exceptions.VMwareRuntimeError(exc.msg)
         try:
             files.append(
-                salt.utils.vmware.utils_common.wait_for_task(task, directory, "query virtual machine files")
+                salt.utils.vmware.utils_common.wait_for_task(
+                    task, directory, "query virtual machine files"
+                )
             )
         except salt.exceptions.VMwareFileNotFoundError:
             pass
@@ -1659,7 +1660,10 @@ def get_datastores(
             skip=False,
             type=vim.StoragePod,
         )
-    elif isinstance(reference, vim.Folder) and utils_common.get_managed_object_name(reference) == "Datacenters":
+    elif (
+        isinstance(reference, vim.Folder)
+        and utils_common.get_managed_object_name(reference) == "Datacenters"
+    ):
         # Traversal of root folder (doesn't support multiple levels of Folders)
         traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
             path="childEntity",
@@ -1937,7 +1941,9 @@ def remove_datastore(service_instance, datastore_ref):
     datastore_ref
         The reference to the datastore to remove
     """
-    ds_props = utils_common.get_properties_of_managed_object(datastore_ref, ["host", "info", "name"])
+    ds_props = utils_common.get_properties_of_managed_object(
+        datastore_ref, ["host", "info", "name"]
+    )
     ds_name = ds_props["name"]
     log.debug("Removing datastore '%s'", ds_name)
     ds_hosts = ds_props.get("host")
@@ -2193,7 +2199,9 @@ def get_disk_partition_info(host_ref, disk_id, storage_system=None):
     if not storage_system:
         storage_system = get_storage_system(service_instance, host_ref, hostname)
 
-    props = utils_common.get_properties_of_managed_object(storage_system, ["storageDeviceInfo.scsiLun"])
+    props = utils_common.get_properties_of_managed_object(
+        storage_system, ["storageDeviceInfo.scsiLun"]
+    )
     if not props.get("storageDeviceInfo.scsiLun"):
         raise salt.exceptions.VMwareObjectRetrievalError(
             "No devices were retrieved in host '{}'".format(hostname)
@@ -2422,7 +2430,9 @@ def get_host_cache(host_ref, host_cache_manager=None):
             return None
         return results[0]["cacheConfigurationInfo"][0]
     else:
-        results = utils_common.get_properties_of_managed_object(host_cache_manager, ["cacheConfigurationInfo"])
+        results = utils_common.get_properties_of_managed_object(
+            host_cache_manager, ["cacheConfigurationInfo"]
+        )
         if not results:
             log.trace("Host '%s' has no host cache", hostname)
             return None
@@ -2560,7 +2570,9 @@ def get_folder(service_instance, datacenter, placement, base_vm_name=None):
     """
     log.trace("Retrieving folder information")
     if base_vm_name:
-        vm_object = utils_vm.get_vm_by_property(service_instance, base_vm_name, vm_properties=["name"])
+        vm_object = utils_vm.get_vm_by_property(
+            service_instance, base_vm_name, vm_properties=["name"]
+        )
         vm_props = salt.utils.vmware.utils_common.get_properties_of_managed_object(
             vm_object, properties=["parent"]
         )
@@ -2585,7 +2597,9 @@ def get_folder(service_instance, datacenter, placement, base_vm_name=None):
             )
         folder_object = folder_objects[0]
     elif datacenter:
-        datacenter_object = utils_datacenter.utils_datacenter.get_datacenter(service_instance, datacenter)
+        datacenter_object = utils_datacenter.utils_datacenter.get_datacenter(
+            service_instance, datacenter
+        )
         dc_props = salt.utils.vmware.utils_common.get_properties_of_managed_object(
             datacenter_object, properties=["vmFolder"]
         )
@@ -2670,7 +2684,9 @@ def get_placement(service_instance, datacenter, placement=None):
                 )
             )
         resourcepool_object = resourcepool_objects[0]
-        res_props = utils_common.get_properties_of_managed_object(resourcepool_object, properties=["parent"])
+        res_props = utils_common.get_properties_of_managed_object(
+            resourcepool_object, properties=["parent"]
+        )
         if "parent" in res_props:
             placement_object = res_props["parent"]
         else:
@@ -2680,7 +2696,9 @@ def get_placement(service_instance, datacenter, placement=None):
     elif "cluster" in placement:
         datacenter_object = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_object = utils_cluster.get_cluster(datacenter_object, placement["cluster"])
-        clus_props = utils_common.get_properties_of_managed_object(cluster_object, properties=["resourcePool"])
+        clus_props = utils_common.get_properties_of_managed_object(
+            cluster_object, properties=["resourcePool"]
+        )
         if "resourcePool" in clus_props:
             resourcepool_object = clus_props["resourcePool"]
         else:
@@ -2771,7 +2789,9 @@ def get_proxy_target(service_instance):
             raise InvalidEntityError(
                 "Proxies connected directly to ESXi " "hosts are not supported"
             )
-        references = salt.utils.vmware.utils_esxi.get_hosts(service_instance, host_names=details["esxi_host"])
+        references = salt.utils.vmware.utils_esxi.get_hosts(
+            service_instance, host_names=details["esxi_host"]
+        )
         if not references:
             raise VMwareObjectRetrievalError(
                 "ESXi host '{}' was not found".format(details["esxi_host"])

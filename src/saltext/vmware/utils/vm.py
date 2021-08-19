@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
-import tarfile
 import logging
+import tarfile
+
+import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
-import salt.exceptions
 
 # pylint: disable=no-name-in-module
 try:
@@ -59,7 +60,9 @@ def power_cycle_vm(virtual_machine, action="on"):
     else:
         raise salt.exceptions.ArgumentValueError("The given action is not supported")
     try:
-        utils_common.wait_for_task(task, utils_common.get_managed_object_name(virtual_machine), task_name)
+        utils_common.wait_for_task(
+            task, utils_common.get_managed_object_name(virtual_machine), task_name
+        )
     except salt.exceptions.VMwareFileNotFoundError as exc:
         raise salt.exceptions.VMwarePowerOnError(
             " ".join(

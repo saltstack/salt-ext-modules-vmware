@@ -1,7 +1,8 @@
 import logging
+
+import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
-import salt.exceptions
 
 # pylint: disable=no-name-in-module
 try:

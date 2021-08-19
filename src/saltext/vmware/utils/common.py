@@ -2,8 +2,8 @@
 """
 Common functions used across modules
 """
-import logging
 import errno
+import logging
 from http.client import BadStatusLine
 
 import salt.exceptions
