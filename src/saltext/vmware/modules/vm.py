@@ -1,16 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
-from threading import Thread
-from time import sleep
 
 import salt.utils.platform
-import saltext.vmware.utils.common as common
 import saltext.vmware.utils.connect as connect
-import saltext.vmware.utils.datacenter as datacenter
-from pyVim.task import WaitForTask
+import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.vm as utils_vm
 from salt.exceptions import CommandExecutionError
 from salt.exceptions import InvalidConfigError
-from salt.utils.decorators import depends
 from salt.utils.dictdiffer import recursive_diff
 from salt.utils.listdiffer import list_diff
 from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineDeleteSchema
@@ -41,7 +39,96 @@ def __virtual__():
     return __virtualname__
 
 
-# @connect.get_si
+def _deployment_resources(host_name, datacenter_name, cluster_name, service_instance):
+
+    # get datacenter
+    datacenter_ref = utils_datacenter.get_datacenter(
+        service_instance=service_instance, datacenter_name=datacenter_name
+    )
+
+    # get destination host
+    destination_host_ref = utils_common.get_mor_by_property(
+        service_instance,
+        vim.HostSystem,
+        host_name,
+        container_ref=datacenter_ref,
+    )
+
+
+    # Get cluster
+    cluster = utils_cluster.get_cluster(datacenter_ref, cluster_name)
+
+    # Generate resource pool.
+    resource_pool = cluster.resourcePool
+
+    return {
+        "destination_host": destination_host_ref,
+        "datacenter": datacenter_ref,
+        "cluster": cluster,
+        "resource_pool": resource_pool
+    }
+    
+
+
+def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name, service_instance=None):
+    """
+    Deploy a virtual machine from an OVF
+    """
+    
+    vms = list_(host=host_name)
+    if name in vms:
+        raise CommandExecutionError("Duplicate virtual machine name")
+
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    content = service_instance.content
+    manager = content.ovfManager
+    spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
+
+    resources = _deployment_resources(host_name, datacenter_name, cluster_name, service_instance)
+
+    import_spec = manager.CreateImportSpec(
+        ovf, resources["resource_pool"], resources["destination_host"].datastore[0], spec_params
+    )
+    if import_spec.importSpec == None:
+        return {"Create Import Spec error": import_spec.error[0].msg}
+    lease = resources["resource_pool"].ImportVApp(import_spec.importSpec, resources["datacenter"].vmFolder)
+
+    while True:
+        if lease.state == vim.HttpNfcLease.State.ready:
+            lease.HttpNfcLeaseComplete()
+            return {"state": lease.state}
+        elif lease.state == vim.HttpNfcLease.State.error:
+            return {"state": lease.state, "Lease error": lease.error.msg}
+
+
+def deploy_template(service_instance=None):
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    content = service_instance.content
+    resources = _deployment_resources("10.206.245.190", "Datacenter", "Cluster", service_instance)
+    breakpoint()
+    return 0
+
+
+def deploy_ovf(name, host_name, ovf_path, datacenter_name="Datacenter", cluster_name="Cluster"):
+    """
+    Deploy a virtual machine from an OVF
+    """
+    ovf = utils_vm.read_ovf_file(ovf_path)
+    result = _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name)
+    return result
+
+
+def deploy_ova(name, host_name, ova_path, datacenter_name="Datacenter", cluster_name="Cluster"):
+    """
+    Deploy a virtual machine from an OVA
+    """
+    ovf = utils_vm.read_ovf_from_ova(ova_path)
+    result = _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name)
+    return result
+
+
 def get_vm_facts(service_instance=None):
     """
     Return basic facts about a vSphere VM guest
@@ -55,7 +142,7 @@ def get_vm_facts(service_instance=None):
         host_id = host.name
         vms[host_id] = {}
         for vm in virtual_machines:
-            dc = datacenter.get_vm_datacenter(vm=vm)
+            dc = utils_datacenter.get_vm_datacenter(vm=vm)
             vms[host_id][vm.summary.config.name] = {
                 "cluster": vm.summary.runtime.host.parent.name,
                 "datacenter": dc.name,
@@ -74,78 +161,16 @@ def get_vm_facts(service_instance=None):
     return vms
 
 
-def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name, service_instance=None):
-    """
-    Deploy a virtual machine from an OVF
-    """
-    
-    vms = list_(host=host_name)
-    if name in vms:
-        raise CommandExecutionError("Duplicate virtual machine name")
-
-    if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    content = service_instance.content
-    manager = content.ovfManager
-    spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
-
-    # get destination host
-    destination_host = datacenter.get_destination_host(
-        service_instance=service_instance, host_name=host_name
-    )
-
-    # get datacenter
-    dc = datacenter.get_service_instance_datacenter(
-        service_instance=service_instance, datacenter_name=datacenter_name
-    )
-
-    # Get cluster
-    cluster = datacenter.get_cluster(datacenter=dc, cluster_name=cluster_name)
-
-    # Generate resource pool.
-    resource_pool = cluster.resourcePool
-
-    import_spec = manager.CreateImportSpec(
-        ovf, resource_pool, destination_host.datastore[0], spec_params
-    )
-    if import_spec.importSpec == None:
-        return {"Create Import Spec error": import_spec.error[0].msg}
-    lease = resource_pool.ImportVApp(import_spec.importSpec, dc.vmFolder)
-
-    while True:
-        if lease.state == vim.HttpNfcLease.State.ready:
-            lease.HttpNfcLeaseComplete()
-            return {"state": lease.state}
-        elif lease.state == vim.HttpNfcLease.State.error:
-            return {"state": lease.state, "Lease error": lease.error.msg}
-
-
-def deploy_ovf(name, host_name, ovf_path, datacenter_name="Datacenter", cluster_name="Cluster"):
-    """
-    Deploy a virtual machine from an OVF
-    """
-    ovf = common.read_ovf_file(ovf_path)
-    result = _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name)
-    return result
-
-
-def deploy_ova(name, host_name, ova_path, datacenter_name="Datacenter", cluster_name="Cluster"):
-    """
-    Deploy a virtual machine from an OVA
-    """
-    ovf = common.read_ovf_from_ova(ova_path)
-    result = _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name)
-    return result
-
-
-def list_(host=None, service_instance=None):
+def list_(host=None, datacenter_name="Datacenter", cluster_name="Cluster", service_instance=None):
     """
     return virtual machines on a host
-    """
+    """ 
 
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+    cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
+    hosts = cluster_ref.host
     result = [] if host else {}
     for host_i in hosts:
         if host == None:

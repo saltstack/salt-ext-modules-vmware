@@ -3,7 +3,9 @@
 import logging
 
 import salt.exceptions
-import saltext.vmware.utils.vmware
+import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.datacenter as utils_datacenter
 from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
@@ -38,11 +40,11 @@ def list_():
     ret = {}
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        datacenters = saltext.vmware.utils.vmware.get_datacenters(
+        datacenters = utils_datacenter.get_datacenters(
             service_instance, get_all_datacenters=True
         )
         for datacenter in datacenters:
-            clusters = saltext.vmware.utils.vmware.get_mors_with_properties(
+            clusters = utils_common.get_mors_with_properties(
                 service_instance,
                 vim.ClusterComputeResource,
                 container_ref=datacenter,
@@ -73,9 +75,9 @@ def create(name, datacenter):
     """
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, datacenter)
+        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_spec = vim.cluster.ConfigSpecEx()
-        saltext.vmware.utils.vmware.create_cluster(
+        utils_cluster.create_cluster(
             cluster_name=name, dc_ref=dc_ref, cluster_spec=cluster_spec
         )
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareRuntimeError) as exc:
@@ -102,8 +104,8 @@ def get_(name, datacenter):
     ret = {}
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, datacenter)
-        cluster_ref = saltext.vmware.utils.vmware.get_cluster(dc_ref=dc_ref, cluster=name)
+        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
+        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=name)
 
         # DRS config
         ret["drs_enabled"] = cluster_ref.configurationEx.drsConfig.enabled
@@ -137,7 +139,7 @@ def delete(name, datacenter):
     """
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        saltext.vmware.utils.vmware.delete_cluster(service_instance, name, datacenter)
+        utils_cluster.delete_cluster(service_instance, name, datacenter)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
         return {name: False, "reason": str(exc)}
     return {name: True}
