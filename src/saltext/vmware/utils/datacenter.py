@@ -1,14 +1,133 @@
 # SPDX-License-Identifier: Apache-2.0
-from os import sys
-
 # pylint: disable=no-name-in-module
+import logging
+
+import salt.exceptions
+import salt.modules.cmdmod
+import salt.utils.path
+import salt.utils.platform
+import salt.utils.stringutils
+import saltext.vmware.utils.common as utils_common
+
 try:
-    from pyVim.connect import GetSi, SmartConnect, Disconnect, GetStub, SoapStubAdapter
-    from pyVmomi import vim, vmodl, VmomiSupport
+    from pyVmomi import vim, vmodl
 
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
+
+log = logging.getLogger(__name__)
+
+
+def list_datacenters(service_instance):
+    """
+    Returns a list of datacenters associated with a given service instance.
+
+    service_instance
+        The Service Instance Object from which to obtain datacenters.
+    """
+    return utils_common.list_objects(service_instance, vim.Datacenter)
+
+
+def get_datacenters(service_instance, datacenter_names=None, get_all_datacenters=False):
+    """
+    Returns all datacenters in a vCenter.
+
+    service_instance
+        The Service Instance Object from which to obtain cluster.
+
+    datacenter_names
+        List of datacenter names to filter by. Default value is None.
+
+    get_all_datacenters
+        Flag specifying whether to retrieve all datacenters.
+        Default value is None.
+    """
+    items = [
+        i["object"]
+        for i in utils_common.get_mors_with_properties(
+            service_instance, vim.Datacenter, property_list=["name"]
+        )
+        if get_all_datacenters or (datacenter_names and i["name"] in datacenter_names)
+    ]
+    return items
+
+
+def get_datacenter(service_instance, datacenter_name):
+    """
+    Returns a vim.Datacenter managed object.
+
+    service_instance
+        The Service Instance Object from which to obtain datacenter.
+
+    datacenter_name
+        The datacenter name
+    """
+    items = get_datacenters(service_instance, datacenter_names=[datacenter_name])
+    if not items:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Datacenter '{}' was not found".format(datacenter_name)
+        )
+    return items[0]
+
+
+def create_datacenter(service_instance, datacenter_name):
+    """
+    Creates a datacenter.
+
+    .. versionadded:: 2017.7.0
+
+    service_instance
+        The Service Instance Object
+
+    datacenter_name
+        The datacenter name
+    """
+    root_folder = utils_common.get_root_folder(service_instance)
+    log.trace("Creating datacenter '%s'", datacenter_name)
+    try:
+        dc_obj = root_folder.CreateDatacenter(datacenter_name)
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    return dc_obj
+
+
+def delete_datacenter(service_instance, datacenter_name):
+    """
+    Deletes a datacenter.
+
+    service_instance
+        The Service Instance Object
+
+    datacenter_name
+        The datacenter name
+    """
+    root_folder = utils_common.get_root_folder(service_instance)
+    log.trace("Deleting datacenter '%s'", datacenter_name)
+    try:
+        dc_obj = get_datacenter(service_instance, datacenter_name)
+        task = dc_obj.Destroy_Task()
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    utils_common.wait_for_task(task, datacenter_name, "DeleteDatacenterTask")
 
 
 def get_vm_datacenter(*, vm):
@@ -25,49 +144,3 @@ def get_vm_datacenter(*, vm):
         except AttributeError:
             break
     return datacenter
-
-
-def get_service_instance_datacenter(*, service_instance, datacenter_name):
-    """
-    Return a datacenter from service instance
-    """
-    datacenter = None
-    content = service_instance.content
-    for child in content.rootFolder.childEntity:
-        if child.name == datacenter_name:
-            datacenter = child
-            break
-    if datacenter == None:
-        sys.exit(f"Datacenter {datacenter_name} not found!")
-    return datacenter
-
-
-def get_destination_host(*, service_instance, host_name):
-    """
-    Return Destination Host
-    """
-    content = service_instance.content
-    container = content.viewManager.CreateContainerView(content.rootFolder, [vim.HostSystem], True)
-    destination_host = None
-    for obj in container.view:
-        if obj.name == host_name:
-            destination_host = obj
-            break
-    container.Destroy()
-    if destination_host == None:
-        sys.exit(f"Destination host {host_name} not found!")
-    return destination_host
-
-
-def get_cluster(*, datacenter, cluster_name):
-    cluster_list = datacenter.hostFolder.childEntity
-    cluster_obj = None
-    if cluster_name:
-        for cluster in cluster_list:
-            if cluster.name == cluster_name:
-                cluster_obj = cluster
-    elif cluster_obj == None and len(cluster_list) > 0:
-        cluster_obj = cluster_list[0]
-    else:
-        exit(f"No clusters found in datacenter ({datacenter.name}).")
-    return cluster_obj

@@ -3,7 +3,8 @@
 import logging
 
 import salt.exceptions
-import saltext.vmware.utils.vmware
+import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.datacenter as utils_datacenter
 from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def list_():
         salt '*' vmware_datacenter.list
     """
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    return saltext.vmware.utils.vmware.list_datacenters(service_instance)
+    return utils_datacenter.list_datacenters(service_instance)
 
 
 def create(name):
@@ -54,7 +55,7 @@ def create(name):
     """
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        saltext.vmware.utils.vmware.create_datacenter(service_instance, name)
+        utils_datacenter.create_datacenter(service_instance, name)
     except salt.exceptions.VMwareApiError as exc:
         return {name: False, "reason": str(exc)}
     return {name: True}
@@ -76,8 +77,8 @@ def get_(name):
     ret = {}
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, name)
-        dc = saltext.vmware.utils.vmware.get_mors_with_properties(
+        dc_ref = utils_datacenter.get_datacenter(service_instance, name)
+        dc = utils_common.get_mors_with_properties(
             service_instance, vim.Datacenter, container_ref=dc_ref, local_properties=True
         )
         if dc:
@@ -102,7 +103,7 @@ def delete(name):
     """
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        saltext.vmware.utils.vmware.delete_datacenter(service_instance, name)
+        utils_datacenter.delete_datacenter(service_instance, name)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
         return {name: False, "reason": str(exc)}
     return {name: True}
