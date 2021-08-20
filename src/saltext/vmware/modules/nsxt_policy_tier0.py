@@ -101,7 +101,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 )
             vrf_resource_params["tier0_path"] = NSXTTier0.get_resource_base_url() + "/" + tier0_id
             vrf_fields = {"evpn_l2_vni_config", "evpn_transit_vni", "route_distinguisher"}
-            # This block cab be refactored
+            # This block can be refactored
             for field in vrf_fields:
                 val = vrf_config.get(field)
                 if val:
@@ -147,7 +147,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
 
             for static_route in static_routes:
                 resource_params = {}
-                # This block cab be refactored
+                # This block can be refactored
                 for key in fields:
                     val = static_route.get(key)
                     if val:
@@ -195,7 +195,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
             bfd_peers = kwargs.get("bfd_peers") or {}
             for bfd_peer in bfd_peers:
                 resource_params = {}
-                # This block cab be refactored
+                # This block can be refactored
                 for key in fields:
                     if bfd_peer.get(key):
                         resource_params[key] = bfd_peer.get(key)
@@ -236,7 +236,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
             locale_services = kwargs.get("locale_services") or {}
             for locale_service in locale_services:
                 resource_params = {}
-                # This block cab be refactored
+                # This block can be refactored
                 for field in fields:
                     if locale_service.get(field):
                         resource_params[field] = locale_service[field]
@@ -334,7 +334,7 @@ class NSXTTier0(NSXTPolicyBaseResource):
                 )
                 if locale_service:
                     interfaces = locale_service.get("interfaces") or {}
-                    # This block cab be refactored
+                    # This block can be refactored
                     for interface in interfaces:
                         resource_params = {}
                         for field in fields:
