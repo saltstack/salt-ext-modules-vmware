@@ -81,7 +81,7 @@ def test_template_deploy(integration_test_config, patch_salt_globals_vm):
     if integration_test_config["virtual_machines_templates"]:
         res = virtual_machine.deploy_template(
             name="test_template",
-            template_name= integration_test_config["virtual_machines_templates"][0],
+            template_name=integration_test_config["virtual_machines_templates"][0],
             host_name=integration_test_config["esxi_host_name"],
         )
         assert res["create"] == True
