@@ -45,10 +45,10 @@ def do_it(*, config_file):
     config["virtual_machines"] = {}
     config["vm_facts"] = {}
     for host in hosts:
-        config["virtual_machines"][host.name] = []
+        config["virtual_machines"] = []
         config["vm_facts"][host.name] = {}
         for vm in host.vm:
-            config["virtual_machines"][host.name].append(vm.name)
+            config["virtual_machines"].append(vm.name)
             config["vm_facts"][host.name][vm.name] = {
                 "cluster": vm.summary.runtime.host.parent.name,
                 "esxi_hostname": vm.summary.runtime.host.summary.config.name,

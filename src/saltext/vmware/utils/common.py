@@ -4,7 +4,9 @@ Common functions used across modules
 """
 import errno
 import logging
+import time
 from http.client import BadStatusLine
+import saltext.vmware.utils.datacenter as utils_datacenter
 
 import salt.exceptions
 import salt.modules.cmdmod
@@ -375,6 +377,59 @@ def get_managed_object_name(mo_ref):
     return props.get("name")
 
 
+def get_resource_pools(
+    service_instance,
+    resource_pool_names,
+    datacenter_name=None,
+    get_all_resource_pools=False,
+):
+    """
+    Retrieves resource pool objects
+
+    service_instance
+        The service instance object to query the vCenter
+
+    resource_pool_names
+        Resource pool names
+
+    datacenter_name
+        Name of the datacenter where the resource pool is available
+
+    get_all_resource_pools
+        Boolean
+
+    return
+        Resourcepool managed object reference
+    """
+
+    properties = ["name"]
+    if not resource_pool_names:
+        resource_pool_names = []
+    if datacenter_name:
+        container_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+    else:
+        container_ref = get_root_folder(service_instance)
+
+    resource_pools = get_mors_with_properties(
+        service_instance,
+        vim.ResourcePool,
+        container_ref=container_ref,
+        property_list=properties,
+    )
+
+    selected_pools = []
+    for pool in resource_pools:
+        if get_all_resource_pools or (pool["name"] in resource_pool_names):
+            selected_pools.append(pool["object"])
+    if not selected_pools:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "The resource pools with properties "
+            "names={} get_all={} could not be found".format(selected_pools, get_all_resource_pools)
+        )
+
+    return selected_pools
+
+
 def _filter_kwargs(allowed_kwargs, default_dict=None, **kwargs):
     result = default_dict or {}
     for field in allowed_kwargs:
@@ -500,3 +555,45 @@ def wait_for_task(task, instance_name, task_type, sleep_seconds=1, log_level="de
             if exc.faultMessage:
                 exc_message = "{} ({})".format(exc_message, exc.faultMessage[0].message)
             raise salt.exceptions.VMwareApiError(exc_message)
+
+
+def get_parent_type(node, parent_type):
+    """
+    Return a parent of specified type from a node.
+
+    node
+        Object reference to start at.
+
+    parent_type
+        The vim type of the parent you are searching for.
+    """
+    if isinstance(node, parent_type):
+        return node
+    try:
+        node = node.parent
+    except AttributeError:
+        return None
+    return get_parent_type(node, parent_type)
+
+
+def get_path(node, service_instance, path=""):
+    """
+    Return a path to root from a node.
+
+    node
+        Object reference to start at.
+
+    service_instance
+        The Service Instance from which to obtain managed object references.
+
+    path
+        Path to node, recursively passed.
+    """
+    if node == service_instance.content.rootFolder:
+        return path
+    try:
+        path = "/" + node.name + path
+        node = node.parent
+    except AttributeError:
+        return path
+    return get_path(node, service_instance, path)

@@ -31,24 +31,12 @@ def test_vm_get_basic_facts(integration_test_config, arg_name, patch_salt_global
             assert vm_facts[host_id][vm_name][arg_name] == expected_value
 
 
-def test_vm_list_all(integration_test_config, patch_salt_globals_vm):
+def test_vm_list(integration_test_config, patch_salt_globals_vm):
     """
     Test vm list_all()
     """
     all = virtual_machine.list_()
-    for host in all:
-        for vm in all[host]:
-            assert vm in integration_test_config["virtual_machines"][host]
-
-
-def test_vm_list(integration_test_config, patch_salt_globals_vm):
-    """
-    Test vm list_()
-    """
-    for host in integration_test_config["virtual_machines"]:
-        vms = virtual_machine.list_(host)
-        for vm in vms:
-            assert vm in integration_test_config["virtual_machines"][host]
+    assert all == integration_test_config["virtual_machines"]
 
 
 def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
@@ -60,7 +48,7 @@ def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
         host_name=integration_test_config["esxi_host_name"],
         ovf_path="tests/test_files/centos-7-tools.ovf",
     )
-    assert res["state"] == "done"
+    assert res["create"] == True
 
 
 def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
@@ -76,4 +64,4 @@ def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
         ova_path="tests/test_files/sample.tar",
     )
     os.remove("tests/test_files/sample.tar")
-    assert res["state"] == "done"
+    assert res["create"] == True
