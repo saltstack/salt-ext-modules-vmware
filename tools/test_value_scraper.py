@@ -15,8 +15,16 @@ import argparse
 import json
 import pathlib
 import ssl
+import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.vm as utils_vm
 
 from pyVim import connect
+try:
+    from pyVmomi import vim
+
+    HAS_PYVMOMI = True
+except ImportError:
+    HAS_PYVMOMI = False
 
 
 def do_it(*, config_file):
@@ -43,21 +51,35 @@ def do_it(*, config_file):
     ]
     config["esxi_capabilities"] = {host.name: dict(host.capability.__dict__) for host in hosts}
     config["virtual_machines"] = {}
-    config["vm_facts"] = {}
+    config["vm_info"] = {}
     for host in hosts:
         config["virtual_machines"] = []
-        config["vm_facts"][host.name] = {}
+        config["virtual_machines_templates"] = []
         for vm in host.vm:
             config["virtual_machines"].append(vm.name)
-            config["vm_facts"][host.name][vm.name] = {
-                "cluster": vm.summary.runtime.host.parent.name,
-                "esxi_hostname": vm.summary.runtime.host.summary.config.name,
+            if vm.config.template:
+                config["virtual_machines_templates"].append(vm.name)
+            datacenter_ref = utils_common.get_parent_type(vm, vim.Datacenter)
+            mac_address = utils_vm.get_mac_address(vm)
+            network = utils_vm.get_network(vm)
+            tags = []
+            for tag in vm.tag:
+                tags.append(tag.name)
+            folder_path = utils_common.get_path(vm, si)
+            config["vm_info"][vm.name] = {
                 "guest_name": vm.summary.config.name,
                 "guest_fullname": vm.summary.guest.guestFullName,
-                "ip_address": vm.summary.guest.ipAddress,
-                "mac_address": None,
                 "power_state": vm.summary.runtime.powerState,
+                "ip_address": vm.summary.guest.ipAddress,
+                "mac_address": mac_address,
                 "uuid": vm.summary.config.uuid,
+                "vm_network": network,
+                "esxi_hostname": vm.summary.runtime.host.name,
+                "datacenter": datacenter_ref.name,
+                "cluster": vm.summary.runtime.host.parent.name,
+                "tags": tags,
+                "folder": folder_path,
+                "moid": vm._moId,
             }
 
     json_config = json.dumps(config, indent=2, sort_keys=True)

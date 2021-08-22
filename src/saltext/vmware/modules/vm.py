@@ -215,7 +215,7 @@ def deploy_template(name, template_name, host_name, service_instance=None):
     return {"create": True}
 
 
-def get_vm_info(name=None, service_instance=None):
+def get_info(name=None, service_instance=None):
     """
     Return basic info about a vSphere VM guest
 
@@ -245,20 +245,11 @@ def get_vm_info(name=None, service_instance=None):
 
     for vm in vms:
         datacenter_ref = utils_common.get_parent_type(vm, vim.Datacenter)
-        mac_address = []
-        for device in vm.config.hardware.device:
-            if isinstance(device, vim.vm.device.VirtualEthernetCard):
-                mac_address.append(device.macAddress)
-        network = {}
-        for device in vm.guest.net:
-            network[device.macAddress] = {}
-            network[device.macAddress]['ipv4'] = []
-            network[device.macAddress]['ipv6'] = []
-            for address in device.ipAddress:
-                if "::" in address:
-                    network[device.macAddress]['ipv6'].append(address)
-                else:
-                    network[device.macAddress]['ipv4'].append(address)
+        mac_address = utils_vm.get_mac_address(vm)
+        network = utils_vm.get_network(vm)
+        tags = []
+        for tag in vm.tag:
+            tags.append(tag.name)
         folder_path = utils_common.get_path(vm, service_instance)
         info[vm.summary.config.name] = {
             "guest_name": vm.summary.config.name,
@@ -271,9 +262,7 @@ def get_vm_info(name=None, service_instance=None):
             "esxi_hostname": vm.summary.runtime.host.name,
             "datacenter": datacenter_ref.name,
             "cluster": vm.summary.runtime.host.parent.name,
-            # TODO: attributes, tags
-            "attributes": None,
-            "tags": None,
+            "tags": tags,
             "folder": folder_path,
             "moid": vm._moId,
         }

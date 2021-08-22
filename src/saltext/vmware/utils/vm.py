@@ -545,6 +545,9 @@ def get_folder(service_instance, datacenter, placement, base_vm_name=None):
 def read_ovf_file(ovf_path):
     """
     Read in OVF file.
+
+    ovf_path
+        Path to ovf file
     """
     try:
         with open(ovf_path) as ovf_file:
@@ -556,6 +559,9 @@ def read_ovf_file(ovf_path):
 def read_ovf_from_ova(ova_path):
     """
     Read in OVF file from OVA.
+
+    ova_path
+        Path to ova file
     """
     try:
         with tarfile.open(ova_path) as tf:
@@ -565,3 +571,37 @@ def read_ovf_from_ova(ova_path):
                     return ovf.read().decode()
     except Exception:
         exit(f"Could not read file: {ova_path}")
+
+
+def get_network(vm):
+    """
+    Returns network from a virtual machine object.
+
+    vm
+        Virtual Machine Object from which to obtain mac address.
+    """
+    network = {}
+    for device in vm.guest.net:
+        network[device.macAddress] = {}
+        network[device.macAddress]['ipv4'] = []
+        network[device.macAddress]['ipv6'] = []
+        for address in device.ipAddress:
+            if "::" in address:
+                network[device.macAddress]['ipv6'].append(address)
+            else:
+                network[device.macAddress]['ipv4'].append(address)
+    return network
+
+
+def get_mac_address(vm):
+    """
+    Returns mac addresses from a virtual machine object.
+
+    vm
+        Virtual Machine Object from which to obtain mac address.
+    """
+    mac_address = []
+    for device in vm.config.hardware.device:
+        if isinstance(device, vim.vm.device.VirtualEthernetCard):
+            mac_address.append(device.macAddress)
+    return mac_address

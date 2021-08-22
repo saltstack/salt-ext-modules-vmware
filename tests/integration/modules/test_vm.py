@@ -19,24 +19,31 @@ import saltext.vmware.modules.vm as virtual_machine
         "uuid",
     ],
 )
-def test_vm_get_basic_facts(integration_test_config, arg_name, patch_salt_globals_vm):
+def test_vm_get_info(integration_test_config, arg_name, patch_salt_globals_vm):
     """
-    Test we are returning the same values from get_vm_facts
+    Test we are returning the same values from get_info
     as our connected vcenter instance.
     """
-    vm_facts = virtual_machine.get_vm_facts()
-    for host_id in vm_facts:
-        for vm_name in vm_facts[host_id]:
-            expected_value = integration_test_config["vm_facts"][host_id][vm_name][arg_name]
-            assert vm_facts[host_id][vm_name][arg_name] == expected_value
+    vm_info = virtual_machine.get_info()
+    for vm_name in vm_info:
+        expected_value = integration_test_config["vm_info"][vm_name][arg_name]
+        assert vm_info[vm_name][arg_name] == expected_value
 
 
 def test_vm_list(integration_test_config, patch_salt_globals_vm):
     """
-    Test vm list_all()
+    Test vm list_
     """
     all = virtual_machine.list_()
     assert all == integration_test_config["virtual_machines"]
+
+
+def test_vm_list_templates(integration_test_config, patch_salt_globals_vm):
+    """
+    Test vm list_templates
+    """
+    all = virtual_machine.list_templates()
+    assert all == integration_test_config["virtual_machines_templates"]
 
 
 def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
