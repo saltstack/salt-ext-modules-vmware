@@ -15,10 +15,11 @@ import argparse
 import json
 import pathlib
 import ssl
+
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.vm as utils_vm
-
 from pyVim import connect
+
 try:
     from pyVmomi import vim
 

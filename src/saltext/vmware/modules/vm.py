@@ -1,17 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
-import salt.utils.platform
 import salt.exceptions
-from salt.utils.dictdiffer import recursive_diff
-from salt.utils.listdiffer import list_diff
-
+import salt.utils.platform
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as utils_datacenter
 import saltext.vmware.utils.vm as utils_vm
 import saltext.vmware.utils.vmware as utils_vmware
+from salt.utils.dictdiffer import recursive_diff
+from salt.utils.listdiffer import list_diff
 from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineDeleteSchema
 from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineUnregisterSchema
 
@@ -55,7 +54,7 @@ def list_(service_instance=None):
 def list_templates(service_instance=None):
     """
     Returns virtual machines tempates.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -109,11 +108,11 @@ def _deploy_ovf(name, host_name, ovf, service_instance=None):
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    
+
     vms = list_(service_instance)
     if name in vms:
         raise salt.exceptions.CommandExecutionError("Duplicate virtual machine name.")
-    
+
     content = service_instance.content
     manager = content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
@@ -128,7 +127,7 @@ def _deploy_ovf(name, host_name, ovf, service_instance=None):
         import_spec.importSpec.configSpec,
         resources["datacenter"].vmFolder,
         resources["resource_pool"],
-        resources["destination_host"]
+        resources["destination_host"],
     )
     return vm_ref
 
@@ -166,7 +165,7 @@ def deploy_ova(name, host_name, ova_path, service_instance=None):
 
     ova_path
         The path to the Open Virtualization Appliance that contains a compressed configuration of a virtual machine.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -181,23 +180,23 @@ def deploy_template(name, template_name, host_name, service_instance=None):
 
     name
         The name of the virtual machine to be created.
-    
+
     template_name
         The name of the template to clone from.
 
     host_name
         The name of the esxi host to create the vitual machine on.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    
+
     vms = list_(service_instance)
     if name in vms:
         raise salt.exceptions.CommandExecutionError("Duplicate virtual machine name.")
-    
+
     template_vms = list_templates(service_instance)
     if template_name not in template_vms:
         raise salt.exceptions.CommandExecutionError("Template does not exist.")
@@ -221,7 +220,7 @@ def get_info(name=None, service_instance=None):
 
     name
         (optional) The name of the virtual machine to get info on.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -229,13 +228,15 @@ def get_info(name=None, service_instance=None):
     info = {}
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    
+
     if name:
-        vms.append(utils_common.get_mor_by_property(
-            service_instance,
-            vim.VirtualMachine,
-            name,
-        ))
+        vms.append(
+            utils_common.get_mor_by_property(
+                service_instance,
+                vim.VirtualMachine,
+                name,
+            )
+        )
 
     else:
         for dc in service_instance.content.rootFolder.childEntity:
@@ -464,7 +465,7 @@ def create_vm(
     sata_controllers=None,
     cd_drives=None,
     advanced_configs=None,
-    service_instance=None
+    service_instance=None,
 ):
     """
     Creates a virtual machine container.
@@ -602,9 +603,7 @@ def create_vm(
             "Specified datastore: '{}' does not exist.".format(datastore)
         )
     try:
-        ds_summary = utils_common.get_properties_of_managed_object(
-            datastore_object, "summary.type"
-        )
+        ds_summary = utils_common.get_properties_of_managed_object(datastore_object, "summary.type")
         if "summary.type" in ds_summary and ds_summary["summary.type"] == "vsan":
             log.trace(
                 "The vmPathName should be the datastore " "name if the datastore type is vsan"
@@ -658,9 +657,7 @@ def create_vm(
         config_spec.deviceChange.extend(cd_drive_specs)
     if advanced_configs:
         _apply_advanced_config(config_spec, advanced_configs)
-    utils_vm.create_vm(
-        vm_name, config_spec, folder_object, resourcepool_object, placement_object
-    )
+    utils_vm.create_vm(vm_name, config_spec, folder_object, resourcepool_object, placement_object)
 
     return {"create_vm": True}
 

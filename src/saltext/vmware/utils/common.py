@@ -6,13 +6,13 @@ import errno
 import logging
 import time
 from http.client import BadStatusLine
-import saltext.vmware.utils.datacenter as utils_datacenter
 
 import salt.exceptions
 import salt.modules.cmdmod
 import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
+import saltext.vmware.utils.datacenter as utils_datacenter
 
 
 try:

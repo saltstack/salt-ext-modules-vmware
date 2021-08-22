@@ -500,12 +500,8 @@ def get_folder(service_instance, datacenter, placement, base_vm_name=None):
     """
     log.trace("Retrieving folder information")
     if base_vm_name:
-        vm_object = get_vm_by_property(
-            service_instance, base_vm_name, vm_properties=["name"]
-        )
-        vm_props = utils_common.get_properties_of_managed_object(
-            vm_object, properties=["parent"]
-        )
+        vm_object = get_vm_by_property(service_instance, base_vm_name, vm_properties=["name"])
+        vm_props = utils_common.get_properties_of_managed_object(vm_object, properties=["parent"])
         if "parent" in vm_props:
             folder_object = vm_props["parent"]
         else:
@@ -527,9 +523,7 @@ def get_folder(service_instance, datacenter, placement, base_vm_name=None):
     #         )
     #     folder_object = folder_objects[0]
     elif datacenter:
-        datacenter_object = utils_datacenter.get_datacenter(
-            service_instance, datacenter
-        )
+        datacenter_object = utils_datacenter.get_datacenter(service_instance, datacenter)
         dc_props = utils_common.get_properties_of_managed_object(
             datacenter_object, properties=["vmFolder"]
         )
@@ -583,13 +577,13 @@ def get_network(vm):
     network = {}
     for device in vm.guest.net:
         network[device.macAddress] = {}
-        network[device.macAddress]['ipv4'] = []
-        network[device.macAddress]['ipv6'] = []
+        network[device.macAddress]["ipv4"] = []
+        network[device.macAddress]["ipv6"] = []
         for address in device.ipAddress:
             if "::" in address:
-                network[device.macAddress]['ipv6'].append(address)
+                network[device.macAddress]["ipv6"].append(address)
             else:
-                network[device.macAddress]['ipv4'].append(address)
+                network[device.macAddress]["ipv4"].append(address)
     return network
 
 
