@@ -619,5 +619,5 @@ class NSXTPolicyBaseResource(ABC):
         for k, v in existing_params.items():
             if k not in resource_params:
                 resource_params[k] = v
-            elif type(v) == dict:
+            elif isinstance(v, dict):
                 self._fill_missing_resource_params(v, resource_params[k])
