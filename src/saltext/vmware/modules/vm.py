@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
+import salt.exceptions
 import salt.utils.platform
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as utils_datacenter
 import saltext.vmware.utils.vm as utils_vm
-from salt.exceptions import CommandExecutionError
-from salt.exceptions import InvalidConfigError
+import saltext.vmware.utils.vmware as utils_vmware
 from salt.utils.dictdiffer import recursive_diff
 from salt.utils.listdiffer import list_diff
 from saltext.vmware.config.schemas.esxvm import ESXVirtualMachineDeleteSchema
@@ -39,148 +39,235 @@ def __virtual__():
     return __virtualname__
 
 
-def _deployment_resources(host_name, datacenter_name, cluster_name, service_instance):
+def list_(service_instance=None):
+    """
+    Returns virtual machines.
 
-    # get datacenter
-    datacenter_ref = utils_datacenter.get_datacenter(
-        service_instance=service_instance, datacenter_name=datacenter_name
-    )
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    return utils_vm.list_vms(service_instance)
 
-    # get destination host
+
+def list_templates(service_instance=None):
+    """
+    Returns virtual machines tempates.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    return utils_vm.list_vm_templates(service_instance)
+
+
+def _deployment_resources(host_name, service_instance):
+    """
+    Returns the dict representation of deployment resources from given host name.
+
+    host_name
+        The name of the esxi host to obtain esxi reference.
+
+    """
     destination_host_ref = utils_common.get_mor_by_property(
         service_instance,
         vim.HostSystem,
         host_name,
-        container_ref=datacenter_ref,
     )
-
-    # Get cluster
-    cluster = utils_cluster.get_cluster(datacenter_ref, cluster_name)
-
-    # Generate resource pool.
-    resource_pool = cluster.resourcePool
+    datacenter_ref = utils_common.get_parent_type(destination_host_ref, vim.Datacenter)
+    cluster_ref = utils_common.get_parent_type(destination_host_ref, vim.ClusterComputeResource)
+    resource_pool = cluster_ref.resourcePool
 
     return {
         "destination_host": destination_host_ref,
         "datacenter": datacenter_ref,
-        "cluster": cluster,
+        "cluster": cluster_ref,
         "resource_pool": resource_pool,
     }
 
 
-def _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name, service_instance=None):
+def _deploy_ovf(name, host_name, ovf, service_instance=None):
     """
-    Deploy a virtual machine from an OVF
+    Helper fuctions that takes in a OVF file to create a virtual machine.
+
+    Returns virtual machine reference.
+
+    name
+        The name of the virtual machine to be created.
+
+    host_name
+        The name of the esxi host to create the vitual machine on.
+
+    ovf_path
+        The path to the Open Virtualization Format that contains a configuration of a virtual machine.
+
+    service_instance
+        The Service Instance from which to obtain managed object references.
     """
-
-    vms = list_(host=host_name)
-    if name in vms:
-        raise CommandExecutionError("Duplicate virtual machine name")
-
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    vms = list_(service_instance)
+    if name in vms:
+        raise salt.exceptions.CommandExecutionError("Duplicate virtual machine name.")
+
     content = service_instance.content
     manager = content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
 
-    resources = _deployment_resources(host_name, datacenter_name, cluster_name, service_instance)
+    resources = _deployment_resources(host_name, service_instance)
 
     import_spec = manager.CreateImportSpec(
         ovf, resources["resource_pool"], resources["destination_host"].datastore[0], spec_params
     )
-    if import_spec.importSpec == None:
-        return {"Create Import Spec error": import_spec.error[0].msg}
-    lease = resources["resource_pool"].ImportVApp(
-        import_spec.importSpec, resources["datacenter"].vmFolder
+    vm_ref = utils_vm.create_vm(
+        name,
+        import_spec.importSpec.configSpec,
+        resources["datacenter"].vmFolder,
+        resources["resource_pool"],
+        resources["destination_host"],
     )
-
-    while True:
-        if lease.state == vim.HttpNfcLease.State.ready:
-            lease.HttpNfcLeaseComplete()
-            return {"state": lease.state}
-        elif lease.state == vim.HttpNfcLease.State.error:
-            return {"state": lease.state, "Lease error": lease.error.msg}
+    return vm_ref
 
 
-def deploy_template(service_instance=None):
-    if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    content = service_instance.content
-    resources = _deployment_resources("10.206.245.190", "Datacenter", "Cluster", service_instance)
-    breakpoint()
-    return 0
-
-
-def deploy_ovf(name, host_name, ovf_path, datacenter_name="Datacenter", cluster_name="Cluster"):
+def deploy_ovf(name, host_name, ovf_path, service_instance=None):
     """
     Deploy a virtual machine from an OVF
+
+    name
+        The name of the virtual machine to be created.
+
+    host_name
+        The name of the esxi host to create the vitual machine on.
+
+    ovf_path
+        The path to the Open Virtualization Format that contains a configuration of a virtual machine.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
     """
     ovf = utils_vm.read_ovf_file(ovf_path)
-    result = _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name)
-    return result
+    _deploy_ovf(name, host_name, ovf, service_instance)
+    return {"create": True}
 
 
-def deploy_ova(name, host_name, ova_path, datacenter_name="Datacenter", cluster_name="Cluster"):
+def deploy_ova(name, host_name, ova_path, service_instance=None):
     """
     Deploy a virtual machine from an OVA
+
+    name
+        The name of the virtual machine to be created.
+
+    host_name
+        The name of the esxi host to create the vitual machine on.
+
+    ova_path
+        The path to the Open Virtualization Appliance that contains a compressed configuration of a virtual machine.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
     """
     ovf = utils_vm.read_ovf_from_ova(ova_path)
-    result = _deploy_ovf(name, host_name, ovf, datacenter_name, cluster_name)
-    return result
+    _deploy_ovf(name, host_name, ovf, service_instance)
+    return {"create": True}
 
 
-def get_vm_facts(service_instance=None):
+def deploy_template(name, template_name, host_name, service_instance=None):
     """
-    Return basic facts about a vSphere VM guest
+    Deploy a virtual machine from a template virtual machine.
+
+    name
+        The name of the virtual machine to be created.
+
+    template_name
+        The name of the template to clone from.
+
+    host_name
+        The name of the esxi host to create the vitual machine on.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
     """
-    vms = {}
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    for host in hosts:
-        virtual_machines = host.vm
-        host_id = host.name
-        vms[host_id] = {}
-        for vm in virtual_machines:
-            dc = utils_datacenter.get_vm_datacenter(vm=vm)
-            vms[host_id][vm.summary.config.name] = {
-                "cluster": vm.summary.runtime.host.parent.name,
-                "datacenter": dc.name,
-                "esxi_hostname": vm.summary.runtime.host.summary.config.name,
-                "guest_fullname": vm.summary.guest.guestFullName,
-                "guest_name": vm.summary.config.name,
-                "ip_address": vm.summary.guest.ipAddress,
-                # TODO get mac address
-                "mac_address": None,
-                "power_state": vm.summary.runtime.powerState,
-                "uuid": vm.summary.config.uuid,
-                # TODO get network
-                "vm_network": {}
-                # TODO get attributes, tags, folder, moid
-            }
-    return vms
+
+    vms = list_(service_instance)
+    if name in vms:
+        raise salt.exceptions.CommandExecutionError("Duplicate virtual machine name.")
+
+    template_vms = list_templates(service_instance)
+    if template_name not in template_vms:
+        raise salt.exceptions.CommandExecutionError("Template does not exist.")
+
+    template = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, template_name)
+    resources = _deployment_resources(host_name, service_instance)
+
+    relospec = vim.vm.RelocateSpec()
+    relospec.pool = resources["resource_pool"]
+
+    clonespec = vim.vm.CloneSpec()
+    clonespec.location = relospec
+
+    utils_vm.clone_vm(name, resources["datacenter"].vmFolder, template, clonespec)
+    return {"create": True}
 
 
-def list_(host=None, datacenter_name="Datacenter", cluster_name="Cluster", service_instance=None):
+def get_info(name=None, service_instance=None):
     """
-    return virtual machines on a host
-    """
+    Return basic info about a vSphere VM guest
 
+    name
+        (optional) The name of the virtual machine to get info on.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    vms = []
+    info = {}
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
-    dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
-    cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
-    hosts = cluster_ref.host
-    result = [] if host else {}
-    for host_i in hosts:
-        if host == None:
-            result[host_i.name] = []
-            for vm in host_i.vm:
-                result[host_i.name].append(vm.name)
-        elif host_i.name == host:
-            for vm in host_i.vm:
-                result.append(vm.name)
-    return result
+
+    if name:
+        vms.append(
+            utils_common.get_mor_by_property(
+                service_instance,
+                vim.VirtualMachine,
+                name,
+            )
+        )
+
+    else:
+        for dc in service_instance.content.rootFolder.childEntity:
+            for i in dc.vmFolder.childEntity:
+                if isinstance(i, vim.VirtualMachine):
+                    vms.append(i)
+
+    for vm in vms:
+        datacenter_ref = utils_common.get_parent_type(vm, vim.Datacenter)
+        mac_address = utils_vm.get_mac_address(vm)
+        network = utils_vm.get_network(vm)
+        tags = []
+        for tag in vm.tag:
+            tags.append(tag.name)
+        folder_path = utils_common.get_path(vm, service_instance)
+        info[vm.summary.config.name] = {
+            "guest_name": vm.summary.config.name,
+            "guest_fullname": vm.summary.guest.guestFullName,
+            "power_state": vm.summary.runtime.powerState,
+            "ip_address": vm.summary.guest.ipAddress,
+            "mac_address": mac_address,
+            "uuid": vm.summary.config.uuid,
+            "vm_network": network,
+            "esxi_hostname": vm.summary.runtime.host.name,
+            "datacenter": datacenter_ref.name,
+            "cluster": vm.summary.runtime.host.parent.name,
+            "tags": tags,
+            "folder": folder_path,
+            "moid": vm._moId,
+        }
+    return info
 
 
 # pylint: disable=C0302
@@ -359,6 +446,220 @@ connection credentials are used instead of vCenter credentials, the ``host_names
                 port:
                     6500
 """
+
+
+def create_vm(
+    vm_name,
+    cpu,
+    memory,
+    image,
+    version,
+    datacenter,
+    datastore,
+    placement,
+    interfaces,
+    disks,
+    scsi_devices,
+    serial_ports=None,
+    ide_controllers=None,
+    sata_controllers=None,
+    cd_drives=None,
+    advanced_configs=None,
+    service_instance=None,
+):
+    """
+    Creates a virtual machine container.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt vm_minion vsphere.create_vm vm_name=vmname cpu='{count: 2, nested: True}' ...
+
+    vm_name
+        Name of the virtual machine
+
+    cpu
+        Properties of CPUs for freshly created machines
+
+    memory
+        Memory size for freshly created machines
+
+    image
+        Virtual machine guest OS version identifier
+        VirtualMachineGuestOsIdentifier
+
+    version
+        Virtual machine container hardware version
+
+    datacenter
+        Datacenter where the virtual machine will be deployed (mandatory)
+
+    datastore
+        Datastore where the virtual machine files will be placed
+
+    placement
+        Resource pool or cluster or host or folder where the virtual machine
+        will be deployed
+
+    devices
+        interfaces
+
+        .. code-block:: bash
+
+            interfaces:
+              adapter: 'Network adapter 1'
+              name: vlan100
+              switch_type: distributed or standard
+              adapter_type: vmxnet3 or vmxnet, vmxnet2, vmxnet3, e1000, e1000e
+              mac: '00:11:22:33:44:55'
+              connectable:
+                allow_guest_control: True
+                connected: True
+                start_connected: True
+
+        disks
+
+        .. code-block:: bash
+
+            disks:
+              adapter: 'Hard disk 1'
+              size: 16
+              unit: GB
+              address: '0:0'
+              controller: 'SCSI controller 0'
+              thin_provision: False
+              eagerly_scrub: False
+              datastore: 'myshare'
+              filename: 'vm/mydisk.vmdk'
+
+        scsi_devices
+
+        .. code-block:: bash
+
+            scsi_devices:
+              controller: 'SCSI controller 0'
+              type: paravirtual
+              bus_sharing: no_sharing
+
+        serial_ports
+
+        .. code-block:: bash
+
+            serial_ports:
+              adapter: 'Serial port 1'
+              type: network
+              backing:
+                uri: 'telnet://something:port'
+                direction: <client|server>
+                filename: 'service_uri'
+              connectable:
+                allow_guest_control: True
+                connected: True
+                start_connected: True
+              yield: False
+
+        cd_drives
+
+        .. code-block:: bash
+
+            cd_drives:
+              adapter: 'CD/DVD drive 0'
+              controller: 'IDE 0'
+              device_type: datastore_iso_file
+              datastore_iso_file:
+                path: path_to_iso
+              connectable:
+                allow_guest_control: True
+                connected: True
+                start_connected: True
+
+    advanced_config
+        Advanced config parameters to be set for the virtual machine
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    # If datacenter is specified, set the container reference to start search
+    # from it instead
+    container_object = utils_datacenter.get_datacenter(service_instance, datacenter)
+    (resourcepool_object, placement_object) = utils_vm.get_placement(
+        service_instance, datacenter, placement=placement
+    )
+    folder_object = utils_vm.get_folder(service_instance, datacenter, placement)
+    # Create the config specs
+    config_spec = vim.vm.ConfigSpec()
+    config_spec.name = vm_name
+    config_spec.guestId = image
+    config_spec.files = vim.vm.FileInfo()
+
+    # For VSAN disks we need to specify a different vm path name, the vm file
+    # full path cannot be used
+    datastore_object = utils_vmware.get_datastores(
+        service_instance, placement_object, datastore_names=[datastore]
+    )[0]
+    if not datastore_object:
+        raise salt.exceptions.ArgumentValueError(
+            "Specified datastore: '{}' does not exist.".format(datastore)
+        )
+    try:
+        ds_summary = utils_common.get_properties_of_managed_object(datastore_object, "summary.type")
+        if "summary.type" in ds_summary and ds_summary["summary.type"] == "vsan":
+            log.trace(
+                "The vmPathName should be the datastore " "name if the datastore type is vsan"
+            )
+            config_spec.files.vmPathName = "[{}]".format(datastore)
+        else:
+            config_spec.files.vmPathName = "[{0}] {1}/{1}.vmx".format(datastore, vm_name)
+    except salt.exceptions.VMwareApiError:
+        config_spec.files.vmPathName = "[{0}] {1}/{1}.vmx".format(datastore, vm_name)
+
+    cd_controllers = []
+    if version:
+        _apply_hardware_version(version, config_spec, "add")
+    if cpu:
+        _apply_cpu_config(config_spec, cpu)
+    if memory:
+        _apply_memory_config(config_spec, memory)
+    if scsi_devices:
+        scsi_specs = _create_scsi_devices(scsi_devices)
+        config_spec.deviceChange.extend(scsi_specs)
+    if disks:
+        scsi_controllers = [spec.device for spec in scsi_specs]
+        disk_specs = _create_disks(
+            service_instance,
+            disks,
+            scsi_controllers=scsi_controllers,
+            parent=container_object,
+        )
+        config_spec.deviceChange.extend(disk_specs)
+    if interfaces:
+        (
+            interface_specs,
+            nic_settings,  # pylint: disable=unused-variable
+        ) = _create_network_adapters(interfaces, parent=container_object)
+        config_spec.deviceChange.extend(interface_specs)
+    if serial_ports:
+        serial_port_specs = _create_serial_ports(serial_ports)
+        config_spec.deviceChange.extend(serial_port_specs)
+    if ide_controllers:
+        ide_specs = _create_ide_controllers(ide_controllers)
+        config_spec.deviceChange.extend(ide_specs)
+        cd_controllers.extend(ide_specs)
+    if sata_controllers:
+        sata_specs = _create_sata_controllers(sata_controllers)
+        config_spec.deviceChange.extend(sata_specs)
+        cd_controllers.extend(sata_specs)
+    if cd_drives:
+        cd_drive_specs = _create_cd_drives(
+            cd_drives, controllers=cd_controllers, parent_ref=container_object
+        )
+        config_spec.deviceChange.extend(cd_drive_specs)
+    if advanced_configs:
+        _apply_advanced_config(config_spec, advanced_configs)
+    utils_vm.create_vm(vm_name, config_spec, folder_object, resourcepool_object, placement_object)
+
+    return {"create_vm": True}
 
 
 def _get_scsi_controller_key(bus_number, scsi_ctrls):
@@ -1984,261 +2285,6 @@ def delete_vm(
     saltext.vmware.utils.vmware.delete_vm(vm_ref)
     results["deleted_vm"] = True
     return results
-
-
-def create_vm(
-    vm_name,
-    cpu,
-    memory,
-    image,
-    version,
-    datacenter,
-    datastore,
-    placement,
-    interfaces,
-    disks,
-    scsi_devices,
-    serial_ports=None,
-    ide_controllers=None,
-    sata_controllers=None,
-    cd_drives=None,
-    advanced_configs=None,
-    host=None,
-    vcenter=None,
-    username=None,
-    password=None,
-    protocol=None,
-    port=None,
-    verify_ssl=True,
-):
-    """
-    Creates a virtual machine container.
-
-    CLI Example:
-
-    .. code-block:: bash
-
-        salt vm_minion vsphere.create_vm vm_name=vmname cpu='{count: 2, nested: True}' ...
-
-    vm_name
-        Name of the virtual machine
-
-    cpu
-        Properties of CPUs for freshly created machines
-
-    memory
-        Memory size for freshly created machines
-
-    image
-        Virtual machine guest OS version identifier
-        VirtualMachineGuestOsIdentifier
-
-    version
-        Virtual machine container hardware version
-
-    datacenter
-        Datacenter where the virtual machine will be deployed (mandatory)
-
-    datastore
-        Datastore where the virtual machine files will be placed
-
-    placement
-        Resource pool or cluster or host or folder where the virtual machine
-        will be deployed
-
-    host
-        The location of the host.
-
-    username
-        The username used to login to the host, such as ``root``.
-
-    password
-        The password used to login to the host.
-
-    protocol
-        Optionally set to alternate protocol if the host is not using the default
-        protocol. Default protocol is ``https``.
-
-    port
-        Optionally set to alternate port if the host is not using the default
-        port. Default port is ``443``.
-
-    verify_ssl
-        Verify the SSL certificate. Default: True
-
-    devices
-        interfaces
-
-        .. code-block:: bash
-
-            interfaces:
-              adapter: 'Network adapter 1'
-              name: vlan100
-              switch_type: distributed or standard
-              adapter_type: vmxnet3 or vmxnet, vmxnet2, vmxnet3, e1000, e1000e
-              mac: '00:11:22:33:44:55'
-              connectable:
-                allow_guest_control: True
-                connected: True
-                start_connected: True
-
-        disks
-
-        .. code-block:: bash
-
-            disks:
-              adapter: 'Hard disk 1'
-              size: 16
-              unit: GB
-              address: '0:0'
-              controller: 'SCSI controller 0'
-              thin_provision: False
-              eagerly_scrub: False
-              datastore: 'myshare'
-              filename: 'vm/mydisk.vmdk'
-
-        scsi_devices
-
-        .. code-block:: bash
-
-            scsi_devices:
-              controller: 'SCSI controller 0'
-              type: paravirtual
-              bus_sharing: no_sharing
-
-        serial_ports
-
-        .. code-block:: bash
-
-            serial_ports:
-              adapter: 'Serial port 1'
-              type: network
-              backing:
-                uri: 'telnet://something:port'
-                direction: <client|server>
-                filename: 'service_uri'
-              connectable:
-                allow_guest_control: True
-                connected: True
-                start_connected: True
-              yield: False
-
-        cd_drives
-
-        .. code-block:: bash
-
-            cd_drives:
-              adapter: 'CD/DVD drive 0'
-              controller: 'IDE 0'
-              device_type: datastore_iso_file
-              datastore_iso_file:
-                path: path_to_iso
-              connectable:
-                allow_guest_control: True
-                connected: True
-                start_connected: True
-
-    advanced_config
-        Advanced config parameters to be set for the virtual machine
-    """
-    if salt.utils.platform.is_proxy():
-        details = __salt__["vmware_info.get_proxy_connection_details"]()
-    else:
-        details = __salt__["vmware_info.get_connection_details"](
-            host=host,
-            vcenter=vcenter,
-            username=username,
-            password=password,
-            protocol=protocol,
-            port=port,
-            verify_ssl=verify_ssl,
-        )
-    service_instance = saltext.vmware.utils.vmware.get_service_instance(**details)
-
-    # If datacenter is specified, set the container reference to start search
-    # from it instead
-    container_object = saltext.vmware.utils.vmware.get_datacenter(service_instance, datacenter)
-    (resourcepool_object, placement_object) = saltext.vmware.utils.vmware.get_placement(
-        service_instance, datacenter, placement=placement
-    )
-    folder_object = saltext.vmware.utils.vmware.get_folder(service_instance, datacenter, placement)
-    # Create the config specs
-    config_spec = vim.vm.ConfigSpec()
-    config_spec.name = vm_name
-    config_spec.guestId = image
-    config_spec.files = vim.vm.FileInfo()
-
-    # For VSAN disks we need to specify a different vm path name, the vm file
-    # full path cannot be used
-    datastore_object = saltext.vmware.utils.vmware.get_datastores(
-        service_instance, placement_object, datastore_names=[datastore]
-    )[0]
-    if not datastore_object:
-        raise salt.exceptions.ArgumentValueError(
-            "Specified datastore: '{}' does not exist.".format(datastore)
-        )
-    try:
-        ds_summary = saltext.vmware.utils.vmware.get_properties_of_managed_object(
-            datastore_object, "summary.type"
-        )
-        if "summary.type" in ds_summary and ds_summary["summary.type"] == "vsan":
-            log.trace(
-                "The vmPathName should be the datastore " "name if the datastore type is vsan"
-            )
-            config_spec.files.vmPathName = "[{}]".format(datastore)
-        else:
-            config_spec.files.vmPathName = "[{0}] {1}/{1}.vmx".format(datastore, vm_name)
-    except salt.exceptions.VMwareApiError:
-        config_spec.files.vmPathName = "[{0}] {1}/{1}.vmx".format(datastore, vm_name)
-
-    cd_controllers = []
-    if version:
-        _apply_hardware_version(version, config_spec, "add")
-    if cpu:
-        _apply_cpu_config(config_spec, cpu)
-    if memory:
-        _apply_memory_config(config_spec, memory)
-    if scsi_devices:
-        scsi_specs = _create_scsi_devices(scsi_devices)
-        config_spec.deviceChange.extend(scsi_specs)
-    if disks:
-        scsi_controllers = [spec.device for spec in scsi_specs]
-        disk_specs = _create_disks(
-            service_instance,
-            disks,
-            scsi_controllers=scsi_controllers,
-            parent=container_object,
-        )
-        config_spec.deviceChange.extend(disk_specs)
-    if interfaces:
-        (
-            interface_specs,
-            nic_settings,  # pylint: disable=unused-variable
-        ) = _create_network_adapters(interfaces, parent=container_object)
-        config_spec.deviceChange.extend(interface_specs)
-    if serial_ports:
-        serial_port_specs = _create_serial_ports(serial_ports)
-        config_spec.deviceChange.extend(serial_port_specs)
-    if ide_controllers:
-        ide_specs = _create_ide_controllers(ide_controllers)
-        config_spec.deviceChange.extend(ide_specs)
-        cd_controllers.extend(ide_specs)
-    if sata_controllers:
-        sata_specs = _create_sata_controllers(sata_controllers)
-        config_spec.deviceChange.extend(sata_specs)
-        cd_controllers.extend(sata_specs)
-    if cd_drives:
-        cd_drive_specs = _create_cd_drives(
-            cd_drives, controllers=cd_controllers, parent_ref=container_object
-        )
-        config_spec.deviceChange.extend(cd_drive_specs)
-    if advanced_configs:
-        _apply_advanced_config(config_spec, advanced_configs)
-    saltext.vmware.utils.vmware.create_vm(
-        vm_name, config_spec, folder_object, resourcepool_object, placement_object
-    )
-
-    return {"create_vm": True}
 
 
 def update_vm(

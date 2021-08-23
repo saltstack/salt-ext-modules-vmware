@@ -3,8 +3,10 @@ import logging
 import tarfile
 
 import salt.exceptions
+import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.esxi as utils_esxi
 
 # pylint: disable=no-name-in-module
 try:
@@ -92,7 +94,7 @@ def create_vm(vm_name, vm_config_spec, folder_object, resourcepool_object, host_
         Resource pool object where the machine will be created
 
     host_object
-        Host object where the machine will ne placed (optional)
+        Host object where the machine will be placed (optional)
 
     return
         Virtual Machine managed object reference
@@ -116,6 +118,41 @@ def create_vm(vm_name, vm_config_spec, folder_object, resourcepool_object, host_
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     vm_object = utils_common.wait_for_task(task, vm_name, "CreateVM Task", 10, "info")
+    return vm_object
+
+
+def clone_vm(vm_name, folder_object, template, clone_config_spec):
+    """
+    Creates virtual machine from config spec
+
+    Returns Virtual Machine managed object reference
+
+    vm_name
+        Virtual machine name to be created
+
+    folder_object
+        Virtual Machine Folder managed object reference
+
+    template
+        Vitual Machine template to clone from
+
+    clone_config_spec
+        Clone Config Spec object
+    """
+    try:
+        task = template.CloneVM_Task(folder_object, vm_name, clone_config_spec)
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    vm_object = utils_common.wait_for_task(task, vm_name, "CloneVM Task", 10, "info")
     return vm_object
 
 
@@ -259,6 +296,21 @@ def list_vms(service_instance):
     return utils_common.list_objects(service_instance, vim.VirtualMachine)
 
 
+def list_vm_templates(service_instance):
+    """
+    Returns a list of template VMs associated with a given service instance.
+
+    service_instance
+        The Service Instance Object from which to obtain VMs.
+    """
+    items = []
+    vms = utils_common.get_mors_with_properties(service_instance, vim.VirtualMachine)
+    for vm in vms:
+        if vm["config"].template:
+            items.append(vm["name"])
+    return items
+
+
 def get_vm_by_property(
     service_instance,
     name,
@@ -330,9 +382,166 @@ def get_vm_by_property(
     return vm_formatted[0]
 
 
+def get_placement(service_instance, datacenter, placement=None):
+    """
+    To create a virtual machine a resource pool needs to be supplied, we would like to use the strictest as possible.
+
+    datacenter
+        Name of the datacenter
+
+    placement
+        Dictionary with the placement info, cluster, host resource pool name
+
+    return
+        Resource pool, cluster and host object if any applies
+    """
+    log.trace("Retrieving placement information")
+    resourcepool_object, placement_object = None, None
+    if "host" in placement:
+        host_objects = utils_esxi.get_hosts(
+            service_instance, datacenter_name=datacenter, host_names=[placement["host"]]
+        )
+        if not host_objects:
+            raise salt.exceptions.VMwareObjectRetrievalError(
+                " ".join(
+                    [
+                        "The specified host",
+                        "{} cannot be found.".format(placement["host"]),
+                    ]
+                )
+            )
+        try:
+            host_props = utils_common.get_properties_of_managed_object(
+                host_objects[0], properties=["resourcePool"]
+            )
+            resourcepool_object = host_props["resourcePool"]
+        except vmodl.query.InvalidProperty:
+            traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
+                path="parent",
+                skip=True,
+                type=vim.HostSystem,
+                selectSet=[
+                    vmodl.query.PropertyCollector.TraversalSpec(
+                        path="resourcePool", skip=False, type=vim.ClusterComputeResource
+                    )
+                ],
+            )
+            resourcepools = utils_common.get_mors_with_properties(
+                service_instance,
+                vim.ResourcePool,
+                container_ref=host_objects[0],
+                property_list=["name"],
+                traversal_spec=traversal_spec,
+            )
+            if resourcepools:
+                resourcepool_object = resourcepools[0]["object"]
+            else:
+                raise salt.exceptions.VMwareObjectRetrievalError(
+                    "The resource pool of host {} cannot be found.".format(placement["host"])
+                )
+        placement_object = host_objects[0]
+    elif "resourcepool" in placement:
+        resourcepool_objects = utils_common.get_resource_pools(
+            service_instance, [placement["resourcepool"]], datacenter_name=datacenter
+        )
+        if len(resourcepool_objects) > 1:
+            raise salt.exceptions.VMwareMultipleObjectsError(
+                " ".join(
+                    [
+                        "Multiple instances are available of the",
+                        "specified host {}.".format(placement["host"]),
+                    ]
+                )
+            )
+        resourcepool_object = resourcepool_objects[0]
+        res_props = utils_common.get_properties_of_managed_object(
+            resourcepool_object, properties=["parent"]
+        )
+        if "parent" in res_props:
+            placement_object = res_props["parent"]
+        else:
+            raise salt.exceptions.VMwareObjectRetrievalError(
+                " ".join(["The resource pool's parent", "object is not defined"])
+            )
+    elif "cluster" in placement:
+        datacenter_object = utils_datacenter.get_datacenter(service_instance, datacenter)
+        cluster_object = utils_cluster.get_cluster(datacenter_object, placement["cluster"])
+        clus_props = utils_common.get_properties_of_managed_object(
+            cluster_object, properties=["resourcePool"]
+        )
+        if "resourcePool" in clus_props:
+            resourcepool_object = clus_props["resourcePool"]
+        else:
+            raise salt.exceptions.VMwareObjectRetrievalError(
+                " ".join(["The cluster's resource pool", "object is not defined"])
+            )
+        placement_object = cluster_object
+    else:
+        # We are checking the schema for this object, this exception should never be raised
+        raise salt.exceptions.VMwareObjectRetrievalError(" ".join(["Placement is not defined."]))
+    return (resourcepool_object, placement_object)
+
+
+def get_folder(service_instance, datacenter, placement, base_vm_name=None):
+    """
+    Returns a Folder Object
+
+    service_instance
+        Service instance object
+
+    datacenter
+        Name of the datacenter
+
+    placement
+        Placement dictionary
+
+    base_vm_name
+        Existing virtual machine name (for cloning)
+    """
+    log.trace("Retrieving folder information")
+    if base_vm_name:
+        vm_object = get_vm_by_property(service_instance, base_vm_name, vm_properties=["name"])
+        vm_props = utils_common.get_properties_of_managed_object(vm_object, properties=["parent"])
+        if "parent" in vm_props:
+            folder_object = vm_props["parent"]
+        else:
+            raise salt.exceptions.VMwareObjectRetrievalError(
+                " ".join(["The virtual machine parent", "object is not defined"])
+            )
+    # elif "folder" in placement:
+    #     folder_objects = get_folders(
+    #         service_instance, [placement["folder"]], datacenter
+    #     )
+    #     if len(folder_objects) > 1:
+    #         raise salt.exceptions.VMwareMultipleObjectsError(
+    #             " ".join(
+    #                 [
+    #                     "Multiple instances are available of the",
+    #                     "specified folder {}".format(placement["folder"]),
+    #                 ]
+    #             )
+    #         )
+    #     folder_object = folder_objects[0]
+    elif datacenter:
+        datacenter_object = utils_datacenter.get_datacenter(service_instance, datacenter)
+        dc_props = utils_common.get_properties_of_managed_object(
+            datacenter_object, properties=["vmFolder"]
+        )
+        if "vmFolder" in dc_props:
+            folder_object = dc_props["vmFolder"]
+        else:
+            raise salt.exceptions.VMwareObjectRetrievalError(
+                "The datacenter vm folder object is not defined"
+            )
+    return folder_object
+
+
 def read_ovf_file(ovf_path):
     """
     Read in OVF file.
+
+    ovf_path
+        Path to ovf file
     """
     try:
         with open(ovf_path) as ovf_file:
@@ -344,6 +553,9 @@ def read_ovf_file(ovf_path):
 def read_ovf_from_ova(ova_path):
     """
     Read in OVF file from OVA.
+
+    ova_path
+        Path to ova file
     """
     try:
         with tarfile.open(ova_path) as tf:
@@ -353,3 +565,37 @@ def read_ovf_from_ova(ova_path):
                     return ovf.read().decode()
     except Exception:
         exit(f"Could not read file: {ova_path}")
+
+
+def get_network(vm):
+    """
+    Returns network from a virtual machine object.
+
+    vm
+        Virtual Machine Object from which to obtain mac address.
+    """
+    network = {}
+    for device in vm.guest.net:
+        network[device.macAddress] = {}
+        network[device.macAddress]["ipv4"] = []
+        network[device.macAddress]["ipv6"] = []
+        for address in device.ipAddress:
+            if "::" in address:
+                network[device.macAddress]["ipv6"].append(address)
+            else:
+                network[device.macAddress]["ipv4"].append(address)
+    return network
+
+
+def get_mac_address(vm):
+    """
+    Returns mac addresses from a virtual machine object.
+
+    vm
+        Virtual Machine Object from which to obtain mac address.
+    """
+    mac_address = []
+    for device in vm.config.hardware.device:
+        if isinstance(device, vim.vm.device.VirtualEthernetCard):
+            mac_address.append(device.macAddress)
+    return mac_address
