@@ -19,12 +19,12 @@ import saltext.vmware.modules.vm as virtual_machine
         "uuid",
     ],
 )
-def test_vm_get_info(integration_test_config, arg_name, patch_salt_globals_vm):
+def test_vm_info(integration_test_config, arg_name, patch_salt_globals_vm):
     """
     Test we are returning the same values from get_info
     as our connected vcenter instance.
     """
-    vm_info = virtual_machine.get_info()
+    vm_info = virtual_machine.info()
     for vm_name in vm_info:
         expected_value = integration_test_config["vm_info"][vm_name][arg_name]
         assert vm_info[vm_name][arg_name] == expected_value
@@ -87,3 +87,12 @@ def test_template_deploy(integration_test_config, patch_salt_globals_vm):
         assert res["create"] == True
     else:
         pass
+
+
+def test_path(integration_test_config, patch_salt_globals_vm):
+    """
+    Test deploy virtual machine through an template
+    """
+    for k, v in integration_test_config["virtual_machine_paths"].items():
+        res = virtual_machine.path(name=k)
+        assert res == v

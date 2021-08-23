@@ -63,6 +63,26 @@ def list_templates(service_instance=None):
     return utils_vm.list_vm_templates(service_instance)
 
 
+def path(name, service_instance=None):
+    """
+    Returns specified virtual machine path.
+
+    name
+        The name of the virtual machine.
+
+    service_instance
+        The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    vm_ref = utils_common.get_mor_by_property(
+        service_instance,
+        vim.VirtualMachine,
+        name,
+    )
+    return utils_common.get_path(vm_ref, service_instance)
+
+
 def _deployment_resources(host_name, service_instance):
     """
     Returns the dict representation of deployment resources from given host name.
@@ -214,7 +234,7 @@ def deploy_template(name, template_name, host_name, service_instance=None):
     return {"create": True}
 
 
-def get_info(name=None, service_instance=None):
+def info(name=None, service_instance=None):
     """
     Return basic info about a vSphere VM guest
 
