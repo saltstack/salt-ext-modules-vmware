@@ -56,6 +56,7 @@ def do_it(*, config_file):
     for host in hosts:
         config["virtual_machines"] = []
         config["virtual_machines_templates"] = []
+        config["virtual_machine_paths"] = {}
         for vm in host.vm:
             config["virtual_machines"].append(vm.name)
             if vm.config.template:
@@ -67,6 +68,7 @@ def do_it(*, config_file):
             for tag in vm.tag:
                 tags.append(tag.name)
             folder_path = utils_common.get_path(vm, si)
+            config["virtual_machine_paths"][vm.name] = folder_path
             config["vm_info"][vm.name] = {
                 "guest_name": vm.summary.config.name,
                 "guest_fullname": vm.summary.guest.guestFullName,
