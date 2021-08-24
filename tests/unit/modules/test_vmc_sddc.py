@@ -234,7 +234,7 @@ def test_update_sddc_when_api_should_return_api_response(
     )
 
 
-def test_update_sddc_called_with_url():
+def test_update_sddc_called_with_expected_kwargs():
     expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs/sddc_id"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         vmc_sddc.update_name(
@@ -249,3 +249,43 @@ def test_update_sddc_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.PATCH_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_payload",
+    [
+        # allow args have None - NA
+        (
+            {
+                "sddc_new_name": None,
+            },
+            {
+                "name": None,
+            },
+        ),
+        # all args have values
+        (
+            {
+                "sddc_new_name": "sddc_new",
+            },
+            {
+                "name": "sddc_new",
+            },
+        ),
+    ],
+)
+def test_assert_sddc_update_should_correctly_filter_args(actual_args, expected_payload):
+    common_actual_args = {
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "authorization_host": "authorization_host",
+        "org_id": "org_id",
+        "sddc_id": "sddc_id",
+        "verify_ssl": False,
+    }
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        actual_args.update(common_actual_args)
+        vmc_sddc.update_name(**actual_args)
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["data"] == expected_payload
