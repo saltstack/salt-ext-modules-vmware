@@ -290,6 +290,59 @@ def info(name=None, service_instance=None):
     return info
 
 
+def power_state(name, state, datacenter_name=None, service_instance=None):
+    """
+    Manages the power state of a virtual machine.
+
+    name
+        The name of the virtual machine.
+
+    state
+        The state you want the specified virtual machine in (powered-on,powered-off,suspend,reset).
+
+    datacenter_name
+        (optional) The name of the datacenter containing the virtual machine you want to manage.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    log.trace(f"Managing power state of virtual machine {name} to {state}")
+    if datacenter_name:
+        dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
+        vm_ref = utils_common.get_mor_by_property(
+            service_instance, vim.VirtualMachine, name, "name", dc_ref
+        )
+    else:
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
+    if state == "powered-on" and vm_ref.summary.runtime.powerState == "poweredOn":
+        result = {
+            "comment": "Virtual machine is already powered on",
+            "changes": {"state": vm_ref.summary.runtime.powerState},
+        }
+        return result
+    elif state == "powered-off" and vm_ref.summary.runtime.powerState == "poweredOff":
+        result = {
+            "comment": "Virtual machine is already powered off",
+            "changes": {"state": vm_ref.summary.runtime.powerState},
+        }
+        return result
+    elif state == "suspend" and vm_ref.summary.runtime.powerState == "suspended":
+        result = {
+            "comment": "Virtual machine is already suspended",
+            "changes": {"state": vm_ref.summary.runtime.powerState},
+        }
+        return result
+    result_ref_vm = utils_vm.power_cycle_vm(vm_ref, state)
+    result = {
+        "comment": f"Virtual machine {state} action succeeded",
+        "changes": {"state": result_ref_vm.summary.runtime.powerState},
+    }
+    return result
+
+
 # pylint: disable=C0302
 """
 Manage VMware vCenter servers and ESXi hosts.

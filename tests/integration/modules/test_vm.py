@@ -93,6 +93,22 @@ def test_path(integration_test_config, patch_salt_globals_vm):
     """
     Test deploy virtual machine through an template
     """
-    for k, v in integration_test_config["virtual_machine_paths"].items():
-        res = virtual_machine.path(name=k)
-        assert res == v
+    if integration_test_config["virtual_machine_paths"].items:
+        for k, v in integration_test_config["virtual_machine_paths"].items():
+            res = virtual_machine.path(name=k)
+            assert res == v
+    else:
+        pass
+
+
+def test_powered_on(integration_test_config, patch_salt_globals_vm):
+    """
+    Test deploy virtual machine through an template
+    """
+    if integration_test_config["virtual_machines"]:
+        states = ["powered-on", "suspend", "powered-on", "reset", "powered-off"]
+        for state in states:
+            res = virtual_machine.power_state(integration_test_config["virtual_machines"][0], state)
+            assert res["comment"] == f"Virtual machine {state} action succeeded"
+    else:
+        pass
