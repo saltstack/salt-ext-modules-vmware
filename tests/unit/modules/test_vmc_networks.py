@@ -190,3 +190,86 @@ def test_create_network_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.PUT_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_payload",
+    [
+        # all actual args are None
+        (
+            {},
+            {
+                "subnets": None,
+                "admin_state": "UP",
+                "description": None,
+                "domain_name": None,
+                "tags": None,
+                "advanced_config": None,
+                "l2_extension": None,
+                "dhcp_config_path": None,
+                "display_name": "network_id",
+                "id": "network_id",
+            },
+        ),
+        # allow none have values
+        (
+            {
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+                "subnets": [{"gateway_address": "40.1.1.1/16", "dhcp_ranges": ["40.1.2.0/24"]}],
+            },
+            {
+                "subnets": [{"gateway_address": "40.1.1.1/16", "dhcp_ranges": ["40.1.2.0/24"]}],
+                "admin_state": "UP",
+                "description": None,
+                "domain_name": None,
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+                "advanced_config": None,
+                "l2_extension": None,
+                "dhcp_config_path": None,
+                "display_name": "network_id",
+                "id": "network_id",
+            },
+        ),
+        # all args have values
+        (
+            {
+                "subnets": [{"gateway_address": "40.1.1.1/16", "dhcp_ranges": ["40.1.2.0/24"]}],
+                "admin_state": "UP",
+                "description": "network segment",
+                "domain_name": "net.eng.vmware.com",
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+                "advanced_config": {"address_pool_paths": [], "connectivity": "ON"},
+                "l2_extension": None,
+                "dhcp_config_path": "/infra/dhcp-server-configs/default",
+            },
+            {
+                "subnets": [{"gateway_address": "40.1.1.1/16", "dhcp_ranges": ["40.1.2.0/24"]}],
+                "admin_state": "UP",
+                "description": "network segment",
+                "domain_name": "net.eng.vmware.com",
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+                "advanced_config": {"address_pool_paths": [], "connectivity": "ON"},
+                "l2_extension": None,
+                "dhcp_config_path": "/infra/dhcp-server-configs/default",
+                "display_name": "network_id",
+                "id": "network_id",
+            },
+        ),
+    ],
+)
+def test_assert_networks_create_should_correctly_filter_args(actual_args, expected_payload):
+    common_actual_args = {
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "authorization_host": "authorization_host",
+        "org_id": "org_id",
+        "sddc_id": "sddc_id",
+        "network_id": "network_id",
+        "verify_ssl": False,
+    }
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        actual_args.update(common_actual_args)
+        vmc_networks.create(**actual_args)
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["data"] == expected_payload
