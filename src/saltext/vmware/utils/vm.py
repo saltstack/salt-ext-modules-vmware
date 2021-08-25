@@ -29,9 +29,9 @@ def power_cycle_vm(virtual_machine, action="on"):
     action
         Operation option to power on/off the machine
     """
-    if action == "on":
+    if action == "powered-on":
         try:
-            task = virtual_machine.PowerOn()
+            task = virtual_machine.PowerOnVM_Task()
             task_name = "power on"
         except vim.fault.NoPermission as exc:
             log.exception(exc)
@@ -44,10 +44,40 @@ def power_cycle_vm(virtual_machine, action="on"):
         except vmodl.RuntimeFault as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    elif action == "off":
+    elif action == "powered-off":
         try:
-            task = virtual_machine.PowerOff()
+            task = virtual_machine.PowerOffVM_Task()
             task_name = "power off"
+        except vim.fault.NoPermission as exc:
+            log.exception(exc)
+            raise salt.exceptions.VMwareApiError(
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+            )
+        except vim.fault.VimFault as exc:
+            log.exception(exc)
+            raise salt.exceptions.VMwareApiError(exc.msg)
+        except vmodl.RuntimeFault as exc:
+            log.exception(exc)
+            raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    elif action == "suspend":
+        try:
+            task = virtual_machine.SuspendVM_Task()
+            task_name = "suspend"
+        except vim.fault.NoPermission as exc:
+            log.exception(exc)
+            raise salt.exceptions.VMwareApiError(
+                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+            )
+        except vim.fault.VimFault as exc:
+            log.exception(exc)
+            raise salt.exceptions.VMwareApiError(exc.msg)
+        except vmodl.RuntimeFault as exc:
+            log.exception(exc)
+            raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    elif action == "reset":
+        try:
+            task = virtual_machine.ResetVM_Task()
+            task_name = "reset"
         except vim.fault.NoPermission as exc:
             log.exception(exc)
             raise salt.exceptions.VMwareApiError(
