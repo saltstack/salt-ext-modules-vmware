@@ -189,6 +189,7 @@ def power_state(
         salt '*' vmware_esxi.power_state datacenter=dc1 cluster=cl1 host_name=host1 state=shutdown
     """
     ret = None
+    task = None
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
@@ -208,7 +209,8 @@ def power_state(
                 task = h.PowerUpHostFromStandBy_Task(timeout)
             elif state == "shutdown":
                 task = h.ShutdownHost_Task(force)
-            utils_common.wait_for_task(task, h.name, "PowerStateTask")
+            if task:
+                utils_common.wait_for_task(task, h.name, "PowerStateTask")
             ret = True
     except vmodl.fault.NotSupported as exc:
         ret = exc.msg
