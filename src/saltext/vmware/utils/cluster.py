@@ -246,3 +246,15 @@ def drs_rule_info(rule):
         "mandatory": rule.mandatory,
         "key": rule.key,
     }
+
+
+def check_affinity(rule):
+    """
+    Returns of affinity of cluster DRS virtual machine rule.
+
+    rule
+        Reference to DRS rule.
+    """
+    if type(rule) == vim.cluster.AffinityRuleSpec:
+        return True
+    return False

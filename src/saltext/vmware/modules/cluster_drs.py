@@ -134,7 +134,7 @@ def get_(cluster, datacenter):
     return ret
 
 
-def vm_vm_rule(
+def vm_affinity_rule(
     name,
     affinity,
     vm_names,
@@ -196,7 +196,7 @@ def vm_vm_rule(
         for rule in rules:
             if rule.name == name:
                 rule_info = utils_cluster.drs_rule_info(rule)
-                if rule_info["affinity"] != affinity:
+                if utils_cluster.check_affinity(rule) != affinity:
                     return {
                         "updated": False,
                         "message": "Unable to update affinity, make new rule.",
