@@ -165,19 +165,19 @@ def create_drs_rule(name, affinity, vm_refs, enabled, mandatory, cluster_ref):
 
     name
         The name of the rule.
-    
+
     affinity
         (boolean) Describes whether to make affinity or anti affinity rule.
-    
+
     vm_refs
         Array of virtual machines associated with DRS rule.
-    
+
     enabled
         (boolean) Enable the DRS rule being created.
-    
+
     mandatory
         (boolean) Sets whether the rule being created is mandatory.
-    
+
     cluster_ref
         Reference to cluster DRS rule is being created on.
     """
@@ -189,10 +189,10 @@ def create_drs_rule(name, affinity, vm_refs, enabled, mandatory, cluster_ref):
     rule_spec.enabled = enabled
     rule_spec.mandatory = mandatory
     rule_spec.name = name
-    spec = vim.cluster.RuleSpec(info=rule_spec, operation='add')
+    spec = vim.cluster.RuleSpec(info=rule_spec, operation="add")
     config_spec = vim.cluster.ConfigSpecEx(rulesSpec=[spec])
     task = cluster_ref.ReconfigureEx(config_spec, modify=True)
-    utils_common.wait_for_task(task, 'Cluster', "Create DRS rule Task")
+    utils_common.wait_for_task(task, "Cluster", "Create DRS rule Task")
 
 
 def update_drs_rule(rule_ref, vm_refs, enabled, mandatory, cluster_ref):
@@ -201,26 +201,26 @@ def update_drs_rule(rule_ref, vm_refs, enabled, mandatory, cluster_ref):
 
     rule_ref
         Reference to rule with same name.
-    
+
     vm_refs
         Array of virtual machines associated with DRS rule.
-    
+
     enabled
         (boolean) Enable the DRS rule being created. Defaults to True.
-    
+
     mandatory
         (optional, boolean) Sets whether the rule being created is mandatory. Defaults to None.
-    
+
     cluster_ref
         Reference to cluster DRS rule is being created on.
     """
     rule_ref.vm = vm_refs
     rule_ref.enabled = enabled
     rule_ref.mandatory = mandatory
-    spec = vim.cluster.RuleSpec(info=rule_ref, operation='edit')
+    spec = vim.cluster.RuleSpec(info=rule_ref, operation="edit")
     config_spec = vim.cluster.ConfigSpecEx(rulesSpec=[spec])
     task = cluster_ref.ReconfigureEx(config_spec, modify=True)
-    utils_common.wait_for_task(task, 'Cluster', "Create DRS rule Task")
+    utils_common.wait_for_task(task, "Cluster", "Create DRS rule Task")
 
 
 def drs_rule_info(rule):
@@ -230,7 +230,7 @@ def drs_rule_info(rule):
     rule
         Reference to DRS rule.
     """
-    if (type(rule)== vim.cluster.AffinityRuleSpec):
+    if type(rule) == vim.cluster.AffinityRuleSpec:
         affinity = True
     else:
         affinity = False
@@ -244,5 +244,5 @@ def drs_rule_info(rule):
         "enabled": rule.enabled,
         "vms": vms,
         "mandatory": rule.mandatory,
-        "key": rule.key
+        "key": rule.key,
     }

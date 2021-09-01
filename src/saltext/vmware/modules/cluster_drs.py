@@ -3,8 +3,8 @@
 import logging
 
 import salt.exceptions
-import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -134,31 +134,40 @@ def get_(cluster, datacenter):
     return ret
 
 
-def vm_vm_rule(name, affinity, vm_names, cluster_name, enabled=True, mandatory=None, datacenter_name=None, service_instance=None):
+def vm_vm_rule(
+    name,
+    affinity,
+    vm_names,
+    cluster_name,
+    enabled=True,
+    mandatory=None,
+    datacenter_name=None,
+    service_instance=None,
+):
     """
     Configure a virtual machine to virtual machine DRS rule
-    
+
     name
         The name of the rule.
-    
+
     affinity
         (boolean) Describes whether to make affinity or anti affinity rule.
-    
+
     vm_names
         Array of virtual machines associated with DRS rule.
-    
+
     cluster_name
         The name of the cluster to configure a rule on.
-    
+
     enabled
         (optional, boolean) Enable the DRS rule being created. Defaults to True.
-    
+
     mandatory
         (optional, boolean) Sets whether the rule being created is mandatory. Defaults to None.
-    
+
     datacenter_name
         (optional) The name of the cluster to configure a rule on.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -172,11 +181,15 @@ def vm_vm_rule(name, affinity, vm_names, cluster_name, enabled=True, mandatory=N
         )
     else:
         cluster_ref = utils_common.get_mor_by_property(
-            service_instance, vim.ClusterComputeResource, cluster_name,
+            service_instance,
+            vim.ClusterComputeResource,
+            cluster_name,
         )
     vm_refs = []
     for vm_name in vm_names:
-        vm_refs.append(utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name))
+        vm_refs.append(
+            utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+        )
     rules = cluster_ref.configuration.rule
     rule_ref = None
     if rules:
@@ -184,11 +197,21 @@ def vm_vm_rule(name, affinity, vm_names, cluster_name, enabled=True, mandatory=N
             if rule.name == name:
                 rule_info = utils_cluster.drs_rule_info(rule)
                 if rule_info["affinity"] != affinity:
-                    return {"updated": False, "message": "Unable to update affinity, make new rule."}
-                if rule_info["vms"] == vm_names and rule_info["enabled"] == enabled and rule_info["mandatory"] == mandatory:
-                    return {"updated": False, "message": "Failed to update rule, rule already exists."}
+                    return {
+                        "updated": False,
+                        "message": "Unable to update affinity, make new rule.",
+                    }
+                if (
+                    rule_info["vms"] == vm_names
+                    and rule_info["enabled"] == enabled
+                    and rule_info["mandatory"] == mandatory
+                ):
+                    return {
+                        "updated": False,
+                        "message": "Failed to update rule, rule already exists.",
+                    }
                 rule_ref = rule
-    
+
     if rule_ref:
         utils_cluster.update_drs_rule(rule_ref, vm_refs, enabled, mandatory, cluster_ref)
         return {"updated": True}
@@ -200,13 +223,13 @@ def vm_vm_rule(name, affinity, vm_names, cluster_name, enabled=True, mandatory=N
 def rule_info(cluster_name, datacenter_name=None, service_instance=None):
     """
     Return info on given cluster's DRS rules.
-    
+
     cluster_name
         The name of the cluster to configure a rule on.
-    
+
     datacenter_name
         (optional) The name of the cluster to configure a rule on.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -220,9 +243,11 @@ def rule_info(cluster_name, datacenter_name=None, service_instance=None):
         )
     else:
         cluster_ref = utils_common.get_mor_by_property(
-            service_instance, vim.ClusterComputeResource, cluster_name,
+            service_instance,
+            vim.ClusterComputeResource,
+            cluster_name,
         )
-    
+
     rules = cluster_ref.configuration.rule
     info = []
     for rule in rules:
