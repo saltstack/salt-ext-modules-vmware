@@ -30,8 +30,8 @@ try:
 except ImportError:
     HAS_PYVMOMI = False
 
-__virtualname__ = "vm"
-__proxyenabled__ = ["vm"]
+__virtualname__ = "vmware_vm"
+__proxyenabled__ = ["vmware_vm"]
 __func_alias__ = {"list_": "list"}
 
 
@@ -170,7 +170,7 @@ def deploy_ovf(name, host_name, ovf_path, service_instance=None):
     """
     ovf = utils_vm.read_ovf_file(ovf_path)
     _deploy_ovf(name, host_name, ovf, service_instance)
-    return {"create": True}
+    return {"deployed": True}
 
 
 def deploy_ova(name, host_name, ova_path, service_instance=None):
@@ -191,7 +191,7 @@ def deploy_ova(name, host_name, ova_path, service_instance=None):
     """
     ovf = utils_vm.read_ovf_from_ova(ova_path)
     _deploy_ovf(name, host_name, ovf, service_instance)
-    return {"create": True}
+    return {"deployed": True}
 
 
 def deploy_template(name, template_name, host_name, service_instance=None):
@@ -231,7 +231,7 @@ def deploy_template(name, template_name, host_name, service_instance=None):
     clonespec.location = relospec
 
     utils_vm.clone_vm(name, resources["datacenter"].vmFolder, template, clonespec)
-    return {"create": True}
+    return {"deployed": True}
 
 
 def info(name=None, service_instance=None):
@@ -306,10 +306,10 @@ def power_state(name, state, datacenter_name=None, service_instance=None):
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
+    log.trace(f"Managing power state of virtual machine {name} to {state}")
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    log.trace(f"Managing power state of virtual machine {name} to {state}")
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
         vm_ref = utils_common.get_mor_by_property(
