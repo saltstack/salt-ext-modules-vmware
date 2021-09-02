@@ -6,6 +6,7 @@ from unittest.mock import patch
 import saltext.vmware.modules.cluster as cluster
 import saltext.vmware.modules.cluster_drs as cluster_drs
 import saltext.vmware.modules.cluster_ha as cluster_ha
+import pytest
 
 
 def test_get(vmware_cluster):
@@ -105,7 +106,7 @@ def test_vm_affinity_rule(integration_test_config, service_instance):
         )
         assert ret["created"] == True
     else:
-        pass
+        pytest.skip('test requires 2 configured VMs')
 
 
 def test_vm_affinity_rule_duplicate(integration_test_config, service_instance):
@@ -123,7 +124,7 @@ def test_vm_affinity_rule_duplicate(integration_test_config, service_instance):
         )
         assert ret["message"] == "Exact rule already exists."
     else:
-        pass
+        pytest.skip('test requires 2 configured VMs')
 
 
 def test_vm_affinity_rule_change_affinity(integration_test_config, service_instance):
@@ -141,7 +142,7 @@ def test_vm_affinity_rule_change_affinity(integration_test_config, service_insta
         )
         assert ret["updated"] == False
     else:
-        pass
+        pytest.skip('test requires 2 configured VMs')
 
 
 def test_vm_affinity_rule_update(integration_test_config, service_instance):
@@ -159,7 +160,7 @@ def test_vm_affinity_rule_update(integration_test_config, service_instance):
         )
         assert ret["updated"] == True
     else:
-        pass
+        pytest.skip('test requires 2 configured VMs')
 
 
 def test_vm_anti_affinity_rule(integration_test_config, service_instance):
@@ -182,4 +183,4 @@ def test_vm_anti_affinity_rule(integration_test_config, service_instance):
         )
         assert ret["created"] == True
     else:
-        pass
+        pytest.skip('test requires 2 configured VMs')

@@ -230,16 +230,12 @@ def drs_rule_info(rule):
     rule
         Reference to DRS rule.
     """
-    if type(rule) == vim.cluster.AffinityRuleSpec:
-        affinity = True
-    else:
-        affinity = False
     vms = []
     for vm in rule.vm:
         vms.append(vm.name)
     return {
         "name": rule.name,
-        "affinity": affinity,
+        "affinity": check_affinity(rule),
         "rule_uuid": rule.ruleUuid,
         "enabled": rule.enabled,
         "vms": vms,
@@ -255,6 +251,6 @@ def check_affinity(rule):
     rule
         Reference to DRS rule.
     """
-    if type(rule) == vim.cluster.AffinityRuleSpec:
-        return True
-    return False
+    if type(rule) == vim.cluster.AntiAffinityRuleSpec:
+        return False
+    return True
