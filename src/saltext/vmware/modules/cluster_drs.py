@@ -217,4 +217,3 @@ def vm_affinity_rule(
     else:
         utils_cluster.create_drs_rule(name, affinity, vm_refs, enabled, mandatory, cluster_ref)
         return {"created": True}
-
