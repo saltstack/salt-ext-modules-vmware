@@ -142,6 +142,10 @@ def _deploy_ovf(name, host_name, ovf, service_instance=None):
     import_spec = manager.CreateImportSpec(
         ovf, resources["resource_pool"], resources["destination_host"].datastore[0], spec_params
     )
+    errors = [e.msg for e in import_spec.error]
+    if errors:
+        log.exception(errors)
+        raise salt.exceptions.VMwareApiError(errors)
     vm_ref = utils_vm.create_vm(
         name,
         import_spec.importSpec.configSpec,

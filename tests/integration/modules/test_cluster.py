@@ -121,7 +121,7 @@ def test_vm_affinity_rule_duplicate(integration_test_config, service_instance):
         ret = cluster_drs.vm_affinity_rule(
             "test-rule", True, vms, vm_info["cluster"], service_instance=service_instance
         )
-        assert ret["updated"] == False
+        assert ret["message"] == "Exact rule already exists."
     else:
         pass
 

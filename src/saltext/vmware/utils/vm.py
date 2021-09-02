@@ -323,7 +323,12 @@ def list_vms(service_instance):
     service_instance
         The Service Instance Object from which to obtain VMs.
     """
-    return utils_common.list_objects(service_instance, vim.VirtualMachine)
+    items = []
+    vms = utils_common.get_mors_with_properties(service_instance, vim.VirtualMachine)
+    for vm in vms:
+        if not vm["config"].template:
+            items.append(vm["name"])
+    return items
 
 
 def list_vm_templates(service_instance):

@@ -80,7 +80,7 @@ def test_template_deploy(integration_test_config, patch_salt_globals_vm):
     """
     if integration_test_config["virtual_machines_templates"]:
         res = virtual_machine.deploy_template(
-            name="test_template",
+            name="test_template_vm",
             template_name=integration_test_config["virtual_machines_templates"][0],
             host_name=integration_test_config["esxi_host_name"],
         )
