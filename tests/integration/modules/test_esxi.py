@@ -130,36 +130,72 @@ def test_manage_service(service_instance):
     """
     SSH_SERVICE = "TSM-SSH"
     ret = esxi.manage_service(
-        service_name=SSH_SERVICE, service_instance=service_instance, state="start"
+        service_name=SSH_SERVICE,
+        service_instance=service_instance,
+        state="start",
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
     )
     assert ret
 
-    ret = esxi.list_services(service_name=SSH_SERVICE, service_instance=service_instance)
+    ret = esxi.list_services(
+        service_name=SSH_SERVICE,
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
     for host in ret:
         assert ret[host][SSH_SERVICE]["state"] == "running"
 
     ret = esxi.manage_service(
-        service_name=SSH_SERVICE, service_instance=service_instance, state="stop"
+        service_name=SSH_SERVICE,
+        service_instance=service_instance,
+        state="stop",
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
     )
     assert ret
 
-    ret = esxi.list_services(service_name=SSH_SERVICE, service_instance=service_instance)
+    ret = esxi.list_services(
+        service_name=SSH_SERVICE,
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
     for host in ret:
         assert ret[host][SSH_SERVICE]["state"] == "stopped"
 
     ret = esxi.manage_service(
-        service_name=SSH_SERVICE, service_instance=service_instance, state="restart"
+        service_name=SSH_SERVICE,
+        service_instance=service_instance,
+        state="restart",
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
     )
     assert ret
-    ret = esxi.list_services(service_name=SSH_SERVICE, service_instance=service_instance)
+    ret = esxi.list_services(
+        service_name=SSH_SERVICE,
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
     for host in ret:
         assert ret[host][SSH_SERVICE]["state"] == "running"
 
     for policy in ["on", "off", "automatic"]:
         ret = esxi.manage_service(
-            service_name=SSH_SERVICE, service_instance=service_instance, service_policy=policy
+            service_name=SSH_SERVICE,
+            service_instance=service_instance,
+            service_policy=policy,
+            datacenter_name="Datacenter",
+            cluster_name="Cluster",
         )
         assert ret
-        ret = esxi.list_services(service_name=SSH_SERVICE, service_instance=service_instance)
+        ret = esxi.list_services(
+            service_name=SSH_SERVICE,
+            service_instance=service_instance,
+            datacenter_name="Datacenter",
+            cluster_name="Cluster",
+        )
         for host in ret:
             assert ret[host][SSH_SERVICE]["service_policy"] == policy

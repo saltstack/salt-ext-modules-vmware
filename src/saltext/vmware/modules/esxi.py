@@ -160,22 +160,22 @@ def get_capabilities(*, service_instance=None):
 
 
 def power_state(
-    datacenter="Datacenter", cluster="Cluster", host_name=None, state=None, timeout=600, force=True
+    datacenter_name=None, cluster_name=None, host_name=None, state=None, timeout=600, force=True
 ):
     """
     Manage the power state of the ESXI host.
 
-    datacenter
-        The datacenter name (required when cluster is specified)
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
 
-    cluster
-        The cluster name (optional)
+    cluster_name
+        Filter by this cluster name (optional)
 
     host_name
-        The ESXI hostname whose power state needs to be managed (required if cluster is not specified)
+        Filter by this ESXI hostname whose power state needs to be managed (Optional)
 
     state
-        Sets the ESXI host to this power state. Valid values: reboot, standby, poweron, shutdown
+        Sets the ESXI host to this power state. Valid values: "reboot", "standby", "poweron", "shutdown".
 
     timeout
         Timeout when transitioning power state to standby / poweron. Default: 600 seconds
@@ -186,7 +186,7 @@ def power_state(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.power_state datacenter=dc1 cluster=cl1 host_name=host1 state=shutdown
+        salt '*' vmware_esxi.power_state datacenter_name=dc1 cluster_name=cl1 host_name=host1 state=shutdown
     """
     ret = None
     task = None
@@ -194,8 +194,8 @@ def power_state(
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
-        cluster_name=cluster,
-        datacenter_name=datacenter,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
         get_all_hosts=True if not host_name else False,
     )
 
@@ -221,8 +221,8 @@ def power_state(
 
 def manage_service(
     service_name,
-    datacenter="Datacenter",
-    cluster="Cluster",
+    datacenter_name=None,
+    cluster_name=None,
     host_name=None,
     state=None,
     service_policy=None,
@@ -234,30 +234,30 @@ def manage_service(
     service_name
         Service that needs to be managed.
 
-    datacenter
-        The datacenter name (required when cluster is specified)
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
 
-    cluster
-        The cluster name (optional)
+    cluster_name
+        Filter by this cluster name (optional)
 
     host_name
-        The ESXI hostname whose power state needs to be managed (required if cluster is not specified)
+        Filter by this ESXI hostname whose power state needs to be managed (optional)
 
     state
-        Sets the service running on the ESXI host to this state. Valid values: start, stop, restart.
+        Sets the service running on the ESXI host to this state. Valid values: "start", "stop", "restart".
 
     service_policy
-        Sets the service startup policy. Valid values on, off, automatic.
+        Sets the service startup policy. Valid values "on", "off", "automatic".
         - on: Start and stop with host
         - off: Start and stop manually
         - automatic: Start automatically if any ports are open, and stop when all ports are closed
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Need not be passed by the user.
+        Use this vCenter service connection instance instead of creating a new one. (Optional)
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.manage_service sshd datacenter=dc1 cluster=cl1 host_name=host1 state=restart service_policy=on
+        salt '*' vmware_esxi.manage_service sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1 state=restart service_policy=on
     """
     log.debug("Running vmware_esxi.manage_service")
     ret = None
@@ -267,8 +267,8 @@ def manage_service(
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
-        cluster_name=cluster,
-        datacenter_name=datacenter,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
         get_all_hosts=True if not host_name else False,
     )
 
@@ -282,8 +282,10 @@ def manage_service(
                     host_service.StartService(id=service_name)
                 elif state == "stop":
                     host_service.StopService(id=service_name)
-                if state == "restart":
+                elif state == "restart":
                     host_service.RestartService(id=service_name)
+                else:
+                    return "Error: Unknown state - {}".format(state)
             if service_policy is not None:
                 if service_policy is True:
                     service_policy = "on"
@@ -305,8 +307,8 @@ def manage_service(
 
 def list_services(
     service_name=None,
-    datacenter="Datacenter",
-    cluster="Cluster",
+    datacenter_name=None,
+    cluster_name=None,
     host_name=None,
     state=None,
     service_policy=None,
@@ -316,25 +318,25 @@ def list_services(
     Manage the state of the service running on the EXSI host.
 
     service_name
-        The name of service to filter by. (optional)
+        Filter by this service name. (optional)
 
-    datacenter
-        The datacenter name (required when cluster is specified)
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
 
-    cluster
-        The cluster name (optional)
+    cluster_name
+        Filter by this cluster name (optional)
 
     host_name
-        The ESXI hostname whose power state needs to be managed (required if cluster is not specified)
+        Filter by this ESXI hostname (optional)
 
     state
-        Filter by this service state. Valid values: start, stop, restart.
+        Filter by this service state. Valid values: "running", "stopped"
 
     service_policy
-        Filter by this service startup policy. Valid values on, off, automatic.
+        Filter by this service startup policy. Valid values "on", "off", "automatic".
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Need not be passed by the user.
+        Use this vCenter service connection instance instead of creating a new one. Optional.
 
     .. code-block:: bash
 
@@ -347,8 +349,8 @@ def list_services(
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
-        cluster_name=cluster,
-        datacenter_name=datacenter,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
         get_all_hosts=True if not host_name else False,
     )
 
@@ -359,6 +361,7 @@ def list_services(
             if not host_service:
                 continue
             if service_policy is not None:
+                # salt converts command line input "on" and "off" to True and False. Handle explicitly.
                 if service_policy is True:
                     service_policy = "on"
                 elif service_policy is False:
@@ -368,6 +371,10 @@ def list_services(
                 if service_name and service.key != service_name:
                     continue
                 if service_policy and service.policy != service_policy:
+                    continue
+                if state and state == "running" and not service.running:
+                    continue
+                if state and state == "stopped" and service.running:
                     continue
                 ret[h.name][service.key] = {
                     "state": "running" if service.running else "stopped",
