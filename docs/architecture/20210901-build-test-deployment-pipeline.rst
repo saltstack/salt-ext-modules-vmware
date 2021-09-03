@@ -4,7 +4,7 @@
 Status
 ------
 
-Discussion/Development
+Approved/Development
 
 Context
 -------
@@ -16,9 +16,11 @@ The motivations behind our CI/CD pipeline are:
 * "nightly" builds
 
 We want our tests to run as fast as reasonably possible. At the current time,
-TODO has a unit test suite that runs TODO tests in about 15 minutes. This is
-an entirely reasonable amount of time to wait for tests to run. Much longer and
-the feedback cycle takes much too long.
+Django has a unit test suite that runs over 150,000 tests in about 30 minutes.
+This is an entirely reasonable amount of time to wait for tests to run. Much
+longer and the feedback cycle takes much too long. For a project the size of
+Django, 30 minutes is a reasonable amount of time. For this module, our PR
+checks should take no longer than 15 minutes.
 
 Of course the reason that we want tests in the first place is that
 well-written, meaningful tests allow us to deploy the most reasonably reliable
@@ -45,6 +47,76 @@ something like create a new PR to launch the whole process again. As long as
 successful artifacts exist from the previous step in the pipeline, each step
 should be able to be re-started.
 
+Pipline Overview
+----------------
+
+.. ::
+
+                    +-----------------------------------------------+
+                    |   input: local code/doc changes               |
+                    |                                               |
+                    |       Local pre-commit hooks                  | <----------------------,
+                    |                                               |                         |
+                    |   output: new code locally                    |                         |
+                    +----------------------+------------------------+                         |
+                                           |                                                  |
+                                           |                                                  |
+                                           V                                                  |
+                    +-----------------------------------------------+                         |
+                    |   input: local code                           |                         |
+                    |                                               |                       ./|
+                    |       Local intgration/unit test runs*        +--[ failed tests ]-----' |
+                    |                                               |                         |
+                    |   output: code pushed to fork/branch          |                         |
+                    +----------------------+------------------------+                         |
+                                           |   *: these may happen before commits             |
+                                           |      but should also happen before pushing       |
+                                           |      code or opening a PR                        |
+                                ==== Local/PR line ====                                       |
+                                           |                                                  |
+                                           |                                                  |
+                    +-----------------------------------------------+                         |
+                    |   input: code from fork/branch                |                         |
+                    |                                               |                         |
+                    |       Unit test suite/code review             +--[ failed tests or   ] /|
+                    |                                               |  [ changes requested ]' |
+                    |   output: code merged to main                 |                         |
+                    +----------------------+------------------------+                         |
+                                           |                                                  |
+                                           |                                                  |
+                                           V                                                  |
+                     +-----------------------------------------------+                        |
+                     |   input: latest code on main                  |                        |
+                     |                                               |                       ,'
+                     |       build docs + .whl                       |                      /
+                     |       Full suite of unit+integration tests    +--[ Failed tests ]---'
+                     |                                               |
+                     |   output: release artifacts (build + docs)    |
+                     +----------------------+------------------------+
+                                            |
+                                            |
+                                            V
+                      +---------------------------------------------------+
+                      |   input: release artifacts                        |
+                      |                                                   |
+                      |       Copy release artifacts to archive/nightly   |
+                      |       (keep last 30 builds, min 30 days)          |
+                      |                                                   |
+                      |   output: release artifacts (build + docs)        |
+                      +----------------------+----------------------------+
+                                             |
+                                             |
+                                             V
+                      +---------------------------------------------------+
+                      |   input: tagged release artifacts                 |
+                      |                                                   |
+                      |       Push release to PyPI/Docs to ????           |
+                      |                                                   |
+                      |   output: release on PyPI                         |
+                      +---------------------------------------------------+
+
+
+
 Details
 -------
 
@@ -62,13 +134,18 @@ documentation, and tests are organized and ready to open a PR. This step is an
 essential part of the pipeline, since updates require test coverage and
 documentation.
 
+**On Murphy**: failures here simply require re-running the process, as this is
+simply a local process. The pre-commit hooks should be fail safe, not touching
+anything if they can't do it safely, or just printing error messages.
+
 Unit Tests (and More) On Pull Requests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Every pull request will check the pre-commit hooks, build the docs, and run the
-unit test suite. We may want to enable certain integration tests to run on pull
-requests, or define a manual(ish) process to run the integration tests on PRs,
-but at minimum the PR will run:
+Every pull request will run the pre-commit hook checks, build the docs, build
+and do a local install of the package, and run the unit test suite. We may want
+to enable certain integration tests to run on pull requests, or define a
+manual(ish) process to run the integration tests on PRs, but at minimum the PR
+will run:
 
 * pre-commit hooks
 * docs build
@@ -76,58 +153,78 @@ but at minimum the PR will run:
 
 Any failure here MUST be addressed before the PR may be merged. The entire unit
 test suite must be green before the PR is merged. Merging also requires that
-the main branch tests are green. Otherwise, PRs should not be merged (unless of
-course they're fixing the full test suite)
+the full main branch tests are green. Otherwise, PRs should not be merged
+(unless of course they're fixing the full test suite).
+
+**On Murphy**: We may run out of time on our runners, or they may otherwise
+crash and burn. Whatever runners we're using should be able to be restarted and
+re-run the PR checks. The input here is a particular revision, and the output
+will be code merged to the `main` branch.
 
 Integration (Post-Merge) Tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Because the unit test suite is very narrow - isolating against many of the
 extension module dependencies - we want more broad, comprehensive tests. While
-the unit tests will trust that things work as expected, the integration tests
-will verify that things work as expected. Correctly running integration tests
+the unit tests will *trust* that things work as expected, the integration tests
+will *verify* that things work as expected. *Correctly running integration tests
 will give us confidence that the assumptions made in the unit test suite are
-safe assumptions.
+safe assumptions.*
 
-Integration tests should not only run against the current/latest merge to
-master with the specified dependencies, but they should also run against the
-newest versions of as many dependencies as possible. Running against several
-different versions of Salt (including the latest code in git) and other
-dependencies will ensure that as APIs change that we learn of it sooner rather
-than later, and can anticipate breaking changes rather than react to them.
+Integration tests should not only run against the current/latest merge to main
+with the specified dependencies, but they should also run against the newest
+versions of as many dependencies as possible. Running against several different
+versions of Salt (including the latest code in git) and other dependencies will
+ensure that as APIs change that we learn of it sooner rather than later, and
+can anticipate breaking changes rather than react to them.
 
-Both the unit and integration tests in the pipeline environment should build
-the module, intall it, and run the tests against the installed version. This
-will help ensure that any potential packaging issues are caught earlier rather
-than later.
+Like unit test section of the pipeline, the integration test (which should also
+run the unit tests) should build the module and install it. The tests should be
+ran against the installed package version. This process will help detect
+potential packaging issues earlier rather than later.
 
-The artifact of successful integration tests will be a .whl package of the
-library. For nightly builds, these pre-release pacakges should be kept for 30
-days minimum, and at least the last 30 builds. For instance, if 20 builds
-happened across 2 months then all 20 builds would be kept. If 10 more builds
-happened the next month, all 30 builds would be kept, despite some of them
-being over 30 days old. With each subsequent build, however, the oldest build
-would be removed. Or alternatively, if 40 builds happened within 29 days, all
-40 builds would be kept. On day 31, the first 10 builds could be deleted.
 
-All of these artifacts should be made public - perhaps via pypi or GitHub. PyPI
+Failures in the integration test run are considered an **EMERGENCY**. No code
+should be merged, besides fixes for the tests, until the integration tests are
+running successfully again. It would be a good idea for integration test
+failures to automatically create an issue in GitHub, or re-open an existing
+issue that corresponds to the same test, to help identify flaky integration
+tests. Integration test failures should also have a corresponding unit test
+that produces the same behavior by mocking out the conditions that caused the
+integration test failure -- this will ensure that regressions aren't
+re-introduced, as well as allow failure detection in the fast-running unit test
+suite.
+
+On a successful pass through the integration tests, the result will be a
+``.whl`` package of the library, as well as the documentation. These artifacts
+should be kept for the last 30 days and the last 30 builds, minimum. In other
+words, if we built 2x per day for 30 days we would keep the last 60 builds.
+Alternatively, if we built ever other day for 60 days, we would keep the last
+30 days, even though 15 of them would be more than 30 days old.
+
+These old artifacts will be useful if we need to go back and detect issues in
+our build process, or other uncommon problems. 30 days/30 builds is an
+arbitrary number - we could store more artifacts if it doesn't make much of an
+impact.
+
+All of these artifacts should be made public - perhaps via PyPI or GitHub. PyPI
 would be easy, but we would be increasing the load on PyPI - if we did that we
 should investigate helping to fund PyPI.
-
-A test failure here *is* an **EMERGENCY**. Failures here should be treated with
-the utmost importance. Failures here should lead to the creation of a new unit
-test that exhibits the same failure that halted the integration test so that
-behavior can be accounted for in the module code. It would be a good idea for
-failures in this step to automatically create a GitHub issue based on the test
-name, or re-open an existing test failure issue. That would allow flaky
-integration tests to be identified and either flakiness addressed or tests
-completely removed.
 
 Because these tests run against private cloud infrastructure, they must be
 designed to take advantage of config files that can be provided either at a
 relative location or a configurable location in the filesystem. That allows the
 CI pipeline the ability to provide connection secrets in a way that is unlikely
 to leak in any test logging.
+
+**On Murphy:** Integration tests, being closer to real-world use, can fail for
+any number of reasons. There can be some breakage with the network. DNS issues.
+The underlying system configuration could fail. GitHub could fall over. We
+should work to anticipate these problems and avoid them ahead of time, but if
+we are unable to, we should address them as they arise. Since the input of this
+step is the code at the main branch, this step should not be considered
+successful until the release artifacts for that particular commit on ``main``
+have been uploaded to the correct location.
 
 Tagging and Release
 ^^^^^^^^^^^^^^^^^^^
@@ -141,66 +238,30 @@ version.
 Because the only difference between a regular build and a RC/final release
 build is tagging and potentially documentation, the release will follow the
 same process as any other build. Our confidence should be high that our test
-suite and full pipeline will suceed, with such trivial non-code changes.
+suite and full pipeline will succeed, with such trivial non-code changes.
 
+The only difference between the regular "nightly build" process, and a PyPI
+releas, will be that if there is a tag corresponding to the commit that created
+this build, in addition to uploading the artifacts to our archive, the
+artifacts will also be released to PyPI and whatever location is hosting our
+docs.
 
-Pipeline Overview
-^^^^^^^^^^^^^^^^^
+**On Murphy**: something could happen here, failing to upload the release
+artifacts to PyPI/doc hosting. In the *absolute* worst case, the machine
+holding our release artifacts would be hit by a meteor at the same time the
+datacenter holding our archive falls into a sinkhole. In that case, we would
+have to re-start the entire build process. But what is more likely is that the
+upload would simply fail, and we would have to continue to re-try uploading the
+artifacts, either from the build machine or a copy from our archive.
 
+Notifications
+^^^^^^^^^^^^^
 
-.. ::
-
-    *optional
-
-
-    local pre-commit hooks <-,----------,
-              |               `\         `|
-              |                 |         |
-            ./^\___,------------'         |
-            |                             |
-            `\,                           |
-              |                           |
-              V                           |
-    local unit/integration* <-,           |
-          test run            |           |
-              |             ,/'           |
-              |            /              |
-            ./^\___,------'               |
-            |                             |
-            `\,                           |
-              |                           |
-              V                           |
-    ---- local/PR line ------             |
-              |                           |
-              |                           |
-              |                           |
-              V                           |
-        PR: pre-commit hooks,             |
-            docs/pkg build/install,       |
-            unit tests run                |
-              |                           |
-              |                           |
-            ./^\                          |
-            |   `\                        |
-            `\,   `-( tests/any failure )-'
-              |
-              V
-    ---- PR/merge line -----
-              |
-              |
-              V
-       Integration/full test suite
-              |
-              |
-            ./^\,___.-->=( on fail, new PR to fix failure )
-            |
-            `\,
-              |
-              V
-       Release nightly build internal/GitHub
-       Release RC/final/post relase PyPI
-
-
+The final step of the release will be notifying the Salt community of the
+release. As of this writing there is no automation to generate notices via IRC,
+Slack, email, and social media, but since the Salt Project will have a number
+of extension modules it seems reasonable that we would want to build this type
+of automation.
 
 Consequences
 ------------
