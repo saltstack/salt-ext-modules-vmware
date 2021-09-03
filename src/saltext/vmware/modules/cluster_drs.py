@@ -177,11 +177,14 @@ def vm_affinity_rule(
     dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     vm_refs = []
+    missing_vms = []
     for vm_name in vm_names:
         vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
         if not vm_ref:
-            return {"error": f"Could not find virtual machine {vm_name}."}
+            missing_vms.append(vm_name)
         vm_refs.append(vm_ref)
+    if missing_vms:
+        raise salt.exceptions.VMwareApiError({f"Could not find virtual machines {missing_vms}"})
     rules = cluster_ref.configuration.rule
     rule_ref = None
     if rules:
