@@ -58,9 +58,10 @@ def do_it(*, config_file):
         config["virtual_machines_templates"] = []
         config["virtual_machine_paths"] = {}
         for vm in host.vm:
-            config["virtual_machines"].append(vm.name)
             if vm.config.template:
                 config["virtual_machines_templates"].append(vm.name)
+            else:
+                config["virtual_machines"].append(vm.name)
             datacenter_ref = utils_common.get_parent_type(vm, vim.Datacenter)
             mac_address = utils_vm.get_mac_address(vm)
             network = utils_vm.get_network(vm)
