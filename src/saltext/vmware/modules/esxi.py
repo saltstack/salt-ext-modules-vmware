@@ -260,7 +260,7 @@ def manage_service(
         salt '*' vmware_esxi.manage_service sshd datacenter=dc1 cluster=cl1 host_name=host1 state=restart service_policy=on
     """
     log.debug("Running vmware_esxi.manage_service")
-    ret = {}
+    ret = None
     task = None
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -274,7 +274,6 @@ def manage_service(
 
     try:
         for h in hosts:
-            ret[h.name] = {}
             host_service = h.configManager.serviceSystem
             if not host_service:
                 continue
