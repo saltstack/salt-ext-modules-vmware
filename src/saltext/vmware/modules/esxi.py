@@ -247,7 +247,7 @@ def manage_service(
         Sets the service running on the ESXI host to this state. Valid values: "start", "stop", "restart".
 
     service_policy
-        Sets the service startup policy. Valid values "on", "off", "automatic".
+        Sets the service startup policy. If unspecified, no changes are made. Valid values "on", "off", "automatic".
         - on: Start and stop with host
         - off: Start and stop manually
         - automatic: Start automatically if any ports are open, and stop when all ports are closed
