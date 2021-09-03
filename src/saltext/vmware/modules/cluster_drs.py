@@ -139,9 +139,9 @@ def vm_affinity_rule(
     affinity,
     vm_names,
     cluster_name,
+    datacenter_name,
     enabled=True,
     mandatory=None,
-    datacenter_name=None,
     service_instance=None,
 ):
     """
@@ -159,14 +159,14 @@ def vm_affinity_rule(
     cluster_name
         The name of the cluster to configure a rule on.
 
+    datacenter_name
+        The name of the datacenter where the cluster exists.
+
     enabled
         (optional, boolean) Enable the DRS rule being created. Defaults to True.
 
     mandatory
-        (optional, boolean) Sets whether the rule being created is mandatory. Defaults to None.
-
-    datacenter_name
-        (optional) The name of the cluster to configure a rule on.
+        (optional, boolean) Sets whether the rule being created is mandatory. Defaults to False.
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
@@ -174,15 +174,8 @@ def vm_affinity_rule(
     log.debug(f"Configuring a vm to vm DRS rule {name} on cluster {cluster_name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    if datacenter_name:
-        dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
-        cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
-    else:
-        cluster_ref = utils_common.get_mor_by_property(
-            service_instance,
-            vim.ClusterComputeResource,
-            cluster_name,
-        )
+    dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
+    cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     vm_refs = []
     for vm_name in vm_names:
         vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
@@ -217,3 +210,4 @@ def vm_affinity_rule(
     else:
         utils_cluster.create_drs_rule(name, affinity, vm_refs, enabled, mandatory, cluster_ref)
         return {"created": True}
+
