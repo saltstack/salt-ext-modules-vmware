@@ -102,7 +102,12 @@ def test_vm_affinity_rule(integration_test_config, service_instance):
             integration_test_config["virtual_machines"][1],
         ]
         ret = cluster_drs.vm_affinity_rule(
-            "test-rule", True, vms, vm_info["cluster"], vm_info["datacenter"], service_instance=service_instance
+            "test-rule",
+            True,
+            vms,
+            vm_info["cluster"],
+            vm_info["datacenter"],
+            service_instance=service_instance,
         )
         assert ret["created"] == True
     else:
@@ -120,7 +125,12 @@ def test_vm_affinity_rule_duplicate(integration_test_config, service_instance):
             integration_test_config["virtual_machines"][1],
         ]
         ret = cluster_drs.vm_affinity_rule(
-            "test-rule", True, vms, vm_info["cluster"], vm_info["datacenter"], service_instance=service_instance
+            "test-rule",
+            True,
+            vms,
+            vm_info["cluster"],
+            vm_info["datacenter"],
+            service_instance=service_instance,
         )
         assert ret["message"] == "Exact rule already exists."
     else:
@@ -138,7 +148,12 @@ def test_vm_affinity_rule_change_affinity(integration_test_config, service_insta
             integration_test_config["virtual_machines"][1],
         ]
         ret = cluster_drs.vm_affinity_rule(
-            "test-rule", False, vms, vm_info["cluster"], vm_info["datacenter"], service_instance=service_instance
+            "test-rule",
+            False,
+            vms,
+            vm_info["cluster"],
+            vm_info["datacenter"],
+            service_instance=service_instance,
         )
         assert ret["updated"] == False
     else:
@@ -156,7 +171,13 @@ def test_vm_affinity_rule_update(integration_test_config, service_instance):
             integration_test_config["virtual_machines"][1],
         ]
         ret = cluster_drs.vm_affinity_rule(
-            "test-rule", True, vms, vm_info["cluster"], vm_info["datacenter"], False, service_instance=service_instance
+            "test-rule",
+            True,
+            vms,
+            vm_info["cluster"],
+            vm_info["datacenter"],
+            False,
+            service_instance=service_instance,
         )
         assert ret["updated"] == True
     else:
