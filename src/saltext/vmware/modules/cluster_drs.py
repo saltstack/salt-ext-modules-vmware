@@ -180,7 +180,7 @@ def vm_affinity_rule(
     for vm_name in vm_names:
         vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
         if not vm_ref:
-            return {"error": "Could not find virtual machine."}
+            return {"error": f"Could not find virtual machine {vm_name}."}
         vm_refs.append(vm_ref)
     rules = cluster_ref.configuration.rule
     rule_ref = None
