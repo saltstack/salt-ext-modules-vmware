@@ -122,3 +122,44 @@ def test_esxi_host_capability_params(service_instance, integration_test_config, 
     for host_id in capabilities:
         expected_value = integration_test_config["esxi_capabilities"][host_id][arg_name]
         assert capabilities[host_id][arg_name] == expected_value
+
+
+def test_manage_service(service_instance):
+    """
+    Test manage services on esxi host
+    """
+    SSH_SERVICE = "TSM-SSH"
+    ret = esxi.manage_service(
+        service_name=SSH_SERVICE, service_instance=service_instance, state="start"
+    )
+    assert ret
+
+    ret = esxi.list_services(service_name=SSH_SERVICE, service_instance=service_instance)
+    for host in ret:
+        assert ret[host][SSH_SERVICE]["state"] == "running"
+
+    ret = esxi.manage_service(
+        service_name=SSH_SERVICE, service_instance=service_instance, state="stop"
+    )
+    assert ret
+
+    ret = esxi.list_services(service_name=SSH_SERVICE, service_instance=service_instance)
+    for host in ret:
+        assert ret[host][SSH_SERVICE]["state"] == "stopped"
+
+    ret = esxi.manage_service(
+        service_name=SSH_SERVICE, service_instance=service_instance, state="restart"
+    )
+    assert ret
+    ret = esxi.list_services(service_name=SSH_SERVICE, service_instance=service_instance)
+    for host in ret:
+        assert ret[host][SSH_SERVICE]["state"] == "running"
+
+    for policy in ["on", "off", "automatic"]:
+        ret = esxi.manage_service(
+            service_name=SSH_SERVICE, service_instance=service_instance, service_policy=policy
+        )
+        assert ret
+        ret = esxi.list_services(service_name=SSH_SERVICE, service_instance=service_instance)
+        for host in ret:
+            assert ret[host][SSH_SERVICE]["service_policy"] == policy

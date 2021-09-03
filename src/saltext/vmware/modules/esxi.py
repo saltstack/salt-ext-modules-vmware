@@ -10,7 +10,7 @@ from saltext.vmware.utils.connect import get_service_instance
 log = logging.getLogger(__name__)
 
 try:
-    from pyVmomi import vmodl
+    from pyVmomi import vmodl, vim
 
     HAS_PYVMOMI = True
 except ImportError:
@@ -213,6 +213,173 @@ def power_state(
                 utils_common.wait_for_task(task, h.name, "PowerStateTask")
             ret = True
     except vmodl.fault.NotSupported as exc:
+        ret = exc.msg
+    except salt.exceptions.VMwareApiError as api_err:
+        ret = str(api_err)
+    return ret
+
+
+def manage_service(
+    service_name,
+    datacenter="Datacenter",
+    cluster="Cluster",
+    host_name=None,
+    state=None,
+    service_policy=None,
+    service_instance=None,
+):
+    """
+    Manage the state of the service running on the EXSI host.
+
+    service_name
+        Service that needs to be managed.
+
+    datacenter
+        The datacenter name (required when cluster is specified)
+
+    cluster
+        The cluster name (optional)
+
+    host_name
+        The ESXI hostname whose power state needs to be managed (required if cluster is not specified)
+
+    state
+        Sets the service running on the ESXI host to this state. Valid values: start, stop, restart.
+
+    service_policy
+        Sets the service startup policy. Valid values on, off, automatic.
+        - on: Start and stop with host
+        - off: Start and stop manually
+        - automatic: Start automatically if any ports are open, and stop when all ports are closed
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. Need not be passed by the user.
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.manage_service sshd datacenter=dc1 cluster=cl1 host_name=host1 state=restart service_policy=on
+    """
+    log.debug("Running vmware_esxi.manage_service")
+    ret = {}
+    task = None
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster,
+        datacenter_name=datacenter,
+        get_all_hosts=True if not host_name else False,
+    )
+
+    try:
+        for h in hosts:
+            ret[h.name] = {}
+            host_service = h.configManager.serviceSystem
+            if not host_service:
+                continue
+            if state:
+                if state == "start":
+                    host_service.StartService(id=service_name)
+                elif state == "stop":
+                    host_service.StopService(id=service_name)
+                if state == "restart":
+                    host_service.RestartService(id=service_name)
+            if service_policy is not None:
+                if service_policy is True:
+                    service_policy = "on"
+                elif service_policy is False:
+                    service_policy = "off"
+                host_service.UpdateServicePolicy(id=service_name, policy=service_policy)
+        ret = True
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+    ) as exc:
+        ret = exc.msg
+    except salt.exceptions.VMwareApiError as api_err:
+        ret = str(api_err)
+    return ret
+
+
+def list_services(
+    service_name=None,
+    datacenter="Datacenter",
+    cluster="Cluster",
+    host_name=None,
+    state=None,
+    service_policy=None,
+    service_instance=None,
+):
+    """
+    Manage the state of the service running on the EXSI host.
+
+    service_name
+        The name of service to filter by. (optional)
+
+    datacenter
+        The datacenter name (required when cluster is specified)
+
+    cluster
+        The cluster name (optional)
+
+    host_name
+        The ESXI hostname whose power state needs to be managed (required if cluster is not specified)
+
+    state
+        Filter by this service state. Valid values: start, stop, restart.
+
+    service_policy
+        Filter by this service startup policy. Valid values on, off, automatic.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. Need not be passed by the user.
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_services
+    """
+    log.debug("Running vmware_esxi.list_services")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster,
+        datacenter_name=datacenter,
+        get_all_hosts=True if not host_name else False,
+    )
+
+    try:
+        for h in hosts:
+            host_service = h.configManager.serviceSystem
+            ret[h.name] = {}
+            if not host_service:
+                continue
+            if service_policy is not None:
+                if service_policy is True:
+                    service_policy = "on"
+                elif service_policy is False:
+                    service_policy = "off"
+            services = host_service.serviceInfo.service
+            for service in services or []:
+                if service_name and service.key != service_name:
+                    continue
+                if service_policy and service.policy != service_policy:
+                    continue
+                ret[h.name][service.key] = {
+                    "state": "running" if service.running else "stopped",
+                    "service_policy": service.policy,
+                }
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+    ) as exc:
         ret = exc.msg
     except salt.exceptions.VMwareApiError as api_err:
         ret = str(api_err)
