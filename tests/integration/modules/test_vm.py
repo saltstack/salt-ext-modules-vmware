@@ -19,36 +19,31 @@ import saltext.vmware.modules.vm as virtual_machine
         "uuid",
     ],
 )
-def test_vm_get_basic_facts(service_instance, integration_test_config, arg_name):
+def test_vm_info(integration_test_config, arg_name, patch_salt_globals_vm):
     """
-    Test we are returning the same values from get_vm_facts
+    Test we are returning the same values from get_info
     as our connected vcenter instance.
     """
-    vm_facts = virtual_machine.get_vm_facts(service_instance=service_instance)
-    for host_id in vm_facts:
-        for vm_name in vm_facts[host_id]:
-            expected_value = integration_test_config["vm_facts"][host_id][vm_name][arg_name]
-            assert vm_facts[host_id][vm_name][arg_name] == expected_value
-
-
-def test_vm_list_all(integration_test_config, patch_salt_globals_vm):
-    """
-    Test vm list_all()
-    """
-    all = virtual_machine.list_()
-    for host in all:
-        for vm in all[host]:
-            assert vm in integration_test_config["virtual_machines"][host]
+    vm_info = virtual_machine.info()
+    for vm_name in vm_info:
+        expected_value = integration_test_config["vm_info"][vm_name][arg_name]
+        assert vm_info[vm_name][arg_name] == expected_value
 
 
 def test_vm_list(integration_test_config, patch_salt_globals_vm):
     """
-    Test vm list_()
+    Test vm list_
     """
-    for host in integration_test_config["virtual_machines"]:
-        vms = virtual_machine.list_(host)
-        for vm in vms:
-            assert vm in integration_test_config["virtual_machines"][host]
+    all = virtual_machine.list_()
+    assert all == integration_test_config["virtual_machines"]
+
+
+def test_vm_list_templates(integration_test_config, patch_salt_globals_vm):
+    """
+    Test vm list_templates
+    """
+    all = virtual_machine.list_templates()
+    assert all == integration_test_config["virtual_machines_templates"]
 
 
 def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
@@ -60,7 +55,7 @@ def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
         host_name=integration_test_config["esxi_host_name"],
         ovf_path="tests/test_files/centos-7-tools.ovf",
     )
-    assert res["state"] == "done"
+    assert res["deployed"] == True
 
 
 def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
@@ -76,4 +71,44 @@ def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
         ova_path="tests/test_files/sample.tar",
     )
     os.remove("tests/test_files/sample.tar")
-    assert res["state"] == "done"
+    assert res["deployed"] == True
+
+
+def test_template_deploy(integration_test_config, patch_salt_globals_vm):
+    """
+    Test deploy virtual machine through an template
+    """
+    if integration_test_config["virtual_machines_templates"]:
+        res = virtual_machine.deploy_template(
+            name="test_template_vm",
+            template_name=integration_test_config["virtual_machines_templates"][0],
+            host_name=integration_test_config["esxi_host_name"],
+        )
+        assert res["deployed"] == True
+    else:
+        pass
+
+
+def test_path(integration_test_config, patch_salt_globals_vm):
+    """
+    Test deploy virtual machine through an template
+    """
+    if integration_test_config["virtual_machine_paths"].items:
+        for k, v in integration_test_config["virtual_machine_paths"].items():
+            res = virtual_machine.path(name=k)
+            assert res == v
+    else:
+        pass
+
+
+def test_powered_on(integration_test_config, patch_salt_globals_vm):
+    """
+    Test deploy virtual machine through an template
+    """
+    if integration_test_config["virtual_machines"]:
+        states = ["powered-on", "suspend", "powered-on", "reset", "powered-off"]
+        for state in states:
+            res = virtual_machine.power_state(integration_test_config["virtual_machines"][0], state)
+            assert res["comment"] == f"Virtual machine {state} action succeeded"
+    else:
+        pass

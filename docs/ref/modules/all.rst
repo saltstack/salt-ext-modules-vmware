@@ -21,11 +21,18 @@ Execution Modules
     saltext.vmware.modules.firewall
     saltext.vmware.modules.info
     saltext.vmware.modules.license
+    saltext.vmware.modules.nsxt_compute_manager
     saltext.vmware.modules.nsxt_ip_blocks
     saltext.vmware.modules.nsxt_ip_pools
     saltext.vmware.modules.nsxt_license
     saltext.vmware.modules.nsxt_manager
+    saltext.vmware.modules.nsxt_policy_segment
+    saltext.vmware.modules.nsxt_policy_tier0
+    saltext.vmware.modules.nsxt_policy_tier1
     saltext.vmware.modules.nsxt_transport_node
+    saltext.vmware.modules.nsxt_transport_node_profiles
+    saltext.vmware.modules.nsxt_transport_zone
+    saltext.vmware.modules.nsxt_uplink_profiles
     saltext.vmware.modules.ntp
     saltext.vmware.modules.service
     saltext.vmware.modules.ssl_adapter
@@ -37,7 +44,9 @@ Execution Modules
     saltext.vmware.modules.vmc_direct_connect
     saltext.vmware.modules.vmc_dns_forwarder
     saltext.vmware.modules.vmc_nat_rules
+    saltext.vmware.modules.vmc_networks
     saltext.vmware.modules.vmc_sddc
+    saltext.vmware.modules.vmc_security_groups
     saltext.vmware.modules.vmc_security_rules
     saltext.vmware.modules.vmc_vpn_statistics
     saltext.vmware.modules.vmotion

@@ -1,14 +1,26 @@
 # SPDX-License-Identifier: Apache-2.0
-from os import sys
-
 # pylint: disable=no-name-in-module
+import logging
+
+import salt.exceptions
+import salt.modules.cmdmod
+import salt.utils.path
+import salt.utils.platform
+import salt.utils.stringutils
+from saltext.vmware.utils.common import create_datacenter as create_datacenter
+from saltext.vmware.utils.common import delete_datacenter as delete_datacenter
+from saltext.vmware.utils.common import get_datacenter as get_datacenter
+from saltext.vmware.utils.common import get_datacenters as get_datacenters
+from saltext.vmware.utils.common import list_datacenters as list_datacenters
+
 try:
-    from pyVim.connect import GetSi, SmartConnect, Disconnect, GetStub, SoapStubAdapter
-    from pyVmomi import vim, vmodl, VmomiSupport
+    from pyVmomi import vim, vmodl
 
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
+
+log = logging.getLogger(__name__)
 
 
 def get_vm_datacenter(*, vm):
@@ -25,49 +37,3 @@ def get_vm_datacenter(*, vm):
         except AttributeError:
             break
     return datacenter
-
-
-def get_service_instance_datacenter(*, service_instance, datacenter_name):
-    """
-    Return a datacenter from service instance
-    """
-    datacenter = None
-    content = service_instance.content
-    for child in content.rootFolder.childEntity:
-        if child.name == datacenter_name:
-            datacenter = child
-            break
-    if datacenter == None:
-        sys.exit(f"Datacenter {datacenter_name} not found!")
-    return datacenter
-
-
-def get_destination_host(*, service_instance, host_name):
-    """
-    Return Destination Host
-    """
-    content = service_instance.content
-    container = content.viewManager.CreateContainerView(content.rootFolder, [vim.HostSystem], True)
-    destination_host = None
-    for obj in container.view:
-        if obj.name == host_name:
-            destination_host = obj
-            break
-    container.Destroy()
-    if destination_host == None:
-        sys.exit(f"Destination host {host_name} not found!")
-    return destination_host
-
-
-def get_cluster(*, datacenter, cluster_name):
-    cluster_list = datacenter.hostFolder.childEntity
-    cluster_obj = None
-    if cluster_name:
-        for cluster in cluster_list:
-            if cluster.name == cluster_name:
-                cluster_obj = cluster
-    elif cluster_obj == None and len(cluster_list) > 0:
-        cluster_obj = cluster_list[0]
-    else:
-        exit(f"No clusters found in datacenter ({datacenter.name}).")
-    return cluster_obj

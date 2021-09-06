@@ -3,7 +3,9 @@
 import logging
 
 import salt.exceptions
-import saltext.vmware.utils.vmware
+import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.esxi as utils_esxi
 from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
@@ -52,7 +54,7 @@ def _set_failover_host_admission_control_params(
     Set failover host admission control params
     """
     cluster_spec.dasConfig.admissionControlPolicy = vim.cluster.FailoverHostAdmissionControlPolicy()
-    hosts = saltext.vmware.utils.vmware.get_hosts(
+    hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         datacenter_name=datacenter,
         cluster_name=cluster,
@@ -262,8 +264,8 @@ def configure(
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     admission_control_policy = admission_control_policy or {}
     try:
-        dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, datacenter)
-        cluster_ref = saltext.vmware.utils.vmware.get_cluster(dc_ref=dc_ref, cluster=cluster)
+        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
+        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster)
         cluster_spec = vim.cluster.ConfigSpecEx()
         cluster_spec.dasConfig = vim.cluster.DasConfigInfo()
         cluster_spec.dasConfig.enabled = enable
@@ -307,9 +309,7 @@ def configure(
             cluster_spec.dasConfig.option.append(
                 vim.OptionValue(key=key, value=advanced_options[key])
             )
-        saltext.vmware.utils.vmware.update_cluster(
-            cluster_ref=cluster_ref, cluster_spec=cluster_spec
-        )
+        utils_cluster.update_cluster(cluster_ref=cluster_ref, cluster_spec=cluster_spec)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareRuntimeError) as exc:
         return {cluster: False, "reason": str(exc)}
     return {cluster: True}
@@ -328,8 +328,8 @@ def get_(cluster, datacenter):
     ret = {}
     service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        dc_ref = saltext.vmware.utils.vmware.get_datacenter(service_instance, datacenter)
-        cluster_ref = saltext.vmware.utils.vmware.get_cluster(dc_ref=dc_ref, cluster=cluster)
+        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
+        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster)
         das_config = cluster_ref.configurationEx.dasConfig
         ret["enabled"] = das_config.enabled
         ret["host_monitoring"] = das_config.hostMonitoring
