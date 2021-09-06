@@ -61,6 +61,9 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     python tools/test_value_scraper.py -c local/vcenter.conf
 
 
+For code contributions, as part of VMware we require [a signed CLA][cla-faq].
+If you've already signed the VMware CLA, you're probably good to go.
+
 Of course, writing code isn't the only way to contribute! We value
 contributions in any of these areas:
 
@@ -93,3 +96,4 @@ that's where you'll find the rest of the documentation.
 [PRs]: https://github.com/saltstack/salt-ext-modules-vmware/pulls
 [discussions]: https://github.com/saltstack/salt-ext-modules-vmware/discussions
 [comments]: https://conventionalcomments.org/
+[cla-faq]: https://cla.vmware.com/faq

@@ -24,6 +24,7 @@ What are you most interested in?
   vsphere.rst
   nsx.rst
   vmc.rst
+  utils.rst
 
 
 .. toctree::

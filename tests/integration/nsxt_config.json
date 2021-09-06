@@ -1,0 +1,14 @@
+{
+  "hostname": "nsxt-hostname/ip",
+  "username": "nsxt-username",
+  "password": "nsxt-password",
+  "cert": "path-to-nsxt-cert.pem",
+  "license_key": "nsxt-license-key",
+  "compute_manager_server": "compute-manager-server-ip",
+  "credential": {
+    "username": "compute-manager-server-username",
+    "password": "compute-manager-server-password",
+    "credential_type": "UsernamePasswordLoginCredential",
+    "thumbprint": "compute-manager-server-thumbprint"
+  }
+}

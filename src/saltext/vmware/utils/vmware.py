@@ -66,17 +66,19 @@ You should see output related to the ESXi host's syslog configuration.
 
 """
 import atexit
-import errno
 import logging
 import ssl
-import time
-from http.client import BadStatusLine
 
 import salt.exceptions
 import salt.modules.cmdmod
 import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
+import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.esxi as utils_esxi
+import saltext.vmware.utils.vm as utils_vm
 
 # pylint: disable=no-name-in-module
 try:
@@ -474,24 +476,6 @@ def get_new_service_instance_stub(service_instance, path, ns=None, version=None)
     return new_stub
 
 
-def get_service_instance_from_managed_object(mo_ref, name="<unnamed>"):
-    """
-    Retrieves the service instance from a managed object.
-
-    me_ref
-        Reference to a managed object (of type vim.ManagedEntity).
-
-    name
-        Name of managed object. This field is optional.
-    """
-    if not name:
-        name = mo_ref.name
-    log.trace("[%s] Retrieving service instance from managed object", name)
-    si = vim.ServiceInstance("ServiceInstance")
-    si._stub = mo_ref._stub
-    return si
-
-
 def disconnect(service_instance):
     """
     Function that disconnects from the vCenter server or ESXi host
@@ -760,315 +744,6 @@ def get_inventory(service_instance):
     return service_instance.RetrieveContent()
 
 
-def get_root_folder(service_instance):
-    """
-    Returns the root folder of a vCenter.
-
-    service_instance
-        The Service Instance Object for which to obtain the root folder.
-    """
-    try:
-        log.trace("Retrieving root folder")
-        return service_instance.RetrieveContent().rootFolder
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-
-
-def get_content(
-    service_instance,
-    obj_type,
-    property_list=None,
-    container_ref=None,
-    traversal_spec=None,
-    local_properties=False,
-):
-    """
-    Returns the content of the specified type of object for a Service Instance.
-
-    For more information, please see:
-    http://pubs.vmware.com/vsphere-50/index.jsp?topic=%2Fcom.vmware.wssdk.pg.doc_50%2FPG_Ch5_PropertyCollector.7.6.html
-
-    service_instance
-        The Service Instance from which to obtain content.
-
-    obj_type
-        The type of content to obtain.
-
-    property_list
-        An optional list of object properties to used to return even more filtered content results.
-
-    container_ref
-        An optional reference to the managed object to search under. Can either be an object of type Folder, Datacenter,
-        ComputeResource, Resource Pool or HostSystem. If not specified, default behaviour is to search under the inventory
-        rootFolder.
-
-    traversal_spec
-        An optional TraversalSpec to be used instead of the standard
-        ``Traverse All`` spec.
-
-    local_properties
-        Flag specifying whether the properties to be retrieved are local to the
-        container. If that is the case, the traversal spec needs to be None.
-    """
-    # Start at the rootFolder if container starting point not specified
-    if not container_ref:
-        container_ref = get_root_folder(service_instance)
-
-    # By default, the object reference used as the starting poing for the filter
-    # is the container_ref passed in the function
-    obj_ref = container_ref
-    local_traversal_spec = False
-    if not traversal_spec and not local_properties:
-        local_traversal_spec = True
-        # We don't have a specific traversal spec override so we are going to
-        # get everything using a container view
-        try:
-            obj_ref = service_instance.content.viewManager.CreateContainerView(
-                container_ref, [obj_type], True
-            )
-        except vim.fault.NoPermission as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-            )
-        except vim.fault.VimFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(exc.msg)
-        except vmodl.RuntimeFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareRuntimeError(exc.msg)
-
-        # Create 'Traverse All' traversal spec to determine the path for
-        # collection
-        traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-            name="traverseEntities",
-            path="view",
-            skip=False,
-            type=vim.view.ContainerView,
-        )
-
-    # Create property spec to determine properties to be retrieved
-    property_spec = vmodl.query.PropertyCollector.PropertySpec(
-        type=obj_type, all=True if not property_list else False, pathSet=property_list
-    )
-
-    # Create object spec to navigate content
-    obj_spec = vmodl.query.PropertyCollector.ObjectSpec(
-        obj=obj_ref,
-        skip=True if not local_properties else False,
-        selectSet=[traversal_spec] if not local_properties else None,
-    )
-
-    # Create a filter spec and specify object, property spec in it
-    filter_spec = vmodl.query.PropertyCollector.FilterSpec(
-        objectSet=[obj_spec],
-        propSet=[property_spec],
-        reportMissingObjectsInResults=False,
-    )
-
-    # Retrieve the contents
-    try:
-        content = service_instance.content.propertyCollector.RetrieveContents([filter_spec])
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-
-    # Destroy the object view
-    if local_traversal_spec:
-        try:
-            obj_ref.Destroy()
-        except vim.fault.NoPermission as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-            )
-        except vim.fault.VimFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(exc.msg)
-        except vmodl.RuntimeFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareRuntimeError(exc.msg)
-
-    return content
-
-
-def get_mor_by_property(
-    service_instance,
-    object_type,
-    property_value,
-    property_name="name",
-    container_ref=None,
-):
-    """
-    Returns the first managed object reference having the specified property value.
-
-    service_instance
-        The Service Instance from which to obtain managed object references.
-
-    object_type
-        The type of content for which to obtain managed object references.
-
-    property_value
-        The name of the property for which to obtain the managed object reference.
-
-    property_name
-        An object property used to return the specified object reference results. Defaults to ``name``.
-
-    container_ref
-        An optional reference to the managed object to search under. Can either be an object of type Folder, Datacenter,
-        ComputeResource, Resource Pool or HostSystem. If not specified, default behaviour is to search under the inventory
-        rootFolder.
-    """
-    # Get list of all managed object references with specified property
-    object_list = get_mors_with_properties(
-        service_instance,
-        object_type,
-        property_list=[property_name],
-        container_ref=container_ref,
-    )
-
-    for obj in object_list:
-        obj_id = str(obj.get("object", "")).strip("'\"")
-        if obj[property_name] == property_value or property_value == obj_id:
-            return obj["object"]
-
-    return None
-
-
-def get_mors_with_properties(
-    service_instance,
-    object_type,
-    property_list=None,
-    container_ref=None,
-    traversal_spec=None,
-    local_properties=False,
-):
-    """
-    Returns a list containing properties and managed object references for the managed object.
-
-    service_instance
-        The Service Instance from which to obtain managed object references.
-
-    object_type
-        The type of content for which to obtain managed object references.
-
-    property_list
-        An optional list of object properties used to return even more filtered managed object reference results.
-
-    container_ref
-        An optional reference to the managed object to search under. Can either be an object of type Folder, Datacenter,
-        ComputeResource, Resource Pool or HostSystem. If not specified, default behaviour is to search under the inventory
-        rootFolder.
-
-    traversal_spec
-        An optional TraversalSpec to be used instead of the standard
-        ``Traverse All`` spec
-
-    local_properties
-        Flag specigying whether the properties to be retrieved are local to the
-        container. If that is the case, the traversal spec needs to be None.
-    """
-    # Get all the content
-    content_args = [service_instance, object_type]
-    content_kwargs = {
-        "property_list": property_list,
-        "container_ref": container_ref,
-        "traversal_spec": traversal_spec,
-        "local_properties": local_properties,
-    }
-    try:
-        content = get_content(*content_args, **content_kwargs)
-    except BadStatusLine:
-        content = get_content(*content_args, **content_kwargs)
-    except OSError as exc:
-        if exc.errno != errno.EPIPE:
-            raise
-        content = get_content(*content_args, **content_kwargs)
-
-    object_list = []
-    for obj in content:
-        properties = {}
-        for prop in obj.propSet:
-            properties[prop.name] = prop.val
-        properties["object"] = obj.obj
-        object_list.append(properties)
-    log.trace("Retrieved %s objects", len(object_list))
-    return object_list
-
-
-def get_properties_of_managed_object(mo_ref, properties):
-    """
-    Returns specific properties of a managed object, retrieved in an
-    optimally.
-
-    mo_ref
-        The managed object reference.
-
-    properties
-        List of properties of the managed object to retrieve.
-    """
-    service_instance = get_service_instance_from_managed_object(mo_ref)
-    log.trace("Retrieving name of %s", type(mo_ref).__name__)
-    try:
-        items = get_mors_with_properties(
-            service_instance,
-            type(mo_ref),
-            container_ref=mo_ref,
-            property_list=["name"],
-            local_properties=True,
-        )
-        mo_name = items[0]["name"]
-    except vmodl.query.InvalidProperty:
-        mo_name = "<unnamed>"
-    log.trace(
-        "Retrieving properties '%s' of %s '%s'",
-        properties,
-        type(mo_ref).__name__,
-        mo_name,
-    )
-    items = get_mors_with_properties(
-        service_instance,
-        type(mo_ref),
-        container_ref=mo_ref,
-        property_list=properties,
-        local_properties=True,
-    )
-    if not items:
-        raise salt.exceptions.VMwareApiError(
-            "Properties of managed object '{}' weren't " "retrieved".format(mo_name)
-        )
-    return items[0]
-
-
-def get_managed_object_name(mo_ref):
-    """
-    Returns the name of a managed object.
-    If the name wasn't found, it returns None.
-
-    mo_ref
-        The managed object reference.
-    """
-    props = get_properties_of_managed_object(mo_ref, ["name"])
-    return props.get("name")
-
-
 def get_network_adapter_type(adapter_type):
     """
     Return the network adapter type.
@@ -1124,7 +799,7 @@ def get_dvss(dc_ref, dvs_names=None, get_all_dvss=False):
     get_all_dvss
         Return all DVSs in the datacenter. Default is False.
     """
-    dc_name = get_managed_object_name(dc_ref)
+    dc_name = utils_common.get_managed_object_name(dc_ref)
     log.trace(
         "Retrieving DVSs in datacenter '%s', dvs_names='%s', get_all_dvss=%s",
         dc_name,
@@ -1142,10 +817,10 @@ def get_dvss(dc_ref, dvs_names=None, get_all_dvss=False):
             )
         ],
     )
-    service_instance = get_service_instance_from_managed_object(dc_ref)
+    service_instance = utils_common.get_service_instance_from_managed_object(dc_ref)
     items = [
         i["object"]
-        for i in get_mors_with_properties(
+        for i in utils_common.get_mors_with_properties(
             service_instance,
             vim.DistributedVirtualSwitch,
             container_ref=dc_ref,
@@ -1161,13 +836,13 @@ def get_network_folder(dc_ref):
     """
     Retrieves the network folder of a datacenter
     """
-    dc_name = get_managed_object_name(dc_ref)
+    dc_name = utils_common.get_managed_object_name(dc_ref)
     log.trace("Retrieving network folder in datacenter '%s'", dc_name)
-    service_instance = get_service_instance_from_managed_object(dc_ref)
+    service_instance = utils_common.get_service_instance_from_managed_object(dc_ref)
     traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
         path="networkFolder", skip=False, type=vim.Datacenter
     )
-    entries = get_mors_with_properties(
+    entries = utils_common.get_mors_with_properties(
         service_instance,
         vim.Folder,
         container_ref=dc_ref,
@@ -1196,7 +871,7 @@ def create_dvs(dc_ref, dvs_name, dvs_create_spec=None):
         The DVS spec (vim.DVSCreateSpec) to use when creating the DVS.
         Default is None.
     """
-    dc_name = get_managed_object_name(dc_ref)
+    dc_name = utils_common.get_managed_object_name(dc_ref)
     log.trace("Creating DVS '%s' in datacenter '%s'", dvs_name, dc_name)
     if not dvs_create_spec:
         dvs_create_spec = vim.DVSCreateSpec()
@@ -1217,7 +892,7 @@ def create_dvs(dc_ref, dvs_name, dvs_create_spec=None):
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, dvs_name, str(task.__class__))
+    utils_common.wait_for_task(task, dvs_name, str(task.__class__))
 
 
 def update_dvs(dvs_ref, dvs_config_spec):
@@ -1231,7 +906,7 @@ def update_dvs(dvs_ref, dvs_config_spec):
         The updated config spec (vim.VMwareDVSConfigSpec) to be applied to
         the DVS.
     """
-    dvs_name = get_managed_object_name(dvs_ref)
+    dvs_name = utils_common.get_managed_object_name(dvs_ref)
     log.trace("Updating dvs '%s'", dvs_name)
     try:
         task = dvs_ref.ReconfigureDvs_Task(dvs_config_spec)
@@ -1246,7 +921,7 @@ def update_dvs(dvs_ref, dvs_config_spec):
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, dvs_name, str(task.__class__))
+    utils_common.wait_for_task(task, dvs_name, str(task.__class__))
 
 
 def set_dvs_network_resource_management_enabled(dvs_ref, enabled):
@@ -1259,7 +934,7 @@ def set_dvs_network_resource_management_enabled(dvs_ref, enabled):
     enabled
         Flag specifying whether NIOC is enabled.
     """
-    dvs_name = get_managed_object_name(dvs_ref)
+    dvs_name = utils_common.get_managed_object_name(dvs_ref)
     log.trace(
         "Setting network resource management enable to %s on " "dvs '%s'",
         enabled,
@@ -1298,7 +973,7 @@ def get_dvportgroups(parent_ref, portgroup_names=None, get_all_portgroups=False)
         raise salt.exceptions.ArgumentValueError(
             "Parent has to be either a datacenter, " "or a distributed virtual switch"
         )
-    parent_name = get_managed_object_name(parent_ref)
+    parent_name = utils_common.get_managed_object_name(parent_ref)
     log.trace(
         "Retrieving portgroup in %s '%s', portgroups_names='%s', " "get_all_portgroups=%s",
         type(parent_ref).__name__,
@@ -1323,10 +998,10 @@ def get_dvportgroups(parent_ref, portgroup_names=None, get_all_portgroups=False)
             path="portgroup", skip=False, type=vim.DistributedVirtualSwitch
         )
 
-    service_instance = get_service_instance_from_managed_object(parent_ref)
+    service_instance = utils_common.get_service_instance_from_managed_object(parent_ref)
     items = [
         i["object"]
-        for i in get_mors_with_properties(
+        for i in utils_common.get_mors_with_properties(
             service_instance,
             vim.DistributedVirtualPortgroup,
             container_ref=parent_ref,
@@ -1346,15 +1021,15 @@ def get_uplink_dvportgroup(dvs_ref):
     dvs_ref
         The dvs reference
     """
-    dvs_name = get_managed_object_name(dvs_ref)
+    dvs_name = utils_common.get_managed_object_name(dvs_ref)
     log.trace("Retrieving uplink portgroup of dvs '%s'", dvs_name)
     traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
         path="portgroup", skip=False, type=vim.DistributedVirtualSwitch
     )
-    service_instance = get_service_instance_from_managed_object(dvs_ref)
+    service_instance = utils_common.get_service_instance_from_managed_object(dvs_ref)
     items = [
         entry["object"]
-        for entry in get_mors_with_properties(
+        for entry in utils_common.get_mors_with_properties(
             service_instance,
             vim.DistributedVirtualPortgroup,
             container_ref=dvs_ref,
@@ -1381,7 +1056,7 @@ def create_dvportgroup(dvs_ref, spec):
     spec
         Portgroup spec (vim.DVPortgroupConfigSpec)
     """
-    dvs_name = get_managed_object_name(dvs_ref)
+    dvs_name = utils_common.get_managed_object_name(dvs_ref)
     log.trace("Adding portgroup %s to dvs '%s'", spec.name, dvs_name)
     log.trace("spec = %s", spec)
     try:
@@ -1397,7 +1072,7 @@ def create_dvportgroup(dvs_ref, spec):
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, dvs_name, str(task.__class__))
+    utils_common.wait_for_task(task, dvs_name, str(task.__class__))
 
 
 def update_dvportgroup(portgroup_ref, spec):
@@ -1410,7 +1085,7 @@ def update_dvportgroup(portgroup_ref, spec):
     spec
         Portgroup spec (vim.DVPortgroupConfigSpec)
     """
-    pg_name = get_managed_object_name(portgroup_ref)
+    pg_name = utils_common.get_managed_object_name(portgroup_ref)
     log.trace("Updating portgrouo %s", pg_name)
     try:
         task = portgroup_ref.ReconfigureDVPortgroup_Task(spec)
@@ -1425,7 +1100,7 @@ def update_dvportgroup(portgroup_ref, spec):
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, pg_name, str(task.__class__))
+    utils_common.wait_for_task(task, pg_name, str(task.__class__))
 
 
 def remove_dvportgroup(portgroup_ref):
@@ -1435,7 +1110,7 @@ def remove_dvportgroup(portgroup_ref):
     portgroup_ref
         The portgroup reference
     """
-    pg_name = get_managed_object_name(portgroup_ref)
+    pg_name = utils_common.get_managed_object_name(portgroup_ref)
     log.trace("Removing portgroup %s", pg_name)
     try:
         task = portgroup_ref.Destroy_Task()
@@ -1450,7 +1125,7 @@ def remove_dvportgroup(portgroup_ref):
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, pg_name, str(task.__class__))
+    utils_common.wait_for_task(task, pg_name, str(task.__class__))
 
 
 def get_networks(parent_ref, network_names=None, get_all_networks=False):
@@ -1471,7 +1146,7 @@ def get_networks(parent_ref, network_names=None, get_all_networks=False):
 
     if not isinstance(parent_ref, vim.Datacenter):
         raise salt.exceptions.ArgumentValueError("Parent has to be a datacenter.")
-    parent_name = get_managed_object_name(parent_ref)
+    parent_name = utils_common.get_managed_object_name(parent_ref)
     log.trace(
         "Retrieving network from %s '%s', network_names='%s', " "get_all_networks=%s",
         type(parent_ref).__name__,
@@ -1480,7 +1155,7 @@ def get_networks(parent_ref, network_names=None, get_all_networks=False):
         get_all_networks,
     )
     properties = ["name"]
-    service_instance = get_service_instance_from_managed_object(parent_ref)
+    service_instance = utils_common.get_service_instance_from_managed_object(parent_ref)
     traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
         path="networkFolder",
         skip=True,
@@ -1493,7 +1168,7 @@ def get_networks(parent_ref, network_names=None, get_all_networks=False):
     )
     items = [
         i["object"]
-        for i in get_mors_with_properties(
+        for i in utils_common.get_mors_with_properties(
             service_instance,
             vim.Network,
             container_ref=parent_ref,
@@ -1502,30 +1177,6 @@ def get_networks(parent_ref, network_names=None, get_all_networks=False):
         )
         if get_all_networks or (network_names and i["name"] in network_names)
     ]
-    return items
-
-
-def list_objects(service_instance, vim_object, properties=None):
-    """
-    Returns a simple list of objects from a given service instance.
-
-    service_instance
-        The Service Instance for which to obtain a list of objects.
-
-    object_type
-        The type of content for which to obtain information.
-
-    properties
-        An optional list of object properties used to return reference results.
-        If not provided, defaults to ``name``.
-    """
-    if properties is None:
-        properties = ["name"]
-
-    items = []
-    item_list = get_mors_with_properties(service_instance, vim_object, properties)
-    for item in item_list:
-        items.append(item["name"])
     return items
 
 
@@ -1816,259 +1467,6 @@ def assign_license(
     return vmware_license
 
 
-def list_datacenters(service_instance):
-    """
-    Returns a list of datacenters associated with a given service instance.
-
-    service_instance
-        The Service Instance Object from which to obtain datacenters.
-    """
-    return list_objects(service_instance, vim.Datacenter)
-
-
-def get_datacenters(service_instance, datacenter_names=None, get_all_datacenters=False):
-    """
-    Returns all datacenters in a vCenter.
-
-    service_instance
-        The Service Instance Object from which to obtain cluster.
-
-    datacenter_names
-        List of datacenter names to filter by. Default value is None.
-
-    get_all_datacenters
-        Flag specifying whether to retrieve all datacenters.
-        Default value is None.
-    """
-    items = [
-        i["object"]
-        for i in get_mors_with_properties(service_instance, vim.Datacenter, property_list=["name"])
-        if get_all_datacenters or (datacenter_names and i["name"] in datacenter_names)
-    ]
-    return items
-
-
-def get_datacenter(service_instance, datacenter_name):
-    """
-    Returns a vim.Datacenter managed object.
-
-    service_instance
-        The Service Instance Object from which to obtain datacenter.
-
-    datacenter_name
-        The datacenter name
-    """
-    items = get_datacenters(service_instance, datacenter_names=[datacenter_name])
-    if not items:
-        raise salt.exceptions.VMwareObjectRetrievalError(
-            "Datacenter '{}' was not found".format(datacenter_name)
-        )
-    return items[0]
-
-
-def create_datacenter(service_instance, datacenter_name):
-    """
-    Creates a datacenter.
-
-    .. versionadded:: 2017.7.0
-
-    service_instance
-        The Service Instance Object
-
-    datacenter_name
-        The datacenter name
-    """
-    root_folder = get_root_folder(service_instance)
-    log.trace("Creating datacenter '%s'", datacenter_name)
-    try:
-        dc_obj = root_folder.CreateDatacenter(datacenter_name)
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    return dc_obj
-
-
-def delete_datacenter(service_instance, datacenter_name):
-    """
-    Deletes a datacenter.
-
-    service_instance
-        The Service Instance Object
-
-    datacenter_name
-        The datacenter name
-    """
-    root_folder = get_root_folder(service_instance)
-    log.trace("Deleting datacenter '%s'", datacenter_name)
-    try:
-        dc_obj = get_datacenter(service_instance, datacenter_name)
-        task = dc_obj.Destroy_Task()
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, datacenter_name, "DeleteDatacenterTask")
-
-
-def get_cluster(dc_ref, cluster):
-    """
-    Returns a cluster in a datacenter.
-
-    dc_ref
-        The datacenter reference
-
-    cluster
-        The cluster to be retrieved
-    """
-    dc_name = get_managed_object_name(dc_ref)
-    log.trace("Retrieving cluster '%s' from datacenter '%s'", cluster, dc_name)
-    si = get_service_instance_from_managed_object(dc_ref, name=dc_name)
-    traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-        path="hostFolder",
-        skip=True,
-        type=vim.Datacenter,
-        selectSet=[
-            vmodl.query.PropertyCollector.TraversalSpec(
-                path="childEntity", skip=False, type=vim.Folder
-            )
-        ],
-    )
-    items = [
-        i["object"]
-        for i in get_mors_with_properties(
-            si,
-            vim.ClusterComputeResource,
-            container_ref=dc_ref,
-            property_list=["name"],
-            traversal_spec=traversal_spec,
-        )
-        if i["name"] == cluster
-    ]
-    if not items:
-        raise salt.exceptions.VMwareObjectRetrievalError(
-            "Cluster '{}' was not found in datacenter " "'{}'".format(cluster, dc_name)
-        )
-    return items[0]
-
-
-def create_cluster(dc_ref, cluster_name, cluster_spec):
-    """
-    Creates a cluster in a datacenter.
-
-    dc_ref
-        The parent datacenter reference.
-
-    cluster_name
-        The cluster name.
-
-    cluster_spec
-        The cluster spec (vim.ClusterConfigSpecEx).
-        Defaults to None.
-    """
-    dc_name = get_managed_object_name(dc_ref)
-    log.trace("Creating cluster '%s' in datacenter '%s'", cluster_name, dc_name)
-    try:
-        dc_ref.hostFolder.CreateClusterEx(cluster_name, cluster_spec)
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-
-
-def update_cluster(cluster_ref, cluster_spec):
-    """
-    Updates a cluster in a datacenter.
-
-    cluster_ref
-        The cluster reference.
-
-    cluster_spec
-        The cluster spec (vim.ClusterConfigSpecEx).
-        Defaults to None.
-    """
-    cluster_name = get_managed_object_name(cluster_ref)
-    log.trace("Updating cluster '%s'", cluster_name)
-    try:
-        task = cluster_ref.ReconfigureComputeResource_Task(cluster_spec, modify=True)
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, cluster_name, "ClusterUpdateTask")
-
-
-def delete_cluster(service_instance, cluster_name, datacenter_name):
-    """
-    Deletes a datacenter.
-
-    service_instance
-        The Service Instance Object
-
-    cluster_name
-        The name of the cluster to delete
-
-    datacenter_name
-        The datacenter name to which the cluster belongs
-    """
-    root_folder = get_root_folder(service_instance)
-    log.trace("Deleting cluster '%s' in '%s'", cluster_name, datacenter_name)
-    try:
-        dc_obj = get_datacenter(service_instance, datacenter_name)
-        cluster_obj = get_cluster(dc_ref=dc_obj, cluster=cluster_name)
-        task = cluster_obj.Destroy_Task()
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, cluster_name, "DeleteClusterTask")
-
-
-def list_clusters(service_instance):
-    """
-    Returns a list of clusters associated with a given service instance.
-
-    service_instance
-        The Service Instance Object from which to obtain clusters.
-    """
-    return list_objects(service_instance, vim.ClusterComputeResource)
-
-
 def list_datastore_clusters(service_instance):
     """
     Returns a list of datastore clusters associated with a given service instance.
@@ -2076,7 +1474,7 @@ def list_datastore_clusters(service_instance):
     service_instance
         The Service Instance Object from which to obtain datastore clusters.
     """
-    return list_objects(service_instance, vim.StoragePod)
+    return utils_common.list_objects(service_instance, vim.StoragePod)
 
 
 def list_datastores(service_instance):
@@ -2086,7 +1484,7 @@ def list_datastores(service_instance):
     service_instance
         The Service Instance Object from which to obtain datastores.
     """
-    return list_objects(service_instance, vim.Datastore)
+    return utils_common.list_objects(service_instance, vim.Datastore)
 
 
 def get_datastore_files(service_instance, directory, datastores, container_object, browser_spec):
@@ -2135,7 +1533,9 @@ def get_datastore_files(service_instance, directory, datastores, container_objec
             raise salt.exceptions.VMwareRuntimeError(exc.msg)
         try:
             files.append(
-                salt.utils.vmware.wait_for_task(task, directory, "query virtual machine files")
+                salt.utils.vmware.utils_common.wait_for_task(
+                    task, directory, "query virtual machine files"
+                )
             )
         except salt.exceptions.VMwareFileNotFoundError:
             pass
@@ -2172,7 +1572,7 @@ def get_datastores(
         Specifies whether to retrieve all disks in the host.
         Default value is False.
     """
-    obj_name = get_managed_object_name(reference)
+    obj_name = utils_common.get_managed_object_name(reference)
     if get_all_datastores:
         log.trace("Retrieving all datastores visible to '%s'", obj_name)
     else:
@@ -2192,7 +1592,7 @@ def get_datastores(
         # At this point we know the reference is a vim.HostSystem
         log.trace("Filtering datastores with backing disk ids: %s", backing_disk_ids)
         storage_system = get_storage_system(service_instance, reference, obj_name)
-        props = salt.utils.vmware.get_properties_of_managed_object(
+        props = utils_common.get_properties_of_managed_object(
             storage_system, ["fileSystemVolumeInfo.mountInfo"]
         )
         mount_infos = props.get("fileSystemVolumeInfo.mountInfo", [])
@@ -2260,7 +1660,10 @@ def get_datastores(
             skip=False,
             type=vim.StoragePod,
         )
-    elif isinstance(reference, vim.Folder) and get_managed_object_name(reference) == "Datacenters":
+    elif (
+        isinstance(reference, vim.Folder)
+        and utils_common.get_managed_object_name(reference) == "Datacenters"
+    ):
         # Traversal of root folder (doesn't support multiple levels of Folders)
         traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
             path="childEntity",
@@ -2277,7 +1680,7 @@ def get_datastores(
             "Unsupported reference type '{}'" "".format(reference.__class__.__name__)
         )
 
-    items = get_mors_with_properties(
+    items = utils_common.get_mors_with_properties(
         service_instance,
         object_type=vim.Datastore,
         property_list=["name"],
@@ -2300,7 +1703,7 @@ def rename_datastore(datastore_ref, new_datastore_name):
     new_datastore_name
         New datastore name
     """
-    ds_name = get_managed_object_name(datastore_ref)
+    ds_name = utils_common.get_managed_object_name(datastore_ref)
     log.trace("Renaming datastore '%s' to '%s'", ds_name, new_datastore_name)
     try:
         datastore_ref.RenameDatastore(new_datastore_name)
@@ -2323,12 +1726,12 @@ def get_storage_system(service_instance, host_ref, hostname=None):
     """
 
     if not hostname:
-        hostname = get_managed_object_name(host_ref)
+        hostname = utils_common.get_managed_object_name(host_ref)
 
     traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
         path="configManager.storageSystem", type=vim.HostSystem, skip=False
     )
-    objs = get_mors_with_properties(
+    objs = utils_common.get_mors_with_properties(
         service_instance,
         vim.HostStorageSystem,
         property_list=["systemFile"],
@@ -2451,7 +1854,7 @@ def create_vmfs_datastore(
         VMFS major version to use
     """
     # TODO Support variable sized partitions
-    hostname = get_managed_object_name(host_ref)
+    hostname = utils_common.get_managed_object_name(host_ref)
     disk_id = disk_ref.canonicalName
     log.debug(
         "Creating datastore '%s' on host '%s', scsi disk '%s', " "vmfs v%s",
@@ -2461,7 +1864,7 @@ def create_vmfs_datastore(
         vmfs_major_version,
     )
     if not storage_system:
-        si = get_service_instance_from_managed_object(host_ref, name=hostname)
+        si = utils_common.get_service_instance_from_managed_object(host_ref, name=hostname)
         storage_system = get_storage_system(si, host_ref, hostname)
 
     target_disk = disk_ref
@@ -2508,12 +1911,12 @@ def get_host_datastore_system(host_ref, hostname=None):
     """
 
     if not hostname:
-        hostname = get_managed_object_name(host_ref)
-    service_instance = get_service_instance_from_managed_object(host_ref)
+        hostname = utils_common.get_managed_object_name(host_ref)
+    service_instance = utils_common.get_service_instance_from_managed_object(host_ref)
     traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
         path="configManager.datastoreSystem", type=vim.HostSystem, skip=False
     )
-    objs = get_mors_with_properties(
+    objs = utils_common.get_mors_with_properties(
         service_instance,
         vim.HostDatastoreSystem,
         property_list=["datastore"],
@@ -2538,7 +1941,9 @@ def remove_datastore(service_instance, datastore_ref):
     datastore_ref
         The reference to the datastore to remove
     """
-    ds_props = get_properties_of_managed_object(datastore_ref, ["host", "info", "name"])
+    ds_props = utils_common.get_properties_of_managed_object(
+        datastore_ref, ["host", "info", "name"]
+    )
     ds_name = ds_props["name"]
     log.debug("Removing datastore '%s'", ds_name)
     ds_hosts = ds_props.get("host")
@@ -2546,7 +1951,7 @@ def remove_datastore(service_instance, datastore_ref):
         raise salt.exceptions.VMwareApiError(
             "Datastore '{}' can't be removed. No " "attached hosts found".format(ds_name)
         )
-    hostname = get_managed_object_name(ds_hosts[0].key)
+    hostname = utils_common.get_managed_object_name(ds_hosts[0].key)
     host_ds_system = get_host_datastore_system(ds_hosts[0].key, hostname=hostname)
     try:
         host_ds_system.RemoveDatastore(datastore_ref)
@@ -2562,80 +1967,6 @@ def remove_datastore(service_instance, datastore_ref):
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     log.trace("[%s] Removed datastore '%s'", hostname, ds_name)
-
-
-def get_hosts(
-    service_instance,
-    datacenter_name=None,
-    host_names=None,
-    cluster_name=None,
-    get_all_hosts=False,
-):
-    """
-    Returns a list of vim.HostSystem objects representing ESXi hosts
-    in a vcenter filtered by their names and/or datacenter, cluster membership.
-
-    service_instance
-        The Service Instance Object from which to obtain the hosts.
-
-    datacenter_name
-        The datacenter name. Default is None.
-
-    host_names
-        The host_names to be retrieved. Default is None.
-
-    cluster_name
-        The cluster name - used to restrict the hosts retrieved. Only used if
-        the datacenter is set.  This argument is optional.
-
-    get_all_hosts
-        Specifies whether to retrieve all hosts in the container.
-        Default value is False.
-    """
-    properties = ["name"]
-    if cluster_name and not datacenter_name:
-        raise salt.exceptions.ArgumentValueError(
-            "Must specify the datacenter when specifying the cluster"
-        )
-    if not host_names:
-        host_names = []
-    if not datacenter_name:
-        # Assume the root folder is the starting point
-        start_point = get_root_folder(service_instance)
-    else:
-        start_point = get_datacenter(service_instance, datacenter_name)
-        if cluster_name:
-            # Retrieval to test if cluster exists. Cluster existence only makes
-            # sense if the datacenter has been specified
-            properties.append("parent")
-
-    # Search for the objects
-    hosts = get_mors_with_properties(
-        service_instance,
-        vim.HostSystem,
-        container_ref=start_point,
-        property_list=properties,
-    )
-    log.trace("Retrieved hosts: %s", [h["name"] for h in hosts])
-    filtered_hosts = []
-    for h in hosts:
-        # Complex conditions checking if a host should be added to the
-        # filtered list (either due to its name and/or cluster membership)
-
-        if cluster_name:
-            if not isinstance(h["parent"], vim.ClusterComputeResource):
-                continue
-            parent_name = get_managed_object_name(h["parent"])
-            if parent_name != cluster_name:
-                continue
-
-        if get_all_hosts:
-            filtered_hosts.append(h["object"])
-            continue
-
-        if h["name"] in host_names:
-            filtered_hosts.append(h["object"])
-    return filtered_hosts
 
 
 def _get_scsi_address_to_lun_key_map(
@@ -2660,7 +1991,7 @@ def _get_scsi_address_to_lun_key_map(
         Name of the host. Default is None.
     """
     if not hostname:
-        hostname = get_managed_object_name(host_ref)
+        hostname = utils_common.get_managed_object_name(host_ref)
     if not storage_system:
         storage_system = get_storage_system(service_instance, host_ref, hostname)
     try:
@@ -2713,9 +2044,9 @@ def get_all_luns(host_ref, storage_system=None, hostname=None):
         Name of the host. This argument is optional.
     """
     if not hostname:
-        hostname = get_managed_object_name(host_ref)
+        hostname = utils_common.get_managed_object_name(host_ref)
     if not storage_system:
-        si = get_service_instance_from_managed_object(host_ref, name=hostname)
+        si = utils_common.get_service_instance_from_managed_object(host_ref, name=hostname)
         storage_system = get_storage_system(si, host_ref, hostname)
         if not storage_system:
             raise salt.exceptions.VMwareObjectRetrievalError(
@@ -2767,8 +2098,8 @@ def get_scsi_address_to_lun_map(host_ref, storage_system=None, hostname=None):
         Name of the host. This argument is optional.
     """
     if not hostname:
-        hostname = get_managed_object_name(host_ref)
-    si = get_service_instance_from_managed_object(host_ref, name=hostname)
+        hostname = utils_common.get_managed_object_name(host_ref)
+    si = utils_common.get_service_instance_from_managed_object(host_ref, name=hostname)
     if not storage_system:
         storage_system = get_storage_system(si, host_ref, hostname)
     lun_ids_to_scsi_addr_map = _get_scsi_address_to_lun_key_map(
@@ -2802,7 +2133,7 @@ def get_disks(host_ref, disk_ids=None, scsi_addresses=None, get_all_disks=False)
         Specifies whether to retrieve all disks in the host.
         Default value is False.
     """
-    hostname = get_managed_object_name(host_ref)
+    hostname = utils_common.get_managed_object_name(host_ref)
     if get_all_disks:
         log.trace("Retrieving all disks in host '%s'", hostname)
     else:
@@ -2814,7 +2145,7 @@ def get_disks(host_ref, disk_ids=None, scsi_addresses=None, get_all_disks=False)
         )
         if not (disk_ids or scsi_addresses):
             return []
-    si = get_service_instance_from_managed_object(host_ref, name=hostname)
+    si = utils_common.get_service_instance_from_managed_object(host_ref, name=hostname)
     storage_system = get_storage_system(si, host_ref, hostname)
     disk_keys = []
     if scsi_addresses:
@@ -2863,12 +2194,14 @@ def get_disk_partition_info(host_ref, disk_id, storage_system=None):
     storage_system
         The ESXi host's storage system. Default is None.
     """
-    hostname = get_managed_object_name(host_ref)
-    service_instance = get_service_instance_from_managed_object(host_ref)
+    hostname = utils_common.get_managed_object_name(host_ref)
+    service_instance = utils_common.get_service_instance_from_managed_object(host_ref)
     if not storage_system:
         storage_system = get_storage_system(service_instance, host_ref, hostname)
 
-    props = get_properties_of_managed_object(storage_system, ["storageDeviceInfo.scsiLun"])
+    props = utils_common.get_properties_of_managed_object(
+        storage_system, ["storageDeviceInfo.scsiLun"]
+    )
     if not props.get("storageDeviceInfo.scsiLun"):
         raise salt.exceptions.VMwareObjectRetrievalError(
             "No devices were retrieved in host '{}'".format(hostname)
@@ -2922,14 +2255,14 @@ def erase_disk_partitions(service_instance, host_ref, disk_id, hostname=None, st
     """
 
     if not hostname:
-        hostname = get_managed_object_name(host_ref)
+        hostname = utils_common.get_managed_object_name(host_ref)
     if not storage_system:
         storage_system = get_storage_system(service_instance, host_ref, hostname)
 
     traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
         path="configManager.storageSystem", type=vim.HostSystem, skip=False
     )
-    results = get_mors_with_properties(
+    results = utils_common.get_mors_with_properties(
         service_instance,
         vim.HostStorageSystem,
         ["storageDeviceInfo.scsiLun"],
@@ -2992,7 +2325,7 @@ def get_diskgroups(host_ref, cache_disk_ids=None, get_all_disk_groups=False):
         Specifies whether to retrieve all disks groups in the host.
         Default value is False.
     """
-    hostname = get_managed_object_name(host_ref)
+    hostname = utils_common.get_managed_object_name(host_ref)
     if get_all_disk_groups:
         log.trace("Retrieving all disk groups on host '%s'", hostname)
     else:
@@ -3076,8 +2409,8 @@ def get_host_cache(host_ref, host_cache_manager=None):
         configuration manager on the specified host. Default is None. If None,
         it will be retrieved in the method
     """
-    hostname = get_managed_object_name(host_ref)
-    service_instance = get_service_instance_from_managed_object(host_ref)
+    hostname = utils_common.get_managed_object_name(host_ref)
+    service_instance = utils_common.get_service_instance_from_managed_object(host_ref)
     log.trace("Retrieving the host cache on host '%s'", hostname)
     if not host_cache_manager:
         traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
@@ -3085,7 +2418,7 @@ def get_host_cache(host_ref, host_cache_manager=None):
             type=vim.HostSystem,
             skip=False,
         )
-        results = get_mors_with_properties(
+        results = utils_common.get_mors_with_properties(
             service_instance,
             vim.HostCacheConfigurationManager,
             ["cacheConfigurationInfo"],
@@ -3097,132 +2430,13 @@ def get_host_cache(host_ref, host_cache_manager=None):
             return None
         return results[0]["cacheConfigurationInfo"][0]
     else:
-        results = get_properties_of_managed_object(host_cache_manager, ["cacheConfigurationInfo"])
+        results = utils_common.get_properties_of_managed_object(
+            host_cache_manager, ["cacheConfigurationInfo"]
+        )
         if not results:
             log.trace("Host '%s' has no host cache", hostname)
             return None
         return results["cacheConfigurationInfo"][0]
-
-
-# TODO Support host caches on multiple datastores
-def configure_host_cache(host_ref, datastore_ref, swap_size_MiB, host_cache_manager=None):
-    """
-    Configures the host cahe of the specified host
-
-    host_ref
-        The vim.HostSystem object representing the host that contains the
-        requested disks.
-
-    datastore_ref
-        The vim.Datastore opject representing the datastore the host cache will
-        be configured on.
-
-    swap_size_MiB
-        The size in Mibibytes of the swap.
-
-    host_cache_manager
-        The vim.HostCacheConfigurationManager object representing the cache
-        configuration manager on the specified host. Default is None. If None,
-        it will be retrieved in the method
-    """
-    hostname = get_managed_object_name(host_ref)
-    if not host_cache_manager:
-        props = get_properties_of_managed_object(
-            host_ref, ["configManager.cacheConfigurationManager"]
-        )
-        if not props.get("configManager.cacheConfigurationManager"):
-            raise salt.exceptions.VMwareObjectRetrievalError(
-                "Host '{}' has no host cache".format(hostname)
-            )
-        host_cache_manager = props["configManager.cacheConfigurationManager"]
-    log.trace(
-        "Configuring the host cache on host '%s', datastore '%s', " "swap size=%s MiB",
-        hostname,
-        datastore_ref.name,
-        swap_size_MiB,
-    )
-
-    spec = vim.HostCacheConfigurationSpec(datastore=datastore_ref, swapSize=swap_size_MiB)
-    log.trace("host_cache_spec=%s", spec)
-    try:
-        task = host_cache_manager.ConfigureHostCache_Task(spec)
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, hostname, "HostCacheConfigurationTask")
-    log.trace("Configured host cache on host '%s'", hostname)
-    return True
-
-
-def list_hosts(service_instance):
-    """
-    Returns a list of hosts associated with a given service instance.
-
-    service_instance
-        The Service Instance Object from which to obtain hosts.
-    """
-    return list_objects(service_instance, vim.HostSystem)
-
-
-def get_resource_pools(
-    service_instance,
-    resource_pool_names,
-    datacenter_name=None,
-    get_all_resource_pools=False,
-):
-    """
-    Retrieves resource pool objects
-
-    service_instance
-        The service instance object to query the vCenter
-
-    resource_pool_names
-        Resource pool names
-
-    datacenter_name
-        Name of the datacenter where the resource pool is available
-
-    get_all_resource_pools
-        Boolean
-
-    return
-        Resourcepool managed object reference
-    """
-
-    properties = ["name"]
-    if not resource_pool_names:
-        resource_pool_names = []
-    if datacenter_name:
-        container_ref = get_datacenter(service_instance, datacenter_name)
-    else:
-        container_ref = get_root_folder(service_instance)
-
-    resource_pools = get_mors_with_properties(
-        service_instance,
-        vim.ResourcePool,
-        container_ref=container_ref,
-        property_list=properties,
-    )
-
-    selected_pools = []
-    for pool in resource_pools:
-        if get_all_resource_pools or (pool["name"] in resource_pool_names):
-            selected_pools.append(pool["object"])
-    if not selected_pools:
-        raise salt.exceptions.VMwareObjectRetrievalError(
-            "The resource pools with properties "
-            "names={} get_all={} could not be found".format(selected_pools, get_all_resource_pools)
-        )
-
-    return selected_pools
 
 
 def list_resourcepools(service_instance):
@@ -3232,7 +2446,7 @@ def list_resourcepools(service_instance):
     service_instance
         The Service Instance Object from which to obtain resource pools.
     """
-    return list_objects(service_instance, vim.ResourcePool)
+    return utils_common.list_objects(service_instance, vim.ResourcePool)
 
 
 def list_networks(service_instance):
@@ -3242,17 +2456,7 @@ def list_networks(service_instance):
     service_instance
         The Service Instance Object from which to obtain networks.
     """
-    return list_objects(service_instance, vim.Network)
-
-
-def list_vms(service_instance):
-    """
-    Returns a list of VMs associated with a given service instance.
-
-    service_instance
-        The Service Instance Object from which to obtain VMs.
-    """
-    return list_objects(service_instance, vim.VirtualMachine)
+    return utils_common.list_objects(service_instance, vim.Network)
 
 
 def list_folders(service_instance):
@@ -3262,7 +2466,7 @@ def list_folders(service_instance):
     service_instance
         The Service Instance Object from which to obtain folders.
     """
-    return list_objects(service_instance, vim.Folder)
+    return utils_common.list_objects(service_instance, vim.Folder)
 
 
 def list_dvs(service_instance):
@@ -3272,7 +2476,7 @@ def list_dvs(service_instance):
     service_instance
         The Service Instance Object from which to obtain distributed virtual switches.
     """
-    return list_objects(service_instance, vim.DistributedVirtualSwitch)
+    return utils_common.list_objects(service_instance, vim.DistributedVirtualSwitch)
 
 
 def list_vapps(service_instance):
@@ -3282,7 +2486,7 @@ def list_vapps(service_instance):
     service_instance
         The Service Instance Object from which to obtain vApps.
     """
-    return list_objects(service_instance, vim.VirtualApp)
+    return utils_common.list_objects(service_instance, vim.VirtualApp)
 
 
 def list_portgroups(service_instance):
@@ -3292,334 +2496,7 @@ def list_portgroups(service_instance):
     service_instance
         The Service Instance Object from which to obtain distributed virtual switches.
     """
-    return list_objects(service_instance, vim.dvs.DistributedVirtualPortgroup)
-
-
-def wait_for_task(task, instance_name, task_type, sleep_seconds=1, log_level="debug"):
-    """
-    Waits for a task to be completed.
-
-    task
-        The task to wait for.
-
-    instance_name
-        The name of the ESXi host, vCenter Server, or Virtual Machine that
-        the task is being run on.
-
-    task_type
-        The type of task being performed. Useful information for debugging purposes.
-
-    sleep_seconds
-        The number of seconds to wait before querying the task again.
-        Defaults to ``1`` second.
-
-    log_level
-        The level at which to log task information. Default is ``debug``,
-        but ``info`` is also supported.
-    """
-    time_counter = 0
-    start_time = time.time()
-    log.trace("task = %s, task_type = %s", task, task.__class__.__name__)
-    try:
-        task_info = task.info
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.FileNotFound as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareFileNotFoundError(exc.msg)
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    while task_info.state == "running" or task_info.state == "queued":
-        if time_counter % sleep_seconds == 0:
-            msg = "[ {} ] Waiting for {} task to finish [{} s]".format(
-                instance_name, task_type, time_counter
-            )
-            if log_level == "info":
-                log.info(msg)
-            else:
-                log.debug(msg)
-        time.sleep(1.0 - ((time.time() - start_time) % 1.0))
-        time_counter += 1
-        try:
-            task_info = task.info
-        except vim.fault.NoPermission as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-            )
-        except vim.fault.FileNotFound as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareFileNotFoundError(exc.msg)
-        except vim.fault.VimFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(exc.msg)
-        except vmodl.RuntimeFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    if task_info.state == "success":
-        msg = "[ {} ] Successfully completed {} task in {} seconds".format(
-            instance_name, task_type, time_counter
-        )
-        if log_level == "info":
-            log.info(msg)
-        else:
-            log.debug(msg)
-        # task is in a successful state
-        return task_info.result
-    else:
-        # task is in an error state
-        try:
-            raise task_info.error
-        except vim.fault.NoPermission as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-            )
-        except vim.fault.FileNotFound as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareFileNotFoundError(exc.msg)
-        except vim.fault.VimFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(exc.msg)
-        except vmodl.fault.SystemError as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareSystemError(exc.msg)
-        except vmodl.fault.InvalidArgument as exc:
-            log.exception(exc)
-            exc_message = exc.msg
-            if exc.faultMessage:
-                exc_message = "{} ({})".format(exc_message, exc.faultMessage[0].message)
-            raise salt.exceptions.VMwareApiError(exc_message)
-
-
-def get_vm_by_property(
-    service_instance,
-    name,
-    datacenter=None,
-    vm_properties=None,
-    traversal_spec=None,
-    parent_ref=None,
-):
-    """
-    Get virtual machine properties based on the traversal specs and properties list,
-    returns Virtual Machine object with properties.
-
-    service_instance
-        Service instance object to access vCenter
-
-    name
-        Name of the virtual machine.
-
-    datacenter
-        Datacenter name
-
-    vm_properties
-        List of vm properties.
-
-    traversal_spec
-        Traversal Spec object(s) for searching.
-
-    parent_ref
-        Container Reference object for searching under a given object.
-    """
-    if datacenter and not parent_ref:
-        parent_ref = salt.utils.vmware.get_datacenter(service_instance, datacenter)
-    if not vm_properties:
-        vm_properties = [
-            "name",
-            "config.hardware.device",
-            "summary.storage.committed",
-            "summary.storage.uncommitted",
-            "summary.storage.unshared",
-            "layoutEx.file",
-            "config.guestFullName",
-            "config.guestId",
-            "guest.net",
-            "config.hardware.memoryMB",
-            "config.hardware.numCPU",
-            "config.files.vmPathName",
-            "summary.runtime.powerState",
-            "guest.toolsStatus",
-        ]
-    vm_list = salt.utils.vmware.get_mors_with_properties(
-        service_instance,
-        vim.VirtualMachine,
-        vm_properties,
-        container_ref=parent_ref,
-        traversal_spec=traversal_spec,
-    )
-    vm_formatted = [vm for vm in vm_list if vm["name"] == name]
-    if not vm_formatted:
-        raise salt.exceptions.VMwareObjectRetrievalError("The virtual machine was not found.")
-    elif len(vm_formatted) > 1:
-        raise salt.exceptions.VMwareMultipleObjectsError(
-            " ".join(
-                [
-                    "Multiple virtual machines were found with the"
-                    "same name, please specify a container."
-                ]
-            )
-        )
-    return vm_formatted[0]
-
-
-def get_folder(service_instance, datacenter, placement, base_vm_name=None):
-    """
-    Returns a Folder Object
-
-    service_instance
-        Service instance object
-
-    datacenter
-        Name of the datacenter
-
-    placement
-        Placement dictionary
-
-    base_vm_name
-        Existing virtual machine name (for cloning)
-    """
-    log.trace("Retrieving folder information")
-    if base_vm_name:
-        vm_object = get_vm_by_property(service_instance, base_vm_name, vm_properties=["name"])
-        vm_props = salt.utils.vmware.get_properties_of_managed_object(
-            vm_object, properties=["parent"]
-        )
-        if "parent" in vm_props:
-            folder_object = vm_props["parent"]
-        else:
-            raise salt.exceptions.VMwareObjectRetrievalError(
-                " ".join(["The virtual machine parent", "object is not defined"])
-            )
-    elif "folder" in placement:
-        folder_objects = salt.utils.vmware.get_folders(
-            service_instance, [placement["folder"]], datacenter
-        )
-        if len(folder_objects) > 1:
-            raise salt.exceptions.VMwareMultipleObjectsError(
-                " ".join(
-                    [
-                        "Multiple instances are available of the",
-                        "specified folder {}".format(placement["folder"]),
-                    ]
-                )
-            )
-        folder_object = folder_objects[0]
-    elif datacenter:
-        datacenter_object = salt.utils.vmware.get_datacenter(service_instance, datacenter)
-        dc_props = salt.utils.vmware.get_properties_of_managed_object(
-            datacenter_object, properties=["vmFolder"]
-        )
-        if "vmFolder" in dc_props:
-            folder_object = dc_props["vmFolder"]
-        else:
-            raise salt.exceptions.VMwareObjectRetrievalError(
-                "The datacenter vm folder object is not defined"
-            )
-    return folder_object
-
-
-def get_placement(service_instance, datacenter, placement=None):
-    """
-    To create a virtual machine a resource pool needs to be supplied, we would like to use the strictest as possible.
-
-    datacenter
-        Name of the datacenter
-
-    placement
-        Dictionary with the placement info, cluster, host resource pool name
-
-    return
-        Resource pool, cluster and host object if any applies
-    """
-    log.trace("Retrieving placement information")
-    resourcepool_object, placement_object = None, None
-    if "host" in placement:
-        host_objects = get_hosts(
-            service_instance, datacenter_name=datacenter, host_names=[placement["host"]]
-        )
-        if not host_objects:
-            raise salt.exceptions.VMwareObjectRetrievalError(
-                " ".join(
-                    [
-                        "The specified host",
-                        "{} cannot be found.".format(placement["host"]),
-                    ]
-                )
-            )
-        try:
-            host_props = get_properties_of_managed_object(
-                host_objects[0], properties=["resourcePool"]
-            )
-            resourcepool_object = host_props["resourcePool"]
-        except vmodl.query.InvalidProperty:
-            traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-                path="parent",
-                skip=True,
-                type=vim.HostSystem,
-                selectSet=[
-                    vmodl.query.PropertyCollector.TraversalSpec(
-                        path="resourcePool", skip=False, type=vim.ClusterComputeResource
-                    )
-                ],
-            )
-            resourcepools = get_mors_with_properties(
-                service_instance,
-                vim.ResourcePool,
-                container_ref=host_objects[0],
-                property_list=["name"],
-                traversal_spec=traversal_spec,
-            )
-            if resourcepools:
-                resourcepool_object = resourcepools[0]["object"]
-            else:
-                raise salt.exceptions.VMwareObjectRetrievalError(
-                    "The resource pool of host {} cannot be found.".format(placement["host"])
-                )
-        placement_object = host_objects[0]
-    elif "resourcepool" in placement:
-        resourcepool_objects = get_resource_pools(
-            service_instance, [placement["resourcepool"]], datacenter_name=datacenter
-        )
-        if len(resourcepool_objects) > 1:
-            raise salt.exceptions.VMwareMultipleObjectsError(
-                " ".join(
-                    [
-                        "Multiple instances are available of the",
-                        "specified host {}.".format(placement["host"]),
-                    ]
-                )
-            )
-        resourcepool_object = resourcepool_objects[0]
-        res_props = get_properties_of_managed_object(resourcepool_object, properties=["parent"])
-        if "parent" in res_props:
-            placement_object = res_props["parent"]
-        else:
-            raise salt.exceptions.VMwareObjectRetrievalError(
-                " ".join(["The resource pool's parent", "object is not defined"])
-            )
-    elif "cluster" in placement:
-        datacenter_object = get_datacenter(service_instance, datacenter)
-        cluster_object = get_cluster(datacenter_object, placement["cluster"])
-        clus_props = get_properties_of_managed_object(cluster_object, properties=["resourcePool"])
-        if "resourcePool" in clus_props:
-            resourcepool_object = clus_props["resourcePool"]
-        else:
-            raise salt.exceptions.VMwareObjectRetrievalError(
-                " ".join(["The cluster's resource pool", "object is not defined"])
-            )
-        placement_object = cluster_object
-    else:
-        # We are checking the schema for this object, this exception should never be raised
-        raise salt.exceptions.VMwareObjectRetrievalError(" ".join(["Placement is not defined."]))
-    return (resourcepool_object, placement_object)
+    return utils_common.list_objects(service_instance, vim.dvs.DistributedVirtualPortgroup)
 
 
 def convert_to_kb(unit, size):
@@ -3641,236 +2518,6 @@ def convert_to_kb(unit, size):
     else:
         raise salt.exceptions.ArgumentValueError("The unit is not specified")
     return {"size": target_size, "unit": "KB"}
-
-
-def power_cycle_vm(virtual_machine, action="on"):
-    """
-    Powers on/off a virtual machine specified by its name.
-
-    virtual_machine
-        vim.VirtualMachine object to power on/off virtual machine
-
-    action
-        Operation option to power on/off the machine
-    """
-    if action == "on":
-        try:
-            task = virtual_machine.PowerOn()
-            task_name = "power on"
-        except vim.fault.NoPermission as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-            )
-        except vim.fault.VimFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(exc.msg)
-        except vmodl.RuntimeFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    elif action == "off":
-        try:
-            task = virtual_machine.PowerOff()
-            task_name = "power off"
-        except vim.fault.NoPermission as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(
-                "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-            )
-        except vim.fault.VimFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareApiError(exc.msg)
-        except vmodl.RuntimeFault as exc:
-            log.exception(exc)
-            raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    else:
-        raise salt.exceptions.ArgumentValueError("The given action is not supported")
-    try:
-        wait_for_task(task, get_managed_object_name(virtual_machine), task_name)
-    except salt.exceptions.VMwareFileNotFoundError as exc:
-        raise salt.exceptions.VMwarePowerOnError(
-            " ".join(
-                [
-                    "An error occurred during power",
-                    "operation, a file was not found: {}".format(exc),
-                ]
-            )
-        )
-    return virtual_machine
-
-
-def create_vm(vm_name, vm_config_spec, folder_object, resourcepool_object, host_object=None):
-    """
-    Creates virtual machine from config spec
-
-    vm_name
-        Virtual machine name to be created
-
-    vm_config_spec
-        Virtual Machine Config Spec object
-
-    folder_object
-        vm Folder managed object reference
-
-    resourcepool_object
-        Resource pool object where the machine will be created
-
-    host_object
-        Host object where the machine will ne placed (optional)
-
-    return
-        Virtual Machine managed object reference
-    """
-    try:
-        if host_object and isinstance(host_object, vim.HostSystem):
-            task = folder_object.CreateVM_Task(
-                vm_config_spec, pool=resourcepool_object, host=host_object
-            )
-        else:
-            task = folder_object.CreateVM_Task(vm_config_spec, pool=resourcepool_object)
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    vm_object = wait_for_task(task, vm_name, "CreateVM Task", 10, "info")
-    return vm_object
-
-
-def register_vm(datacenter, name, vmx_path, resourcepool_object, host_object=None):
-    """
-    Registers a virtual machine to the inventory with the given vmx file, on success
-    it returns the vim.VirtualMachine managed object reference
-
-    datacenter
-        Datacenter object of the virtual machine, vim.Datacenter object
-
-    name
-        Name of the virtual machine
-
-    vmx_path:
-        Full path to the vmx file, datastore name should be included
-
-    resourcepool
-        Placement resource pool of the virtual machine, vim.ResourcePool object
-
-    host
-        Placement host of the virtual machine, vim.HostSystem object
-    """
-    try:
-        if host_object:
-            task = datacenter.vmFolder.RegisterVM_Task(
-                path=vmx_path,
-                name=name,
-                asTemplate=False,
-                host=host_object,
-                pool=resourcepool_object,
-            )
-        else:
-            task = datacenter.vmFolder.RegisterVM_Task(
-                path=vmx_path, name=name, asTemplate=False, pool=resourcepool_object
-            )
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    try:
-        vm_ref = wait_for_task(task, name, "RegisterVM Task")
-    except salt.exceptions.VMwareFileNotFoundError as exc:
-        raise salt.exceptions.VMwareVmRegisterError(
-            "An error occurred during registration operation, the "
-            "configuration file was not found: {}".format(exc)
-        )
-    return vm_ref
-
-
-def update_vm(vm_ref, vm_config_spec):
-    """
-    Updates the virtual machine configuration with the given object
-
-    vm_ref
-        Virtual machine managed object reference
-
-    vm_config_spec
-        Virtual machine config spec object to update
-    """
-    vm_name = get_managed_object_name(vm_ref)
-    log.trace("Updating vm '%s'", vm_name)
-    try:
-        task = vm_ref.ReconfigVM_Task(vm_config_spec)
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    vm_ref = wait_for_task(task, vm_name, "ReconfigureVM Task")
-    return vm_ref
-
-
-def delete_vm(vm_ref):
-    """
-    Destroys the virtual machine
-
-    vm_ref
-        Managed object reference of a virtual machine object
-    """
-    vm_name = get_managed_object_name(vm_ref)
-    log.trace("Destroying vm '%s'", vm_name)
-    try:
-        task = vm_ref.Destroy_Task()
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
-    wait_for_task(task, vm_name, "Destroy Task")
-
-
-def unregister_vm(vm_ref):
-    """
-    Destroys the virtual machine
-
-    vm_ref
-        Managed object reference of a virtual machine object
-    """
-    vm_name = get_managed_object_name(vm_ref)
-    log.trace("Destroying vm '%s'", vm_name)
-    try:
-        vm_ref.UnregisterVM()
-    except vim.fault.NoPermission as exc:
-        log.exception(exc)
-        raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
-        )
-    except vim.fault.VimFault as exc:
-        raise salt.exceptions.VMwareApiError(exc.msg)
-    except vmodl.RuntimeFault as exc:
-        raise salt.exceptions.VMwareRuntimeError(exc.msg)
 
 
 def get_proxy_target(service_instance):
@@ -3902,8 +2549,8 @@ def get_proxy_target(service_instance):
             cluster,
         ) = _get_esxcluster_proxy_details()
 
-        dc_ref = salt.utils.vmware.get_datacenter(service_instance, datacenter)
-        reference = salt.utils.vmware.get_cluster(dc_ref, cluster)
+        dc_ref = utils_datacenter.utils_datacenter.get_datacenter(service_instance, datacenter)
+        reference = utils_cluster.utils_cluster.get_cluster(dc_ref, cluster)
     elif proxy_type == "esxdatacenter":
         # esxdatacenter proxy
         (
@@ -3918,10 +2565,10 @@ def get_proxy_target(service_instance):
             datacenter,
         ) = _get_esxdatacenter_proxy_details()
 
-        reference = salt.utils.vmware.get_datacenter(service_instance, datacenter)
+        reference = utils_datacenter.utils_datacenter.get_datacenter(service_instance, datacenter)
     elif proxy_type == "vcenter":
         # vcenter proxy - the target is the root folder
-        reference = salt.utils.vmware.get_root_folder(service_instance)
+        reference = utils_common.utils_common.get_root_folder(service_instance)
     elif proxy_type == "esxi":
         # esxi proxy
         details = __proxy__["esxi.get_details"]()
@@ -3929,7 +2576,9 @@ def get_proxy_target(service_instance):
             raise InvalidEntityError(
                 "Proxies connected directly to ESXi " "hosts are not supported"
             )
-        references = salt.utils.vmware.get_hosts(service_instance, host_names=details["esxi_host"])
+        references = salt.utils.vmware.utils_esxi.get_hosts(
+            service_instance, host_names=details["esxi_host"]
+        )
         if not references:
             raise VMwareObjectRetrievalError(
                 "ESXi host '{}' was not found".format(details["esxi_host"])
