@@ -79,14 +79,6 @@ def __virtual__():
 
 # TODO Check if we can replace it with context managers
 def _establish_vcenter_connection(vcenter_host, username, password, ret):
-    """
-    params:
-    - vCenter_host: vCenter host IP
-    - username: vCenter username
-    - password: vCenter password
-    result:
-    Retrieves vCenter information from service instance and returns as content object.
-    """
     try:
         service_instance = connect.SmartConnect(
             host=vcenter_host, user=username, pwd=password, port=443
@@ -124,13 +116,6 @@ def _establish_vcenter_connection(vcenter_host, username, password, ret):
 
 
 def _get_resource_id_from_name(vcenter_host, username, password, resource_type, resource_name, ret):
-    """
-    params:
-    - resource_type: Type of vCenter resource. Accepted values 'host', 'cluster', 'storage' and 'network'.
-    - resouce_name: Name of the resource.
-    result:
-    - moref id of the resource name and type given.
-    """
     try:
         content = _establish_vcenter_connection(vcenter_host, username, password, ret)
 

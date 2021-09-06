@@ -739,6 +739,7 @@ def test_present_with_error_get_transport_nodes():
     with patch.dict(
         nsxt_transport_node.__salt__,
         {"nsxt_transport_node.get_by_display_name": mock_get_transport_nodes},
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Get-Transport-Node-With-Get-Error",
@@ -764,6 +765,7 @@ def test_present_with_multiple_nodes_with_same_display_name():
         {
             "nsxt_transport_node.get_by_display_name": mock_get_transport_nodes_with_same_display_name
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Get-Transport-Node-With-Same-Display-Name",
@@ -801,6 +803,7 @@ def test_present_with_given_payload():
             "nsxt_transport_zone.get_by_display_name": mock_transport_zone_response,
             "nsxt_uplink_profiles.get_by_display_name": mock_get_uplink_profile_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Create-Transport-Zone",
@@ -828,6 +831,7 @@ def test_present_with_given_payload_with_test():
         {
             "nsxt_transport_node.get_by_display_name": mock_get_response,
         },
+        autospec=True,
     ):
         with patch.dict(nsxt_transport_node.__opts__, {"test": True}):
             result = nsxt_transport_node.present(
@@ -866,6 +870,7 @@ def test_present_with_given_payload_with_other_state_and_error_in_ip_pool():
             "nsxt_uplink_profiles.get_by_display_name": mock_get_uplink_profile_response,
             "nsxt_transport_zone.get_by_display_name": mock_transport_zone_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Create-Transport-Zone",
@@ -902,6 +907,7 @@ def test_present_with_given_payload_with_other_state_and_multiple_value_in_ip_po
             "nsxt_uplink_profiles.get_by_display_name": mock_get_uplink_profile_response,
             "nsxt_transport_zone.get_by_display_name": mock_transport_zone_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Create-Transport-Zone",
@@ -938,6 +944,7 @@ def test_present_with_given_payload_with_other_state_and_error_in_transport_zone
             "nsxt_uplink_profiles.get_by_display_name": mock_get_uplink_profile_response,
             "nsxt_transport_zone.get_by_display_name": mock_transport_zone_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Create-Transport-Zone",
@@ -974,6 +981,7 @@ def test_present_with_given_payload_with_other_state_and_multiple_value_in_trans
             "nsxt_uplink_profiles.get_by_display_name": mock_get_uplink_profile_response,
             "nsxt_transport_zone.get_by_display_name": mock_transport_zone_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Create-Transport-Zone",
@@ -1001,6 +1009,7 @@ def test_present_with_error_in_create():
             "nsxt_transport_node.get_by_display_name": mock_get_response,
             "nsxt_transport_node.create": mock_create_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Create-Transport-Zone",
@@ -1030,6 +1039,7 @@ def test_present_with_update():
             "nsxt_transport_node.get_by_display_name": mock_get_response,
             "nsxt_transport_node.update": mock_update_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-update-Transport-Node",
@@ -1060,6 +1070,7 @@ def test_present_with_update_with_test():
             "nsxt_transport_node.get_by_display_name": mock_get_response,
             "nsxt_transport_node.update": mock_update_response,
         },
+        autospec=True,
     ):
         with patch.dict(nsxt_transport_node.__opts__, {"test": True}):
             result = nsxt_transport_node.present(
@@ -1089,6 +1100,7 @@ def test_present_with_error_in_update():
             "nsxt_transport_node.get_by_display_name": mock_get_response,
             "nsxt_transport_node.update": mock_update_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.present(
             name="Test-Create-Transport-Node",
@@ -1112,7 +1124,9 @@ def test_delete_with_error_in_get():
     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
     mock_get_response = MagicMock(return_value=mocked_error_response)
     with patch.dict(
-        nsxt_transport_node.__salt__, {"nsxt_transport_node.get_by_display_name": mock_get_response}
+        nsxt_transport_node.__salt__,
+        {"nsxt_transport_node.get_by_display_name": mock_get_response},
+        autospec=True,
     ):
         result = nsxt_transport_node.absent(
             name="Test-Create-Transport-Zone",
@@ -1137,6 +1151,7 @@ def test_absent_with_multiple_nodes_with_same_display_name():
         {
             "nsxt_transport_node.get_by_display_name": mock_get_transport_nodes_with_same_display_name
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.absent(
             name="Test-Get-Transport-Node-With-Same-Display-Name",
@@ -1165,6 +1180,7 @@ def test_absent_with_success_in_delete():
                 return_value={"message": "Deleted transport node successfully"}
             ),
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.absent(
             name="Test-Create-Transport-Node",
@@ -1189,6 +1205,7 @@ def test_absent_with_test_success_in_delete():
                 return_value={"message": "Deleted transport node successfully"}
             ),
         },
+        autospec=True,
     ):
         with patch.dict(nsxt_transport_node.__opts__, {"test": True}):
             result = nsxt_transport_node.absent(
@@ -1214,6 +1231,7 @@ def test_absent_with_error_in_delete():
             "nsxt_transport_node.get_by_display_name": mock_get_response,
             "nsxt_transport_node.delete": mock_delete_response,
         },
+        autospec=True,
     ):
         result = nsxt_transport_node.absent(
             name="Test-Create-Transport-Node",
