@@ -285,7 +285,7 @@ def manage_service(
                 elif state == "restart":
                     host_service.RestartService(id=service_name)
                 else:
-                    return "Error: Unknown state - {}".format(state)
+                    raise salt.exceptions.SaltException("Unknown state - {}".format(state))
             if service_policy is not None:
                 if service_policy is True:
                     service_policy = "on"
