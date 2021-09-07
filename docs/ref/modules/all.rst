@@ -26,6 +26,9 @@ Execution Modules
     saltext.vmware.modules.nsxt_ip_pools
     saltext.vmware.modules.nsxt_license
     saltext.vmware.modules.nsxt_manager
+    saltext.vmware.modules.nsxt_policy_segment
+    saltext.vmware.modules.nsxt_policy_tier0
+    saltext.vmware.modules.nsxt_policy_tier1
     saltext.vmware.modules.nsxt_transport_node_profiles
     saltext.vmware.modules.nsxt_transport_zone
     saltext.vmware.modules.nsxt_uplink_profiles
