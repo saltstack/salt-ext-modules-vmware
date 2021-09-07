@@ -186,7 +186,7 @@ def test_manage_service(service_instance):
         ret = esxi.manage_service(
             service_name=SSH_SERVICE,
             service_instance=service_instance,
-            service_policy=policy,
+            startup_policy=policy,
             datacenter_name="Datacenter",
             cluster_name="Cluster",
         )
@@ -198,4 +198,4 @@ def test_manage_service(service_instance):
             cluster_name="Cluster",
         )
         for host in ret:
-            assert ret[host][SSH_SERVICE]["service_policy"] == policy
+            assert ret[host][SSH_SERVICE]["startup_policy"] == policy

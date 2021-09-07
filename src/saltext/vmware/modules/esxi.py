@@ -225,7 +225,7 @@ def manage_service(
     cluster_name=None,
     host_name=None,
     state=None,
-    service_policy=None,
+    startup_policy=None,
     service_instance=None,
 ):
     """
@@ -246,7 +246,7 @@ def manage_service(
     state
         Sets the service running on the ESXI host to this state. Valid values: "start", "stop", "restart".
 
-    service_policy
+    startup_policy
         Sets the service startup policy. If unspecified, no changes are made. Valid values "on", "off", "automatic".
         - on: Start and stop with host
         - off: Start and stop manually
@@ -257,7 +257,7 @@ def manage_service(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.manage_service sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1 state=restart service_policy=on
+        salt '*' vmware_esxi.manage_service sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1 state=restart startup_policy=on
     """
     log.debug("Running vmware_esxi.manage_service")
     ret = None
@@ -286,12 +286,12 @@ def manage_service(
                     host_service.RestartService(id=service_name)
                 else:
                     raise salt.exceptions.SaltException("Unknown state - {}".format(state))
-            if service_policy is not None:
-                if service_policy is True:
-                    service_policy = "on"
-                elif service_policy is False:
-                    service_policy = "off"
-                host_service.UpdateServicePolicy(id=service_name, policy=service_policy)
+            if startup_policy is not None:
+                if startup_policy is True:
+                    startup_policy = "on"
+                elif startup_policy is False:
+                    startup_policy = "off"
+                host_service.UpdateServicePolicy(id=service_name, policy=startup_policy)
         ret = True
     except (
         vim.fault.InvalidState,
@@ -311,7 +311,7 @@ def list_services(
     cluster_name=None,
     host_name=None,
     state=None,
-    service_policy=None,
+    startup_policy=None,
     service_instance=None,
 ):
     """
@@ -332,7 +332,7 @@ def list_services(
     state
         Filter by this service state. Valid values: "running", "stopped"
 
-    service_policy
+    startup_policy
         Filter by this service startup policy. Valid values "on", "off", "automatic".
 
     service_instance
@@ -360,17 +360,17 @@ def list_services(
             ret[h.name] = {}
             if not host_service:
                 continue
-            if service_policy is not None:
+            if startup_policy is not None:
                 # salt converts command line input "on" and "off" to True and False. Handle explicitly.
-                if service_policy is True:
-                    service_policy = "on"
-                elif service_policy is False:
-                    service_policy = "off"
+                if startup_policy is True:
+                    startup_policy = "on"
+                elif startup_policy is False:
+                    startup_policy = "off"
             services = host_service.serviceInfo.service
             for service in services or []:
                 if service_name and service.key != service_name:
                     continue
-                if service_policy and service.policy != service_policy:
+                if startup_policy and service.policy != startup_policy:
                     continue
                 if state and state == "running" and not service.running:
                     continue
@@ -378,7 +378,7 @@ def list_services(
                     continue
                 ret[h.name][service.key] = {
                     "state": "running" if service.running else "stopped",
-                    "service_policy": service.policy,
+                    "startup_policy": service.policy,
                 }
     except (
         vim.fault.InvalidState,
