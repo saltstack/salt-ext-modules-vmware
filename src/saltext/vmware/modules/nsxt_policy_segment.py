@@ -294,7 +294,7 @@ def get_hierarchy(
     hostname, username, password, segment_id, cert=None, cert_common_name=None, verify_ssl=True
 ):
     """
-    Returns entire hieararchy of segment and its sub-resources'
+    Returns entire hierarchy of segment and its sub-resources
 
     hostname
         The host name of NSX-T manager

@@ -2013,7 +2013,7 @@ def get_hierarchy(
     hostname, username, password, tier0_id, cert=None, cert_common_name=None, verify_ssl=True
 ):
     """
-    Returns entire hieararchy of Tier 0 gateway and its sub-resources
+    Returns entire hierarchy of Tier 0 gateway and its sub-resources
 
     hostname
         The host name of NSX-T manager
