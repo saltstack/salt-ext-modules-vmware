@@ -4,6 +4,7 @@ import logging
 
 import salt.exceptions
 import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -131,3 +132,84 @@ def get_(cluster, datacenter):
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareRuntimeError) as exc:
         return {cluster: False, "reason": str(exc)}
     return ret
+
+
+def vm_affinity_rule(
+    name,
+    affinity,
+    vm_names,
+    cluster_name,
+    datacenter_name,
+    enabled=True,
+    mandatory=None,
+    service_instance=None,
+):
+    """
+    Configure a virtual machine to virtual machine DRS rule
+
+    name
+        The name of the rule.
+
+    affinity
+        (boolean) Describes whether to make affinity or anti affinity rule.
+
+    vm_names
+        List of virtual machines associated with DRS rule.
+
+    cluster_name
+        The name of the cluster to configure a rule on.
+
+    datacenter_name
+        The name of the datacenter where the cluster exists.
+
+    enabled
+        (optional, boolean) Enable the DRS rule being created. Defaults to True.
+
+    mandatory
+        (optional, boolean) Sets whether the rule being created is mandatory. Defaults to False.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    log.debug(f"Configuring a vm to vm DRS rule {name} on cluster {cluster_name}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
+    cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
+    vm_refs = []
+    missing_vms = []
+    for vm_name in vm_names:
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+        if not vm_ref:
+            missing_vms.append(vm_name)
+        vm_refs.append(vm_ref)
+    if missing_vms:
+        raise salt.exceptions.VMwareApiError({f"Could not find virtual machines {missing_vms}"})
+    rules = cluster_ref.configuration.rule
+    rule_ref = None
+    if rules:
+        for rule in rules:
+            if rule.name == name:
+                rule_info = utils_cluster.drs_rule_info(rule)
+                if utils_cluster.check_affinity(rule) != affinity:
+                    return {
+                        "updated": False,
+                        "message": f"Existing rule of name {name} has an affinity of {not affinity} and cannot be changed, make new rule.",
+                    }
+                if (
+                    rule_info["vms"] == vm_names
+                    and rule_info["enabled"] == enabled
+                    and rule_info["mandatory"] == mandatory
+                ):
+                    return {
+                        "updated": True,
+                        "message": "Exact rule already exists.",
+                    }
+                rule_ref = rule
+
+    if rule_ref:
+        utils_cluster.update_drs_rule(rule_ref, vm_refs, enabled, mandatory, cluster_ref)
+        return {"updated": True}
+    else:
+        utils_cluster.create_drs_rule(name, affinity, vm_refs, enabled, mandatory, cluster_ref)
+        return {"created": True}
