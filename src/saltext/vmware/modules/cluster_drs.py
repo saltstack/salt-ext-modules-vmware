@@ -213,3 +213,33 @@ def vm_affinity_rule(
     else:
         utils_cluster.create_drs_rule(name, affinity, vm_refs, enabled, mandatory, cluster_ref)
         return {"created": True}
+
+
+def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=None):
+    """
+    Return info on given cluster's DRS rules.
+
+    cluster_name
+        The name of the cluster to configure a rule on.
+
+    datacenter_name
+        The name of the datacenter where the cluster exists.
+
+    rule_name
+        (optional) The name of the rule.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    log.debug(f"Getting rules info on cluster {cluster_name}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
+    cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
+    rules = cluster_ref.configuration.rule
+    info = []
+    for rule in rules:
+        if rule.name == rule_name:
+            return utils_cluster.drs_rule_info(rule)
+        info.append(utils_cluster.drs_rule_info(rule))
+    return info

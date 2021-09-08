@@ -44,6 +44,11 @@ def do_it(*, config_file):
     )
 
     # Okay, now this is where all the updating things goes:
+    config["datacenters"] = {}
+    for dc in si.content.rootFolder.childEntity:
+        config["datacenters"][dc.name] = []
+        for cluster in dc.hostFolder.childEntity:
+            config["datacenters"][dc.name].append(cluster.name)
     hosts = si.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     host = hosts[0]
     config["esxi_host_name"] = host.name

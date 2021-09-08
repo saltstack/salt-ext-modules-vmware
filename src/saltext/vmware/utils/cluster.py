@@ -230,18 +230,31 @@ def drs_rule_info(rule):
     rule
         Reference to DRS rule.
     """
-    vms = []
-    for vm in rule.vm:
-        vms.append(vm.name)
-    return {
+    rule_info = {
         "name": rule.name,
-        "affinity": check_affinity(rule),
-        "rule_uuid": rule.ruleUuid,
+        "uuid": rule.ruleUuid,
         "enabled": rule.enabled,
-        "vms": vms,
         "mandatory": rule.mandatory,
         "key": rule.key,
+        "in_compliance": rule.inCompliance
     }
+    if type(rule) == vim.cluster.AntiAffinityRuleSpec or type(rule) == vim.cluster.AffinityRuleSpec:
+        vms = []
+        for vm in rule.vm:
+            vms.append(vm.name)
+        rule_info["type"] = "vm_affinity_rule"
+        rule_info["vms"] = vms
+        rule_info["affinity"] = check_affinity(rule)
+    elif type(rule) == vim.cluster.VmHostRuleInfo:
+        rule_info["type"] = "vm_host_rule"
+        rule_info["vm_group_name"] = rule.vmGroupName
+        rule_info["affine_host_group_name"] = rule.affineHostGroupName
+        rule_info["anti_affine_host_group_name"] = rule.antiAffineHostGroupName
+    elif type(rule) == vim.cluster.DependencyRuleInfo:
+        rule_info["type"] = "dependency_rule"
+        rule_info["vm_group"] = rule.vmGroup
+        rule_info["depends_on_vm_group"] = rule.dependsOnVmGroup
+    return rule_info
 
 
 def check_affinity(rule):
