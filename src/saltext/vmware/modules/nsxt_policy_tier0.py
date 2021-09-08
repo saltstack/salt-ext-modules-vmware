@@ -5,7 +5,6 @@ import logging
 
 from salt.exceptions import SaltInvocationError
 from saltext.vmware.utils.nsxt_policy_base_resource import NSXTPolicyBaseResource
-from saltext.vmware.utils.nsxt_resource_urls import BFD_PROFILE_URL
 from saltext.vmware.utils.nsxt_resource_urls import DHCP_RELAY_CONFIG_URL
 from saltext.vmware.utils.nsxt_resource_urls import EDGE_CLUSTER_URL
 from saltext.vmware.utils.nsxt_resource_urls import EDGE_NODE_URL
@@ -504,28 +503,39 @@ def get_by_display_name(
 ):
     """
     Gets Tier 0 Gateway present in the NSX-T Manager with given name.
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_tier0.get_by_display_name hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     display_name
         The name of Tier 0 Gateway to fetch
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     """
     nsxt_tier0 = NSXTTier0()
     url = (NSXTPolicyBaseResource.get_nsxt_base_url() + nsxt_tier0.get_resource_base_url()).format(
@@ -557,37 +567,51 @@ def get(
 ):
     """
     Lists NSXT Tier 0 Gateways present in the NSX-T Manager
+
     CLI Example:
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_tier0.get hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     cursor
         (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
+
     include_mark_for_delete_objects
         (Optional) Include objects that are marked for deletion in results. If true, resources that are marked for
         deletion will be included in the results. By default, these resources are not included.
+
     included_fields
         (Optional) Comma separated list of fields that should be included in query result
+
     page_size
         (Optional) Maximum number of results to return in this page
+
     sort_by
         (Optional) Field by which records are sorted
+
     sort_ascending
         (Optional) Boolean value to sort result in ascending order
     """
@@ -641,71 +665,109 @@ def create_or_update(
 ):
     """
     Creates a Tier 0 Gateway and its sub-resources with given specifications
+
     CLI Example:
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_tier0.create hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     display_name:
         description:
             - Display name.
             - If resource ID is not specified, display_name will be used as ID.
+
         required: false
         type: str
+
     tags:
         description: Opaque identifiers meaningful to the API user.
+
         type: dict
+
         suboptions:
+
             scope:
                 description: Tag scope.
                 required: true
                 type: str
+
             tag:
                 description: Tag value.
                 required: true
                 type: str
+
     id:
+
         description: Tier-0 ID
+
         required: false
+
         type: str
+
     description:
+
         description: Tier-0 description
+
         type: str
+
     state:
+
         description: present or absent keyword is used as an indetifier, default value is present.
                     If a user has provided absent that resource/sub-resource will be deleted
+
     default_rule_logging:
+
         description: Enable logging for whitelisted rule.
                      Indicates if logging should be enabled for the default
                      whitelisting rule.
+
         default: false
+
     ha_mode:
+
         description: High-availability Mode for Tier-0
+
         choices:
             - 'ACTIVE_STANDBY'
             - 'ACTIVE_ACTIVE'
+
         default: 'ACTIVE_ACTIVE'
+
         type: str
+
     disable_firewall:
+
         description: Disable or enable gateway fiewall.
+
         default: False
+
         type: bool
+
     failover_mode:
+
         description: Determines the behavior when a Tier-0 instance in
                      ACTIVE-STANDBY high-availability mode restarts
                      after a failure. If set to PREEMPTIVE, the preferred node
@@ -714,17 +776,27 @@ def create_or_update(
                      the instance that restarted will remain secondary.
                      This property must not be populated unless the
                      ha_mode property is set to ACTIVE_STANDBY.
+
         choices:
+
             - 'NON_PREEMPTIVE'
             - 'PREEMPTIVE'
+
         default: 'NON_PREEMPTIVE'
+
         type: str
+
     force_whitelisting:
+
         description: Flag to add whitelisting FW rule during
                      realization.
+
         default: False
+
         type: bool
+
     internal_transit_subnets:
+
         description: Internal transit subnets in CIDR format.
                      Specify subnets that are used to assign addresses
                      to logical links connecting service routers and
@@ -732,13 +804,20 @@ def create_or_update(
                      supported. When not specified, subnet 169.254.0.0/
                      24 is assigned by default in ACTIVE_ACTIVE HA mode
                      or 169.254.0.0/28 in ACTIVE_STANDBY mode.
+
         default: False
+
         type: list
+
     intersite_config:
+
         description: Inter site routing configuration when the gateway is
                      streched.
+
         type: dict
+
         suboptions:
+
             fallback_sites:
                 description: Fallback site to be used as new primary
                              site on current primary site failure.
@@ -747,7 +826,9 @@ def create_or_update(
                              supported only for T0 gateway. T1 gateway
                              will follow T0 gateway's primary site
                              during disaster recovery
+
                 type: list
+
             intersite_transit_subnet:
                 description:
                     - Transit subnet in CIDR format
@@ -755,8 +836,10 @@ def create_or_update(
                       connecting service routers across sites for
                       stretched gateway. For IPv6 link local subnet is
                       auto configured
+
                 type: str
                 default: "169.254.32.0/20"
+
             last_admin_active_epoch:
                 description:
                     - Epoch of last time admin changing active
@@ -768,7 +851,9 @@ def create_or_update(
                       not in sync then User can optionally override
                       this. New value must be higher than the current
                       value.
+
                 type: int
+
             primary_site_path:
                 description:
                     - Primary egress site for gateway.
@@ -780,24 +865,35 @@ def create_or_update(
                       secondary site prefers routes learned from primary over
                       locally learned routes. This field is not applicable for
                       T1 gateway with no services
+
                 type: str
+
     ipv6_ndra_profile_id:
+
         description: IPv6 NDRA profile configuration on Tier0.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_dad_profile_id.
+
         type: str
+
     ipv6_dad_profile_id:
+
         description: IPv6 DRA profile configuration on Tier0.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_ndra_profile_id.
+
     rd_admin_field:
+
         description:
             - Route distinguisher administrator address
             - If you are using EVPN service, then route distinguisher
               administrator address should be defined if you need auto
               generation of route distinguisher on your VRF configuration
+
         type: str
+
     transit_subnets:
+
         description: Transit subnets in CIDR format.
                      Specify transit subnets that are used to assign
                      addresses to logical links connecting tier-0 and
@@ -805,152 +901,221 @@ def create_or_update(
                      supported.
                      When not specified, subnet 100.64.0.0/16 is
                      configured by default.
+
         type: list
+
     dhcp_config_id:
+
         description: DHCP configuration for Segments connected to
                      Tier-0. DHCP service is configured in relay mode.
+
         type: str
+
     vrf_config:
+
         type: dict
         description: VRF config, required for VRF Tier0
+
         suboptions:
+
             evpn_transit_vni:
+
                 description:
                     - L3 VNI associated with the VRF for overlay traffic.
                     - VNI must be unique and belong to configured VNI pool.
+
                 type: int
+
             route_distinguisher:
                 description: Route distinguisher. 'ASN:<>' or 'IPAddress:<>'.
+
                 type: str
+
             route_targets:
                 description: Route targets
                 type: list
                 element: dict
                 suboptions:
+
                     export_route_targets:
                         description: Export route targets. 'ASN:' or
                                      'IPAddress:<>'
+
                         type: list
+
                         element: str
+
                     import_route_targets:
                         description: Import route targets. 'ASN:' or
                                      'IPAddress:<>'
+
                         type: list
+
                         element: str
+
             tier0_id:
+
                 description: Default tier0 id. Cannot be modified after
                              realization. Either this or tier0_id must
                              be specified
+
                 type: str
+
     static_routes:
+
         type: list
         element: dict
         description: This is a list of Static Routes that need to be created, updated, or deleted
         suboptions:
+
             id:
                 description: Tier-0 Static Route ID.
                 required: false
                 type: str
+
             display_name:
+
                 description:
                     - Tier-0 Static Route display name.
                     - Either this or id must be specified. If both are
                       specified, id takes precedence.
+
                 required: false
+
                 type: str
+
             description:
+
                 description:
                     - Tier-0 Static Route description.
+
                 type: str
+
             state:
                 description: present or absent keyword is used as an indetifier, default value is present.
                              If a user has provided absent that resource/sub-resource will be deleted
+
             network:
+
                 description: Network address in CIDR format
                 required: true
                 type: str
+
             next_hops:
+
                 description: Next hop routes for network
                 type: list
                 elements: dict
                 suboptions:
+
                     admin_distance:
                         description: Cost associated with next hop route
                         type: int
                         default: 1
+
                     ip_address:
                         description: Next hop gateway IP address
                         type: str
+
                     scope:
                         description:
                             - Interface path associated with current route
                             - For example, specify a policy path referencing the
                               IPSec VPN Session
+
                         type: list
+
             tags:
+
                 description: Opaque identifiers meaningful to the API user
+
                 type: dict
+
                 suboptions:
+
                     scope:
                         description: Tag scope.
                         required: true
                         type: str
+
                     tag:
                         description: Tag value.
                         required: true
                         type: str
+
     bfd_peers:
+
         type: list
         element: dict
         description: This is a list of BFD Peers that need to be created, updated, or deleted
         suboptions:
+
             id:
                 description: Tier-0 BFD Peer ID.
                 required: false
                 type: str
+
             display_name:
                 description:
                     - Tier-0 BFD Peer display name.
                     - Either this or id must be specified. If both are
                       specified, id takes precedence.
+
                 required: false
                 type: str
+
             description:
                 description:
                     - Tier-0 BFD Peer description. config
+
                 type: str
+
             state:
                 description: present or absent keyword is used as an indetifier, default value is present.
                              If a user has provided absent that resource/sub-resource will be deleted
+
             bfd_profile_id:
+
                 description:
                     - The associated BFD Profile ID
                     - Either this or bfd_profile_display_name must be specified
                     - BFD Profile is not supported for IPv6 networks.
+
                 type: str
+
             enabled:
                 description: Flag to enable BFD peer.
                 type: boolean
+
             peer_address:
                 description: IP Address of static route next hop peer. Only IPv4 addresses are supported
                              Only a single BFD config per peer address is allowed.
+
                 type: str
+
             source_addresses:
                 description: List of source IP addresses. Array of Tier0 external interface IP addresses. BFD peering
                              is established from all these source addresses to the neighbor specified in peer_address.
                              Only IPv4 addresses are supported.(Minimum-0, Maximum-8 values are allowed)
+
                 type: list
                 elements: IPv4 addresse strings
+
             scope:
                 description: Array of policy paths of locale services. Represents the array of policy paths of
                              locale services where this BFD peer should get relalized on. The locale service service
                              and this BFD peer must belong to the same router. Default scope is empty.
+
                 type: list
                 elements: policy path string of locale services
+
             tags:
                 description: Opaque identifiers meaningful to the API user
+
                 type: dict
+
                 suboptions:
+
                     scope:
                         description: Tag scope.
                         required: true
@@ -959,104 +1124,144 @@ def create_or_update(
                         description: Tag value.
                         required: true
                         type: str
+
     locale_services:
+
         type: list
         element: dict
         description: This is a list of Locale Services that need to be created,updated, or deleted
+
         suboptions:
+
             id:
                 description: Tier-0 Locale Service ID.
                 required: false
                 type: str
+
             display_name:
                 description:
                     - Tier-0 Locale Service display name.
                     - Either this or id must be specified. If both are
                       specified, id takes precedence
+
                 required: false
+
                 type: str
+
             description:
                 description:
                     - Tier-0 Locale Service  description.
+
                 type: str
+
             state:
                 description: present or absent keyword is used as an indetifier, default value is present.
                              If a user has provided absent that resource/sub-resource will be deleted
+
             tags:
                 description: Opaque identifiers meaningful to the API user
                 type: dict
                 suboptions:
+
                     scope:
                         description: Tag scope.
                         required: true
                         type: str
+
                     tag:
                         description: Tag value.
                         required: true
                         type: str
+
             edge_cluster_info:
                 description: Used to create path to edge cluster. Auto-assigned
                             if associated enforcement-point has only one edge
                             cluster.
+
                 type: dict
+
                 suboptions:
+
                     site_id:
+
                         description: site_id where edge cluster is located
                         default: default
                         type: str
+
                     enforcementpoint_id:
                         description: enforcementpoint_id where edge cluster is located
                         default: default
                         type: str
+
                     edge_cluster_id:
                         description: ID of the edge cluster
                         type: str
+
             preferred_edge_nodes_info:
+
                 description: Used to create paths to edge nodes. Specified edge
                             is used as preferred edge cluster member when
                             failover mode is set to PREEMPTIVE, not
                             applicable otherwise.
+
                 type: list
                 suboptions:
+
                     site_id:
                         description: site_id where edge node is located
                         default: default
                         type: str
+
                     enforcementpoint_id:
                         description: enforcementpoint_id where edge node is located
                         default: default
                         type: str
+
                     edge_cluster_id:
                         description: edge_cluster_id where edge node is located
                         type: str
+
                     edge_node_id:
                         description: ID of the edge node
                         type: str
+
             route_redistribution_config:
+
                 description: Configure all route redistribution properties like
                              enable/disable redistributon, redistribution rule
                              and so on.
+
                 type: dict
+
                 suboptions:
+
                     bgp_enabled:
                         description: Flag to enable route redistribution.
                         type: bool
                         default: false
+
                     redistribution_rules:
                         description: List of redistribution rules.
                         type: list
                         elements: dict
                         suboptions:
+
                             name:
                                 description: Rule name
                                 type: str
+
                             route_map_path:
+
                                 description: Route map to be associated with
                                              the redistribution rule
+
                                 type: str
+
                             route_redistribution_types:
+
                                 description: Tier-0 route redistribution types
                                 choices:
+
                                     - TIER0_STATIC - Redistribute user added
                                       static routes.
                                     - TIER0_CONNECTED - Redistribute all
@@ -1104,11 +1309,17 @@ def create_or_update(
                                     - TIER1_IPSEC_LOCAL_ENDPOINT - Redistribute
                                       IPSec VPN local-endpoint subnets
                                       advertised by TIER1.
+
                                 type: list
+
             ha_vip_configs:
+
                 type: list
+
                 elements: dict
+
                 description:
+
                     - Array of HA VIP Config.
                     - This configuration can be defined only for Active-Standby
                       Tier0 gateway to provide redundancy. For mulitple
@@ -1117,11 +1328,14 @@ def create_or_update(
                       interfaces. The VIP will move and will always be owned by
                       the Active node. When this property is configured,
                       configuration of dynamic-routing is not allowed.
+
                 suboptions:
+
                     enabled:
                         description: Flag to enable this HA VIP config.
                         default: true
                         type: bool
+
                     external_interface_paths:
                         description:
                             - Policy paths to Tier0 external interfaces for
@@ -1130,47 +1344,68 @@ def create_or_update(
                               are to be paired to provide redundancy. Floating
                               IP will be owned by one of these interfaces
                               depending upon which edge node is Active.
+
                         type: list
+
                     vip_subnets:
+
                         description:
                             - VIP floating IP address subnets
                             - Array of IP address subnets which will be used as
                               floating IP addresses.
+
                         type: list
+
                         suboptions:
+
                             ip_addresses:
                                 description: IP addresses assigned to interface
                                 type: list
                                 required: true
+
                             prefix_len:
                                 description: Subnet prefix length
                                 type: int
                                 required: true
+
             bgp:
+
                 description: Specify the BGP spec in this section
+
                 type: dict
+
                 state:
+
                     description: present or absent keyword is used as an indetifier, default value is present,
                                  If a user has provided absent that resource/sub-resource will be deleted.
+
                 suboptions:
+
                     ecmp:
                         description: Flag to enable ECMP.
                         type: bool
                         required: False
                         default: True
+
                     enabled:
                         description: Flag to enable BGP configuration.
                                      Disabling will stop feature and BGP
                                      peering.
+
                         type: bool
+
                         default: True
+
                     graceful_restart_config:
                         description: Configuration field to hold BGP Restart
                                      mode and timer.
+
                         type: dict
                         required: False
                         suboptions:
+
                             mode:
+
                                 description:
                                     - BGP Graceful Restart Configuration Mode
                                     - If mode is DISABLE, then graceful restart
@@ -1186,19 +1421,26 @@ def create_or_update(
                                     - GRACEFUL_RESTART mode is the ability of a
                                       BGP speaker to advertise its restart to
                                       its peers.
+
                                 type: str
+
                                 required: False
+
                                 default: 'HELPER_ONLY'
+
                                 choices:
                                     - DISABLE
                                     - GR_AND_HELPER
                                     - HELPER_ONLY
+
                             timer:
                                 description: BGP Graceful Restart Timer
                                 type: dict
                                 required: False
                                 suboptions:
+
                                     restart_timer:
+
                                         description:
                                             - BGP Graceful Restart Timer
                                             - Maximum time taken (in seconds)
@@ -1213,90 +1455,125 @@ def create_or_update(
                                               speaker will delete all the stale
                                               routes from that peer. Min 1 and
                                               Max 3600
+
                                         type: int
+
                                         default: 180
+
                                     stale_route_timer:
+
                                         description:
+
                                             - BGP Stale Route Timer
                                             - Maximum time (in seconds) before
                                               stale routes are removed from the
                                               RIB (Routing Information Base)
                                               when BGP restarts. Min 1 and Max
                                               3600
+
                                         type: int
+
                                         default: 600
+
                     inter_sr_ibgp:
+
                         description: Flag to enable inter SR IBGP
                                      configuration. When not specified, inter
                                      SR IBGP is automatically enabled if Tier-0
                                      is created in ACTIVE_ACTIVE ha_mode.
+
                         type: bool
                         required: False
+
                     local_as_num:
+
                         description:
+
                             - BGP AS number in ASPLAIN/ASDOT Format.
                             - Specify BGP AS number for Tier-0 to advertize to
                               BGP peers. AS number can be specified in ASPLAIN
                               (e.g., "65546") or ASDOT (e.g., "1.10") format.
                               Empty string disables BGP feature.
+
                         type: str
                         required: True
+
                     multipath_relax:
                         description: Flag to enable BGP multipath relax option.
                         type: bool
                         default: True
+
                     route_aggregations:
                         description: List of routes to be aggregated
                         type: dict
                         required: False
                         suboptions:
+
                             prefix:
+
                                 description: CIDR of aggregate address
                                 type: str
                                 required: True
+
                             summary_only:
                                 description:
                                     - Send only summarized route.
                                     - Summarization reduces number of routes
                                       advertised by representing multiple
                                       related routes with prefix property
+
                                 type: bool
                                 default: True
+
                     neighbors:
+
                         description: Specify the BGP neighbors in this section
                                      that need to be created, updated, or
                                      deleted
+
                         type: list
                         element: dict
                         state:
+
                             description: present or absent keyword is used as an indetifier, default value is present.
                                          If a user has provided absent that resource/sub-resource will be deleted
+
                         suboptions:
+
                             allow_as_in:
                                 description: Flag to enable allowas_in option
                                              for BGP neighbor.
+
                                 type: bool
                                 default: False
+
                             bfd:
                                 description:
                                     - BFD configuration for failure detection
                                     - BFD is enabled with default values when
                                       not configured
+
                                 type: dict
                                 required: False
+
                                 suboptions:
+
                                     enabled:
                                         description: Flag to enable BFD
                                                      cofiguration.
+
                                         type: bool
                                         required: False
+
                                     interval:
                                         description: Time interval between
                                                      heartbeat packets in
                                                      milliseconds. Min 300 and
                                                      Max 60000.
+
                                         type: int
                                         default: 1000
+
                                     multiple:
                                         description:
                                             - Declare dead multiple.
@@ -1304,9 +1581,12 @@ def create_or_update(
                                               is missed before BFD declares the
                                               neighbor is down.
                                               Min 2 and Max 16.
+
                                         type: int
                                         default: 3
+
                             graceful_restart_mode:
+
                                 description:
                                     - BGP Graceful Restart Configuration Mode
                                     - If mode is DISABLE, then graceful restart
@@ -1322,75 +1602,110 @@ def create_or_update(
                                     - GRACEFUL_RESTART mode is the ability of a
                                       BGP speaker to advertise its restart to
                                       its peers.
+
                                 type: str
+
                                 choices:
                                     - DISABLE
                                     - GR_AND_HELPER
                                     - HELPER_ONLY
+
                             hold_down_time:
+
                                 description: Wait time in seconds before
                                              declaring peer dead. Min 1 and Max
                                              65535.
+
                                 type: int
                                 default: 180
+
                             keep_alive_time:
+
                                 description: Interval between keep alive
                                              messages sent to peer. Min 1 and
                                              Max 65535.
+
                                 type: int
                                 default: 60
+
                             maximum_hop_limit:
+
                                 description: Maximum number of hops allowed to
                                              reach BGP neighbor. Min 1 and Max
                                              255.
+
                                 type: int
                                 default: 1
+
                             address:
+
                                 description: Neighbor IP Address
+
                                 type: str
                                 required: True
+
                             password:
+
                                 description: Password for BGP Neighbor
                                              authentication. Empty string ("")
                                              clears existing password.
+
                                 type: str
                                 required: False
+
                             remote_as_num:
+
                                 description: 4 Byte ASN of the neighbor in
                                              ASPLAIN Format.
+
                                 type: str
                                 required: True
+
                             route_filtering:
+
                                 description: Enable address families and route
                                              filtering in each direction.
+
                                 type: list
                                 elements: dict
                                 required: False
                                 suboptions:
+
                                     address_family:
-                                        description:
+
                                         type: str
                                         required: False
                                         choices:
+
                                             - 'IPV4'
                                             - 'IPV6'
                                             - 'VPN'
+
                                     enabled:
+
                                         description: Flag to enable address
                                                      family.
+
                                         type: bool
                                         default: True
+
                                     in_route_filters:
+
                                         description:
+
                                             - Prefix-list or route map path for
                                               IN direction
                                             - Specify path of prefix-list or
                                               route map to filter routes for IN
                                               direction.
+
                                         type: list
                                         required: False
+
                                     out_route_filters:
+
                                         description:
+
                                             - Prefix-list or route map path for
                                               OUT direction
                                             - Specify path of prefix-list or
@@ -1400,9 +1715,12 @@ def create_or_update(
                                               prefix-list named
                                               'prefixlist-out-default' is
                                               automatically applied.
+
                                         type: list
                                         required: False
+
                             source_addresses:
+
                                 description:
                                     - Source IP Addresses for BGP peering
                                     - Source addresses should belong to Tier0
@@ -1411,132 +1729,192 @@ def create_or_update(
                                       these addresses. This property is
                                       mandatory when maximum_hop_limit is
                                       greater than 1.
+
                                 type: list
                                 required: False
+
             interfaces:
+
                 type: list
+
                 element: dict
+
                 description: Specify the interfaces associated with the Gateway
                              in this section that need to be created, updated,
                              or deleted
+
                 state:
+
                     description: present or absent keyword is used as an indetifier, default value is present.
                                  If a user has provided absent that resource/sub-resource will be deleted
+
                 suboptions:
+
                     id:
                         description: Tier-0 Interface ID
                         type: str
+
                     display_name:
                         description:
                             - Tier-0 Interface display name
                             - Either this or id must be specified. If both are
                               specified, id takes precedence.
+
                         required: false
                         type: str
+
                     description:
+
                         description: Tier-0 Interface  description
                         type: str
+
                     state:
+
                         description:
                             - State can be either 'present' or 'absent'.
                               'present' is used to create or update resource.
                               'absent' is used to delete resource.
                             - Required if I(segp_id != null)
+
                         choices:
+
                             - present
                             - absent
+
                     tags:
                         description: Opaque identifiers meaningful to the API
                                      user.
+
                         type: dict
+
                         suboptions:
+
                             scope:
                                 description: Tag scope.
                                 required: true
                                 type: str
+
                             tag:
                                 description: Tag value.
                                 required: true
                                 type: str
+
                     access_vlan_id:
+
                         description: Vlan id
                         type: int
+
                     ipv6_ndra_profile_display_name:
+
                         description: Same as ipv6_ndra_profile_id. Either one
                                      should be specified.
+
                         type: str
+
                     ipv6_ndra_profile_id:
+
                         description: Configuration IPv6 NDRA profile. Only one
                                      NDRA profile can be configured.
+
                         type: str
+
                     mtu:
                         description:
                             - MTU size
                             - Maximum transmission unit (MTU) specifies the
                               size of the largest packet that a network
                               protocol can transmit.
+
                         type: int
+
                     multicast:
                         description: Multicast PIM configuration
+
                         type: dict
                         suboptions:
+
                             enabled:
+
                                 description: enable/disable PIM configuration
                                 type: bool
                                 default: False
                     urpf_mode:
                         description: Unicast Reverse Path Forwarding mode
+
                         type: str
                         choices:
+
                             - NONE
                             - STRICT
+
                     segment_id:
                         description: Specify Segment to which this interface is
                                      connected to. Required if id is specified.
+
                         type: str
+
                     segment_display_name:
                         description:
                             - Same as segment_id
                             - Either this or segment_id must be specified. If
                               both are specified, segment_id takes precedence.
+
                         type: str
+
                     type:
+
                         description: Interface type
+
                         choices:
+
                             - "EXTERNAL"
                             - "LOOPBACK"
                             - "SERVICE"
+
                         type: str
+
                     edge_node_info:
+
                         description:
                             - Info to create policy path to edge node to
                               handle externalconnectivity.
                             - Required if interface type is EXTERNAL and
                               I(id != null)
+
                         type: dict
                         suboptions:
+
                             site_id:
                                 description: site_id where edge node is located
+
                                 default: default
                                 type: str
+
                             enforcementpoint_id:
                                 description: enforcementpoint_id where edge
                                              node is located.
+
                                 default: default
                                 type: str
+
                             edge_cluster_id:
                                 description: edge_cluster_id where edge node is
                                              located
+
                                 type: str
+
                             edge_node_id:
                                 description: ID of the edge node
+
                                 type: str
+
                     subnets:
                         description:
                             - IP address and subnet specification for interface
                             - Specify IP address and network prefix for
                               interface.
                             - Required if I(id != null).
+
                         required: False
                         type: list
     """
@@ -1584,25 +1962,33 @@ def delete(
 ):
     """
     Deletes a Tier 0 gateway and it sub-resources
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     tier0_id
         id of the tier 0 to be deleted
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     """
     execution_logs = []
     try:
@@ -1628,25 +2014,33 @@ def get_hierarchy(
 ):
     """
     Returns entire hieararchy of Tier 0 gateway and its sub-resources
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     tier0_id
         id of the tier 0 gateway
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     """
     result = {}
     try:
