@@ -213,12 +213,43 @@ def test_rule_info(integration_test_config, service_instance):
     Test rule info has correct fields
     """
     if integration_test_config["datacenters"]:
-        vm_affinity_rule_keys = ["name","uuid","enabled", "mandatory", "key", "in_compliance", "vms", "affinity", "type"]
-        vm_host_rule_keys = ["name","uuid","enabled", "mandatory", "key", "in_compliance", "vm_group_name", "affine_host_group_name", "anti_affine_host_group_name", "type"]
-        dependency_rule_keys = ["name","uuid","enabled", "mandatory", "key", "in_compliance", "vm_group", "depends_on_vm_group", "type"]
-        for k,v in integration_test_config["datacenters"].items():
+        vm_affinity_rule_keys = [
+            "name",
+            "uuid",
+            "enabled",
+            "mandatory",
+            "key",
+            "in_compliance",
+            "vms",
+            "affinity",
+            "type",
+        ]
+        vm_host_rule_keys = [
+            "name",
+            "uuid",
+            "enabled",
+            "mandatory",
+            "key",
+            "in_compliance",
+            "vm_group_name",
+            "affine_host_group_name",
+            "anti_affine_host_group_name",
+            "type",
+        ]
+        dependency_rule_keys = [
+            "name",
+            "uuid",
+            "enabled",
+            "mandatory",
+            "key",
+            "in_compliance",
+            "vm_group",
+            "depends_on_vm_group",
+            "type",
+        ]
+        for k, v in integration_test_config["datacenters"].items():
             for cluster in v:
-                rules = cluster_drs.rule_info(cluster,k,service_instance=service_instance)
+                rules = cluster_drs.rule_info(cluster, k, service_instance=service_instance)
                 for rule in rules:
                     if rule["type"] == "vm_affinity_rule":
                         assert sorted(vm_affinity_rule_keys) == sorted(rule.keys())
@@ -229,4 +260,3 @@ def test_rule_info(integration_test_config, service_instance):
 
     else:
         pytest.skip("test requires 2 configured VMs")
-    

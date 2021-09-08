@@ -236,7 +236,7 @@ def drs_rule_info(rule):
         "enabled": rule.enabled,
         "mandatory": rule.mandatory,
         "key": rule.key,
-        "in_compliance": rule.inCompliance
+        "in_compliance": rule.inCompliance,
     }
     if type(rule) == vim.cluster.AntiAffinityRuleSpec or type(rule) == vim.cluster.AffinityRuleSpec:
         vms = []
