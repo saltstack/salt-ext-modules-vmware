@@ -315,7 +315,7 @@ def list_services(
     service_instance=None,
 ):
     """
-    Manage the state of the service running on the EXSI host.
+    List the state of services running on the EXSI host.
 
     service_name
         Filter by this service name. (optional)
@@ -380,6 +380,321 @@ def list_services(
                     "state": "running" if service.running else "stopped",
                     "startup_policy": service.policy,
                 }
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+    ) as exc:
+        ret = exc.msg
+    except salt.exceptions.VMwareApiError as api_err:
+        ret = str(api_err)
+    return ret
+
+
+def get_acceptance_level(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    acceptance_level=None,
+    service_instance=None,
+):
+    """
+    Get acceptance level on the EXSI host.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXI hostname (optional)
+
+    acceptance_level
+        Filter by this acceptance level. Valid values: "community", "partner", "vmware_accepted", "vmware_certified". (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. Optional.
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_acceptance_level
+    """
+    log.debug("Running vmware_esxi.get_acceptance_level")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+
+    try:
+        for h in hosts:
+            host_config_manager = h.configManager.imageConfigManager
+            if not host_config_manager:
+                continue
+            host_acceptance_level = host_config_manager.HostImageConfigGetAcceptance()
+            if acceptance_level and host_acceptance_level != acceptance_level:
+                continue
+            ret[h.name] = host_acceptance_level
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+    ) as exc:
+        ret = exc.msg
+    except salt.exceptions.VMwareApiError as api_err:
+        ret = str(api_err)
+    return ret
+
+
+def set_acceptance_level(
+    acceptance_level,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set acceptance level on the EXSI host.
+
+    acceptance_level
+        Set to this acceptance level. Valid values: "community", "partner", "vmware_accepted", "vmware_certified".
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXI hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. Optional.
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.set_acceptance_level
+    """
+    log.debug("Running vmware_esxi.set_acceptance_level")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+
+    try:
+        for h in hosts:
+            host_config_manager = h.configManager.imageConfigManager
+            if not host_config_manager:
+                continue
+            host_config_manager.UpdateHostImageAcceptanceLevel(newAcceptanceLevel=acceptance_level)
+            ret[h.name] = acceptance_level
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+    ) as exc:
+        ret = exc.msg
+    except salt.exceptions.VMwareApiError as api_err:
+        ret = str(api_err)
+    return ret
+
+
+def get_advanced_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    config_name=None,
+    service_instance=None,
+):
+    """
+    Get acceptance level on the EXSI host.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXI hostname (optional)
+
+    config_name
+        Filter by this config_name. (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. Optional.
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_advanced_config
+    """
+    log.debug("Running vmware_esxi.get_advanced_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+
+    try:
+        for h in hosts:
+            config_manager = h.configManager.advancedOption
+            ret[h.name] = {}
+            if not config_manager:
+                continue
+            for opt in config_manager.QueryOptions(config_name):
+                ret[h.name][opt.key] = opt.value
+
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+    ) as exc:
+        ret = exc.msg
+    except salt.exceptions.VMwareApiError as api_err:
+        ret = str(api_err)
+    return ret
+
+
+def set_advanced_configs(
+    config_dict,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set advanced config value on the EXSI host.
+
+    config_dict
+        Set the configuration key to the configuration value. Eg: {"Annotations.WelcomeMessage": "Hello"}
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXI hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. Optional.
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.set_advanced_config config_name=Annotations.WelcomeMessage config_value=Hello
+    """
+    log.debug("Running vmware_esxi.set_advanced_configs")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+
+    try:
+        for h in hosts:
+            config_manager = h.configManager.advancedOption
+            ret[h.name] = {}
+            if not config_manager:
+                continue
+            advanced_configs = []
+            for opt in config_dict:
+                advanced_configs.append(vim.option.OptionValue(key=opt, value=config_dict[opt]))
+                ret[h.name][opt] = config_dict[opt]
+            config_manager.UpdateOptions(changedValue=advanced_configs)
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+    ) as exc:
+        ret = exc.msg
+    except salt.exceptions.VMwareApiError as api_err:
+        ret = str(api_err)
+    return ret
+
+
+def set_advanced_config(
+    config_name,
+    config_value,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set advanced config value on the EXSI host.
+
+    config_name
+        Set the value for this configuration.
+
+    config_value
+        Set the advanced configuration to this value.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXI hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. Optional.
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.set_advanced_config config_name=Annotations.WelcomeMessage config_value=Hello
+    """
+    log.debug("Running vmware_esxi.set_advanced_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+
+    try:
+        for h in hosts:
+            config_manager = h.configManager.advancedOption
+            ret[h.name] = {}
+            if not config_manager:
+                continue
+            config_manager.UpdateOptions(
+                changedValue=[vim.option.OptionValue(key=config_name, value=config_value)]
+            )
+            ret[h.name][config_name] = config_value
     except (
         vim.fault.InvalidState,
         vim.fault.NotFound,
