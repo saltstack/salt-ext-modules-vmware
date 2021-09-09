@@ -250,13 +250,16 @@ def test_rule_info(integration_test_config, service_instance):
         for k, v in integration_test_config["datacenters"].items():
             for cluster in v:
                 rules = cluster_drs.rule_info(cluster, k, service_instance=service_instance)
-                for rule in rules:
-                    if rule["type"] == "vm_affinity_rule":
-                        assert sorted(vm_affinity_rule_keys) == sorted(rule.keys())
-                    elif rule["type"] == "vm_host_rule":
-                        assert sorted(vm_host_rule_keys) == sorted(rule.keys())
-                    elif rule["type"] == "dependency_rule":
-                        assert sorted(dependency_rule_keys) == sorted(rule.keys())
+                if rules:
+                    for rule in rules:
+                        if rule["type"] == "vm_affinity_rule":
+                            assert sorted(vm_affinity_rule_keys) == sorted(rule.keys())
+                        elif rule["type"] == "vm_host_rule":
+                            assert sorted(vm_host_rule_keys) == sorted(rule.keys())
+                        elif rule["type"] == "dependency_rule":
+                            assert sorted(dependency_rule_keys) == sorted(rule.keys())
+                else:
+                    pytest.skip("test requires at least one drs rule.")
 
     else:
-        pytest.skip("test requires 2 configured VMs")
+        pytest.skip("test requires a datacenter.")

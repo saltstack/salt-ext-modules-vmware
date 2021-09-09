@@ -254,16 +254,21 @@ def drs_rule_info(rule):
         rule_info["type"] = "dependency_rule"
         rule_info["vm_group"] = rule.vmGroup
         rule_info["depends_on_vm_group"] = rule.dependsOnVmGroup
+    else:
+        raise salt.exceptions.VMwareApiError({f"Unknown affinity rule type {type(rule)}"})
     return rule_info
 
 
 def check_affinity(rule):
     """
-    Returns of affinity of cluster DRS virtual machine rule.
+    returns True if rule is Affine, or False if rule is AntiAffine.
 
     rule
         Reference to DRS rule.
     """
     if type(rule) == vim.cluster.AntiAffinityRuleSpec:
         return False
-    return True
+    elif type(rule) == vim.cluster.AffinityRuleSpec:
+        return True
+    else:
+        raise Exception(f"Rule type {type(rule)} has no affinity.")

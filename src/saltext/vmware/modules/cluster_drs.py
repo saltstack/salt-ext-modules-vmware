@@ -217,7 +217,7 @@ def vm_affinity_rule(
 
 def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=None):
     """
-    Return info on given cluster's DRS rules.
+    Return a list of all the DRS rules on a given cluster, or one DRS rule if filtered by rule_name.
 
     cluster_name
         The name of the cluster to configure a rule on.
@@ -226,7 +226,7 @@ def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=No
         The name of the datacenter where the cluster exists.
 
     rule_name
-        (optional) The name of the rule.
+        (optional) Return only the rule with rule_name
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
@@ -238,8 +238,12 @@ def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=No
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     rules = cluster_ref.configuration.rule
     info = []
-    for rule in rules:
-        if rule.name == rule_name:
-            return utils_cluster.drs_rule_info(rule)
-        info.append(utils_cluster.drs_rule_info(rule))
-    return info
+    if rule_name:
+        for rule in rules:
+            if rule.name == rule_name:
+                return utils_cluster.drs_rule_info(rule)
+    else:
+        for rule in rules:
+            info.append(utils_cluster.drs_rule_info(rule))
+        return info
+    raise salt.exceptions.VMwareApiError({f"Rule name {rule_name} not found."})
