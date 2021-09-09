@@ -277,7 +277,9 @@ def test_rule_info_values(integration_test_config, service_instance):
                 for rule in rules:
                     if rule["name"] in integration_test_config["datacenters"][k][cluster]:
                         tested = True
-                        assert integration_test_config["datacenters"][k][cluster][rule["name"]] == rule
+                        assert (
+                            integration_test_config["datacenters"][k][cluster][rule["name"]] == rule
+                        )
 
     else:
         pytest.skip("test requires a datacenter.")
