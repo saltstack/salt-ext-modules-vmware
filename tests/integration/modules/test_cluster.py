@@ -208,7 +208,7 @@ def test_vm_anti_affinity_rule(integration_test_config, service_instance):
         pytest.skip("test requires 2 configured VMs")
 
 
-def test_rule_info(integration_test_config, service_instance):
+def test_rule_info_fields(integration_test_config, service_instance):
     """
     Test rule info has correct fields
     """
@@ -248,7 +248,7 @@ def test_rule_info(integration_test_config, service_instance):
             "type",
         ]
         for k, v in integration_test_config["datacenters"].items():
-            for cluster in v:
+            for cluster in v.keys():
                 rules = cluster_drs.rule_info(cluster, k, service_instance=service_instance)
                 if rules:
                     for rule in rules:
@@ -263,3 +263,23 @@ def test_rule_info(integration_test_config, service_instance):
 
     else:
         pytest.skip("test requires a datacenter.")
+
+
+def test_rule_info_values(integration_test_config, service_instance):
+    """
+    Test rule info has correct values.
+    """
+    tested = False
+    if integration_test_config["datacenters"]:
+        for k, v in integration_test_config["datacenters"].items():
+            for cluster in v.keys():
+                rules = cluster_drs.rule_info(cluster, k, service_instance=service_instance)
+                for rule in rules:
+                    if rule["name"] in integration_test_config["datacenters"][k][cluster]:
+                        tested = True
+                        assert integration_test_config["datacenters"][k][cluster][rule["name"]] == rule
+
+    else:
+        pytest.skip("test requires a datacenter.")
+    if not tested:
+        pytest.skip("test requires rule in config file.")

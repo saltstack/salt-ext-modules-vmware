@@ -17,6 +17,7 @@ import pathlib
 import ssl
 
 import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.vm as utils_vm
 from pyVim import connect
 
@@ -46,9 +47,11 @@ def do_it(*, config_file):
     # Okay, now this is where all the updating things goes:
     config["datacenters"] = {}
     for dc in si.content.rootFolder.childEntity:
-        config["datacenters"][dc.name] = []
+        config["datacenters"][dc.name] = {}
         for cluster in dc.hostFolder.childEntity:
-            config["datacenters"][dc.name].append(cluster.name)
+            config["datacenters"][dc.name][cluster.name] = {}
+            for rule in cluster.configuration.rule:
+                config["datacenters"][dc.name][cluster.name][rule.name] = utils_cluster.drs_rule_info(rule)
     hosts = si.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     host = hosts[0]
     config["esxi_host_name"] = host.name

@@ -220,7 +220,7 @@ def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=No
     Return a list of all the DRS rules on a given cluster, or one DRS rule if filtered by rule_name.
 
     cluster_name
-        The name of the cluster to configure a rule on.
+        The name of the cluster to get rules from.
 
     datacenter_name
         The name of the datacenter where the cluster exists.
