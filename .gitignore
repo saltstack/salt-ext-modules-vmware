@@ -141,3 +141,4 @@ local/
 .idea/
 src/.DS_Store
 src/saltext/.DS_Store
+.vscode/

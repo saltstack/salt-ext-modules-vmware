@@ -212,10 +212,8 @@ def power_state(
             if task:
                 utils_common.wait_for_task(task, h.name, "PowerStateTask")
             ret = True
-    except vmodl.fault.NotSupported as exc:
-        ret = exc.msg
-    except salt.exceptions.VMwareApiError as api_err:
-        ret = str(api_err)
+    except (vmodl.fault.NotSupported, salt.exceptions.VMwareApiError) as exc:
+        raise salt.exceptions.SaltException(str(exc))
     return ret
 
 
@@ -298,10 +296,9 @@ def manage_service(
         vim.fault.NotFound,
         vim.fault.HostConfigFault,
         vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
-        ret = exc.msg
-    except salt.exceptions.VMwareApiError as api_err:
-        ret = str(api_err)
+        raise salt.exceptions.SaltException(str(exc))
     return ret
 
 
@@ -315,7 +312,7 @@ def list_services(
     service_instance=None,
 ):
     """
-    List the state of services running on the EXSI host.
+    List the state of services running on matching EXSI hosts.
 
     service_name
         Filter by this service name. (optional)
@@ -385,10 +382,9 @@ def list_services(
         vim.fault.NotFound,
         vim.fault.HostConfigFault,
         vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
-        ret = exc.msg
-    except salt.exceptions.VMwareApiError as api_err:
-        ret = str(api_err)
+        raise salt.exceptions.SaltException(str(exc))
     return ret
 
 
@@ -400,7 +396,7 @@ def get_acceptance_level(
     service_instance=None,
 ):
     """
-    Get acceptance level on the EXSI host.
+    Get acceptance level on matching EXSI hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -415,7 +411,7 @@ def get_acceptance_level(
         Filter by this acceptance level. Valid values: "community", "partner", "vmware_accepted", "vmware_certified". (optional)
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Optional.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
@@ -447,10 +443,9 @@ def get_acceptance_level(
         vim.fault.NotFound,
         vim.fault.HostConfigFault,
         vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
-        ret = exc.msg
-    except salt.exceptions.VMwareApiError as api_err:
-        ret = str(api_err)
+        raise salt.exceptions.SaltException(str(exc))
     return ret
 
 
@@ -462,7 +457,7 @@ def set_acceptance_level(
     service_instance=None,
 ):
     """
-    Set acceptance level on the EXSI host.
+    Set acceptance level on matching EXSI hosts.
 
     acceptance_level
         Set to this acceptance level. Valid values: "community", "partner", "vmware_accepted", "vmware_certified".
@@ -507,10 +502,9 @@ def set_acceptance_level(
         vim.fault.NotFound,
         vim.fault.HostConfigFault,
         vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
-        ret = exc.msg
-    except salt.exceptions.VMwareApiError as api_err:
-        ret = str(api_err)
+        raise salt.exceptions.SaltException(str(exc))
     return ret
 
 
@@ -522,7 +516,7 @@ def get_advanced_config(
     service_instance=None,
 ):
     """
-    Get acceptance level on the EXSI host.
+    Get advanced config on matching EXSI hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -569,10 +563,9 @@ def get_advanced_config(
         vim.fault.NotFound,
         vim.fault.HostConfigFault,
         vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
-        ret = exc.msg
-    except salt.exceptions.VMwareApiError as api_err:
-        ret = str(api_err)
+        raise salt.exceptions.SaltException(str(exc))
     return ret
 
 
@@ -584,10 +577,10 @@ def set_advanced_configs(
     service_instance=None,
 ):
     """
-    Set advanced config value on the EXSI host.
+    Set multiple advanced configurations on matching EXSI hosts.
 
     config_dict
-        Set the configuration key to the configuration value. Eg: {"Annotations.WelcomeMessage": "Hello"}
+        Set the configuration key to the configuration value. To reset a particular config value, pass the corresponding value for the configuration key. Eg: {"Annotations.WelcomeMessage": "Hello"}
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -628,14 +621,14 @@ def set_advanced_configs(
             for opt in config_manager.supportedOption:
                 if opt.key not in config_dict:
                     continue
-                supported_configs[opt.key] = {"type": opt.optionType}
+                supported_configs[opt.key] = opt.optionType
 
             advanced_configs = []
             for opt in config_dict:
-                opt_type = supported_configs[opt]["type"]
+                opt_type = supported_configs[opt]
                 val = config_dict[opt]
                 if isinstance(opt_type, vim.option.BoolOption) and not isinstance(val, bool):
-                    val = True if val.lower() in ["true"] else False
+                    val = val.lower() == "true"
                 elif isinstance(opt_type, vim.option.LongOption):
                     val = VmomiSupport.vmodlTypes["long"](val)
                 elif isinstance(opt_type, vim.option.IntOption):
@@ -648,10 +641,9 @@ def set_advanced_configs(
         vim.fault.NotFound,
         vim.fault.HostConfigFault,
         vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
-        ret = exc.msg
-    except salt.exceptions.VMwareApiError as api_err:
-        ret = str(api_err)
+        raise salt.exceptions.SaltException(str(exc))
     return ret
 
 
@@ -664,10 +656,10 @@ def set_advanced_config(
     service_instance=None,
 ):
     """
-    Set advanced config value on the EXSI host.
+    Set a single advanced configuration on matching EXSI hosts.
 
     config_name
-        Set the value for this configuration.
+        Name of the advanced configuration to be set.
 
     config_value
         Set the advanced configuration to this value.
@@ -715,8 +707,7 @@ def set_advanced_config(
         vim.fault.NotFound,
         vim.fault.HostConfigFault,
         vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
-        ret = exc.msg
-    except salt.exceptions.VMwareApiError as api_err:
-        ret = str(api_err)
+        raise salt.exceptions.SaltException(str(exc))
     return ret
