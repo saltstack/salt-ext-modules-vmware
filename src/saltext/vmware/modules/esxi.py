@@ -10,7 +10,7 @@ from saltext.vmware.utils.connect import get_service_instance
 log = logging.getLogger(__name__)
 
 try:
-    from pyVmomi import vmodl, vim
+    from pyVmomi import vmodl, vim, VmomiSupport
 
     HAS_PYVMOMI = True
 except ImportError:
@@ -623,9 +623,24 @@ def set_advanced_configs(
             ret[h.name] = {}
             if not config_manager:
                 continue
+
+            supported_configs = {}
+            for opt in config_manager.supportedOption:
+                if opt.key not in config_dict:
+                    continue
+                supported_configs[opt.key] = {"type": opt.optionType}
+
             advanced_configs = []
             for opt in config_dict:
-                advanced_configs.append(vim.option.OptionValue(key=opt, value=config_dict[opt]))
+                opt_type = supported_configs[opt]["type"]
+                val = config_dict[opt]
+                if isinstance(opt_type, vim.option.BoolOption) and not isinstance(val, bool):
+                    val = True if val.lower() in ["true"] else False
+                elif isinstance(opt_type, vim.option.LongOption):
+                    val = VmomiSupport.vmodlTypes["long"](val)
+                elif isinstance(opt_type, vim.option.IntOption):
+                    val = VmomiSupport.vmodlTypes["int"](val)
+                advanced_configs.append(vim.option.OptionValue(key=opt, value=val))
                 ret[h.name][opt] = config_dict[opt]
             config_manager.UpdateOptions(changedValue=advanced_configs)
     except (
