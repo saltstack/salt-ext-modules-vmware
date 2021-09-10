@@ -602,7 +602,7 @@ def set_advanced_configs(
     Set multiple advanced configurations on matching EXSI hosts.
 
     config_dict
-        Set the configuration key to the configuration value. To reset a particular config value, pass the corresponding value for the configuration key. Eg: {"Annotations.WelcomeMessage": "Hello"}
+        Set the configuration key to the configuration value. Eg: {"Annotations.WelcomeMessage": "Hello"}
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
