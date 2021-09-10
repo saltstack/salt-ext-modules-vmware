@@ -163,7 +163,7 @@ def power_state(
     datacenter_name=None, cluster_name=None, host_name=None, state=None, timeout=600, force=True
 ):
     """
-    Manage the power state of the ESXI host.
+    Manage the power state of the ESXi host.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -172,10 +172,10 @@ def power_state(
         Filter by this cluster name (optional)
 
     host_name
-        Filter by this ESXI hostname whose power state needs to be managed (Optional)
+        Filter by this ESXi hostname whose power state needs to be managed (optional).
 
     state
-        Sets the ESXI host to this power state. Valid values: "reboot", "standby", "poweron", "shutdown".
+        Sets the ESXi host to this power state. Valid values: "reboot", "standby", "poweron", "shutdown".
 
     timeout
         Timeout when transitioning power state to standby / poweron. Default: 600 seconds
@@ -239,10 +239,10 @@ def manage_service(
         Filter by this cluster name (optional)
 
     host_name
-        Filter by this ESXI hostname whose power state needs to be managed (optional)
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
 
     state
-        Sets the service running on the ESXI host to this state. Valid values: "start", "stop", "restart".
+        Sets the service running on the ESXi host to this state. Valid values: "start", "stop", "restart".
 
     startup_policy
         Sets the service startup policy. If unspecified, no changes are made. Valid values "on", "off", "automatic".
@@ -251,7 +251,7 @@ def manage_service(
         - automatic: Start automatically if any ports are open, and stop when all ports are closed
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (Optional)
+        Use this vCenter service connection instance instead of creating a new one. (optional)
 
     .. code-block:: bash
 
@@ -324,7 +324,7 @@ def list_services(
         Filter by this cluster name (optional)
 
     host_name
-        Filter by this ESXI hostname (optional)
+        Filter by this ESXi hostname (optional)
 
     state
         Filter by this service state. Valid values: "running", "stopped"
@@ -333,7 +333,7 @@ def list_services(
         Filter by this service startup policy. Valid values "on", "off", "automatic".
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Optional.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
@@ -405,7 +405,7 @@ def get_acceptance_level(
         Filter by this cluster name (optional)
 
     host_name
-        Filter by this ESXI hostname (optional)
+        Filter by this ESXi hostname (optional)
 
     acceptance_level
         Filter by this acceptance level. Valid values: "community", "partner", "vmware_accepted", "vmware_certified". (optional)
@@ -416,7 +416,18 @@ def get_acceptance_level(
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_acceptance_level
+
+    Returns:
+
+    .. code-block:: json
+
+        {
+            "host1": "partner",
+            "host2": "partner"
+        }
+
     """
+
     log.debug("Running vmware_esxi.get_acceptance_level")
     ret = {}
     if not service_instance:
@@ -469,15 +480,26 @@ def set_acceptance_level(
         Filter by this cluster name (optional)
 
     host_name
-        Filter by this ESXI hostname (optional)
+        Filter by this ESXi hostname (optional)
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Optional.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_acceptance_level
+
+    Returns:
+
+    .. code-block:: json
+
+        {
+            "host1": "partner",
+            "host2": "partner"
+        }
+
     """
+
     log.debug("Running vmware_esxi.set_acceptance_level")
     ret = {}
     if not service_instance:
@@ -525,13 +547,13 @@ def get_advanced_config(
         Filter by this cluster name (optional)
 
     host_name
-        Filter by this ESXI hostname (optional)
+        Filter by this ESXi hostname (optional)
 
     config_name
         Filter by this config_name. (optional)
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Optional.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
@@ -589,14 +611,25 @@ def set_advanced_configs(
         Filter by this cluster name (optional)
 
     host_name
-        Filter by this ESXI hostname (optional)
+        Filter by this ESXi hostname (optional)
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Optional.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_advanced_config config_name=Annotations.WelcomeMessage config_value=Hello
+
+    Returns:
+
+    .. code-block:: json
+
+        {
+            "host1": {
+                "Annotations.WelcomeMessage": "HelloDemo"
+            },
+        }
+
     """
     log.debug("Running vmware_esxi.set_advanced_configs")
     ret = {}
@@ -671,43 +704,31 @@ def set_advanced_config(
         Filter by this cluster name (optional)
 
     host_name
-        Filter by this ESXI hostname (optional)
+        Filter by this ESXi hostname (optional)
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Optional.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_advanced_config config_name=Annotations.WelcomeMessage config_value=Hello
+
+    Returns:
+
+    .. code-block:: json
+
+        {
+            "host1": {
+                "Annotations.WelcomeMessage": "HelloDemo"
+            },
+        }
+
     """
     log.debug("Running vmware_esxi.set_advanced_config")
-    ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    hosts = utils_esxi.get_hosts(
-        service_instance=service_instance,
-        host_names=[host_name] if host_name else None,
-        cluster_name=cluster_name,
+    return set_advanced_configs(
+        config_dict={config_name: config_value},
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        cluster_name=cluster_name,
+        host_name=host_name,
+        service_instance=service_instance,
     )
-
-    try:
-        for h in hosts:
-            config_manager = h.configManager.advancedOption
-            ret[h.name] = {}
-            if not config_manager:
-                continue
-            config_manager.UpdateOptions(
-                changedValue=[vim.option.OptionValue(key=config_name, value=config_value)]
-            )
-            ret[h.name][config_name] = config_value
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
-        raise salt.exceptions.SaltException(str(exc))
-    return ret
