@@ -13,11 +13,25 @@ def mock_vmc_request_call_api():
 
 
 @pytest.fixture
+def mock_vmc_vcenter_request_call_api():
+    with patch("saltext.vmware.utils.vmc_vcenter_request.call_api") as vmc_vcenter_call_api:
+        yield vmc_vcenter_call_api
+
+
+@pytest.fixture
 def mock_access_token(mock_response):
     with patch("saltext.vmware.utils.vmc_request.get_access_token") as vmc_access_token:
         mock_response.json = mock.Mock("mock-token")
         vmc_access_token.return_value = mock_response
         yield vmc_access_token
+
+
+@pytest.fixture
+def mock_vcenter_headers(mock_response):
+    with patch("saltext.vmware.utils.vmc_vcenter_request.get_headers") as vcenter_headers:
+        mock_response.json = mock.Mock("mock-header")
+        vcenter_headers.return_value = mock_response
+        yield vcenter_headers
 
 
 @pytest.fixture
