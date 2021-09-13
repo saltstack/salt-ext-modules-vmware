@@ -199,3 +199,68 @@ def test_manage_service(service_instance):
         )
         for host in ret:
             assert ret[host][SSH_SERVICE]["startup_policy"] == policy
+
+
+def test_acceptance_level(service_instance):
+    """
+    Test acceptance level on esxi host
+    """
+    ret = esxi.set_acceptance_level(
+        acceptance_level="community",
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    for h in ret:
+        assert ret[h] == "community"
+
+    ret = esxi.get_acceptance_level(
+        acceptance_level="community",
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    assert set(ret.values()) == {"community"}
+
+
+def test_advanced_config(service_instance):
+    """
+    Test advanced config on esxi host
+    """
+    ret = esxi.set_advanced_config(
+        config_name="Annotations.WelcomeMessage",
+        config_value="testing",
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    for h in ret:
+        assert ret[h]["Annotations.WelcomeMessage"] == "testing"
+
+    ret = esxi.get_advanced_config(
+        config_name="Annotations.WelcomeMessage",
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    for h in ret:
+        assert ret[h]["Annotations.WelcomeMessage"] == "testing"
+
+    ret = esxi.set_advanced_configs(
+        config_dict={"Annotations.WelcomeMessage": "test1", "BufferCache.FlushInterval": 3000},
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    for h in ret:
+        assert ret[h]["Annotations.WelcomeMessage"] == "test1"
+        assert ret[h]["BufferCache.FlushInterval"] == 3000
+
+    ret = esxi.get_advanced_config(
+        config_name="BufferCache.FlushInterval",
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    for h in ret:
+        assert ret[h]["BufferCache.FlushInterval"] == 3000
