@@ -110,12 +110,6 @@ ENV/
 env.bak/
 venv.bak/
 
-# vscode
-.vscode/
-
-#salt env
-Saltfile
-
 # Spyder project settings
 .spyderproject
 .spyproject
