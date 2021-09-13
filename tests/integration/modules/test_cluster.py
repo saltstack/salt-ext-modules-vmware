@@ -206,3 +206,82 @@ def test_vm_anti_affinity_rule(integration_test_config, service_instance):
         assert ret["created"] == True
     else:
         pytest.skip("test requires 2 configured VMs")
+
+
+def test_rule_info_fields(integration_test_config, service_instance):
+    """
+    Test rule info has correct fields
+    """
+    if integration_test_config["datacenters"]:
+        vm_affinity_rule_keys = [
+            "name",
+            "uuid",
+            "enabled",
+            "mandatory",
+            "key",
+            "in_compliance",
+            "vms",
+            "affinity",
+            "type",
+        ]
+        vm_host_rule_keys = [
+            "name",
+            "uuid",
+            "enabled",
+            "mandatory",
+            "key",
+            "in_compliance",
+            "vm_group_name",
+            "affine_host_group_name",
+            "anti_affine_host_group_name",
+            "type",
+        ]
+        dependency_rule_keys = [
+            "name",
+            "uuid",
+            "enabled",
+            "mandatory",
+            "key",
+            "in_compliance",
+            "vm_group",
+            "depends_on_vm_group",
+            "type",
+        ]
+        for k, v in integration_test_config["datacenters"].items():
+            for cluster in v.keys():
+                rules = cluster_drs.rule_info(cluster, k, service_instance=service_instance)
+                if rules:
+                    for rule in rules:
+                        if rule["type"] == "vm_affinity_rule":
+                            assert sorted(vm_affinity_rule_keys) == sorted(rule.keys())
+                        elif rule["type"] == "vm_host_rule":
+                            assert sorted(vm_host_rule_keys) == sorted(rule.keys())
+                        elif rule["type"] == "dependency_rule":
+                            assert sorted(dependency_rule_keys) == sorted(rule.keys())
+                else:
+                    pytest.skip("test requires at least one drs rule.")
+
+    else:
+        pytest.skip("test requires a datacenter.")
+
+
+def test_rule_info_values(integration_test_config, service_instance):
+    """
+    Test rule info has correct values.
+    """
+    tested = False
+    if integration_test_config["datacenters"]:
+        for k, v in integration_test_config["datacenters"].items():
+            for cluster in v.keys():
+                rules = cluster_drs.rule_info(cluster, k, service_instance=service_instance)
+                for rule in rules:
+                    if rule["name"] in integration_test_config["datacenters"][k][cluster]:
+                        tested = True
+                        assert (
+                            integration_test_config["datacenters"][k][cluster][rule["name"]] == rule
+                        )
+
+    else:
+        pytest.skip("test requires a datacenter.")
+    if not tested:
+        pytest.skip("test requires rule in config file.")

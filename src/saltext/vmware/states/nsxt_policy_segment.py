@@ -56,12 +56,19 @@ def present(
     """
       Creates or Updates(if present with same display_name) segment and its sub-resources with the given
       specifications.
+
       Note: To delete any subresource of segment state parameter as absent
+
       CLI Example:
+
       .. code-block:: bash
+
           salt vm_minion nsxt_policy_segment.present hostname=nsxt-manager.local username=admin ...
+
       .. code-block:: yaml
+
     nsxt_policy_segment.present:
+
       - name: Create segment
         hostname: <hostname>
         username: <username>
@@ -74,20 +81,26 @@ def present(
         transport_zone_display_name: "1-transportzone-730"
         replication_mode: "SOURCE"
         advanced_config:
+
           - address_pool_display_name: small-2-pool
             connectivity: "OFF"
             hybrid: False
             local_egress: True
+
         admin_state: UP
         connectivity_path: "/infra/tier-1s/d082bc25-a9b2-4d13-afe5-d3cecad4b854"
         subnets:
+
           - gateway_address: "40.1.1.1/16"
+
         segment_ports:
           - display_name: test-sp-1
             state: present
             tags:
+
               - scope: "scope-1"
                 tag: "tag-2"
+
             extra_configs:
               - config_pair:
                   key: key
@@ -98,6 +111,7 @@ def present(
             state: present
           - display_name: test-sp-3
             state: present
+
     hostname
         The host name of NSX-T manager
     username
@@ -134,6 +148,7 @@ def present(
         type: list
         elements: dict
         suboptions:
+
             ip_address:
                 description: IP Address for port binding
                 type: str
@@ -156,6 +171,7 @@ def present(
         required: False
         type: dict
         suboptions:
+
             address_pool_id:
                 description: IP address pool ID
                 type: str
@@ -166,6 +182,7 @@ def present(
                 description: Connectivity configuration to manually connect
                              (ON) or disconnect (OFF) a logical entity from
                              network topology. Only valid for Tier1 Segment
+
                 type: str
             hybrid:
                 description:
@@ -178,6 +195,7 @@ def present(
                       applicable for segment created with transport zone type
                       OVERLAY_STANDARD. This property cannot be modified after
                       segment is created.
+
                 type: bool
             local_egress:
                 description:
@@ -186,13 +204,16 @@ def present(
                       local egress. When set to true, logical router interface
                       (downlink) connecting Segment to Tier0/Tier1 gateway is
                       configured with prefix-length 32.
+
                 type: bool
             local_egress_routing_policies:
                 description: An ordered list of routing policies to forward
                              traffic to the next hop.
+
                 type: list
                 elements: dict
                 suboptions:
+
                     nexthop_address:
                         required: true
                         description: Next hop address for proximity routing
@@ -200,12 +221,14 @@ def present(
                     prefix_list_paths:
                         required: true
                         description:
+
                             - Policy path to prefix lists, max 1 element
                             - The destination address of traffic matching a
                               prefix-list is forwarded to the nexthop_address.
                               Traffic matching a prefix list with Action DENY
                               will be dropped. Individual prefix-lists
                               specified could have different actions.
+
                         type: list
                         elements: str
             multicast:
@@ -213,6 +236,7 @@ def present(
                     - Enable multicast on the downlink
                     - Enable multicast for a segment. Only applicable for
                       segments connected to Tier0 gateway.
+
                 type: bool
             uplink_teaming_policy_name:
                 description:
@@ -224,6 +248,7 @@ def present(
                       not specified, the segment will not have a teaming policy
                       associated with it and the host switch's default teaming
                       policy will be used by MP.
+
                 type: str
     bridge_profiles:
         description: Bridge Profile Configuration
@@ -231,11 +256,13 @@ def present(
         type: list
         elements: dict
         suboptions:
+
             bridge_profile_path:
                 description:
                     - Policy path to L2 Bridge profile
                     - Same bridge profile can be configured on different
                       segments. Each bridge profile on a segment must unique.
+
                 type: str
             uplink_teaming_policy_name:
                 description:
@@ -245,20 +272,24 @@ def present(
                       switching uplink teaming policy names listed in the
                       transport zone. When this property is not specified, the
                       teaming policy is assigned by MP.
+
                 type: str
             vlan_ids:
                 description: VLAN specification for bridge endpoint. Either
                              VLAN ID or VLAN ranges can be specified. Not both.
+
                 type: str
             vlan_transport_zone_path:
                 description:
                     - Policy path to VLAN Transport Zone
                     - VLAN transport zone should belong to the enforcment-point
                       as the transport zone specified in the segment.
+
                 type: str
     connectivity_path:
         description: Policy path to the connecting Tier-0 or Tier-1. Valid only
                      for segments created under Infra
+
         required: False
         type: str
     dhcp_config_path:
@@ -266,6 +297,7 @@ def present(
             - Policy path to DHCP configuration
             - Policy path to DHCP server or relay configuration to use for all
               IPv4 & IPv6 subnets configured on this segment.
+
         required: False
         type: str
     extra_configs:
@@ -274,15 +306,18 @@ def present(
             - This property could be used for vendor specific configuration in
               key value string pairs, the setting in extra_configs will be
               automatically inheritted by segment ports in the Segment.
+
         type: list
         required: False
         elements: dict
         suboptions:
+
             config_pair:
                 description: Key value pair in string for the configuration
                 type: dict
                 required: true
                 suboptions:
+
                     key:
                         description: Key
                         type: str
@@ -296,43 +331,56 @@ def present(
         required: False
         type: dict
         suboptions:
+
             l2vpn_paths:
                 description: Policy paths corresponding to the associated L2
                          VPN sessions
+
                 type: list
                 elements: str
             local_egress:
                 description: Local Egress
+
                type: dict
                suboptions:
+
                    optimized_ips:
                        description: Gateway IP for Local Egress. Local egress
                                     is enabled only when this list is not empty
+
                        type: list
                        elements: str
             tunnel_id:
                description: Tunnel ID
+
                type: int
+
         mac_pool_id:
             description: Allocation mac pool associated with the Segment
+
             type: str
         metadata_proxy_paths:
             description: Metadata Proxy Configuration Paths
+
             type: list
             elements: str
     tier0_display_name:
         description: Same as tier_0_id. Either one can be specified.
                      If both are specified, tier_0_id takes
                      precedence.
+
         required: False
+
         type: str
     tier0_id:
         description: The Uplink of the Policy Segment.Mutually exclusive with tier_1_id.
+
         type: str
     tier1_display_name:
         description: Same as tier_1_id. Either one can be specified.
                      If both are specified, tier_1_id takes
                      precedence.
+
         type: str
     tier1_id:
         description: The Uplink of the Policy Segment.Mutually exclusive with tier_0_id but takes precedence.
@@ -344,6 +392,7 @@ def present(
         description: Same as transport_zone_id. Either one can be specified.
                      If both are specified, transport_zone_id takes
                      precedence.
+
         type: str
     transport_zone_id:
         description: The TZ associated with the Policy Segment.
@@ -351,22 +400,27 @@ def present(
     enforcementpoint_id:
         description: The EnforcementPoint ID where the TZ is located.
                      Required if transport_zone_id is specified.
+
         default: default
+
         type: str
     site_id:
         description: The site ID where the EnforcementPoint is located.
                      Required if transport_zone_id is specified.
+
         default: default
         type: str
     vlan_ids:
         description: VLAN ids for a VLAN backed Segment.
                      Can be a VLAN id or a range of VLAN ids specified with '-'
                      in between.
+
         type: list
     subnets:
         description: Subnets that belong to this Policy Segment.
         type: dict
         suboptions:
+
             dhcp_ranges:
                 description: DHCP address ranges for dynamic IP allocation.
                              DHCP address ranges are used for dynamic IP
@@ -376,40 +430,51 @@ def present(
                              Existing values cannot be deleted or modified, but
                              additional DHCP ranges can be added.
                              Formats, e.g. 10.12.2.64/26, 10.12.2.2-10.12.2.50
+
                 type: list
             gateway_address:
                 description: Gateway IP address.
                              Gateway IP address in CIDR format for both IPv4
                              and IPv6.
+
                 type: str
     segment_ports:
         type: list
         description: Add the Segment Ports to be create, updated, or deleted in this section
         element: dict
         suboptions:
+
             address_bindings:
                 description: Static address binding used for the port.
                 type: list
                 elements: dict
                 suboptions:
                 ip_address:
+
                     description: IP Address for port binding.
                     type: str
+
                 mac_address:
                     description: Mac address for port binding.
                     type: str
+
                 vlan_id:
                     description: VLAN ID for port binding.
                     type: str
+
             attachment:
+
                 description: VIF attachment.
                 type: dict
                 suboptions:
+
                     allocate_addresses:
                         description: Indicate how IP will be
                                     allocated for the port.
+
                         type: str
                         choices:
+
                             - IP_POOL
                             - MAC_POOL
                             - BOTH
@@ -418,11 +483,13 @@ def present(
                         description: ID used to identify/look up a
                                      child attachment behind a
                                      parent attachment.
+
                         type: str
                     context_id:
                         description: Parent VIF ID if type is CHILD,
                                      Transport node ID if type is
                                      INDEPENDENT.
+
                         type: str
                     id:
                         description: VIF UUID on NSX Manager.
@@ -433,50 +500,72 @@ def present(
                             - Not valid when type is INDEPENDENT, mainly
                               used to identify traffic from different ports
                               in container use case
+
                         type: int
+
                     type:
                         description: Type of port attachment.
+
                         type: str
+
                         choices:
                             - PARENT
                             - CHILD
                             - INDEPENDENT
+
             display_name:
+
                 description:
                     - Segment Port display name.
                     - Either this or id must be specified. If both are
                       specified, id takes precedence.
+
                 type: str
+
             description:
+
                 description:
                     - Segment description.
+
                 type: str
+
             extra_configs:
+
                 description:
                     - Extra configs on segment port
                     - This property could be used for vendor specific
                       configuration in key value string pairs. Segment port
                       setting will override segment setting if the same key was
                       set on both segment and segment port.
+
                 type: list
                 element: dict
                 suboptions:
+
                     config_pair:
                         description: Key value pair in string for the
                                      configuration
+
                         type: dict
+
                         required: true
+
                         suboptions:
+
                             key:
                                 description: Key
                                 type: str
                             value:
                                 description: Value
                                 type: str
+
             id:
                 description: The id of the Policy Segment Port.
+
                 type: str
+
             ignored_address_bindings:
+
                 description:
                     - Address bindings to be ignored by IP Discovery module
                       IP Discovery module uses various mechanisms to discover
@@ -486,36 +575,55 @@ def present(
                       discovered bindings, then those address bindings can be
                       provided here. Currently IP range in CIDR format is not
                       supported.
+
                 type: dict
+
                 suboptions:
+
                 ip_address:
                     description: IP Address for port binding.
                     type: str
+
             mac_address:
+
                 description: Mac address for port binding.
                 type: str
+
             vlan_id:
                 description: VLAN ID for port binding.
                 type: str
+
             state:
+
                 choices:
+
                     - present
                     - absent
+
                 description:
+
                     - State can be either 'present' or 'absent'. 'present' is
                       used to create or update resource. 'absent' is used to
                       delete resource
                     - Required if I(id != null)
+
             tags:
+
                 description: Opaque identifiers meaningful to the API user.
+
                 type: dict
+
                 suboptions:
+
                     scope:
                         description: Tag scope.
                         type: str
+
                     tag:
                         description: Tag value.
                         type: str
+
+
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
     if state and str(state).lower() == "absent":
@@ -734,9 +842,13 @@ def absent(
 ):
     """
     Deletes segment with the given display_name and all its sub-resources
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_segment.absent hostname=nsxt-manager.local username=admin ...
+
         delete_segment:
           nsxt_policy_segment.absent:
             - name: <Name of the operation>
@@ -746,27 +858,36 @@ def absent(
               display_name: <display name of segment>
               cert: <certificate>
               verify_ssl: <False/True>
+
         name
             Name of the operation to perform
+
         hostname
             The host name of NSX-T manager
+
         username
             Username to connect to NSX-T manager
+
         password
             Password to connect to NSX-T manager
+
         display_name
             Display name of the segment to delete
+
         verify_ssl
             (Optional) Option to enable/disable SSL verification. Enabled by default.
             If set to False, the certificate validation is skipped.
+
         cert
             (Optional) Path to the SSL certificate file to connect to NSX-T manager.
             The certificate can be retrieved from browser.
+
         cert_common_name
             (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
              verification. If the client certificate common name and hostname do not match (in case of self-signed
              certificates), specify the certificate common name as part of this parameter. This value is then used to
              compare against certificate common name.
+
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
 

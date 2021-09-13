@@ -16,6 +16,7 @@ import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
 from pyVim import connect
+from saltext.vmware.utils.connect import get_service_instance
 
 
 @pytest.fixture(scope="package")
@@ -53,20 +54,17 @@ def integration_test_config():
         with config_path.open() as f:
             return json.load(f)
     except Exception as e:  # pylint: disable=broad-except
-        pytest.skip(f"Unable to load config from {config_path} - {e}")
+        return None
 
 
 @pytest.fixture(scope="session")
 def service_instance(integration_test_config):
     config = integration_test_config
-    if config.get("skip_ssl_verify", True):
-        ctx = ssl._create_unverified_context()
-    else:
-        ctx = ssl.create_default_context()
-    si = connect.SmartConnect(  # pylint: disable=invalid-name
-        host=config["host"], user=config["user"], pwd=config["password"], sslContext=ctx
-    )
-    return si
+    try:
+        si = get_service_instance(opts={"vmware_config": config.copy()} if config else None)
+        return si
+    except Exception as e:  # pylint: disable=broad-except
+        pytest.skip(f"Unable to create service instance from config. Error = {e}")
 
 
 @pytest.fixture
