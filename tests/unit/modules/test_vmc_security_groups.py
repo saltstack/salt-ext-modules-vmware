@@ -354,4 +354,4 @@ def test_assert_security_groups_update_return_existing_in_case_of_failure(
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         mock_vmc_security_groups_get_by_id.return_value = existing
         actual_args.update(common_actual_args)
-        assert vmc_security_groups.update(**actual_args) == existing
+        assert vmc_security_groups.update(**actual_args) == expected_payload
