@@ -51,15 +51,13 @@ Example:
                  thumbprint: "e7fd7dd84267da10f991812ca62b2bedea3a4a62965396a04728da1e7f8e1cb9"
 """
 import atexit
-import json
 import logging
 import ssl
 
-import requests
 import salt.utils.dictdiffer
-from pyVim import connect
+import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as connect
 from pyVmomi import vim
-from pyVmomi import vmodl
 
 log = logging.getLogger(__name__)
 
@@ -77,119 +75,18 @@ def __virtual__():
     return "nsxt_transport_node"
 
 
-# TODO Check if we can replace it with context managers
-def _establish_vcenter_connection(vcenter_host, username, password, ret):
-    try:
-        service_instance = connect.SmartConnect(
-            host=vcenter_host, user=username, pwd=password, port=443
-        )
-        if not service_instance:
-            ret["result"] = False
-            ret[
-                "comment"
-            ] = "Fail to connect to the specified vCentre host using the given credentials"
-            return
+def _connect_with_vcentre(vcenter_host, username, password, ret):
 
-        atexit.register(connect.Disconnect, service_instance)
+    service_instance = connect.get_service_instance(
+        host=vcenter_host,
+        username=username,
+        password=password,
+        protocol="https",
+        port="443",
+        verify_ssl=False,
+    )
 
-    except (requests.ConnectionError, ssl.SSLError):
-        try:
-            sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-            sslContext.verify_mode = ssl.CERT_NONE
-            service_instance = connect.SmartConnect(
-                host=vcenter_host, user=username, pwd=password, port=443, sslContext=sslContext
-            )
-            if not service_instance:
-                ret["result"] = False
-                ret[
-                    "comment"
-                ] = "Fail to connect to the specified vCentre host using the given credentials"
-                return
-
-            atexit.register(connect.Disconnect, service_instance)
-        except vmodl.MethodFault as error:
-            ret["result"] = False
-            ret["comment"] = "Caught vmodl fault while connecting to vCentre : {}".format(error.msg)
-            return
-
-    return service_instance.RetrieveContent()
-
-
-def _get_resource_id_from_name(vcenter_host, username, password, resource_type, resource_name, ret):
-    try:
-        content = _establish_vcenter_connection(vcenter_host, username, password, ret)
-
-        if resource_type == "host":
-            objview = content.viewManager.CreateContainerView(
-                content.rootFolder, [vim.HostSystem], True
-            )
-
-        elif resource_type == "cluster":
-            objview = content.viewManager.CreateContainerView(
-                content.rootFolder, [vim.ClusterComputeResource], True
-            )
-
-        elif resource_type == "storage":
-            objview = content.viewManager.CreateContainerView(
-                content.rootFolder, [vim.Datastore], True
-            )
-
-        elif resource_type == "network":
-            objview = content.viewManager.CreateContainerView(
-                content.rootFolder, [vim.Network], True
-            )
-        else:
-            ret["result"] = False
-            ret[
-                "comment"
-            ] = "Resource type provided by the user doesn't exist or it is not supported"
-            return
-
-        all_resources = objview.view
-        objview.Destroy()
-        for resource in all_resources:
-            if resource.name == resource_name:
-                return resource._moId
-        ret["result"] = False
-        ret["comment"] = "{} doesnt exist in {}".format(resource_name, resource_type)
-        return
-    except vmodl.MethodFault as error:
-        ret["result"] = False
-        ret["comment"] = "Caught vmodl fault while fetching info from vCentre {}".format(error.msg)
-        return
-
-
-def _get_data_network_id_from_name(vcenter_host, username, password, data_network_name_list, ret):
-    """
-    params:
-    - data_network_name_list: List of data network names
-    result:
-    list of data network ids.
-    """
-    try:
-        content = _establish_vcenter_connection(vcenter_host, username, password, ret)
-        objview = content.viewManager.CreateContainerView(content.rootFolder, [vim.Network], True)
-        all_networks = objview.view
-        objview.Destroy()
-        network_dict = {}
-        for network in all_networks:
-            network_dict[network.name] = network._moId
-        data_network_id_list = []
-        for data_network_name in data_network_name_list:
-            if data_network_name in network_dict:
-                data_network_id_list.append(str(network_dict[data_network_name]))
-            else:
-                ret["result"] = False
-                ret["comment"] = "data network %s does not exit in the available network" % (
-                    data_network_name
-                )
-                return
-
-        return data_network_id_list
-    except vmodl.MethodFault as error:
-        ret["result"] = False
-        ret["comment"] = "Caught vmodl fault while fetching info from vCentre {}".format(error.msg)
-        return
+    return service_instance
 
 
 def inject_vcenter_info(hostname, username, password, ret, **kwargs):
@@ -232,35 +129,52 @@ def inject_vcenter_info(hostname, username, password, ret, **kwargs):
         if "host" in vm_deployment_config:
             host = vm_deployment_config.pop("host", None)
 
-            host_id = _get_resource_id_from_name(vc_ip, vc_username, vc_password, "host", host, ret)
+            host_id = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
+                vim.HostSystem,
+                host,
+                property_name="name",
+            )
 
             vm_deployment_config["host_id"] = str(host_id)
 
         storage = vm_deployment_config.pop("storage", None)
         if storage is not None:
-            storage_id = _get_resource_id_from_name(
-                vc_ip, vc_username, vc_password, "storage", storage, ret
+            storage_id = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
+                vim.Datastore,
+                storage,
+                property_name="name",
             )
             vm_deployment_config["storage_id"] = str(storage_id)
 
         cluster = vm_deployment_config.pop("compute", None)
         if cluster is not None:
-            cluster_id = _get_resource_id_from_name(
-                vc_ip, vc_username, vc_password, "cluster", cluster, ret
+            cluster_id = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
+                vim.ClusterComputeResource,
+                cluster,
+                property_name="name",
             )
             vm_deployment_config["compute_id"] = str(cluster_id)
 
         management_network = vm_deployment_config.pop("management_network", None)
         if management_network is not None:
-            management_network_id = _get_resource_id_from_name(
-                vc_ip, vc_username, vc_password, "network", management_network, ret
+            management_network_id = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
+                vim.Network,
+                management_network,
+                property_name="name",
             )
             vm_deployment_config["management_network_id"] = str(management_network_id)
 
         data_networks = vm_deployment_config.pop("data_networks", None)
         if data_networks is not None:
-            data_network_ids = _get_data_network_id_from_name(
-                vc_ip, vc_username, vc_password, data_networks, ret
+            data_network_ids = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
+                vim.Network,
+                data_networks,
+                property_name="name",
             )
             vm_deployment_config["data_network_ids"] = data_network_ids
 

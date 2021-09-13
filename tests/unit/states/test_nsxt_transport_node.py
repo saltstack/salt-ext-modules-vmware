@@ -1250,42 +1250,42 @@ def test_absent_with_error_in_delete():
 
 # TODO once we have a dedicate pipeline and vcentre running for nsxt we can enable this test.
 # TODO it will make validation and check if we can connect with VC provided the credentials
-# def test_present_with_given_payload_vcentre():
-#     mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
-#     mocked_get_response = _get_mocked_data_get()
-#     mocked_get_ip_pool_response = _get_mocked_data_ip_pool()
-#     mocked_get_transport_zone_response = __get_mocked_data_transport_zone()
-#     mocked_get_compute_manager_response = _get_mocked_compute_manager_response()
-#     mocked_get_uplink_profile_response = _get_mocked_uplink_profile_response()
-#     mock_create_response = MagicMock(return_value=mocked_ok_response)
-#     mock_get_response = MagicMock(return_value=mocked_get_response)
-#     mock_ip_pool_response = MagicMock(return_value=mocked_get_ip_pool_response)
-#     mock_transport_zone_response = MagicMock(return_value=mocked_get_transport_zone_response)
-#     mock_get_compute_manager_response = MagicMock(return_value=mocked_get_compute_manager_response)
-#     mock_get_uplink_profile_response = MagicMock(return_value=mocked_get_uplink_profile_response)
-#     with patch.dict(
-#         nsxt_transport_node.__salt__,
-#         {
-#             "nsxt_transport_node.get_by_display_name": mock_get_response,
-#             "nsxt_transport_node.create": mock_create_response,
-#             "nsxt_ip_pools.get_by_display_name": mock_ip_pool_response,
-#             "nsxt_transport_zone.get_by_display_name": mock_transport_zone_response,
-#             "nsxt_compute_manager.get_by_display_name": mock_get_compute_manager_response,
-#             "nsxt_uplink_profiles.get_by_display_name": mock_get_uplink_profile_response,
-#         },
-#     ):
-#         result = nsxt_transport_node.present(
-#             name="Test-Create-Transport-Zone",
-#             hostname=mocked_hostname,
-#             username="username",
-#             password="password",
-#             display_name="Check-Transport-Node",
-#             resource_type="HostNode",
-#             node_deployment_info=_node_credentials_expanded_vc,
-#             host_switch_spec=_host_credentials_expanded,
-#             transport_zone_endpoints=_transport_zone_endpoints,
-#         )
-#         assert result is not None
-#         assert result["comment"] == "Transport node created successfully"
-#         assert result["result"] == True
-#         assert result["changes"]["new"] == mocked_ok_response
+def test_present_with_given_payload_vcentre():
+    mocked_hostname, mocked_ok_response, mocked_error_response = _get_mocked_data()
+    mocked_get_response = _get_mocked_data_get()
+    mocked_get_ip_pool_response = _get_mocked_data_ip_pool()
+    mocked_get_transport_zone_response = __get_mocked_data_transport_zone()
+    mocked_get_compute_manager_response = _get_mocked_compute_manager_response()
+    mocked_get_uplink_profile_response = _get_mocked_uplink_profile_response()
+    mock_create_response = MagicMock(return_value=mocked_ok_response)
+    mock_get_response = MagicMock(return_value=mocked_get_response)
+    mock_ip_pool_response = MagicMock(return_value=mocked_get_ip_pool_response)
+    mock_transport_zone_response = MagicMock(return_value=mocked_get_transport_zone_response)
+    mock_get_compute_manager_response = MagicMock(return_value=mocked_get_compute_manager_response)
+    mock_get_uplink_profile_response = MagicMock(return_value=mocked_get_uplink_profile_response)
+    with patch.dict(
+        nsxt_transport_node.__salt__,
+        {
+            "nsxt_transport_node.get_by_display_name": mock_get_response,
+            "nsxt_transport_node.create": mock_create_response,
+            "nsxt_ip_pools.get_by_display_name": mock_ip_pool_response,
+            "nsxt_transport_zone.get_by_display_name": mock_transport_zone_response,
+            "nsxt_compute_manager.get_by_display_name": mock_get_compute_manager_response,
+            "nsxt_uplink_profiles.get_by_display_name": mock_get_uplink_profile_response,
+        },
+    ):
+        result = nsxt_transport_node.present(
+            name="Test-Create-Transport-Zone",
+            hostname=mocked_hostname,
+            username="username",
+            password="password",
+            display_name="Check-Transport-Node",
+            resource_type="HostNode",
+            node_deployment_info=_node_credentials_expanded_vc,
+            host_switch_spec=_host_credentials_expanded,
+            transport_zone_endpoints=_transport_zone_endpoints,
+        )
+        assert result is not None
+        assert result["comment"] == "Transport node created successfully"
+        assert result["result"] == True
+        assert result["changes"]["new"] == mocked_ok_response
