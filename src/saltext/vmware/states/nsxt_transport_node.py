@@ -50,9 +50,7 @@ Example:
                  password: "ca$hc0w"
                  thumbprint: "e7fd7dd84267da10f991812ca62b2bedea3a4a62965396a04728da1e7f8e1cb9"
 """
-import atexit
 import logging
-import ssl
 
 import salt.utils.dictdiffer
 import saltext.vmware.utils.common as utils_common
@@ -75,29 +73,14 @@ def __virtual__():
     return "nsxt_transport_node"
 
 
-def _connect_with_vcentre(vcenter_host, username, password, ret):
+def _connect_with_vcentre(vcenter_host, username, password):
+    vmware_config = {"host": vcenter_host, "user": username, "password": password}
 
-    service_instance = connect.get_service_instance(
-        host=vcenter_host,
-        username=username,
-        password=password,
-        protocol="https",
-        port="443",
-        verify_ssl=False,
-    )
-
+    service_instance = connect.get_service_instance(opts={"vmware_config": vmware_config})
     return service_instance
 
 
 def inject_vcenter_info(hostname, username, password, ret, **kwargs):
-    """
-    params:
-    - transport_node_params: These are the transport node parameters passed from sls file
-    result:
-
-    - takes the vcenter parameters accepted by sls and converts it into the form accepted
-      by transport node api using pyvmomi functions.
-    """
 
     node_deployment_info = kwargs.get("node_deployment_info")
     if node_deployment_info:
@@ -126,57 +109,39 @@ def inject_vcenter_info(hostname, username, password, ret, **kwargs):
 
         vc_password = vm_deployment_config.pop("vc_password", None)
 
-        if "host" in vm_deployment_config:
-            host = vm_deployment_config.pop("host", None)
-
-            host_id = utils_common.get_mor_by_property(
-                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
-                vim.HostSystem,
-                host,
-                property_name="name",
-            )
-
-            vm_deployment_config["host_id"] = str(host_id)
+        host = vm_deployment_config.pop("host", None)
+        if host:
+            vm_deployment_config["host_id"] = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password), vim.HostSystem, host
+            )._moId
 
         storage = vm_deployment_config.pop("storage", None)
-        if storage is not None:
-            storage_id = utils_common.get_mor_by_property(
-                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
-                vim.Datastore,
-                storage,
-                property_name="name",
-            )
-            vm_deployment_config["storage_id"] = str(storage_id)
+        if storage:
+            vm_deployment_config["storage_id"] = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password), vim.Datastore, storage
+            )._moId
 
         cluster = vm_deployment_config.pop("compute", None)
-        if cluster is not None:
-            cluster_id = utils_common.get_mor_by_property(
-                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
+        if cluster:
+            vm_deployment_config["compute_id"] = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password),
                 vim.ClusterComputeResource,
                 cluster,
-                property_name="name",
-            )
-            vm_deployment_config["compute_id"] = str(cluster_id)
+            )._moId
 
         management_network = vm_deployment_config.pop("management_network", None)
-        if management_network is not None:
-            management_network_id = utils_common.get_mor_by_property(
-                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
+        if management_network:
+            vm_deployment_config["management_network_id"] = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password),
                 vim.Network,
                 management_network,
-                property_name="name",
-            )
-            vm_deployment_config["management_network_id"] = str(management_network_id)
+            )._moId
 
         data_networks = vm_deployment_config.pop("data_networks", None)
-        if data_networks is not None:
-            data_network_ids = utils_common.get_mor_by_property(
-                _connect_with_vcentre(vc_ip, vc_username, vc_password, ret),
-                vim.Network,
-                data_networks,
-                property_name="name",
-            )
-            vm_deployment_config["data_network_ids"] = data_network_ids
+        if data_networks:
+            vm_deployment_config["data_network_ids"] = utils_common.get_mor_by_property(
+                _connect_with_vcentre(vc_ip, vc_username, vc_password), vim.Network, data_networks
+            )._moId
 
         if "host" in vm_deployment_config:
             vm_deployment_config.pop("host", None)
@@ -184,6 +149,7 @@ def inject_vcenter_info(hostname, username, password, ret, **kwargs):
         vm_deployment_config.pop("storage", None)
         vm_deployment_config.pop("management_network", None)
         vm_deployment_config.pop("data_networks", None)
+
     elif vm_deployment_config:
         if "host" in vm_deployment_config:
             host_id = vm_deployment_config.pop("host", None)
