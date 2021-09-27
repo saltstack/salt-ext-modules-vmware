@@ -16,6 +16,7 @@ Execution Modules
     saltext.vmware.modules.datastore
     saltext.vmware.modules.disk
     saltext.vmware.modules.dvs
+    saltext.vmware.modules.dvswitch
     saltext.vmware.modules.esxi
     saltext.vmware.modules.extra
     saltext.vmware.modules.firewall

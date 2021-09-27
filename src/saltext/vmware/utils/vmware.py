@@ -924,6 +924,63 @@ def update_dvs(dvs_ref, dvs_config_spec):
     utils_common.wait_for_task(task, dvs_name, str(task.__class__))
 
 
+def update_dvs_version(dvs_ref, dvs_product_spec):
+    """
+    Updates a distributed virtual switch version with the config_spec.
+
+    dvs_ref
+        The DVS reference.
+
+    dvs_product_spec
+        The updated config spec (vim.dvs.ProductSpec()) to be applied to
+        the DVS.
+    """
+    dvs_name = utils_common.get_managed_object_name(dvs_ref)
+    log.trace("Updating dvs '%s'", dvs_name)
+    try:
+        task = dvs_ref.PerformDvsProductSpecOperation_Task("upgrade", dvs_product_spec)
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    utils_common.wait_for_task(task, dvs_name, str(task.__class__))
+
+
+def update_dvs_health(dvs_ref, dvs_health_spec):
+    """
+    Updates a distributed virtual switch health checks with the config_spec.
+
+    dvs_ref
+        The DVS reference.
+
+    dvs_health_spec
+        The updated config spec to be applied to the DVS.
+    """
+    dvs_name = utils_common.get_managed_object_name(dvs_ref)
+    log.trace("Updating dvs '%s'", dvs_name)
+    try:
+        task = dvs_ref.UpdateDVSHealthCheckConfig_Task(healthCheckConfig=dvs_health_spec)
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    utils_common.wait_for_task(task, dvs_name, str(task.__class__))
+
+
 def set_dvs_network_resource_management_enabled(dvs_ref, enabled):
     """
     Sets whether NIOC is enabled on a DVS.
