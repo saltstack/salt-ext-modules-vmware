@@ -1,6 +1,7 @@
 """
 Salt State file to create/update/delete transport nodes
 Example:
+
 .. code-block:: yaml
 
     create_transport_node:
@@ -439,8 +440,9 @@ def present(
     """
      Creates/Update(if present with the same name) of transport nodes
      .. code-block:: yaml
-     create_transport_nodes:
-     nsxt_transport_nodes.present:
+
+         create_transport_nodes:
+           nsxt_transport_nodes.present:
 
              hostname: <nsxt-hostname>
              username: <nsxt-username>
@@ -924,16 +926,17 @@ def absent(
     """
     Deletes an Transport Nodes of the of provided name (if present)
     .. code-block:: yaml
-    delete_ip_pool:
-    nsxt_transport_node.absent:
 
-    - name: transport node delete
-          hostname: <hostname>
-          username: <username>
-          password: <password>
-          certificate: <certificate>
-          verify_ssl: <False/True>
-          display_name: <ip pool name>
+        delete_ip_pool:
+          nsxt_transport_node.absent:
+
+            - name: transport node delete
+              hostname: <hostname>
+              username: <username>
+              password: <password>
+              certificate: <certificate>
+              verify_ssl: <False/True>
+              display_name: <ip pool name>
 
     hostname
         The host name of NSX-T manager
