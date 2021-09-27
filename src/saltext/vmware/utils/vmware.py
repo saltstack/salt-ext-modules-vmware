@@ -926,7 +926,7 @@ def update_dvs(dvs_ref, dvs_config_spec):
 
 def update_dvs_version(dvs_ref, dvs_product_spec):
     """
-    Updates a distributed virtual switch version with the config_spec.
+    Updates a distributed virtual switch version with the product spec.
 
     dvs_ref
         The DVS reference.
@@ -955,7 +955,7 @@ def update_dvs_version(dvs_ref, dvs_product_spec):
 
 def update_dvs_health(dvs_ref, dvs_health_spec):
     """
-    Updates a distributed virtual switch health checks with the config_spec.
+    Updates a distributed virtual switch health checks with the health spec.
 
     dvs_ref
         The DVS reference.
