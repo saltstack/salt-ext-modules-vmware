@@ -71,7 +71,7 @@ def manage(
     service_instance=None,
 ):
     """
-    Creates a new distributed vSwitch.
+    Creates a new distributed vSwitch or updates an existing vSwitch.
 
     switch_name
         Name of the distributed vSwitch to create or update.
@@ -107,25 +107,25 @@ def manage(
         Administrator contact information. Optional. Default: "".
 
     network_forged_transmits
-        Allow forged transmits. Optional. Valid values: "True", "False".
+        Allow forged transmits. Type: Boolean. Optional. Valid values: "True", "False".
 
     network_mac_changes
-        Allow mac changes. Optional. Valid values: "True", "False".
+        Allow mac changes. Type: Boolean. Optional. Valid values: "True", "False".
 
     network_promiscuous
-        Allow promiscuous mode. Optional. Valid values: "True", "False".
+        Allow promiscuous mode. Type: Boolean. Optional. Valid values: "True", "False".
 
     health_check_teaming_failover
-        Enable teaming and failover health check. Optional. Valid values: "True", "False".
+        Enable teaming and failover health check. Type: Boolean. Optional. Valid values: "True", "False".
 
     health_teaming_failover_interval
-        Teaming and failover health check interval. Optional.
+        Teaming and failover health check interval in minutes. Optional.
 
     health_vlan_mtu
-        Enable VLAN and MTU health check. Optional. Valid values: "True", "False".
+        Enable VLAN and MTU health check. Type: Boolean. Optional. Valid values: "True", "False".
 
     health_vlan_mtu_interval
-        VLAN and MTU health check interval. Optional.
+        VLAN and MTU health check interval in minutes. Optional.
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. Optional.
@@ -170,6 +170,8 @@ def manage(
 
         if contact_name or contact_description:
             contact_info_spec = vim.DistributedVirtualSwitch.ContactInfo()
+            contact_info_spec.contact = contact_description
+            contact_info_spec.name = contact_name
             if switch_ref:
                 contact_info_spec.contact = contact_description or switch_ref.config.contact.contact
                 contact_info_spec.name = contact_name or switch_ref.config.contact.name
