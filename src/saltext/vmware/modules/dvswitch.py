@@ -162,7 +162,7 @@ def manage(
         if switch_version:
             product_spec = vim.dvs.ProductSpec()
             product_spec.version = switch_version
-            if not switch_ref:
+            if spec:
                 spec.productInfo = product_spec
 
         if switch_description:
@@ -199,6 +199,9 @@ def manage(
             else:
                 config_spec.multicastFilteringMode = multicast_filtering_mode
 
+        if not switch_ref:
+            utils_vmware.create_dvs(dc_ref=dc_ref, dvs_name=switch_name, dvs_create_spec=spec)
+
         if (
             network_promiscuous is not None
             or network_mac_changes is not None
@@ -206,7 +209,6 @@ def manage(
         ):
             policy = vim.dvs.VmwareDistributedVirtualSwitch.SecurityPolicy()
             if not switch_ref:
-                utils_vmware.create_dvs(dc_ref=dc_ref, dvs_name=switch_name, dvs_create_spec=spec)
                 dc_ref, switch_ref, config_spec = _get_switch_config_spec(
                     service_instance=service_instance,
                     datacenter_name=datacenter_name,
@@ -239,7 +241,6 @@ def manage(
             or health_vlan_mtu_interval is not None
         ):
             if not switch_ref:
-                utils_vmware.create_dvs(dc_ref=dc_ref, dvs_name=switch_name, dvs_create_spec=spec)
                 dc_ref, switch_ref, config_spec = _get_switch_config_spec(
                     service_instance=service_instance,
                     datacenter_name=datacenter_name,
@@ -264,9 +265,7 @@ def manage(
                         config.interval = health_teaming_failover_interval
                     health_spec.append(config)
 
-        if not switch_ref:
-            utils_vmware.create_dvs(dc_ref=dc_ref, dvs_name=switch_name, dvs_create_spec=spec)
-        else:
+        if switch_ref:
             utils_vmware.update_dvs(dvs_ref=switch_ref, dvs_config_spec=config_spec)
             if product_spec:
                 utils_vmware.update_dvs_version(dvs_ref=switch_ref, dvs_product_spec=product_spec)
