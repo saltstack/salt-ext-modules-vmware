@@ -58,11 +58,17 @@ def present(
     """
     Creates or Updates(if present with same display_name) tier 1 gateway and its sub-resources with the given
     specifications.
+
     Note: To delete any subresource of tier 1 provide state parameter as absent
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_tier1.present hostname=nsxt-manager.local username=admin ...
+
     .. code-block:: yaml
+
       nsxt_policy_tier1.present:
         - name: Create tier 1 gateway
           hostname: <hostname>
@@ -128,61 +134,82 @@ def present(
                         - <ip-address>
                       prefix_len: <prefix-len-number>
                   urpf_mode: <urpf-mode-enum>
+
     hostname
         The host name of NSX-T manager
+
     username
         Username to connect to NSX-T manager
+
     password
         Password to connect to NSX-T manager
+
     verify_ssl
         Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to NSX-T manager.
         The certificate can be retrieved from browser.
+
     cert_common_name
         (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
         verification. If the client certificate common name and hostname do not match (in case of self-signed
         certificates), specify the certificate common name as part of this parameter. This value is then used to
         compare against
+
     display_name:
+
         description:
             - Display name.
             - If resource ID is not specified, display_name will be used as ID.
+
         required: true
         type: str
+
     state:
         description: present or absent keyword is used as an indetifier, default value is present.
                     If a user has provided absent that resource/sub-resource will be deleted
+
     tags:
         description: Opaque identifiers meaningful to the API user.
         type: dict
         suboptions:
+
             scope:
                 description: Tag scope.
                 required: true
                 type: str
+
             tag:
                 description: Tag value.
                 required: true
                 type: str
+
     id:
         description: Tier-1 ID
         required: false
         type: str
+
     description:
         description: Tier-1 description
         type: str
+
     default_rule_logging:
         description: Enable logging for whitelisted rule.
                      Indicates if logging should be enabled for the default
                      whitelisting rule.
+
         default: false
+
     disable_firewall:
         description: Disable or enable gateway fiewall.
+
         default: False
         type: bool
+
     failover_mode:
+
         description: Determines the behavior when a Tier-1 instance in
                      ACTIVE-STANDBY high-availability mode restarts
                      after a failure. If set to PREEMPTIVE, the preferred node
@@ -191,28 +218,42 @@ def present(
                      the instance that restarted will remain secondary.
                      This property must not be populated unless the
                      ha_mode property is set to ACTIVE_STANDBY.
+
         choices:
+
             - 'NON_PREEMPTIVE'
             - 'PREEMPTIVE'
+
         type: str
+
     enable_standby_relocation:
+
         description:
             - Flag to enable standby service router relocation.
             - Standby relocation is not enabled until edge cluster is
               configured for Tier1.
+
         type: bool
         default: false
+
     force_whitelisting:
+
         description: Flag to add whitelisting FW rule during
                      realization.
+
         default: False
         type: bool
+
     intersite_config:
+
         description: Inter site routing configuration when the gateway is
                      streched.
+
         type: dict
         suboptions:
+
             fallback_sites:
+
                 description: Fallback site to be used as new primary
                              site on current primary site failure.
                              Disaster recovery must be initiated via
@@ -220,17 +261,23 @@ def present(
                              supported only for T0 gateway. T1 gateway
                              will follow T0 gateway's primary site
                              during disaster recovery.
+
                 type: list
+
             intersite_transit_subnet:
+
                 description:
                     - Transit subnet in CIDR format
                     - IPv4 subnet for inter-site transit segment
                       connecting service routers across sites for
                       stretched gateway. For IPv6 link local subnet is
                       auto configured
+
                 type: str
                 default: "169.254.32.0/20"
+
             last_admin_active_epoch:
+
                 description:
                     - Epoch of last time admin changing active
                       LocaleServices
@@ -241,8 +288,11 @@ def present(
                       not in sync then User can optionally override
                       this. New value must be higher than the current
                       value.
+
                 type: int
+
             primary_site_path:
+
                 description:
                     - Primary egress site for gateway.
                     - Primary egress site for gateway. T0/T1 gateway in
@@ -253,36 +303,57 @@ def present(
                       secondary site prefers routes learned from primary over
                       locally learned routes. This field is not applicable for
                       T1 gateway with no services
+
                 type: str
+
     ipv6_ndra_profile_id:
+
         description: IPv6 NDRA profile configuration on Tier1.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_dad_profile_id.
+
         type: str
+
     ipv6_ndra_profile_display_name:
+
         description: Same as ipv6_ndra_profile_id. Either one can be specified.
                      If both are specified, ipv6_ndra_profile_id takes
                      precedence.
+
         type: str
+
     ipv6_dad_profile_id:
+
         description: IPv6 DRA profile configuration on Tier1.
                      Either or both NDRA and/or DAD profiles can be
                      configured. Related attribute ipv6_ndra_profile_id.
+
         type: str
+
     ipv6_dad_profile_display_name:
+
         description: Same as ipv6_dad_profile_id. Either one can be specified.
                      If both are specified, ipv6_dad_profile_id takes
                      precedence.
+
         type: str
+
     dhcp_config_id:
+
         description: DHCP configuration for Segments connected to
                      Tier-1. DHCP service is configured in relay mode.
+
         type: str
+
     dhcp_config_display_name:
+
         description: Same as dhcp_config_id. Either one can be specified.
                      If both are specified, dhcp_config_id takes precedence.
+
         type: str
+
     pool_allocation:
+
         description:
             - Edge node allocation size
             - Supports edge node allocation at different sizes for routing and
@@ -291,31 +362,48 @@ def present(
             - ROUTING - Allocate edge node to provide routing services.
             - LB_SMALL, LB_MEDIUM, LB_LARGE, LB_XLARGE - Specify size of load
               balancer service that will be configured on TIER1 gateway.
+
         type: str
+
         choices:
+
             - ROUTING
             - LB_SMALL
             - LB_MEDIUM
             - LB_LARGE
             - LB_XLARGE
+
         default: ROUTING
+
     qos_profile:
+
         description: QoS Profile configuration for Tier1 router link connected
                      to Tier0 gateway.
+
         type: dict
+
         suboptions:
+
             egress_qos_profile_path:
                 description: Policy path to gateway QoS profile in egress
                              direction.
+
                 type: str
+
             ingress_qos_profile_path:
                 description: Policy path to gateway QoS profile in ingress
                              direction.
+
                 type: str
+
     route_advertisement_rules:
+
         description: Route advertisement rules and filtering
+
         type: list
+
         suboptions:
+
             action:
                 description:
                     - Action to advertise filtered routes to the connected
@@ -323,12 +411,15 @@ def present(
                 choices:
                     - PERMIT: Enables the advertisment
                     - DENY: Disables the advertisement
+
                 type: str
                 required: true
+
             name:
                 description: Display name for rule
                 type: str
                 required: true
+
             prefix_operator:
                 description:
                     - Prefix operator to filter subnets.
@@ -336,18 +427,25 @@ def present(
                       length greater than or equal to the subnets configured.
                     - EQ prefix operator filter all the routes with prefix
                       length equal to the subnets configured.
+
                 type: str
+
                 choices:
+
                     - GE
                     - EQ
+
             route_advertisement_types:
+
                 description:
                     - Enable different types of route advertisements.
                     - By default, Routes to IPSec VPN local-endpoint subnets
                       (TIER1_IPSEC_LOCAL_ENDPOINT) are advertised if no value
                       is supplied here.
+
                 type: list
                 choices:
+
                     - 'TIER1_STATIC_ROUTES'
                     - 'TIER1_CONNECTED'
                     - 'TIER1_NAT'
@@ -355,17 +453,22 @@ def present(
                     - 'TIER1_LB_SNAT'
                     - 'TIER1_DNS_FORWARDER_IP'
                     - 'TIER1_IPSEC_LOCAL_ENDPOINT'
+
             subnets:
                 description: Network CIDRs to be routed.
                 type: list
+
     route_advertisement_types:
+
         description:
             - Enable different types of route advertisements.
             - By default, Routes to IPSec VPN local-endpoint subnets
               (TIER1_IPSEC_LOCAL_ENDPOINT) are advertised if no value is
               supplied here.
+
         type: list
         choices:
+
             - 'TIER1_STATIC_ROUTES'
             - 'TIER1_CONNECTED'
             - 'TIER1_NAT'
@@ -373,178 +476,252 @@ def present(
             - 'TIER1_LB_SNAT'
             - 'TIER1_DNS_FORWARDER_IP'
             - 'TIER1_IPSEC_LOCAL_ENDPOINT'
+
     tier0_id:
+
         description: Tier-1 connectivity to Tier-0
         type: str
+
     tier0_display_name:
+
         description: Same as tier0_id. Either one can be specified.
                     If both are specified, tier0_id takes precedence.
+
         type: str
+
     static_routes:
+
         type: list
         element: dict
         description: This is a list of Static Routes that need to be created,updated, or deleted
+
         suboptions:
+
             id:
                 description: Tier-1 Static Route ID.
                 required: false
+
                 type: str
+
             display_name:
                 description:
                     - Tier-1 Static Route display name.
                     - Either this or id must be specified. If both are
                       specified, id takes precedence.
+
                 required: true
                 type: str
+
             description:
+
                 description:
                     - Tier-1 Static Route description.
+
                 type: str
+
             state:
+
                 description:
                     - State can be either 'present' or 'absent'. 'present' is
                       used to create or update resource. 'absent' is used to
                       delete resource.
                     - Must be specified in order to modify the resource
+
                 choices:
+
                     - present
                     - absent
+
             network:
                 description: Network address in CIDR format
                 required: true
                 type: str
+
             next_hops:
                 description: Next hop routes for network
                 type: list
                 elements: dict
+
                 suboptions:
+
                     admin_distance:
                         description: Cost associated with next hop route
                         type: int
                         default: 1
+
                 ip_address:
                     description: Next hop gateway IP address
                     type: str
+
                 scope:
                     description:
                         - Interface path associated with current route
                         - For example, specify a policy path referencing the
                           IPSec VPN Session
+
                     type: list
+
             tags:
                 description: Opaque identifiers meaningful to the API user
                 type: dict
                 suboptions:
+
                     scope:
+
                         description: Tag scope.
                         required: true
                         type: str
+
                     tag:
                         description: Tag value.
                         required: true
                         type: str
+
     locale_services:
         type: list
         element: dict
         description: This is a list of Locale Services that need to be created,updated, or deleted
+
         suboptions:
+
             id:
                 description: Tier-1 Locale Service ID
                 type: str
+
             display_name:
                 description:
                     - Tier-1 Locale Service display name.
                     - Either this or id must be specified. If both are
                       specified, id takes precedence.
+
                 required: true
                 type: str
+
             description:
+
                 description: Tier-1 Locale Service  description
                 type: str
+
             state:
+
                 description:
                     - State can be either 'present' or 'absent'. 'present' is
                       used to create or update resource. 'absent' is used to
                       delete resource.
                     - Required if I(segp_id != null)
+
                 choices:
+
                     - present
                     - absent
+
             tags:
                 description: Opaque identifiers meaningful to the API user.
                 type: dict
                 suboptions:
+
                     scope:
+
                         description: Tag scope.
                         required: true
                         type: str
+
                     tag:
                         description: Tag value.
                         required: true
                         type: str
+
             edge_cluster_info:
                 description: Used to create path to edge cluster. Auto-assigned
                              if associated enforcement-point has only one edge
                              cluster.
+
                 type: dict
                 suboptions:
+
                     site_id:
+
                         description: site_id where edge cluster is located
                         default: default
                         type: str
+
                     enforcementpoint_id:
                         description: enforcementpoint_id where edge cluster is
                                      located
+
                         default: default
                         type: str
+
                     edge_cluster_id:
                         description: ID of the edge cluster
+
                         required: true
                         type: str
+
                     edge_cluster_display_name:
                         description:
                             - display name of the edge cluster.
                             - Either this or edge_cluster_id must be specified.
                               If both are specified, edge_cluster_id takes
                               precedence
+
                         type: str
+
             preferred_edge_nodes_info:
+
                 description: Used to create paths to edge nodes. Specified edge
                              is used as preferred edge cluster member when
                              failover mode is set to PREEMPTIVE, not
                              applicable otherwise.
+
                 type: list
                 suboptions:
+
                     site_id:
+
                         description: site_id where edge node is located
                         default: default
                         type: str
+
                     enforcementpoint_id:
+
                         description: enforcementpoint_id where edge node is
                                      located
+
                         default: default
                         type: str
+
                     edge_cluster_id:
                         description: edge_cluster_id where edge node is
                                      located
+
                         required: true
                         type: str
+
                     edge_cluster_display_name:
+
                         description:
                             - display name of the edge cluster.
                             - either this or edge_cluster_id must be specified.
                               If both are specified, edge_cluster_id takes
                               precedence
+
                         type: str
+
                     edge_node_id:
+
                         description: ID of the edge node
                         type: str
+
                     edge_node_display_name:
+
                         description:
                             - Display name of the edge node.
                             - either this or edge_node_id must be specified. If
                               both are specified, edge_node_id takes precedence
+
                         type: str
+
             route_redistribution_types:
                 description:
                     - Enable redistribution of different types of routes on
@@ -554,7 +731,9 @@ def present(
                     - This property is deprecated, please use
                       "route_redistribution_config" property to configure
                       redistribution rules.
+
                 choices:
+
                     - TIER0_STATIC - Redistribute user added
                         static routes.
                     - TIER0_CONNECTED - Redistribute all
@@ -601,32 +780,48 @@ def present(
                         Tier1.
                     - TIER1_IPSEC_LOCAL_ENDPOINT - Redistribute
                         IPSec VPN local-endpoint subnets advertised by TIER1.
+
                 type: list
+
             route_redistribution_config:
+
                 description: Configure all route redistribution properties like
                              enable/disable redistributon, redistribution rule
                              and so on.
+
                 type: dict
+
                 suboptions:
+
                     bgp_enabled:
+
                         description: Flag to enable route redistribution.
                         type: bool
                         default: false
+
                     redistribution_rules:
+
                         description: List of redistribution rules.
                         type: list
                         elements: dict
+
                         suboptions:
+
                             name:
                                 description: Rule name
                                 type: str
+
                             route_map_path:
                                 description: Route map to be associated with
                                              the redistribution rule
+
                                 type: str
+
                             route_redistribution_types:
                                 description: Tier-0 route redistribution types
+
                                 choices:
+
                                     - TIER0_STATIC - Redistribute user added
                                       static routes.
                                     - TIER0_CONNECTED - Redistribute all
@@ -674,11 +869,14 @@ def present(
                                     - TIER1_IPSEC_LOCAL_ENDPOINT - Redistribute
                                       IPSec VPN local-endpoint subnets
                                       advertised by TIER1.
+
                                 type: list
+
             ha_vip_configs:
                 type: list
                 elements: dict
                 description:
+
                     - Array of HA VIP Config.
                     - This configuration can be defined only for Active-Standby
                       Tier0 gateway to provide redundancy. For mulitple
@@ -687,16 +885,21 @@ def present(
                       interfaces. The VIP will move and will always be owned by
                       the Active node. When this property is configured,
                       configuration of dynamic-routing is not allowed.
+
                 suboptions:
+
                     enabled:
+
                         description: Flag to enable this HA VIP config.
                         default: true
                         type: bool
+
                     external_interface_info:
                         type: list
                         elements: dict
                         description: Array of external interface info
                         external_interface_paths:
+
                             description:
                                 - Policy paths to Tier0 external interfaces for
                                   providing redundancy
@@ -705,126 +908,176 @@ def present(
                                   IP will be owned by one of these interfaces
                                   depending upon which edge node is Active.
                                 - minimum 2 values should be present
+
                             type: list
+
                         tier0_display_name:
+
                             description: tier0 display name to create the external
                                          interface paths. Can be skipped if external
                                          interface paths are provided
+
                         locale-service_display_name:
                             description: locale-service display name attached to the provided
                                          tier0. Can be skipped if external interface paths are provided
+
                         ls_interface_display_name:
                             description: interface attached to the provided tier0 and locale-service
                                          Can be skipped if external interface paths are provided
+
                     vip_subnets:
+
                         description:
                             - VIP floating IP address subnets
                             - Array of IP address subnets which will be used as
                               floating IP addresses.
+
                         type: list
+
                         suboptions:
+
                             ip_addresses:
+
                                 description: IP addresses assigned to interface
                                 type: list
                                 required: true
+
                             prefix_len:
                                 description: Subnet prefix length
                                 type: int
                                 required: true
+
             interfaces:
                 type: list
                 element: dict
+
                 description: Specify the interfaces associated with the Gateway
+
                 suboptions:
+
                     id:
                         description: Tier-1 Interface ID
                         required: false
                         type: str
+
                     description:
                         description: Tier-1 Interface  description
                         type: str
+
                     display_name:
                         description:
                             - Tier-1 Interface display name
                             - Either this or id must be specified. If both are
                               specified, id takes precedence.
+
                         required: false
                         type: str
+
                     state:
                         description:
                             - State can be either 'present' or 'absent'.
                               'present' is used to create or update resource.
                               'absent' is used to delete resource.
                             - Required if I(segp_id != null).
+
                         choices:
+
                             - present
                             - absent
+
                     tags:
+
                         description: Opaque identifiers meaningful to the API
                                      user
+
                         type: dict
                         suboptions:
+
                             scope:
                                 description: Tag scope.
                                 required: true
                                 type: str
+
                             tag:
                                 description: Tag value.
                                 required: true
                                 type: str
+
                     ipv6_ndra_profile_id:
+
                         description:
                             - Configrue IPv6 NDRA profile. Only one NDRA
                               profile can be configured
                             - Required if I(id != null)
+
                         type: str
+
                     mtu:
                         description:
                             - MTU size
                             - Maximum transmission unit (MTU) specifies the
                               size of the largest packet that a network
                               protocol can transmit.
+
                         type: int
+
                     segment_id:
+
                         description:
                             - Specify Segment to which this interface is
                               connected to.
                             - Required if I(id != null)
+
                         type: str
+
                     segment_display_name:
+
                         description:
                             - Same as segment_id
                             - Either this or segment_id must be specified. If
                               both are specified, segment_id takes precedence.
+
                         type: str
+
                     subnets:
+
                         description:
                             - IP address and subnet specification for interface
                             - Specify IP address and network prefix for
                               interface
                             - Required if I(id != null)
+
                         type: list
                         elements: dict
+
                         suboptions:
+
                             ip_addresses:
                                 description: IP addresses assigned to interface
                                 type: str
+
                             prefix_len:
                                 description: Subnet prefix length
                                 type: str
+
                     dhcp_config_id:
                         description: id of referenced dhcp-relay-config
                         type: str
+
                     dhcp_display_name:
                         description: name of referenced dhcp-relay-config
+
                     urpf_mode:
                         description: Unicast Reverse Path Forwarding mode
                         type: str
                         requires: False
                         choices:
+
                             - NONE
                             - STRICT
+
                         default: STRICT
+
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
     if state and state.lower() == "absent":
@@ -1048,9 +1301,13 @@ def absent(
 ):
     """
     Deletes tier1 gateway with the given display_name and all its sub-resources
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_policy_tier1.absent hostname=nsxt-manager.local username=admin ...
+
         delete_tier1:
           nsxt_policy_tier1.absent:
             - name: <Name of the operation>
@@ -1060,29 +1317,39 @@ def absent(
               display_name: <display name of tier1 gateway>
               cert: <certificate>
               verify_ssl: <False/True>
+
         name
             Name of the operation to perform
+
         hostname
             The host name of NSX-T manager
+
         username
             Username to connect to NSX-T manager
+
         password
             Password to connect to NSX-T manager
+
         display_name
             Display name of the tier1 gateway to delete
+
         cert
             (Optional) Path to the SSL certificate file to connect to NSX-T manager
+
         verify_ssl
             (Optional) Option to enable/disable SSL verification. Enabled by default.
             If set to False, the certificate validation is skipped.
+
         cert
             (Optional) Path to the SSL certificate file to connect to NSX-T manager.
             The certificate can be retrieved from browser.
+
         cert_common_name
             (Optional) By default, the hostname parameter and the common name in certificate is compared for host name
              verification. If the client certificate common name and hostname do not match (in case of self-signed
              certificates), specify the certificate common name as part of this parameter. This value is then used to
              compare against certificate common name.
+
     """
     ret = {"name": name, "result": True, "comment": "", "changes": {}}
     tier_1_result = __salt__["nsxt_policy_tier1.get_by_display_name"](

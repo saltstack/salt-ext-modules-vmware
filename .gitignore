@@ -110,6 +110,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# vscode
+.vscode/
+
+#salt env
+Saltfile
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -141,3 +147,4 @@ local/
 .idea/
 src/.DS_Store
 src/saltext/.DS_Store
+.vscode/
