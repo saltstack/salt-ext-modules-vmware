@@ -1,8 +1,12 @@
 import logging
+import ssl
+import socket
+import hashlib
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.cluster as utils_cluster
 
 # pylint: disable=no-name-in-module
 try:
@@ -155,3 +159,136 @@ def list_hosts(service_instance):
         The Service Instance Object from which to obtain hosts.
     """
     return utils_common.list_objects(service_instance, vim.HostSystem)
+
+
+def disconnect_host(name, service_instance):
+    """
+    Disconnects host from vCenter instance
+
+    Returns connection state of host
+
+    name
+        Name of host.
+    
+    service_instance
+        The Service Instance Object from which to obtain host.
+    """
+    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
+    if host.summary.runtime.connectionState == "disconnected":
+        return host.summary.runtime.connectionState
+    task = host.DisconnectHost_Task()
+    host = utils_common.wait_for_task(task, name, "disconnect host task")
+    return host.summary.runtime.connectionState
+
+
+def reconnect_host(name, service_instance):
+    """
+    Reconnects host from vCenter instance
+
+    Returns connection state of host
+
+    name
+        Name of host.
+    
+    service_instance
+        The Service Instance Object from which to obtain host.
+    """
+    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
+    if host.summary.runtime.connectionState == "connected":
+        return host.summary.runtime.connectionState
+    task = host.ReconnectHost_Task()
+    ret_host = utils_common.wait_for_task(task, name, "reconnect host task")
+    return ret_host.summary.runtime.connectionState
+
+
+def move_host(name, cluster_name, service_instance):
+    """
+    Move host to a different cluster.
+
+    Returns connection state of host
+
+    name
+        Name of host.
+    
+    service_instance
+        The Service Instance Object from which to obtain host.
+    """
+    host_ref = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
+    cluster_ref = utils_common.get_mor_by_property(service_instance, vim.ClusterComputeResource, cluster_name)
+    task = cluster_ref.MoveInto_Task([host_ref])
+    utils_common.wait_for_task(task, cluster_name, "move host task")
+    return 'moved'
+
+
+def remove_host(name, service_instance):
+    """
+    Removes host from vCenter instance.
+
+    Returns connection state of host
+
+    name
+        Name of host.
+    
+    service_instance
+        The Service Instance Object from which to obtain host.
+    """
+    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
+    task = host.Destroy_Task()
+    utils_common.wait_for_task(task, name, "destroy host task")
+    return 'removed'
+
+
+def _format_ssl_thumbprint(number):
+    """
+    Formats ssl cert number
+
+    number
+        Number to be formatted into ssl thumbprint
+    """
+    string = str(number)
+    return ':'.join(a + b for a, b in zip(string[::2], string[1::2]))
+
+
+def add_host(name, user, password, cluster_name, datacenter_name, connect, service_instance):
+    """
+    Adds host from vCenter instance
+
+    Returns connection state of host
+
+    name
+        Name of host
+    
+    user
+        User name used to log into esxi instance.
+
+    password
+        Password to log into esxi instance.
+
+    cluster_name
+        
+
+    service_instance
+        The Service Instance Object to place host on.
+    """
+    dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
+    cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
+    connect_spec = vim.host.ConnectSpec()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    wrapped_socket = ssl.wrap_socket(sock)
+    try:
+        wrapped_socket.connect((name, 443))
+    except socket.error as error:
+        log.error(error)
+    else:
+        der_cert_bin = wrapped_socket.getpeercert(True)
+        wrapped_socket.close()
+
+    sslThumbprint = _format_ssl_thumbprint(hashlib.sha1(der_cert_bin).hexdigest())
+    connect_spec.sslThumbprint = sslThumbprint
+    connect_spec.hostName = name
+    connect_spec.userName = user
+    connect_spec.password = password
+    task = cluster_ref.AddHost_Task(connect_spec, connect)
+    host = utils_common.wait_for_task(task, name, "add host task")
+    return host.summary.runtime.connectionState

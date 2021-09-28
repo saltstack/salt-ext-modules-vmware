@@ -26,7 +26,6 @@ def __virtual__():
     return __virtualname__
 
 
-# @connect.get_si
 def get_lun_ids(*, service_instance):
     """
     Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
@@ -42,7 +41,6 @@ def get_lun_ids(*, service_instance):
     return ids
 
 
-# @connect.get_si
 def get_capabilities(*, service_instance=None):
     """
     Return ESXi host's capability information.
@@ -732,3 +730,71 @@ def set_advanced_config(
         host_name=host_name,
         service_instance=service_instance,
     )
+
+
+def manage(name, task, service_instance=None):
+    """
+    Connect, disconnect, or remove an esxi instance.
+
+    name
+        Name of host.
+
+    task
+        Name of the task to be preformed on the host (connect, disconnect, or remove).
+
+    service_instance
+        The Service Instance from which to obtain managed object references.
+    """
+    log.debug(f"Managing esxi instance {name}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    
+    if task == 'connect':
+        state = utils_esxi.reconnect_host(name, service_instance)
+        return {"state": state}
+    elif task == 'disconnect':
+        state = utils_esxi.disconnect_host(name, service_instance)
+        return {"state": state}
+    elif task == 'remove':
+        state = utils_esxi.remove_host(name, service_instance)
+        return {"state": state}
+    else:
+        raise salt.exceptions.CommandExecutionError("Invalid task name.")
+
+
+def move(name, cluster_name, service_instance=None):
+    """
+    Move an esxi instance to a different cluster.
+
+    name
+        Name of host.
+    
+    cluster_name
+        Name of cluster to move host to.
+    
+    service_instance
+        The Service Instance from which to obtain managed object references.
+    """
+    log.debug(f"Managing esxi instance {name}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    state = utils_esxi.move_host(name, cluster_name, service_instance)
+    return {"state": state}
+
+
+def add(name, user, password, cluster_name, datacenter_name, connect=True, service_instance=None):
+    """
+    Connect, disconnect, remove, or move an esxi instance.
+
+    name
+        Name of host.
+    
+    service_instance
+        The Service Instance from which to obtain managed object references.
+    """
+    log.debug(f"Adding esxi instance {name}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    state = utils_esxi.add_host(name, user, password, cluster_name, datacenter_name, connect, service_instance)
+    return {"state": state}
