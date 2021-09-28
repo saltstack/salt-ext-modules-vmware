@@ -277,7 +277,7 @@ def test_add(integration_test_config, service_instance):
             integration_test_config["esxi_manage_test_instance"]["password"],
             integration_test_config["esxi_manage_test_instance"]["cluster"],
             integration_test_config["esxi_manage_test_instance"]["datacenter"],
-            service_instance=service_instance
+            service_instance=service_instance,
         )
         assert ret["state"] == "connected"
     else:
@@ -292,7 +292,7 @@ def test_manage_disconnect(integration_test_config, service_instance):
         ret = esxi.manage(
             integration_test_config["esxi_manage_test_instance"]["name"],
             "disconnect",
-            service_instance=service_instance
+            service_instance=service_instance,
         )
         assert ret["state"] == "disconnected"
     else:
@@ -307,7 +307,7 @@ def test_move(integration_test_config, service_instance):
         ret = esxi.move(
             integration_test_config["esxi_manage_test_instance"]["name"],
             integration_test_config["esxi_manage_test_instance"]["move"],
-            service_instance=service_instance
+            service_instance=service_instance,
         )
         assert ret["state"] == "moved"
     else:
@@ -322,7 +322,7 @@ def test_manage_connect(integration_test_config, service_instance):
         ret = esxi.manage(
             integration_test_config["esxi_manage_test_instance"]["name"],
             "connect",
-            service_instance=service_instance
+            service_instance=service_instance,
         )
         assert ret["state"] == "connected"
     else:
@@ -337,12 +337,12 @@ def test_manage_remove(integration_test_config, service_instance):
         esxi.manage(
             integration_test_config["esxi_manage_test_instance"]["name"],
             "disconnect",
-            service_instance=service_instance
+            service_instance=service_instance,
         )
         ret = esxi.manage(
             integration_test_config["esxi_manage_test_instance"]["name"],
             "remove",
-            service_instance=service_instance
+            service_instance=service_instance,
         )
         assert ret["state"] == "removed"
     else:

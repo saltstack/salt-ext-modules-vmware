@@ -748,14 +748,14 @@ def manage(name, task, service_instance=None):
     log.debug(f"Managing esxi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    
-    if task == 'connect':
+
+    if task == "connect":
         state = utils_esxi.reconnect_host(name, service_instance)
         return {"state": state}
-    elif task == 'disconnect':
+    elif task == "disconnect":
         state = utils_esxi.disconnect_host(name, service_instance)
         return {"state": state}
-    elif task == 'remove':
+    elif task == "remove":
         state = utils_esxi.remove_host(name, service_instance)
         return {"state": state}
     else:
@@ -768,10 +768,10 @@ def move(name, cluster_name, service_instance=None):
 
     name
         Name of host.
-    
+
     cluster_name
         Name of cluster to move host to.
-    
+
     service_instance
         The Service Instance from which to obtain managed object references.
     """
@@ -789,12 +789,14 @@ def add(name, user, password, cluster_name, datacenter_name, connect=True, servi
 
     name
         Name of host.
-    
+
     service_instance
         The Service Instance from which to obtain managed object references.
     """
     log.debug(f"Adding esxi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    state = utils_esxi.add_host(name, user, password, cluster_name, datacenter_name, connect, service_instance)
+    state = utils_esxi.add_host(
+        name, user, password, cluster_name, datacenter_name, connect, service_instance
+    )
     return {"state": state}
