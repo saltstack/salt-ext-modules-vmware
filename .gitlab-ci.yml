@@ -1,0 +1,27 @@
+---
+stages:
+  - build-docs
+  - publish-docs
+
+build-docs-html:
+  stage: build-docs
+  image: python:3.8
+  script:
+    - pip install -U pip setuptools wheel nox
+    - nox -e docs
+    - mv docs/_build/html html
+  artifacts:
+    paths:
+      - html
+    expire_in: 30 days
+
+pages:
+  stage: publish-docs
+  image: debian:bullseye-slim
+  script:
+    - mv html public
+    - 'echo "Gitlab Pages available at: ${CI_PAGES_URL}"'
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
