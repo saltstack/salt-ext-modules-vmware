@@ -289,9 +289,8 @@ def test_manage_disconnect(integration_test_config, service_instance):
     Test esxi manage disconnect task
     """
     if integration_test_config["esxi_manage_test_instance"]:
-        ret = esxi.manage(
+        ret = esxi.disconnect(
             integration_test_config["esxi_manage_test_instance"]["name"],
-            "disconnect",
             service_instance=service_instance,
         )
         assert ret["state"] == "disconnected"
@@ -319,9 +318,8 @@ def test_manage_connect(integration_test_config, service_instance):
     Test esxi manage connect task
     """
     if integration_test_config["esxi_manage_test_instance"]:
-        ret = esxi.manage(
+        ret = esxi.connect(
             integration_test_config["esxi_manage_test_instance"]["name"],
-            "connect",
             service_instance=service_instance,
         )
         assert ret["state"] == "connected"
@@ -334,14 +332,12 @@ def test_manage_remove(integration_test_config, service_instance):
     Test esxi manage remove task
     """
     if integration_test_config["esxi_manage_test_instance"]:
-        esxi.manage(
+        esxi.disconnect(
             integration_test_config["esxi_manage_test_instance"]["name"],
-            "disconnect",
             service_instance=service_instance,
         )
-        ret = esxi.manage(
+        ret = esxi.remove(
             integration_test_config["esxi_manage_test_instance"]["name"],
-            "remove",
             service_instance=service_instance,
         )
         assert ret["state"] == "removed"

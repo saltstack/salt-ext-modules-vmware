@@ -251,46 +251,67 @@ def _format_ssl_thumbprint(number):
     return ":".join(a + b for a, b in zip(string[::2], string[1::2]))
 
 
-def add_host(name, user, password, cluster_name, datacenter_name, connect, service_instance):
+def _get_host_cert(ip):
+    """
+    Returns host's ssl certificate.
+
+    ip
+        IP address of host.
+    """
+
+    ctx = ssl.SSLContext()
+    _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    _socket.settimeout(1)
+    wrappedSocket = ctx.wrap_socket(_socket)
+
+    try:
+        wrappedSocket.connect((ip, 443))
+    except:
+        response = False
+    else:
+        cert = wrappedSocket.getpeercert(True)
+        sha1 = hashlib.sha1(cert).hexdigest()
+        response = _format_ssl_thumbprint(sha1)
+
+    return response
+
+
+def add_host(ip, root_user, password, cluster_name, datacenter_name, connect, service_instance):
     """
     Adds host from vCenter instance
 
     Returns connection state of host
 
-    name
-        Name of host
+    ip
+        IP address of host.
 
-    user
-        User name used to log into esxi instance.
+    root_user
+        Username with root privilege to esxi instance.
 
     password
-        Password to log into esxi instance.
+        Password to root user.
 
     cluster_name
+        Name of cluster esxi host is being added to.
 
+    datacenter
+        Datacenter that contains cluster that esxi instance is being added to.
+
+    connect
+        Specifies whether host should be connected after being added.
 
     service_instance
         The Service Instance Object to place host on.
     """
     dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
-    connect_spec = vim.host.ConnectSpec()
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(1)
-    wrapped_socket = ssl.wrap_socket(sock)
-    try:
-        wrapped_socket.connect((name, 443))
-    except OSError as error:
-        log.error(error)
-    else:
-        der_cert_bin = wrapped_socket.getpeercert(True)
-        wrapped_socket.close()
 
-    sslThumbprint = _format_ssl_thumbprint(hashlib.sha1(der_cert_bin).hexdigest())
-    connect_spec.sslThumbprint = sslThumbprint
-    connect_spec.hostName = name
-    connect_spec.userName = user
+    connect_spec = vim.host.ConnectSpec()
+    connect_spec.sslThumbprint = _get_host_cert(ip)
+    connect_spec.hostName = ip
+    connect_spec.userName = root_user
     connect_spec.password = password
+
     task = cluster_ref.AddHost_Task(connect_spec, connect)
-    host = utils_common.wait_for_task(task, name, "add host task")
+    host = utils_common.wait_for_task(task, ip, "add host task")
     return host.summary.runtime.connectionState
