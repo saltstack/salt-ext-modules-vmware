@@ -306,6 +306,7 @@ def test_move(integration_test_config, service_instance):
         ret = esxi.move(
             integration_test_config["esxi_manage_test_instance"]["name"],
             integration_test_config["esxi_manage_test_instance"]["move"],
+            integration_test_config["esxi_manage_test_instance"]["current"],
             service_instance=service_instance,
         )
         assert ret["state"] == "moved"

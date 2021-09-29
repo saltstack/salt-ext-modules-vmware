@@ -742,7 +742,7 @@ def connect(name, service_instance=None):
     service_instance
         The Service Instance from which to obtain managed object references.
     """
-    log.debug(f"Managing esxi instance {name}.")
+    log.debug(f"Connect esxi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
@@ -760,7 +760,7 @@ def disconnect(name, service_instance=None):
     service_instance
         The Service Instance from which to obtain managed object references.
     """
-    log.debug(f"Managing esxi instance {name}.")
+    log.debug(f"Disconnect esxi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
@@ -778,7 +778,7 @@ def remove(name, service_instance=None):
     service_instance
         The Service Instance from which to obtain managed object references.
     """
-    log.debug(f"Managing esxi instance {name}.")
+    log.debug(f"Remove esxi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
@@ -786,7 +786,7 @@ def remove(name, service_instance=None):
     return {"state": state}
 
 
-def move(name, cluster_name, service_instance=None):
+def move(name, cluster_name, current_cluser_name, service_instance=None):
     """
     Move an esxi instance to a different cluster.
 
@@ -795,15 +795,18 @@ def move(name, cluster_name, service_instance=None):
 
     cluster_name
         Name of cluster to move host to.
+    
+    current_cluser_name
+        Name of cluster the host is currently on.
 
     service_instance
         The Service Instance from which to obtain managed object references.
     """
-    log.debug(f"Managing esxi instance {name}.")
+    log.debug(f"Move esxi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    state = utils_esxi.move_host(name, cluster_name, service_instance)
+    state = utils_esxi.move_host(name, cluster_name, current_cluser_name, service_instance)
     return {"state": state}
 
 

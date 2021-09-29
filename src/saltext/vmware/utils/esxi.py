@@ -201,7 +201,7 @@ def reconnect_host(name, service_instance):
     return ret_host.summary.runtime.connectionState
 
 
-def move_host(name, cluster_name, service_instance):
+def move_host(name, cluster_name, current_cluser_name, service_instance):
     """
     Move host to a different cluster.
 
@@ -209,14 +209,27 @@ def move_host(name, cluster_name, service_instance):
 
     name
         Name of host.
+    
+    cluster_name
+        Name of cluster to move host to.
+    
+    current_cluser_name
+        Name of cluster the host is currently on.
 
     service_instance
         The Service Instance Object from which to obtain host.
     """
     host_ref = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
+    if host_ref.summary.runtime.connectionState != "disconnected":
+        raise salt.exceptions.VMwareApiError("Disconnect host before moving it to another cluster.")
     cluster_ref = utils_common.get_mor_by_property(
         service_instance, vim.ClusterComputeResource, cluster_name
     )
+    current_cluster_ref = utils_common.get_mor_by_property(
+        service_instance, vim.ClusterComputeResource, current_cluser_name
+    )
+    if cluster_ref.parent.parent != current_cluster_ref.parent.parent:
+        raise salt.exceptions.VMwareApiError("Cluster has to be in the same datacenter")
     task = cluster_ref.MoveInto_Task([host_ref])
     utils_common.wait_for_task(task, cluster_name, "move host task")
     return "moved"
@@ -251,9 +264,9 @@ def _format_ssl_thumbprint(number):
     return ":".join(a + b for a, b in zip(string[::2], string[1::2]))
 
 
-def _get_host_cert(ip):
+def _get_host_thumbprint(ip):
     """
-    Returns host's ssl certificate.
+    Returns host's ssl thumbprint.
 
     ip
         IP address of host.
@@ -307,7 +320,7 @@ def add_host(ip, root_user, password, cluster_name, datacenter_name, connect, se
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
 
     connect_spec = vim.host.ConnectSpec()
-    connect_spec.sslThumbprint = _get_host_cert(ip)
+    connect_spec.sslThumbprint = _get_host_thumbprint(ip)
     connect_spec.hostName = ip
     connect_spec.userName = root_user
     connect_spec.password = password
