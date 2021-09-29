@@ -43,7 +43,9 @@ when necessary, we could cache it or make it a singleton, something like this:
  def load_service_instance():
      return get_service_instance(opts=__opts__, pillar=__pillar__)
 
+
  SI = lazy_object_proxy.Proxy(load_service_instance)
+
 
  def foo(service_instance=SI):
      pass
