@@ -307,7 +307,6 @@ def remove_host(
 
     """
     log.debug("Running vmware_dvswitch.remove_host")
-    ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     hosts = utils_esxi.get_hosts(service_instance=service_instance, host_names=[host_name])
@@ -361,7 +360,6 @@ def manage_host(
 
     """
     log.debug("Running vmware_dvswitch.manage_host")
-    ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     hosts = utils_esxi.get_hosts(service_instance=service_instance, host_names=[host_name])
