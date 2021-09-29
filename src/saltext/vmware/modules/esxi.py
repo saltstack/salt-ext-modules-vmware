@@ -795,7 +795,7 @@ def move(name, cluster_name, current_cluser_name, service_instance=None):
 
     cluster_name
         Name of cluster to move host to.
-    
+
     current_cluser_name
         Name of cluster the host is currently on.
 

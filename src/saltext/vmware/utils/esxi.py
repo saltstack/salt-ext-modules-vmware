@@ -209,10 +209,10 @@ def move_host(name, cluster_name, current_cluser_name, service_instance):
 
     name
         Name of host.
-    
+
     cluster_name
         Name of cluster to move host to.
-    
+
     current_cluser_name
         Name of cluster the host is currently on.
 
