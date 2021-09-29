@@ -7,7 +7,7 @@ build-docs-html:
   stage: build-docs
   image: python:3.8
   script:
-    - apt update && apt install python3-enchant
+    - apt update && apt install python3-enchant -y
     - pip install -U pip setuptools wheel nox
     - nox -e docs
     - mv docs/_build/html html
