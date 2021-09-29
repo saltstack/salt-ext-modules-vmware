@@ -5,6 +5,7 @@ import logging
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -279,5 +280,123 @@ def manage(
         salt.exceptions.VMwareApiError,
         vmodl.RuntimeFault,
         vmodl.MethodFault,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def remove_host(
+    switch_name,
+    host_name,
+    service_instance=None,
+):
+    """
+    Remove an ESXi host from a distributed vSwitch.
+
+    switch_name
+        Name of the distributed vSwitch.
+
+    host_name
+        ESXi host to remove from the distributed vSwitch.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_dvswitch.remove_host switch_name=dvs1 hostname=host1
+
+    """
+    log.debug("Running vmware_dvswitch.remove_host")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(service_instance=service_instance, host_names=[host_name])
+    try:
+        for h in hosts:
+            h.configManager.networkSystem.RemoveVirtualSwitch(vswitchName=switch_name)
+        return True
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vim.fault.ResourceInUse,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def manage_host(
+    switch_name,
+    host_name,
+    nics=None,
+    num_ports=None,
+    mtu=None,
+    service_instance=None,
+):
+    """
+    Add/update an ESXi host to a distributed vSwitch.
+
+    switch_name
+        Name of the distributed vSwitch.
+
+    host_name
+        ESXi host to update/add to the distributed vSwitch.
+
+    nics
+        List of vmnics to attach to vSwtich. (optional). Default "None".
+
+    num_ports
+        Number of ports to configure on the vSwitch. (optional). Default 128.
+
+    mtu
+        MTU to configure on the vSwitch. (optional). Default 1600.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.manage_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+
+    """
+    log.debug("Running vmware_dvswitch.manage_host")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(service_instance=service_instance, host_names=[host_name])
+    try:
+        for h in hosts:
+            network_manager = h.configManager.networkSystem
+            if not network_manager:
+                continue
+            if isinstance(nics, str):
+                nics = [nics]
+            vss_spec = vim.host.VirtualSwitch.Specification()
+            if hasattr(network_manager.networkInfo, "vswitch"):
+                for switch in network_manager.networkInfo.vswitch:
+                    if switch.name != switch_name:
+                        continue
+                    vss_spec.mtu = mtu or switch.mtu
+                    vss_spec.numPorts = num_ports or switch.spec.numPorts
+                    if switch.pnic or nics:
+                        vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(
+                            nicDevice=nics or list(map(lambda x: x.split("-", 3)[-1], switch.pnic))
+                        )
+                    network_manager.UpdateVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
+            else:
+                vss_spec.mtu = mtu or 1500
+                vss_spec.numPorts = num_ports or 128
+                if nics:
+                    vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=nics)
+                network_manager.AddVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
+            return True
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vim.fault.ResourceInUse,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
