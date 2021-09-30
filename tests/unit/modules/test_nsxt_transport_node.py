@@ -354,10 +354,7 @@ def test_update_with_error(mock_call_api):
     )
 
 
-@patch.object(nsxt_request, "call_api")
-def test_update_with_no_revision_number_provided(mock_call_api):
-
-    mock_call_api.return_value = error_json_with_no_revision
+def test_update_with_no_revision_number_provided():
 
     assert (
         nsxt_transport_node.update(
