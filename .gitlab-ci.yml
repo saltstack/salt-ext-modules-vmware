@@ -20,6 +20,7 @@ pages:
   stage: publish-docs
   image: debian:bullseye-slim
   script:
+    - echo hi
     - mv html public
     - 'echo "Gitlab Pages available at: ${CI_PAGES_URL}"'
   artifacts:
