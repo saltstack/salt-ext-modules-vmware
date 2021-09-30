@@ -26,3 +26,16 @@ pages:
     paths:
       - public
     expire_in: 30 days
+
+upload-tags:
+  stage: upload
+  rules:
+    - if: '$CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_TAG != null && $CI_PROJECT_PATH == $CICD_UPSTREAM_PATH'
+  variables:
+    ARTIFACT_PIPELINE_ID: $CI_PIPELINE_ID
+    GITLAB_PROJECT_PATH: "saltstack%2Fopen%2Fsalt-ext%2Fsalt-ext-modules-vmware"
+    DOCS_PATH: "docs.saltproject.io/salt/extensions/salt-ext-modules-vmware/en/latest"
+    RCLONE_OPTIONS: "sync -c -v"
+  trigger:
+    project: saltstack/open/docs/docs-upload
+    strategy: depend
