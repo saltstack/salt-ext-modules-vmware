@@ -328,7 +328,7 @@ def remove_host(
     try:
         for h in hosts:
             ret[h.name] = False
-            if hasattr(h.configManager.networkSystem.networkInfo, 'vswitch'):
+            if hasattr(h.configManager.networkSystem.networkInfo, "vswitch"):
                 h.configManager.networkSystem.RemoveVirtualSwitch(vswitchName=switch_name)
                 ret[h.name] = True
         return ret
