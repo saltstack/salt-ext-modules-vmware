@@ -56,19 +56,18 @@ def do_it(*, config_file):
                 ] = utils_cluster.drs_rule_info(rule)
     hosts = si.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     for host in hosts:
-        host = hosts[0]
         config["esxi_host_name"] = host.name
         config["esxi_datastore_disk_names"] = [
             extent.diskName for datastore in host.datastore for extent in datastore.info.vmfs.extent
         ]
         config["esxi_capabilities"] = {host.name: dict(host.capability.__dict__) for host in hosts}
-        config["virtual_machines"] = {}
-        config["vm_info"] = {}
-        for host in hosts:
-            config["virtual_machines"] = []
-            config["virtual_machines_templates"] = []
-            config["virtual_machine_paths"] = {}
-            for vm in host.vm:
+    config["virtual_machines"] = []
+    config["virtual_machines_templates"] = []
+    config["virtual_machine_paths"] = {}
+    config["vm_info"] = {}
+    for dc in si.content.rootFolder.childEntity:
+        for vm in dc.vmFolder.childEntity:
+            if isinstance(vm, vim.VirtualMachine):
                 if vm.config.template:
                     config["virtual_machines_templates"].append(vm.name)
                 else:
