@@ -286,7 +286,9 @@ def manage(
 
 def remove_host(
     switch_name,
-    host_name,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
     service_instance=None,
 ):
     """
@@ -295,8 +297,14 @@ def remove_host(
     switch_name
         Name of the distributed vSwitch.
 
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
     host_name
-        ESXi host to remove from the distributed vSwitch.
+        Filter by this ESXi hostname (optional)
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -307,13 +315,23 @@ def remove_host(
 
     """
     log.debug("Running vmware_dvswitch.remove_host")
+    ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    hosts = utils_esxi.get_hosts(service_instance=service_instance, host_names=[host_name])
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
     try:
         for h in hosts:
-            h.configManager.networkSystem.RemoveVirtualSwitch(vswitchName=switch_name)
-        return True
+            ret[h.name] = False
+            if hasattr(h.configManager.networkSystem.networkInfo, 'vswitch'):
+                h.configManager.networkSystem.RemoveVirtualSwitch(vswitchName=switch_name)
+                ret[h.name] = True
+        return ret
     except (
         vim.fault.InvalidState,
         vim.fault.NotFound,
@@ -327,7 +345,9 @@ def remove_host(
 
 def manage_host(
     switch_name,
-    host_name,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
     nics=None,
     num_ports=None,
     mtu=None,
@@ -339,8 +359,14 @@ def manage_host(
     switch_name
         Name of the distributed vSwitch.
 
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
     host_name
-        ESXi host to update/add to the distributed vSwitch.
+        Filter by this ESXi hostname (optional)
 
     nics
         List of vmnics to attach to vSwtich. (optional). Default "None".
@@ -360,11 +386,19 @@ def manage_host(
 
     """
     log.debug("Running vmware_dvswitch.manage_host")
+    ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    hosts = utils_esxi.get_hosts(service_instance=service_instance, host_names=[host_name])
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
     try:
         for h in hosts:
+            ret[h.name] = False
             network_manager = h.configManager.networkSystem
             if not network_manager:
                 continue
@@ -382,13 +416,15 @@ def manage_host(
                             nicDevice=nics or list(map(lambda x: x.split("-", 3)[-1], switch.pnic))
                         )
                     network_manager.UpdateVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
-            else:
+                    ret[h.name] = True
+            if not ret[h.name]:
                 vss_spec.mtu = mtu or 1500
                 vss_spec.numPorts = num_ports or 128
                 if nics:
                     vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=nics)
                 network_manager.AddVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
-            return True
+                ret[h.name] = True
+        return ret
     except (
         vim.fault.InvalidState,
         vim.fault.NotFound,
