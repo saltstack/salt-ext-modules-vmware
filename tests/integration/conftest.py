@@ -99,14 +99,14 @@ def patch_salt_globals():
 
 
 @pytest.fixture(scope="function")
-def vmware_datacenter(patch_salt_globals):
+def vmware_datacenter(patch_salt_globals, service_instance):
     """
     Return a vmware_datacenter during start of a test and tear it down once the test ends
     """
     dc_name = str(uuid.uuid4())
-    dc = datacenter_mod.create(name=dc_name)
+    dc = datacenter_mod.create(name=dc_name, service_instance=service_instance)
     yield dc_name
-    datacenter_mod.delete(name=dc_name)
+    datacenter_mod.delete(name=dc_name, service_instance=service_instance)
 
 
 @pytest.fixture
@@ -120,16 +120,20 @@ def patch_salt_globals_vm(vmware_conf):
 
 
 @pytest.fixture(scope="function")
-def vmware_cluster(vmware_datacenter):
+def vmware_cluster(vmware_datacenter, service_instance):
     """
     Return a vmware_cluster during start of a test and tear it down once the test ends
     """
     cluster_name = str(uuid.uuid4())
-    _ = cluster_mod.create(name=cluster_name, datacenter=vmware_datacenter)
+    _ = cluster_mod.create(
+        name=cluster_name, datacenter=vmware_datacenter, service_instance=service_instance
+    )
     Cluster = namedtuple("Cluster", ["name", "datacenter"])
     cluster = Cluster(name=cluster_name, datacenter=vmware_datacenter)
     yield cluster
-    cluster_mod.delete(name=cluster_name, datacenter=vmware_datacenter)
+    cluster_mod.delete(
+        name=cluster_name, datacenter=vmware_datacenter, service_instance=service_instance
+    )
 
 
 @pytest.fixture(scope="session")
