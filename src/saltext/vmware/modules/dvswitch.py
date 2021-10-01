@@ -133,7 +133,7 @@ def configure(
 
     .. code-block:: bash
 
-        salt '*' vmware_dvswitch.manage dvs1
+        salt '*' vmware_dvswitch.configure dvs1
     """
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -382,7 +382,7 @@ def add_host(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.manage_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+        salt '*' vmware_esxi.add_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
 
     """
     log.debug("Running vmware_dvswitch.add_host")
@@ -462,7 +462,7 @@ def update_host(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.manage_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+        salt '*' vmware_esxi.update_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
 
     """
     log.debug("Running vmware_dvswitch.update_host")
