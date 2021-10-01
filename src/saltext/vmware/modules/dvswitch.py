@@ -369,7 +369,7 @@ def add_host(
         Filter by this ESXi hostname (optional)
 
     nics
-        List of vmnics to attach to vSwtich. (optional). Default "None".
+        List of vmnics to attach to vSwitch. (optional). Default "None".
 
     num_ports
         Number of ports to configure on the vSwitch. (optional). Default 128.
@@ -449,7 +449,7 @@ def update_host(
         Filter by this ESXi hostname (optional)
 
     nics
-        List of vmnics to attach to vSwtich. (optional). Default "None".
+        List of vmnics to attach to vSwitch. (optional). Default "None".
 
     num_ports
         Number of ports to configure on the vSwitch. (optional). Default 128.
