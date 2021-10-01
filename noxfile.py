@@ -362,7 +362,7 @@ def docs(session):
             contents = rfh.readlines()[2:]
             if contents:
                 session.error("\n" + "".join(contents))
-    session.run("make", "html", "SPHINXOPTS=-W", external=True)
+    session.run("make", "html", "SPHINXOPTS=-Wn --keep-going", external=True)
     os.chdir(str(REPO_ROOT))
 
 
