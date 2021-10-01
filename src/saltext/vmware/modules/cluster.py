@@ -29,7 +29,7 @@ def __virtual__():
     return __virtualname__
 
 
-def list_():
+def list_(service_instance=None):
     """
     Returns a dictionary containing a list of clusters for each datacenter.
 
@@ -38,7 +38,8 @@ def list_():
         salt '*' vmware_cluster.list
     """
     ret = {}
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         datacenters = utils_datacenter.get_datacenters(service_instance, get_all_datacenters=True)
         for datacenter in datacenters:
@@ -55,7 +56,7 @@ def list_():
     return ret
 
 
-def create(name, datacenter):
+def create(name, datacenter, service_instance=None):
     """
     Creates a cluster.
 
@@ -71,7 +72,8 @@ def create(name, datacenter):
 
         salt '*' vmware_cluster.create dc1 cluster1
     """
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_spec = vim.cluster.ConfigSpecEx()
@@ -81,7 +83,7 @@ def create(name, datacenter):
     return {name: True}
 
 
-def get_(name, datacenter):
+def get_(name, datacenter, service_instance=None):
     """
     Get the properties of a cluster.
 
@@ -98,7 +100,8 @@ def get_(name, datacenter):
         salt '*' vmware_cluster.get dc1
     """
     ret = {}
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=name)
@@ -117,7 +120,7 @@ def get_(name, datacenter):
     return ret
 
 
-def delete(name, datacenter):
+def delete(name, datacenter, service_instance=None):
     """
     Deletes a cluster.
 
@@ -133,7 +136,8 @@ def delete(name, datacenter):
 
         salt '*' vmware_cluster.delete cl1 dc1
     """
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         utils_cluster.delete_cluster(service_instance, name, datacenter)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:

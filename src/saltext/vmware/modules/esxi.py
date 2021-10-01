@@ -26,13 +26,15 @@ def __virtual__():
     return __virtualname__
 
 
-def get_lun_ids(*, service_instance):
+def get_lun_ids(service_instance=None):
     """
     Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
     """
 
-    # TODO: Might be better to use that other recursive view thing? Not sure
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     ids = []
     for host in hosts:
         for datastore in host.datastore:
@@ -41,13 +43,13 @@ def get_lun_ids(*, service_instance):
     return ids
 
 
-def get_capabilities(*, service_instance=None):
+def get_capabilities(service_instance=None):
     """
     Return ESXi host's capability information.
     """
     if service_instance is None:
-        ...
-    hosts = service_instance.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     capabilities = {}
     for host in hosts:
         capability = host.capability
