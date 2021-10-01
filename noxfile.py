@@ -354,8 +354,8 @@ def docs(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
-    session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
-    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
+    session.run("make", "linkcheck", "SPHINXOPTS=-Wn --keep-going", external=True)
+    session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
         with open(docs_coverage_file) as rfh:
