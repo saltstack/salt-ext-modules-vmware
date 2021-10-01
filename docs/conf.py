@@ -17,8 +17,6 @@ try:
 except ImportError:
     from importlib.metadata import distribution
 
-import sphinx_material_saltstack
-
 try:
     docs_basepath = os.path.abspath(os.path.dirname(__file__))
 except NameError:
