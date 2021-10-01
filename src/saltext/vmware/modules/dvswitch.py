@@ -49,7 +49,7 @@ def _get_switch_config_spec(service_instance, datacenter_name, switch_name):
     return dc_ref, switch_ref, config_spec
 
 
-def manage(
+def configure(
     datacenter_name,
     switch_name,
     uplink_count=None,
@@ -343,18 +343,18 @@ def remove_host(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def manage_host(
+def add_host(
     switch_name,
     host_name=None,
     datacenter_name=None,
     cluster_name=None,
     nics=None,
-    num_ports=None,
-    mtu=None,
+    num_ports=128,
+    mtu=1500,
     service_instance=None,
 ):
     """
-    Add/update an ESXi host to a distributed vSwitch.
+    Add an ESXi host to a distributed vSwitch.
 
     switch_name
         Name of the distributed vSwitch.
@@ -385,7 +385,87 @@ def manage_host(
         salt '*' vmware_esxi.manage_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
 
     """
-    log.debug("Running vmware_dvswitch.manage_host")
+    log.debug("Running vmware_dvswitch.add_host")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+    try:
+        for h in hosts:
+            ret[h.name] = False
+            network_manager = h.configManager.networkSystem
+            if not network_manager:
+                continue
+            if isinstance(nics, str):
+                nics = [nics]
+            vss_spec = vim.host.VirtualSwitch.Specification()
+            vss_spec.mtu = mtu
+            vss_spec.numPorts = num_ports
+            if nics:
+                vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=nics)
+            network_manager.AddVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
+            ret[h.name] = True
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vim.fault.ResourceInUse,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def update_host(
+    switch_name,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    nics=None,
+    num_ports=None,
+    mtu=None,
+    service_instance=None,
+):
+    """
+    Update an ESXi host on a distributed vSwitch.
+
+    switch_name
+        Name of the distributed vSwitch.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    nics
+        List of vmnics to attach to vSwtich. (optional). Default "None".
+
+    num_ports
+        Number of ports to configure on the vSwitch. (optional). Default 128.
+
+    mtu
+        MTU to configure on the vSwitch. (optional). Default 1600.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.manage_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+
+    """
+    log.debug("Running vmware_dvswitch.update_host")
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -417,13 +497,6 @@ def manage_host(
                         )
                     network_manager.UpdateVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
                     ret[h.name] = True
-            if not ret[h.name]:
-                vss_spec.mtu = mtu or 1500
-                vss_spec.numPorts = num_ports or 128
-                if nics:
-                    vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=nics)
-                network_manager.AddVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
-                ret[h.name] = True
         return ret
     except (
         vim.fault.InvalidState,
