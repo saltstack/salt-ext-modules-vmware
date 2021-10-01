@@ -29,46 +29,124 @@ bugs can be filed.
 Build
 -----
 
-To build a release artifact, ``python setup.py bdist_wheel`` will generate a
-``.whl`` file. Non-dev tests will be executed against this wheel.
-
-Test the Build
---------------
-
-A new virtualenv will be created, and will install this wheel. Tests will then
-be executed:
+To prepare for a release, the first step is to ensure you're on the latest
+commit on the main branch and build the release artifact, along with
+dependencies:
 
 .. code::
 
-    python -m venv env --prompt vmw-ext
-    source env/bin/activate
-    python -m pip install dist/saltext.vmware-VERSION-py2.py3-none-any.whl  # use actual version
-    python -m nox -e test-build  # TODO - list multiple pythons?
+    git fetch salt
+    git stash  # if needed
+    git checkout salt/main
+    python -m pip wheel .[dev,tests,release] -w dist/
 
-This will run tests against the build artifact. If all tests pass the build
-may be released.
+This will create a ``.whl`` file for the extension module, as well as all of
+the dependencies, in the ``dist/`` directory.
+
+
+Install and Test the Build
+--------------------------
+
+To ensure that the virtual environment is pristine, create a new one. Then the
+package and necessary dependencies can be installed into the environment. By
+building the extension and dependencies locally, and using a pristine
+environment, this will help ensure that any missing dependencies are detected
+before release. Tests will be executed against the installed package, and not
+the local source, which helps to ensure the complete install process is tested.
+
+.. code::
+
+    deactivate  # if a venv is already activated
+    python -m venv /tmp/test_saltext --prompt test-vmw-ext
+    source /tmp/test_saltext/bin/activate
+    python -m pip install --no-index --find-links dist/ saltext.vmware[dev,tests,release]
+    pytest --cov=saltext.vmware tests/
+
+This will run tests against the build artifact. If all tests pass this nightly
+build may be released.
+
+The release process be tested by using Twine with the TestPyPI_
+
+.. _TestPyPI: https://test.pypi.org/project/saltext.vmware/
+
+In order to cut a release, you must be a project maintainer on TestPyPI and
+have a token configured for the project. Your ``~/.pypirc`` should contain your
+key like the following:
+
+.. code::
+
+    [distutils]
+      index-servers =
+        test_saltext_vmware
+
+    [test_saltext_vmware]
+      repository = https://test.pypi.org/legacy/
+      username = __token__
+      password = pypi-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...
+
+Then you would run:
+
+.. code::
+
+    twine upload --repository = test_saltext_vmware dist/saltext.vmware-VERSION-py2.py3-none-any.whl
 
 Versions, Tagging, and Changelog
 --------------------------------
 
-This project uses CalVer_ for versions. In order to
-communicate breaking changes, this project keeps a
-changelog_.
+In order to cut a release, you must be a maintainer of this project on PyPI.
+You should have a ``[saltext_vmware]`` section in your pypirc file, similar to
+the test setting.
+
+In regards to version numbers, this project uses Calver_, with the
+``YY.MM.DD.PATCH`` style. Breaking (and any other) changes should be
+communicated through the changelog_.
 
 .. _CalVer: https://calver.org/
-.. _changelog: https://keepachangelog.com/en/1.0.0/
+.. _changelog: https://github.com/saltstack/salt-ext-modules-vmware/blob/main/CHANGELOG.md
 
-For dev/nightly builds, no tags will be used, and packages will not be uploaded
-to PyPI.
+For dev/nightly builds, tags will ONLY be used if the package gets uploaded to
+the production PyPI. At that point an annotated tag should be created with the
+current changelog for that particular version.
 
 Release candidate builds will be tagged with the **expected** release date with
-``rcN`` modifier. Typically there will only be one RC build - though if bugs
+``rcN`` modifier. For instance, if we planned to release 2010, August 14, we would tag like so:
+
+.. code::
+
+   git tag 10.8.14rc1 -a
+
+Typically there will only be one RC build - though if bugs
 are found, especially severe bugs, new RC versions will be built, tagged, and
 released.
 
-Final releases will be tagged, signed, and annotated with the changelog for
-that particular version. While the source code should not change between RC
-versions and final releases, the final release *will* be a new artifact, and
-will go through the same build/test/upload process as non-final versions. Once
-the release artifact it successfully tested and uploaded to PyPI, the annotated
-tag will be pushed to the repo.
+To cut a final release, the repository will be tagged as above, the changelog
+added to the tag, and then a new package will be built, installed, and tested.
+This order is required because we use setuptools_scm to generate the version
+number from the latest tag. Tagging does not produce any code changes (other
+than the version number), so the tests should continue to pass. If they fail
+for any reason other than your Internet going out, this should be considered a
+critical issue! Flaky tests are undesirable, since they are often just
+misleading. If a test scenario is that flaky, it should be performed manually,
+or not at all.
+
+..
+    That flaky bit could be a in a different document, and linked to from here.
+
+Once the full test suite has passed, sign the production package with gpg and
+upload the package with twine:
+
+.. code::
+    # SIGNING_KEY should be replaced with the signing key, and FINAL-VERSION
+    # with the actual version number
+    gpg --detach-sign -u SIGNING_KEY dist/saltext.vmware-FINAL-VERSION-py2.py3.none-any.whl
+    twine upload --repository = saltext_vmware dist/saltext.vmware-FINAL-VERSION-py2.py3.none-any.whl
+
+Once the package has been uploaded to PyPI the tag should be pushed:
+
+.. code::
+    git push salt 10.8.14   # to use the previous example
+
+A release should also be created on GitHub, uploading both the package as well
+as the `.sig` file.
+
+Congrats! You've just cut a new release!
