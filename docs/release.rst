@@ -10,6 +10,11 @@ these steps will be manual. Over time the process will become more automated.
 Overview
 --------
 
+.. note::
+
+    You may have issues building wheels on MacOS. It may be easier to build in
+    a docker container or other VM.
+
 The goal for this module is to have nightly dev builds released frequently.
 It's possible that days go by without changes happening, but these builds will
 still be called nightly builds.
@@ -59,6 +64,7 @@ the local source, which helps to ensure the complete install process is tested.
     deactivate  # if a venv is already activated
     python -m venv /tmp/test_saltext --prompt test-vmw-ext
     source /tmp/test_saltext/bin/activate
+    python -m pip install --upgrade pip wheel
     python -m pip install --no-index --find-links dist/ saltext.vmware[dev,tests,release]
     pytest --cov=saltext.vmware tests/
 
@@ -88,7 +94,7 @@ Then you would run:
 
 .. code::
 
-    twine upload --repository = test_saltext_vmware dist/saltext.vmware-VERSION-py2.py3-none-any.whl
+    twine upload --repository test_saltext_vmware dist/saltext.vmware-VERSION-py2.py3-none-any.whl
 
 Versions, Tagging, and Changelog
 --------------------------------
@@ -136,6 +142,7 @@ Once the full test suite has passed, sign the production package with gpg and
 upload the package with twine:
 
 .. code::
+
     # SIGNING_KEY should be replaced with the signing key, and FINAL-VERSION
     # with the actual version number
     gpg --detach-sign -u SIGNING_KEY dist/saltext.vmware-FINAL-VERSION-py2.py3.none-any.whl
@@ -144,6 +151,7 @@ upload the package with twine:
 Once the package has been uploaded to PyPI the tag should be pushed:
 
 .. code::
+
     git push salt 10.8.14   # to use the previous example
 
 A release should also be created on GitHub, uploading both the package as well
