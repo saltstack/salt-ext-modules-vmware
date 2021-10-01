@@ -25,6 +25,7 @@ What are you most interested in?
   nsx.rst
   vmc.rst
   utils.rst
+  GitHub Repository <https://github.com/saltstack/salt-ext-modules->
 
 
 .. toctree::
