@@ -165,3 +165,120 @@ def test_delete_security_groups_by_id_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.DELETE_REQUEST_METHOD
+
+
+def test_create_security_group_when_api_should_return_api_response(mock_vmc_request_call_api):
+    data = {"message": "Security group created successfully"}
+    mock_vmc_request_call_api.return_value = data
+
+    assert (
+        vmc_security_groups.create(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            domain_id="domain_id",
+            security_group_id="security_group_id",
+            verify_ssl=False,
+        )
+        == data
+    )
+
+
+def test_create_security_groups_by_id_called_with_url():
+    expected_url = (
+        "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/policy/api/"
+        "v1/infra/domains/domain_id/groups/security_group_id"
+    )
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        result = vmc_security_groups.create(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            domain_id="domain_id",
+            security_group_id="security_group_id",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.PUT_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_payload",
+    [
+        # all actual args are None
+        (
+            {},
+            {
+                "id": "security_group_id",
+                "display_name": "security_group_id",
+                "description": "",
+                "expression": [],
+                "tags": [],
+            },
+        ),
+        # allow none have values
+        (
+            {"tags": [{"tag": "tag1", "scope": "scope1"}]},
+            {
+                "id": "security_group_id",
+                "display_name": "security_group_id",
+                "description": "",
+                "expression": [],
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+            },
+        ),
+        # all args have values
+        (
+            {
+                "description": "VMs Security groups",
+                "expression": [
+                    {
+                        "member_type": "VirtualMachine",
+                        "key": "OSName",
+                        "operator": "EQUALS",
+                        "value": "Centos",
+                        "resource_type": "Condition",
+                    }
+                ],
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+            },
+            {
+                "id": "security_group_id",
+                "display_name": "security_group_id",
+                "description": "VMs Security groups",
+                "expression": [
+                    {
+                        "member_type": "VirtualMachine",
+                        "key": "OSName",
+                        "operator": "EQUALS",
+                        "value": "Centos",
+                        "resource_type": "Condition",
+                    }
+                ],
+                "tags": [{"tag": "tag1", "scope": "scope1"}],
+            },
+        ),
+    ],
+)
+def test_assert_security_groups_create_should_correctly_filter_args(actual_args, expected_payload):
+    common_actual_args = {
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "authorization_host": "authorization_host",
+        "org_id": "org_id",
+        "sddc_id": "sddc_id",
+        "domain_id": "domain_id",
+        "security_group_id": "security_group_id",
+        "verify_ssl": False,
+    }
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        actual_args.update(common_actual_args)
+        vmc_security_groups.create(**actual_args)
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["data"] == expected_payload
