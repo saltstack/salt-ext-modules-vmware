@@ -201,7 +201,7 @@ def reconnect_host(name, service_instance):
     return ret_host.summary.runtime.connectionState
 
 
-def move_host(name, cluster_name, current_cluser_name, service_instance):
+def move_host(name, cluster_name, service_instance):
     """
     Move host to a different cluster.
 
@@ -213,22 +213,14 @@ def move_host(name, cluster_name, current_cluser_name, service_instance):
     cluster_name
         Name of cluster to move host to.
 
-    current_cluser_name
-        Name of cluster the host is currently on.
-
     service_instance
         The Service Instance Object from which to obtain host.
     """
     host_ref = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
-    if host_ref.summary.runtime.connectionState != "disconnected":
-        raise salt.exceptions.VMwareApiError("Disconnect host before moving it to another cluster.")
     cluster_ref = utils_common.get_mor_by_property(
         service_instance, vim.ClusterComputeResource, cluster_name
     )
-    current_cluster_ref = utils_common.get_mor_by_property(
-        service_instance, vim.ClusterComputeResource, current_cluser_name
-    )
-    if cluster_ref.parent.parent != current_cluster_ref.parent.parent:
+    if cluster_ref.parent.parent != host_ref.parent.parent.parent:
         raise salt.exceptions.VMwareApiError("Cluster has to be in the same datacenter")
     task = cluster_ref.MoveInto_Task([host_ref])
     utils_common.wait_for_task(task, cluster_name, "move host task")
@@ -273,20 +265,20 @@ def _get_host_thumbprint(ip):
     """
 
     ctx = ssl.SSLContext()
-    _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    _socket.settimeout(1)
-    wrappedSocket = ctx.wrap_socket(_socket)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as _socket:
+        _socket.settimeout(1)
+        with ctx.wrap_socket(_socket) as wrappedSocket:
 
-    try:
-        wrappedSocket.connect((ip, 443))
-    except:
-        response = False
-    else:
-        cert = wrappedSocket.getpeercert(True)
-        sha1 = hashlib.sha1(cert).hexdigest()
-        response = _format_ssl_thumbprint(sha1)
+            try:
+                wrappedSocket.connect((ip, 443))
+            except:
+                response = False
+            else:
+                cert = wrappedSocket.getpeercert(True)
+                sha1 = hashlib.sha1(cert).hexdigest()
+                response = _format_ssl_thumbprint(sha1)
 
-    return response
+            return response
 
 
 def add_host(ip, root_user, password, cluster_name, datacenter_name, connect, service_instance):
