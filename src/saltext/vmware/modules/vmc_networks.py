@@ -699,7 +699,7 @@ def update(
         use for all IPv4 & IPv6 subnets configured on this segment.
 
     display_name
-        Identifier to use when displaying entity in logs or GUI
+        Identifier to use when displaying entity in logs or GUI.
 
     Example values:
 
