@@ -9,6 +9,14 @@ from saltext.vmware.utils import vmc_constants
 
 
 @pytest.fixture
+def mock_vmc_security_groups_get_by_id():
+    with patch(
+        "saltext.vmware.modules.vmc_security_groups.get_by_id"
+    ) as mock_vmc_security_groups_get_by_id:
+        yield mock_vmc_security_groups_get_by_id
+
+
+@pytest.fixture
 def security_groups_data_by_id(mock_vmc_request_call_api):
     data = {
         "expression": [

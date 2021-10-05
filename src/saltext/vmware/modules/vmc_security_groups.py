@@ -565,7 +565,7 @@ def update(
                 "description": "web group"
             }
 
-    Please refer the `Security groups <https://developer.vmware.com/docs/nsx-vmc-policy/latest/policy/api/v1/infra/domains/domain-id/groups/group-id/patch/>`_ to get insight of input parameters
+    Please refer the `Security groups update <https://developer.vmware.com/docs/nsx-vmc-policy/latest/policy/api/v1/infra/domains/domain-id/groups/group-id/patch/>`_ to get insight of input parameters
 
     """
     log.info("Updating security group %s for SDDC %s", security_group_id, sddc_id)
