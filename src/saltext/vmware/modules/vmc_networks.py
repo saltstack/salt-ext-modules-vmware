@@ -742,11 +742,11 @@ def update(
         base_url=api_url_base, org_id=org_id, sddc_id=sddc_id, network_id=network_id
     )
 
+    # fetch the network for the given network_id
     existing_data = get_by_id(
         hostname, refresh_key, authorization_host, org_id, sddc_id, network_id, verify_ssl, cert
     )
 
-    # fetch the network for the given network_id
     if vmc_constants.ERROR in existing_data:
         return existing_data
 
