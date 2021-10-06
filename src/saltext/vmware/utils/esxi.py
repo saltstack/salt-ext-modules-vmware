@@ -267,7 +267,7 @@ def _get_host_thumbprint(ip):
         IP address of host.
     """
 
-    ctx = ssl.SSLContext()
+    ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as _socket:
         _socket.settimeout(1)
         with ctx.wrap_socket(_socket) as wrappedSocket:
