@@ -30,6 +30,7 @@ Execution Modules
     saltext.vmware.modules.vm
     saltext.vmware.modules.vmc_dhcp_profiles
     saltext.vmware.modules.vmc_direct_connect
+    saltext.vmware.modules.vmc_distributed_firewall_rules
     saltext.vmware.modules.vmc_dns_forwarder
     saltext.vmware.modules.vmc_nat_rules
     saltext.vmware.modules.vmc_networks
