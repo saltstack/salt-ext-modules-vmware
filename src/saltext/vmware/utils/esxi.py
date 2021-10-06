@@ -220,11 +220,14 @@ def move_host(name, cluster_name, service_instance):
     cluster_ref = utils_common.get_mor_by_property(
         service_instance, vim.ClusterComputeResource, cluster_name
     )
-    if cluster_ref.parent.parent != host_ref.parent.parent.parent:
+    host_dc = utils_common.get_mors_type(host_ref, vim.Datacenter)
+    host_cluster = utils_common.get_mors_type(host_ref, vim.ClusterComputeResource)
+    cluster_dc = utils_common.get_mors_type(cluster_ref, vim.Datacenter)
+    if host_dc != cluster_dc:
         raise salt.exceptions.VMwareApiError("Cluster has to be in the same datacenter")
     task = cluster_ref.MoveInto_Task([host_ref])
     utils_common.wait_for_task(task, cluster_name, "move host task")
-    return "moved"
+    return f"moved {name} from {host_cluster.name} to {cluster_ref.name}"
 
 
 def remove_host(name, service_instance):
@@ -242,7 +245,7 @@ def remove_host(name, service_instance):
     host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
     task = host.Destroy_Task()
     utils_common.wait_for_task(task, name, "destroy host task")
-    return "removed"
+    return f"removed host {name}"
 
 
 def _format_ssl_thumbprint(number):
@@ -291,16 +294,16 @@ def add_host(ip, root_user, password, cluster_name, datacenter_name, connect, se
         IP address of host.
 
     root_user
-        Username with root privilege to esxi instance.
+        Username with root privilege to ESXi instance.
 
     password
         Password to root user.
 
     cluster_name
-        Name of cluster esxi host is being added to.
+        Name of cluster ESXi host is being added to.
 
     datacenter
-        Datacenter that contains cluster that esxi instance is being added to.
+        Datacenter that contains cluster that ESXi instance is being added to.
 
     connect
         Specifies whether host should be connected after being added.

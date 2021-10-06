@@ -736,15 +736,15 @@ def set_advanced_config(
 
 def connect(name, service_instance=None):
     """
-    Connect an esxi instance to a vCenter instance.
+    Connect an ESXi instance to a vCenter instance.
 
     name
         Name of host.
 
     service_instance
-        The Service Instance from which to obtain managed object references.
+        The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Connect esxi instance {name}.")
+    log.debug(f"Connect ESXi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
@@ -754,15 +754,15 @@ def connect(name, service_instance=None):
 
 def disconnect(name, service_instance=None):
     """
-    Disconnect an esxi instance.
+    Disconnect an ESXi instance.
 
     name
         Name of host.
 
     service_instance
-        The Service Instance from which to obtain managed object references.
+        The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Disconnect esxi instance {name}.")
+    log.debug(f"Disconnect ESXi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
@@ -772,15 +772,15 @@ def disconnect(name, service_instance=None):
 
 def remove(name, service_instance=None):
     """
-    Remove an esxi instance from a vCenter instance.
+    Remove an ESXi instance from a vCenter instance.
 
     name
         Name of host.
 
     service_instance
-        The Service Instance from which to obtain managed object references.
+        The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Remove esxi instance {name}.")
+    log.debug(f"Remove ESXi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
@@ -790,7 +790,7 @@ def remove(name, service_instance=None):
 
 def move(name, cluster_name, service_instance=None):
     """
-    Move an esxi instance to a different cluster.
+    Move an ESXi instance to a different cluster.
 
     name
         Name of host.
@@ -799,9 +799,9 @@ def move(name, cluster_name, service_instance=None):
         Name of cluster to move host to.
 
     service_instance
-        The Service Instance from which to obtain managed object references.
+        The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Move esxi instance {name}.")
+    log.debug(f"Move ESXi instance {name}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
@@ -813,30 +813,30 @@ def add(
     ip, root_user, password, cluster_name, datacenter_name, connect=True, service_instance=None
 ):
     """
-    Add an esxi instance to a vCenter instance.
+    Add an ESXi instance to a vCenter instance.
 
     ip
         IP address of host.
 
     root_user
-        Username with root privilege to esxi instance.
+        Username with root privilege to ESXi instance.
 
     password
         Password to root user.
 
     cluster_name
-        Name of cluster esxi host is being added to.
+        Name of cluster ESXi host is being added to.
 
     datacenter
-        Datacenter that contains cluster that esxi instance is being added to.
+        Datacenter that contains cluster that ESXi instance is being added to.
 
     connect
         Specifies whether host should be connected after being added. Defaults to True.
 
     service_instance
-        The Service Instance from which to obtain managed object references.
+        The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Adding esxi instance {ip}.")
+    log.debug(f"Adding ESXi instance {ip}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     state = utils_esxi.add_host(

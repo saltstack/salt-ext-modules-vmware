@@ -308,7 +308,10 @@ def test_move(integration_test_config, service_instance):
             integration_test_config["esxi_manage_test_instance"]["move"],
             service_instance=service_instance,
         )
-        assert ret["state"] == "moved"
+        assert (
+            ret["state"]
+            == f"moved {integration_test_config['esxi_manage_test_instance']['name']} from {integration_test_config['esxi_manage_test_instance']['cluster']} to {integration_test_config['esxi_manage_test_instance']['move']}"
+        )
     else:
         pytest.skip("test requires esxi manage test instance credentials")
 
@@ -340,6 +343,9 @@ def test_manage_remove(integration_test_config, service_instance):
             integration_test_config["esxi_manage_test_instance"]["name"],
             service_instance=service_instance,
         )
-        assert ret["state"] == "removed"
+        assert (
+            ret["state"]
+            == f"removed host {integration_test_config['esxi_manage_test_instance']['name']}"
+        )
     else:
         pytest.skip("test requires esxi manage test instance credentials")
