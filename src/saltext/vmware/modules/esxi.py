@@ -734,65 +734,65 @@ def set_advanced_config(
     )
 
 
-def connect(name, service_instance=None):
+def connect(host, service_instance=None):
     """
     Connect an ESXi instance to a vCenter instance.
 
-    name
+    host
         Name of host.
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Connect ESXi instance {name}.")
+    log.debug(f"Connect ESXi instance {host}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    state = utils_esxi.reconnect_host(name, service_instance)
+    state = utils_esxi.reconnect_host(host, service_instance)
     return {"state": state}
 
 
-def disconnect(name, service_instance=None):
+def disconnect(host, service_instance=None):
     """
     Disconnect an ESXi instance.
 
-    name
+    host
         Name of host.
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Disconnect ESXi instance {name}.")
+    log.debug(f"Disconnect ESXi instance {host}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    state = utils_esxi.disconnect_host(name, service_instance)
+    state = utils_esxi.disconnect_host(host, service_instance)
     return {"state": state}
 
 
-def remove(name, service_instance=None):
+def remove(host, service_instance=None):
     """
     Remove an ESXi instance from a vCenter instance.
 
-    name
+    host
         Name of host.
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Remove ESXi instance {name}.")
+    log.debug(f"Remove ESXi instance {host}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    state = utils_esxi.remove_host(name, service_instance)
+    state = utils_esxi.remove_host(host, service_instance)
     return {"state": state}
 
 
-def move(name, cluster_name, service_instance=None):
+def move(host, cluster_name, service_instance=None):
     """
     Move an ESXi instance to a different cluster.
 
-    name
+    host
         Name of host.
 
     cluster_name
@@ -801,11 +801,11 @@ def move(name, cluster_name, service_instance=None):
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Move ESXi instance {name}.")
+    log.debug(f"Move ESXi instance {host}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    state = utils_esxi.move_host(name, cluster_name, service_instance)
+    state = utils_esxi.move_host(host, cluster_name, service_instance)
     return {"state": state}
 
 

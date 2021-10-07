@@ -161,53 +161,53 @@ def list_hosts(service_instance):
     return utils_common.list_objects(service_instance, vim.HostSystem)
 
 
-def disconnect_host(name, service_instance):
+def disconnect_host(host, service_instance):
     """
     Disconnects host from vCenter instance
 
     Returns connection state of host
 
-    name
+    host
         Name of host.
 
     service_instance
         The Service Instance Object from which to obtain host.
     """
-    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
+    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
     if host.summary.runtime.connectionState == "disconnected":
         return host.summary.runtime.connectionState
     task = host.DisconnectHost_Task()
-    host = utils_common.wait_for_task(task, name, "disconnect host task")
+    host = utils_common.wait_for_task(task, host, "disconnect host task")
     return host.summary.runtime.connectionState
 
 
-def reconnect_host(name, service_instance):
+def reconnect_host(host, service_instance):
     """
     Reconnects host from vCenter instance
 
     Returns connection state of host
 
-    name
+    host
         Name of host.
 
     service_instance
         The Service Instance Object from which to obtain host.
     """
-    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
+    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
     if host.summary.runtime.connectionState == "connected":
         return host.summary.runtime.connectionState
     task = host.ReconnectHost_Task()
-    ret_host = utils_common.wait_for_task(task, name, "reconnect host task")
+    ret_host = utils_common.wait_for_task(task, host, "reconnect host task")
     return ret_host.summary.runtime.connectionState
 
 
-def move_host(name, cluster_name, service_instance):
+def move_host(host, cluster_name, service_instance):
     """
     Move host to a different cluster.
 
     Returns connection state of host
 
-    name
+    host
         Name of host.
 
     cluster_name
@@ -216,7 +216,7 @@ def move_host(name, cluster_name, service_instance):
     service_instance
         The Service Instance Object from which to obtain host.
     """
-    host_ref = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
+    host_ref = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
     cluster_ref = utils_common.get_mor_by_property(
         service_instance, vim.ClusterComputeResource, cluster_name
     )
@@ -227,25 +227,25 @@ def move_host(name, cluster_name, service_instance):
         raise salt.exceptions.VMwareApiError("Cluster has to be in the same datacenter")
     task = cluster_ref.MoveInto_Task([host_ref])
     utils_common.wait_for_task(task, cluster_name, "move host task")
-    return f"moved {name} from {host_cluster.name} to {cluster_ref.name}"
+    return f"moved {host} from {host_cluster.name} to {cluster_ref.name}"
 
 
-def remove_host(name, service_instance):
+def remove_host(host, service_instance):
     """
     Removes host from vCenter instance.
 
     Returns connection state of host
 
-    name
+    host
         Name of host.
 
     service_instance
         The Service Instance Object from which to obtain host.
     """
-    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, name)
-    task = host.Destroy_Task()
-    utils_common.wait_for_task(task, name, "destroy host task")
-    return f"removed host {name}"
+    host_ref = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
+    task = host_ref.Destroy_Task()
+    utils_common.wait_for_task(task, host, "destroy host task")
+    return f"removed host {host}"
 
 
 def _format_ssl_thumbprint(number):
