@@ -280,7 +280,7 @@ def _get_host_thumbprint(ip, verify_host_cert=True):
 
 
 def add_host(
-    ip,
+    host,
     root_user,
     password,
     cluster_name,
@@ -294,8 +294,8 @@ def add_host(
 
     Returns connection state of host
 
-    ip
-        IP address of host.
+    host
+        IP address or hostname of ESXI instance.
 
     root_user
         Username with root privilege to ESXi instance.
@@ -322,11 +322,11 @@ def add_host(
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
 
     connect_spec = vim.host.ConnectSpec()
-    connect_spec.sslThumbprint = _get_host_thumbprint(ip, verify_host_cert)
-    connect_spec.hostName = ip
+    connect_spec.sslThumbprint = _get_host_thumbprint(host, verify_host_cert)
+    connect_spec.hostName = host
     connect_spec.userName = root_user
     connect_spec.password = password
 
     task = cluster_ref.AddHost_Task(connect_spec, connect)
-    host = utils_common.wait_for_task(task, ip, "add host task")
-    return host.summary.runtime.connectionState
+    host_ref = utils_common.wait_for_task(task, host, "add host task")
+    return host_ref.summary.runtime.connectionState

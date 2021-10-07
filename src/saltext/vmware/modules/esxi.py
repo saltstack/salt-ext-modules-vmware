@@ -810,7 +810,7 @@ def move(name, cluster_name, service_instance=None):
 
 
 def add(
-    ip,
+    host,
     root_user,
     password,
     cluster_name,
@@ -822,8 +822,8 @@ def add(
     """
     Add an ESXi instance to a vCenter instance.
 
-    ip
-        IP address of host.
+    host
+        IP address or hostname of ESXI instance.
 
     root_user
         Username with root privilege to ESXi instance.
@@ -846,11 +846,11 @@ def add(
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
     """
-    log.debug(f"Adding ESXi instance {ip}.")
+    log.debug(f"Adding ESXi instance {host}.")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     state = utils_esxi.add_host(
-        ip,
+        host,
         root_user,
         password,
         cluster_name,
