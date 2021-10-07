@@ -259,32 +259,29 @@ def _format_ssl_thumbprint(number):
     return ":".join(a + b for a, b in zip(string[::2], string[1::2]))
 
 
-def _get_host_thumbprint(ip):
+def _get_host_thumbprint(ip, server_auth=True):
     """
     Returns host's ssl thumbprint.
 
     ip
         IP address of host.
     """
-
-    ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as _socket:
+    ctx = ssl.SSLContext()
+    if server_auth:
+        ctx = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+    with socket.create_connection((ip, 443)) as _socket:
         _socket.settimeout(1)
-        with ctx.wrap_socket(_socket) as wrappedSocket:
+        with ctx.wrap_socket(_socket, server_hostname=ip) as wrappedSocket:
 
-            try:
-                wrappedSocket.connect((ip, 443))
-            except:
-                response = False
-            else:
-                cert = wrappedSocket.getpeercert(True)
-                sha1 = hashlib.sha1(cert).hexdigest()
-                response = _format_ssl_thumbprint(sha1)
-
+            cert = wrappedSocket.getpeercert(True)
+            sha1 = hashlib.sha1(cert).hexdigest()
+            response = _format_ssl_thumbprint(sha1)
             return response
 
 
-def add_host(ip, root_user, password, cluster_name, datacenter_name, connect, service_instance):
+def add_host(
+    ip, root_user, password, cluster_name, datacenter_name, server_auth, connect, service_instance
+):
     """
     Adds host from vCenter instance
 
@@ -305,6 +302,9 @@ def add_host(ip, root_user, password, cluster_name, datacenter_name, connect, se
     datacenter
         Datacenter that contains cluster that ESXi instance is being added to.
 
+    server_auth
+        Verify ESXi server thumbprint for connection.
+
     connect
         Specifies whether host should be connected after being added.
 
@@ -315,7 +315,7 @@ def add_host(ip, root_user, password, cluster_name, datacenter_name, connect, se
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
 
     connect_spec = vim.host.ConnectSpec()
-    connect_spec.sslThumbprint = _get_host_thumbprint(ip)
+    connect_spec.sslThumbprint = _get_host_thumbprint(ip, server_auth)
     connect_spec.hostName = ip
     connect_spec.userName = root_user
     connect_spec.password = password

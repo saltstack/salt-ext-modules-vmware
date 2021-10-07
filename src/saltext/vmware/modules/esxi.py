@@ -810,7 +810,14 @@ def move(name, cluster_name, service_instance=None):
 
 
 def add(
-    ip, root_user, password, cluster_name, datacenter_name, connect=True, service_instance=None
+    ip,
+    root_user,
+    password,
+    cluster_name,
+    datacenter_name,
+    server_auth=True,
+    connect=True,
+    service_instance=None,
 ):
     """
     Add an ESXi instance to a vCenter instance.
@@ -830,6 +837,9 @@ def add(
     datacenter
         Datacenter that contains cluster that ESXi instance is being added to.
 
+    server_auth
+        Verify ESXi server thumbprint for connection. Defaults to True.
+
     connect
         Specifies whether host should be connected after being added. Defaults to True.
 
@@ -840,6 +850,13 @@ def add(
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     state = utils_esxi.add_host(
-        ip, root_user, password, cluster_name, datacenter_name, connect, service_instance
+        ip,
+        root_user,
+        password,
+        cluster_name,
+        datacenter_name,
+        server_auth,
+        connect,
+        service_instance,
     )
     return {"state": state}
