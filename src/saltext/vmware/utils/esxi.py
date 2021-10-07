@@ -168,7 +168,7 @@ def disconnect_host(host, service_instance):
     Returns connection state of host
 
     host
-        Name of host.
+        Name of ESXi instance in vCenter.
 
     service_instance
         The Service Instance Object from which to obtain host.
@@ -188,7 +188,7 @@ def reconnect_host(host, service_instance):
     Returns connection state of host
 
     host
-        Name of host.
+        Name of ESXi instance in vCenter.
 
     service_instance
         The Service Instance Object from which to obtain host.
@@ -208,7 +208,7 @@ def move_host(host, cluster_name, service_instance):
     Returns connection state of host
 
     host
-        Name of host.
+        Name of ESXi instance in vCenter.
 
     cluster_name
         Name of cluster to move host to.
@@ -237,7 +237,7 @@ def remove_host(host, service_instance):
     Returns connection state of host
 
     host
-        Name of host.
+        Name of ESXi instance in vCenter.
 
     service_instance
         The Service Instance Object from which to obtain host.

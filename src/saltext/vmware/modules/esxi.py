@@ -739,7 +739,7 @@ def connect(host, service_instance=None):
     Connect an ESXi instance to a vCenter instance.
 
     host
-        Name of host.
+        Name of ESXi instance in vCenter.
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
@@ -757,7 +757,7 @@ def disconnect(host, service_instance=None):
     Disconnect an ESXi instance.
 
     host
-        Name of host.
+        Name of ESXi instance in vCenter.
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
@@ -775,7 +775,7 @@ def remove(host, service_instance=None):
     Remove an ESXi instance from a vCenter instance.
 
     host
-        Name of host.
+        Name of ESXi instance in vCenter.
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
@@ -793,7 +793,7 @@ def move(host, cluster_name, service_instance=None):
     Move an ESXi instance to a different cluster.
 
     host
-        Name of host.
+        Name of ESXi instance in vCenter.
 
     cluster_name
         Name of cluster to move host to.
@@ -823,7 +823,7 @@ def add(
     Add an ESXi instance to a vCenter instance.
 
     host
-        IP address or hostname of ESXI instance.
+        IP address or hostname of ESXi instance.
 
     root_user
         Username with root privilege to ESXi instance.
