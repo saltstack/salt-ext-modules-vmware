@@ -349,8 +349,6 @@ def add_host(
     datacenter_name=None,
     cluster_name=None,
     nics=None,
-    num_ports=128,
-    mtu=1500,
     service_instance=None,
 ):
     """
@@ -371,12 +369,6 @@ def add_host(
     nics
         List of vmnics to attach to vSwitch. (optional). Default "None".
 
-    num_ports
-        Number of ports to configure on the vSwitch. (optional). Default 128.
-
-    mtu
-        MTU to configure on the vSwitch. (optional). Default 1600.
-
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
@@ -389,6 +381,11 @@ def add_host(
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    _, switch_ref, _ = _get_switch_config_spec(
+        service_instance=service_instance,
+        datacenter_name=datacenter_name,
+        switch_name=switch_name,
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -405,8 +402,8 @@ def add_host(
             if isinstance(nics, str):
                 nics = [nics]
             vss_spec = vim.host.VirtualSwitch.Specification()
-            vss_spec.mtu = mtu
-            vss_spec.numPorts = num_ports
+            vss_spec.mtu = switch_ref.config.maxMtu or 1500
+            vss_spec.numPorts = switch_ref.config.numPorts or 128
             if nics:
                 vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=nics)
             network_manager.AddVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
@@ -469,6 +466,11 @@ def update_host(
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    _, switch_ref, _ = _get_switch_config_spec(
+        service_instance=service_instance,
+        datacenter_name=datacenter_name,
+        switch_name=switch_name,
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -489,8 +491,10 @@ def update_host(
                 for switch in network_manager.networkInfo.vswitch:
                     if switch.name != switch_name:
                         continue
-                    vss_spec.mtu = mtu or switch.mtu
-                    vss_spec.numPorts = num_ports or switch.spec.numPorts
+                    vss_spec.mtu = mtu or switch.mtu or switch_ref.config.maxMtu
+                    vss_spec.numPorts = (
+                        num_ports or switch.spec.numPorts or switch_ref.config.numPorts
+                    )
                     if switch.pnic or nics:
                         vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(
                             nicDevice=nics or list(map(lambda x: x.split("-", 3)[-1], switch.pnic))
