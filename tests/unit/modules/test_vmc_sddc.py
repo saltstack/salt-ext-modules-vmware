@@ -318,3 +318,17 @@ def test_get_vcenter_detail_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+def test_get_vcenter_detail_fail_with_error(mock_vmc_request_call_api):
+    expected_response = {"error": "Given SDDC does not exist"}
+    mock_vmc_request_call_api.return_value = expected_response
+    result = vmc_sddc.get_vcenter_detail(
+        hostname="hostname",
+        refresh_key="refresh_key",
+        authorization_host="authorization_host",
+        org_id="org_id",
+        sddc_id="sddc_d",
+        verify_ssl=False,
+    )
+    assert "error" in result
