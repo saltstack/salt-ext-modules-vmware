@@ -1,6 +1,10 @@
+import hashlib
 import logging
+import socket
+import ssl
 
 import salt.exceptions
+import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
 
@@ -155,3 +159,174 @@ def list_hosts(service_instance):
         The Service Instance Object from which to obtain hosts.
     """
     return utils_common.list_objects(service_instance, vim.HostSystem)
+
+
+def disconnect_host(host, service_instance):
+    """
+    Disconnects host from vCenter instance
+
+    Returns connection state of host
+
+    host
+        Name of ESXi instance in vCenter.
+
+    service_instance
+        The Service Instance Object from which to obtain host.
+    """
+    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
+    if host.summary.runtime.connectionState == "disconnected":
+        return host.summary.runtime.connectionState
+    task = host.DisconnectHost_Task()
+    host = utils_common.wait_for_task(task, host, "disconnect host task")
+    return host.summary.runtime.connectionState
+
+
+def reconnect_host(host, service_instance):
+    """
+    Reconnects host from vCenter instance
+
+    Returns connection state of host
+
+    host
+        Name of ESXi instance in vCenter.
+
+    service_instance
+        The Service Instance Object from which to obtain host.
+    """
+    host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
+    if host.summary.runtime.connectionState == "connected":
+        return host.summary.runtime.connectionState
+    task = host.ReconnectHost_Task()
+    ret_host = utils_common.wait_for_task(task, host, "reconnect host task")
+    return ret_host.summary.runtime.connectionState
+
+
+def move_host(host, cluster_name, service_instance):
+    """
+    Move host to a different cluster.
+
+    Returns connection state of host
+
+    host
+        Name of ESXi instance in vCenter.
+
+    cluster_name
+        Name of cluster to move host to.
+
+    service_instance
+        The Service Instance Object from which to obtain host.
+    """
+    host_ref = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
+    cluster_ref = utils_common.get_mor_by_property(
+        service_instance, vim.ClusterComputeResource, cluster_name
+    )
+    host_dc = utils_common.get_mors_type(host_ref, vim.Datacenter)
+    host_cluster = utils_common.get_mors_type(host_ref, vim.ClusterComputeResource)
+    cluster_dc = utils_common.get_mors_type(cluster_ref, vim.Datacenter)
+    if host_dc != cluster_dc:
+        raise salt.exceptions.VMwareApiError("Cluster has to be in the same datacenter")
+    task = cluster_ref.MoveInto_Task([host_ref])
+    utils_common.wait_for_task(task, cluster_name, "move host task")
+    return f"moved {host} from {host_cluster.name} to {cluster_ref.name}"
+
+
+def remove_host(host, service_instance):
+    """
+    Removes host from vCenter instance.
+
+    Returns connection state of host
+
+    host
+        Name of ESXi instance in vCenter.
+
+    service_instance
+        The Service Instance Object from which to obtain host.
+    """
+    host_ref = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
+    task = host_ref.Destroy_Task()
+    utils_common.wait_for_task(task, host, "destroy host task")
+    return f"removed host {host}"
+
+
+def _format_ssl_thumbprint(number):
+    """
+    Formats ssl cert number
+
+    number
+        Number to be formatted into ssl thumbprint
+    """
+    string = str(number)
+    return ":".join(a + b for a, b in zip(string[::2], string[1::2]))
+
+
+def _get_host_thumbprint(ip, verify_host_cert=True):
+    """
+    Returns host's ssl thumbprint.
+
+    ip
+        IP address of host.
+    """
+    ctx = ssl.SSLContext()
+    if verify_host_cert:
+        ctx = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+    with socket.create_connection((ip, 443)) as _socket:
+        _socket.settimeout(1)
+        with ctx.wrap_socket(_socket, server_hostname=ip) as wrappedSocket:
+
+            cert = wrappedSocket.getpeercert(True)
+            sha1 = hashlib.sha1(cert).hexdigest()
+            response = _format_ssl_thumbprint(sha1)
+            return response
+
+
+def add_host(
+    host,
+    root_user,
+    password,
+    cluster_name,
+    datacenter_name,
+    verify_host_cert,
+    connect,
+    service_instance,
+):
+    """
+    Adds host from vCenter instance
+
+    Returns connection state of host
+
+    host
+        IP address or hostname of ESXI instance.
+
+    root_user
+        Username with root privilege to ESXi instance.
+
+    password
+        Password to root user.
+
+    cluster_name
+        Name of cluster ESXi host is being added to.
+
+    datacenter
+        Datacenter that contains cluster that ESXi instance is being added to.
+
+    verify_host_cert
+        Validates the host's SSL certificate is signed by a CA, and that the hostname in the certificate matches the host.
+
+    connect
+        Specifies whether host should be connected after being added.
+
+    service_instance
+        The Service Instance Object to place host on.
+    """
+    dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
+    cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
+
+    connect_spec = vim.host.ConnectSpec()
+    connect_spec.sslThumbprint = _get_host_thumbprint(host, verify_host_cert)
+    connect_spec.hostName = host
+    connect_spec.userName = root_user
+    connect_spec.password = password
+
+    task = cluster_ref.AddHost_Task(connect_spec, connect)
+    host_ref = utils_common.wait_for_task(task, host, "add host task")
+    return host_ref.summary.runtime.connectionState
