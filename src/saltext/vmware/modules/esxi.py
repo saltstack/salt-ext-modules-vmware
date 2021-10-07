@@ -815,7 +815,7 @@ def add(
     password,
     cluster_name,
     datacenter_name,
-    server_auth=True,
+    verify_host_cert=True,
     connect=True,
     service_instance=None,
 ):
@@ -837,8 +837,8 @@ def add(
     datacenter
         Datacenter that contains cluster that ESXi instance is being added to.
 
-    server_auth
-        Verify ESXi server thumbprint for connection. Defaults to True.
+    verify_host_cert
+        Validates the host's SSL certificate is signed by a CA, and that the hostname in the certificate matches the host. Defaults to True.
 
     connect
         Specifies whether host should be connected after being added. Defaults to True.
@@ -855,7 +855,7 @@ def add(
         password,
         cluster_name,
         datacenter_name,
-        server_auth,
+        verify_host_cert,
         connect,
         service_instance,
     )

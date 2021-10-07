@@ -259,7 +259,7 @@ def _format_ssl_thumbprint(number):
     return ":".join(a + b for a, b in zip(string[::2], string[1::2]))
 
 
-def _get_host_thumbprint(ip, server_auth=True):
+def _get_host_thumbprint(ip, verify_host_cert=True):
     """
     Returns host's ssl thumbprint.
 
@@ -267,7 +267,7 @@ def _get_host_thumbprint(ip, server_auth=True):
         IP address of host.
     """
     ctx = ssl.SSLContext()
-    if server_auth:
+    if verify_host_cert:
         ctx = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
     with socket.create_connection((ip, 443)) as _socket:
         _socket.settimeout(1)
@@ -280,7 +280,14 @@ def _get_host_thumbprint(ip, server_auth=True):
 
 
 def add_host(
-    ip, root_user, password, cluster_name, datacenter_name, server_auth, connect, service_instance
+    ip,
+    root_user,
+    password,
+    cluster_name,
+    datacenter_name,
+    verify_host_cert,
+    connect,
+    service_instance,
 ):
     """
     Adds host from vCenter instance
@@ -302,8 +309,8 @@ def add_host(
     datacenter
         Datacenter that contains cluster that ESXi instance is being added to.
 
-    server_auth
-        Verify ESXi server thumbprint for connection.
+    verify_host_cert
+        Validates the host's SSL certificate is signed by a CA, and that the hostname in the certificate matches the host.
 
     connect
         Specifies whether host should be connected after being added.
@@ -315,7 +322,7 @@ def add_host(
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
 
     connect_spec = vim.host.ConnectSpec()
-    connect_spec.sslThumbprint = _get_host_thumbprint(ip, server_auth)
+    connect_spec.sslThumbprint = _get_host_thumbprint(ip, verify_host_cert)
     connect_spec.hostName = ip
     connect_spec.userName = root_user
     connect_spec.password = password

@@ -277,7 +277,7 @@ def test_add(integration_test_config, service_instance):
             integration_test_config["esxi_manage_test_instance"]["password"],
             integration_test_config["esxi_manage_test_instance"]["cluster"],
             integration_test_config["esxi_manage_test_instance"]["datacenter"],
-            server_auth=False,
+            verify_host_cert=False,
             service_instance=service_instance,
         )
         assert ret["state"] == "connected"
