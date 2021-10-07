@@ -10,6 +10,11 @@ these steps will be manual. Over time the process will become more automated.
 Overview
 --------
 
+.. note::
+
+    You may have issues building wheels on MacOS. It may be easier to build in
+    a docker container or other VM.
+
 The goal for this module is to have nightly dev builds released frequently.
 It's possible that days go by without changes happening, but these builds will
 still be called nightly builds.
@@ -25,6 +30,25 @@ Salt. This will ensure that any breaking changes within Salt are detected
 ahead of time, and can either be accounted for within this module, or upstream
 bugs can be filed.
 
+Ensure Version
+--------------
+
+When it comes time to build a release, ensure that
+``src/saltext/vmware/version.py`` contains the correct version. For an release
+candidate (RC) release the format should be ``YY.M.D.PATCHrcN``. Any subsequent RC
+releases should increment ``N``. The release manager should start cutting RCs
+far enough ahead of time to be able to cut a complete release on the target
+date. For a production release, the format should be ``YY.M.D.PATCH``. For
+instance, if we were going to release on 2010-08-14, we would start with
+
+.. code::
+
+    __version__ = '10.8.14.0rc1'
+
+When the release is deemed ready, the version would be ``10.8.14.0``.
+
+If the incorrect version is present in the ``main`` branch, it should be
+updated, committed, and pushed before continuing this process.
 
 Build
 -----
@@ -38,6 +62,8 @@ dependencies:
     git fetch salt
     git stash  # if needed
     git checkout salt/main
+    # If pip and wheel are not already installed/up-to-date
+    python -m pip install --upgrade pip wheeel
     python -m pip wheel .[dev,tests,release] -w dist/
 
 This will create a ``.whl`` file for the extension module, as well as all of
@@ -59,6 +85,7 @@ the local source, which helps to ensure the complete install process is tested.
     deactivate  # if a venv is already activated
     python -m venv /tmp/test_saltext --prompt test-vmw-ext
     source /tmp/test_saltext/bin/activate
+    python -m pip install --upgrade pip wheel
     python -m pip install --no-index --find-links dist/ saltext.vmware[dev,tests,release]
     pytest --cov=saltext.vmware tests/
 
@@ -88,7 +115,7 @@ Then you would run:
 
 .. code::
 
-    twine upload --repository = test_saltext_vmware dist/saltext.vmware-VERSION-py2.py3-none-any.whl
+    twine upload --repository test_saltext_vmware dist/saltext.vmware-VERSION-py2.py3-none-any.whl
 
 Versions, Tagging, and Changelog
 --------------------------------
@@ -98,7 +125,7 @@ You should have a ``[saltext_vmware]`` section in your pypirc file, similar to
 the test setting.
 
 In regards to version numbers, this project uses Calver_, with the
-``YY.MM.DD.PATCH`` style. Breaking (and any other) changes should be
+``YY.M.D.PATCH`` style. Breaking (and any other) changes should be
 communicated through the changelog_.
 
 .. _CalVer: https://calver.org/
@@ -136,6 +163,7 @@ Once the full test suite has passed, sign the production package with gpg and
 upload the package with twine:
 
 .. code::
+
     # SIGNING_KEY should be replaced with the signing key, and FINAL-VERSION
     # with the actual version number
     gpg --detach-sign -u SIGNING_KEY dist/saltext.vmware-FINAL-VERSION-py2.py3.none-any.whl
@@ -144,6 +172,7 @@ upload the package with twine:
 Once the package has been uploaded to PyPI the tag should be pushed:
 
 .. code::
+
     git push salt 10.8.14   # to use the previous example
 
 A release should also be created on GitHub, uploading both the package as well
