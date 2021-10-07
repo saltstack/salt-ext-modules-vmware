@@ -28,7 +28,7 @@ def __virtual__():
     return __virtualname__
 
 
-def list_():
+def list_(service_instance=None):
     """
     Returns a list of datacenters for the specified host.
 
@@ -36,11 +36,12 @@ def list_():
 
         salt '*' vmware_datacenter.list
     """
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     return utils_datacenter.list_datacenters(service_instance)
 
 
-def create(name):
+def create(name, service_instance=None):
     """
     Creates a datacenter.
 
@@ -53,7 +54,8 @@ def create(name):
 
         salt '*' vmware_datacenter.create dc1
     """
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         utils_datacenter.create_datacenter(service_instance, name)
     except salt.exceptions.VMwareApiError as exc:
@@ -61,7 +63,7 @@ def create(name):
     return {name: True}
 
 
-def get_(name):
+def get_(name, service_instance=None):
     """
     Get the properties of a datacenter.
 
@@ -75,7 +77,8 @@ def get_(name):
         salt '*' vmware_datacenter.get dc1
     """
     ret = {}
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, name)
         dc = utils_common.get_mors_with_properties(
@@ -88,7 +91,7 @@ def get_(name):
     return ret
 
 
-def delete(name):
+def delete(name, service_instance=None):
     """
     Deletes a datacenter.
 
@@ -101,7 +104,8 @@ def delete(name):
 
         salt '*' vmware_datacenter.delete dc1
     """
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         utils_datacenter.delete_datacenter(service_instance, name)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
