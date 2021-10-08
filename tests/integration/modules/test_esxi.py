@@ -279,3 +279,97 @@ def test_get_dns_config(service_instance):
         assert ret[host]["ip"]
         assert ret[host]["host_name"]
         assert ret[host]["domain_name"]
+
+    ret = esxi.get_dns_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        host_name="no_host",
+    )
+    assert not ret
+
+
+def test_add(integration_test_config, service_instance):
+    """
+    Test esxi add
+    """
+    if integration_test_config["esxi_manage_test_instance"]:
+        ret = esxi.add(
+            integration_test_config["esxi_manage_test_instance"]["name"],
+            integration_test_config["esxi_manage_test_instance"]["user"],
+            integration_test_config["esxi_manage_test_instance"]["password"],
+            integration_test_config["esxi_manage_test_instance"]["cluster"],
+            integration_test_config["esxi_manage_test_instance"]["datacenter"],
+            verify_host_cert=False,
+            service_instance=service_instance,
+        )
+        assert ret["state"] == "connected"
+    else:
+        pytest.skip("test requires esxi manage test instance credentials")
+
+
+def test_manage_disconnect(integration_test_config, service_instance):
+    """
+    Test esxi manage disconnect task
+    """
+    if integration_test_config["esxi_manage_test_instance"]:
+        ret = esxi.disconnect(
+            integration_test_config["esxi_manage_test_instance"]["name"],
+            service_instance=service_instance,
+        )
+        assert ret["state"] == "disconnected"
+    else:
+        pytest.skip("test requires esxi manage test instance credentials")
+
+
+def test_move(integration_test_config, service_instance):
+    """
+    Test esxi move
+    """
+    if integration_test_config["esxi_manage_test_instance"]:
+        ret = esxi.move(
+            integration_test_config["esxi_manage_test_instance"]["name"],
+            integration_test_config["esxi_manage_test_instance"]["move"],
+            service_instance=service_instance,
+        )
+        assert (
+            ret["state"]
+            == f"moved {integration_test_config['esxi_manage_test_instance']['name']} from {integration_test_config['esxi_manage_test_instance']['cluster']} to {integration_test_config['esxi_manage_test_instance']['move']}"
+        )
+    else:
+        pytest.skip("test requires esxi manage test instance credentials")
+
+
+def test_manage_connect(integration_test_config, service_instance):
+    """
+    Test esxi manage connect task
+    """
+    if integration_test_config["esxi_manage_test_instance"]:
+        ret = esxi.connect(
+            integration_test_config["esxi_manage_test_instance"]["name"],
+            service_instance=service_instance,
+        )
+        assert ret["state"] == "connected"
+    else:
+        pytest.skip("test requires esxi manage test instance credentials")
+
+
+def test_manage_remove(integration_test_config, service_instance):
+    """
+    Test esxi manage remove task
+    """
+    if integration_test_config["esxi_manage_test_instance"]:
+        esxi.disconnect(
+            integration_test_config["esxi_manage_test_instance"]["name"],
+            service_instance=service_instance,
+        )
+        ret = esxi.remove(
+            integration_test_config["esxi_manage_test_instance"]["name"],
+            service_instance=service_instance,
+        )
+        assert (
+            ret["state"]
+            == f"removed host {integration_test_config['esxi_manage_test_instance']['name']}"
+        )
+    else:
+        pytest.skip("test requires esxi manage test instance credentials")

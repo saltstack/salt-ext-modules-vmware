@@ -1,12 +1,6 @@
 [build-system]
-requires = ["setuptools>=50.3.2", "wheel", "setuptools-declarative-requirements", "setuptools_scm[toml]>=3.4"]
+requires = ["setuptools>=50.3.2", "wheel", "setuptools-declarative-requirements"]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools_scm]
-write_to = "src/saltext/vmware/version.py"
-write_to_template = "__version__ = \"{version}\"\n"
-version_scheme = "calver-by-date"
-local_scheme="no-local-version"
 
 [tool.black]
 line-length = 100

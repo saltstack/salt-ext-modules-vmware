@@ -30,6 +30,25 @@ Salt. This will ensure that any breaking changes within Salt are detected
 ahead of time, and can either be accounted for within this module, or upstream
 bugs can be filed.
 
+Ensure Version
+--------------
+
+When it comes time to build a release, ensure that
+``src/saltext/vmware/version.py`` contains the correct version. For an release
+candidate (RC) release the format should be ``YY.M.D.PATCHrcN``. Any subsequent RC
+releases should increment ``N``. The release manager should start cutting RCs
+far enough ahead of time to be able to cut a complete release on the target
+date. For a production release, the format should be ``YY.M.D.PATCH``. For
+instance, if we were going to release on 2010-08-14, we would start with
+
+.. code::
+
+    __version__ = '10.8.14.0rc1'
+
+When the release is deemed ready, the version would be ``10.8.14.0``.
+
+If the incorrect version is present in the ``main`` branch, it should be
+updated, committed, and pushed before continuing this process.
 
 Build
 -----
@@ -43,6 +62,8 @@ dependencies:
     git fetch salt
     git stash  # if needed
     git checkout salt/main
+    # If pip and wheel are not already installed/up-to-date
+    python -m pip install --upgrade pip wheeel
     python -m pip wheel .[dev,tests,release] -w dist/
 
 This will create a ``.whl`` file for the extension module, as well as all of
@@ -104,7 +125,7 @@ You should have a ``[saltext_vmware]`` section in your pypirc file, similar to
 the test setting.
 
 In regards to version numbers, this project uses Calver_, with the
-``YY.MM.DD.PATCH`` style. Breaking (and any other) changes should be
+``YY.M.D.PATCH`` style. Breaking (and any other) changes should be
 communicated through the changelog_.
 
 .. _CalVer: https://calver.org/
