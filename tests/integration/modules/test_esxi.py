@@ -275,6 +275,7 @@ def test_get_dns_config(service_instance):
         datacenter_name="Datacenter",
         cluster_name="Cluster",
     )
+    assert ret
     for host in ret:
         assert ret[host]["ip"]
         assert ret[host]["host_name"]
