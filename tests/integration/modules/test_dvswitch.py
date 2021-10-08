@@ -88,14 +88,14 @@ def test_add_remove_host(service_instance):
     )
     assert ret
 
-    ret = dvswitch.add_host(
+    ret = dvswitch.add_hosts(
         switch_name=switch_name,
         datacenter_name="Datacenter",
         service_instance=service_instance,
     )
     assert set(ret.values()) == {True}
 
-    ret = dvswitch.update_host(
+    ret = dvswitch.update_hosts(
         switch_name=switch_name,
         datacenter_name="Datacenter",
         mtu=1800,
@@ -104,7 +104,7 @@ def test_add_remove_host(service_instance):
     )
     assert set(ret.values()) == {True}
 
-    ret = dvswitch.remove_host(
+    ret = dvswitch.remove_hosts(
         switch_name=switch_name,
         datacenter_name="Datacenter",
         service_instance=service_instance,

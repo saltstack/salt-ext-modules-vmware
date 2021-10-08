@@ -284,7 +284,7 @@ def configure(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def remove_host(
+def remove_hosts(
     switch_name,
     host_name=None,
     datacenter_name=None,
@@ -292,7 +292,7 @@ def remove_host(
     service_instance=None,
 ):
     """
-    Remove an ESXi host from a distributed vSwitch.
+    Remove ESXi host(s) from a distributed vSwitch.
 
     switch_name
         Name of the distributed vSwitch.
@@ -311,10 +311,10 @@ def remove_host(
 
     .. code-block:: bash
 
-        salt '*' vmware_dvswitch.remove_host switch_name=dvs1 hostname=host1
+        salt '*' vmware_dvswitch.remove_hosts switch_name=dvs1 hostname=host1
 
     """
-    log.debug("Running vmware_dvswitch.remove_host")
+    log.debug("Running vmware_dvswitch.remove_hosts")
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -343,7 +343,7 @@ def remove_host(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def add_host(
+def add_hosts(
     switch_name,
     host_name=None,
     datacenter_name=None,
@@ -352,7 +352,7 @@ def add_host(
     service_instance=None,
 ):
     """
-    Add an ESXi host to a distributed vSwitch.
+    Add ESXi host(s) to a distributed vSwitch.
 
     switch_name
         Name of the distributed vSwitch.
@@ -374,10 +374,10 @@ def add_host(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.add_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+        salt '*' vmware_esxi.add_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
 
     """
-    log.debug("Running vmware_dvswitch.add_host")
+    log.debug("Running vmware_dvswitch.add_hosts")
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -420,7 +420,7 @@ def add_host(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def update_host(
+def update_hosts(
     switch_name,
     host_name=None,
     datacenter_name=None,
@@ -431,7 +431,7 @@ def update_host(
     service_instance=None,
 ):
     """
-    Update an ESXi host on a distributed vSwitch.
+    Update ESXi host(s) on a distributed vSwitch.
 
     switch_name
         Name of the distributed vSwitch.
@@ -459,10 +459,10 @@ def update_host(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.update_host switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+        salt '*' vmware_esxi.update_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
 
     """
-    log.debug("Running vmware_dvswitch.update_host")
+    log.debug("Running vmware_dvswitch.update_hosts")
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
