@@ -24,6 +24,15 @@ create_sddc = {
 }
 
 
+manage_sddc_host = {
+    "availability_zone": None,
+    "cluster_id": None,
+    "esxs": None,
+    "num_hosts": 1,
+    "strict_placement": False,
+}
+
+
 create_security_rules_mgw = {
     "sequence_number": 0,
     "source_groups": ["ANY"],
