@@ -721,3 +721,19 @@ def get_vm_datacenter(*, vm):
         except AttributeError:
             break
     return datacenter
+
+
+def get_mors_type(obj, type):
+    """
+    Return a vim type from managed object reference
+    """
+    datacenter = None
+    while True:
+        if isinstance(obj, type):
+            datacenter = obj
+            break
+        try:
+            obj = obj.parent
+        except AttributeError:
+            break
+    return datacenter
