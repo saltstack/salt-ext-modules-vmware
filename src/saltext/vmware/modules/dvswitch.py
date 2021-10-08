@@ -5,6 +5,7 @@ import logging
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -48,7 +49,7 @@ def _get_switch_config_spec(service_instance, datacenter_name, switch_name):
     return dc_ref, switch_ref, config_spec
 
 
-def manage(
+def configure(
     datacenter_name,
     switch_name,
     uplink_count=None,
@@ -132,7 +133,7 @@ def manage(
 
     .. code-block:: bash
 
-        salt '*' vmware_dvswitch.manage dvs1
+        salt '*' vmware_dvswitch.configure dvs1
     """
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -279,5 +280,234 @@ def manage(
         salt.exceptions.VMwareApiError,
         vmodl.RuntimeFault,
         vmodl.MethodFault,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def remove_hosts(
+    switch_name,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+):
+    """
+    Remove ESXi host(s) from a distributed vSwitch.
+
+    switch_name
+        Name of the distributed vSwitch.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_dvswitch.remove_hosts switch_name=dvs1 hostname=host1
+
+    """
+    log.debug("Running vmware_dvswitch.remove_hosts")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+    try:
+        for h in hosts:
+            ret[h.name] = False
+            if hasattr(h.configManager.networkSystem.networkInfo, "vswitch"):
+                h.configManager.networkSystem.RemoveVirtualSwitch(vswitchName=switch_name)
+                ret[h.name] = True
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vim.fault.ResourceInUse,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def add_hosts(
+    switch_name,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    nics=None,
+    service_instance=None,
+):
+    """
+    Add ESXi host(s) to a distributed vSwitch.
+
+    switch_name
+        Name of the distributed vSwitch.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    nics
+        List of vmnics to attach to vSwitch. (optional). Default "None".
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.add_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+
+    """
+    log.debug("Running vmware_dvswitch.add_hosts")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    _, switch_ref, _ = _get_switch_config_spec(
+        service_instance=service_instance,
+        datacenter_name=datacenter_name,
+        switch_name=switch_name,
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+    try:
+        for h in hosts:
+            ret[h.name] = False
+            network_manager = h.configManager.networkSystem
+            if not network_manager:
+                continue
+            if isinstance(nics, str):
+                nics = [nics]
+            vss_spec = vim.host.VirtualSwitch.Specification()
+            vss_spec.mtu = switch_ref.config.maxMtu or 1500
+            vss_spec.numPorts = switch_ref.config.numPorts or 128
+            if nics:
+                vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=nics)
+            network_manager.AddVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
+            ret[h.name] = True
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vim.fault.ResourceInUse,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def update_hosts(
+    switch_name,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    nics=None,
+    num_ports=None,
+    mtu=None,
+    service_instance=None,
+):
+    """
+    Update ESXi host(s) on a distributed vSwitch.
+
+    switch_name
+        Name of the distributed vSwitch.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    nics
+        List of vmnics to attach to vSwitch. (optional). Default "None".
+
+    num_ports
+        Number of ports to configure on the vSwitch. (optional). Default 128.
+
+    mtu
+        MTU to configure on the vSwitch. (optional). Default 1600.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+
+    """
+    log.debug("Running vmware_dvswitch.update_hosts")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    _, switch_ref, _ = _get_switch_config_spec(
+        service_instance=service_instance,
+        datacenter_name=datacenter_name,
+        switch_name=switch_name,
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=True if not host_name else False,
+    )
+    try:
+        for h in hosts:
+            ret[h.name] = False
+            network_manager = h.configManager.networkSystem
+            if not network_manager:
+                continue
+            if isinstance(nics, str):
+                nics = [nics]
+            vss_spec = vim.host.VirtualSwitch.Specification()
+            if hasattr(network_manager.networkInfo, "vswitch"):
+                for switch in network_manager.networkInfo.vswitch:
+                    if switch.name != switch_name:
+                        continue
+                    vss_spec.mtu = mtu or switch.mtu or switch_ref.config.maxMtu
+                    vss_spec.numPorts = (
+                        num_ports or switch.spec.numPorts or switch_ref.config.numPorts
+                    )
+                    if switch.pnic or nics:
+                        vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(
+                            nicDevice=nics or list(map(lambda x: x.split("-", 3)[-1], switch.pnic))
+                        )
+                    network_manager.UpdateVirtualSwitch(vswitchName=switch_name, spec=vss_spec)
+                    ret[h.name] = True
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vim.fault.ResourceInUse,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
