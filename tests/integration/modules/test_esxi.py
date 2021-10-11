@@ -266,6 +266,30 @@ def test_advanced_config(service_instance):
         assert ret[h]["BufferCache.FlushInterval"] == 3000
 
 
+def test_get_dns_config(service_instance):
+    """
+    Test get dns configuration on ESXi host
+    """
+    ret = esxi.get_dns_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]["ip"]
+        assert ret[host]["host_name"]
+        assert ret[host]["domain_name"]
+
+    ret = esxi.get_dns_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        host_name="no_host",
+    )
+    assert not ret
+
+
 def test_add(integration_test_config, service_instance):
     """
     Test esxi add

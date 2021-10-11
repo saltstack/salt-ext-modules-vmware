@@ -196,7 +196,7 @@ def power_state(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -267,7 +267,7 @@ def manage_service(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -348,7 +348,7 @@ def list_services(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -437,7 +437,7 @@ def get_acceptance_level(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -509,7 +509,7 @@ def set_acceptance_level(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -568,7 +568,7 @@ def get_advanced_config(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -640,7 +640,7 @@ def set_advanced_configs(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -732,6 +732,65 @@ def set_advanced_config(
         host_name=host_name,
         service_instance=service_instance,
     )
+
+
+def get_dns_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get DNS configuration on matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_dns_config
+    """
+    log.debug("Running vmware_esxi.get_dns_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            dns_config = h.config.network.dnsConfig
+            if not dns_config:
+                continue
+            ret[h.name] = {}
+            ret[h.name]["dhcp"] = dns_config.dhcp
+            ret[h.name]["virtual_nic"] = dns_config.virtualNicDevice
+            ret[h.name]["host_name"] = dns_config.hostName
+            ret[h.name]["domain_name"] = dns_config.domainName
+            ret[h.name]["ip"] = list(dns_config.address)
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+    return ret
 
 
 def connect(host, service_instance=None):
