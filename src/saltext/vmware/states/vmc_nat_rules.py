@@ -167,16 +167,11 @@ def present(
 
         .. code-block::
 
-            tags='[
-                {
-                    "tag": "<tag-key-1>"
-                    "scope": "<tag-value-1>"
-                },
-                {
-                    "tag": "<tag-key-2>"
-                    "scope": "<tag-value-2>"
-                }
-            ]'
+            tags:
+              - tag: <tag-key-1>
+                scope: <tag-value-1>
+              - tag: <tag-key-2>
+                scope: <tag-value-2>
 
     sequence_number
         (Optional) Sequence number of the nat rule
@@ -192,29 +187,22 @@ def present(
 
         .. code-block::
 
-            {
-                "action": "REFLEXIVE",
-                "translated_network": "10.182.171.36",
-                "translated_ports": null,
-                "destination_network": "",
-                "source_network": "192.168.1.23",
-                "sequence_number": 0,
-                "service": "",
-                "logging": false,
-                "enabled": false,
-                "scope": [
-                    "/infra/labels/cgw-public"
-                ],
-                "tags": [
-                    {
-                        "tag": "tag1",
-                        "scope": "scope1"
-                    }
-                ],
-                "description": "",
-                "firewall_match": "MATCH_INTERNAL_ADDRESS"
-            }
-
+            action: REFLEXIVE
+            translated_network: 10.182.171.36
+            translated_ports: null
+            destination_network: ''
+            source_network: 192.168.1.23
+            sequence_number: 0
+            service: ''
+            logging: false
+            enabled: false
+            scope:
+              - /infra/labels/cgw-public
+            tags:
+              - tag: tag1
+                scope: scope1
+            description: ''
+            firewall_match: MATCH_INTERNAL_ADDRESS
     """
 
     input_dict = {
