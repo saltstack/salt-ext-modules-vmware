@@ -83,40 +83,48 @@ def create(name, datacenter, service_instance=None):
     return {name: True}
 
 
-def get_(name, datacenter, service_instance=None):
+def get_(cluster_name, datacenter_name, service_instance=None):
     """
     Get the properties of a cluster.
 
-    Supported proxies: esxcluster
-
-    name
+    cluster_name
         The cluster name
 
-    datacenter
+    datacenter_name
         The datacenter name to which the cluster belongs
 
     .. code-block:: bash
 
-        salt '*' vmware_cluster.get dc1
+        salt '*' vmware_cluster.get cluster_name=cl1 datacenter_name=dc1
     """
     ret = {}
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
-        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=name)
+        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
 
         # DRS config
         ret["drs_enabled"] = cluster_ref.configurationEx.drsConfig.enabled
+        ret["drs"] = __salt__["vmware_cluster_drs.get"](
+            cluster_name=cluster_name,
+            datacenter_name=datacenter_name,
+            service_instance=service_instance,
+        )
 
         # HA config
         ret["ha_enabled"] = cluster_ref.configurationEx.drsConfig.enabled
+        ret["ha"] = __salt__["vmware_cluster_ha.get"](
+            cluster_name=cluster_name,
+            datacenter_name=datacenter_name,
+            service_instance=service_instance,
+        )
 
         # vSAN
         ret["vsan_enabled"] = cluster_ref.configurationEx.vsanConfigInfo.enabled
 
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
-        return {name: False, "reason": str(exc)}
+        return {cluster_name: False, "reason": str(exc)}
     return ret
 
 

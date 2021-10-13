@@ -107,22 +107,27 @@ def configure(
     return {cluster: True}
 
 
-def get_(cluster, datacenter, service_instance=None):
+def get_(cluster_name, datacenter_name, service_instance=None):
     """
     Get DRS info about a cluster in a datacenter
 
-    cluster
+    cluster_name
         The cluster name
 
-    datacenter
+    datacenter_name
         The datacenter name to which the cluster belongs
+
+    .. code-block:: bash
+
+    salt '*' vmware_cluster_drs.get cluster_name=cl1 datacenter_name=dc1
+
     """
     ret = {}
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
-        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster)
+        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
         ret["enabled"] = cluster_ref.configurationEx.drsConfig.enabled
         ret[
             "enable_vm_behavior_overrides"
@@ -133,7 +138,7 @@ def get_(cluster, datacenter, service_instance=None):
         for obj in cluster_ref.configurationEx.drsConfig.option:
             ret["advanced_settings"][obj.key] = obj.value
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareRuntimeError) as exc:
-        return {cluster: False, "reason": str(exc)}
+        return {cluster_name: False, "reason": str(exc)}
     return ret
 
 
