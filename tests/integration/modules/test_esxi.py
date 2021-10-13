@@ -124,6 +124,20 @@ def test_esxi_host_capability_params(service_instance, integration_test_config, 
         assert capabilities[host_id][arg_name] == expected_value
 
 
+def test_list_pkgs(service_instance):
+    """
+    Test list packages on ESXi host
+    """
+    ret = esxi.list_pkgs(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+
+
 def test_manage_service(service_instance):
     """
     Test manage services on esxi host
