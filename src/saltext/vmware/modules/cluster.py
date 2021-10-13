@@ -20,7 +20,7 @@ except ImportError:
 
 __virtualname__ = "vmware_cluster"
 __proxyenabled__ = ["vmware_cluster"]
-__func_alias__ = {"list_": "list", "get_": "get"}
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -83,7 +83,7 @@ def create(name, datacenter, service_instance=None):
     return {name: True}
 
 
-def get_(cluster_name, datacenter_name, service_instance=None):
+def get(cluster_name, datacenter_name, service_instance=None):
     """
     Get the properties of a cluster.
 
@@ -92,6 +92,9 @@ def get_(cluster_name, datacenter_name, service_instance=None):
 
     datacenter_name
         The datacenter name to which the cluster belongs
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
@@ -106,19 +109,21 @@ def get_(cluster_name, datacenter_name, service_instance=None):
 
         # DRS config
         ret["drs_enabled"] = cluster_ref.configurationEx.drsConfig.enabled
-        ret["drs"] = __salt__["vmware_cluster_drs.get"](
-            cluster_name=cluster_name,
-            datacenter_name=datacenter_name,
-            service_instance=service_instance,
-        )
+        if ret["drs_enabled"]:
+            ret["drs"] = __salt__["vmware_cluster_drs.get"](
+                cluster_name=cluster_name,
+                datacenter_name=datacenter_name,
+                service_instance=service_instance,
+            )
 
         # HA config
-        ret["ha_enabled"] = cluster_ref.configurationEx.drsConfig.enabled
-        ret["ha"] = __salt__["vmware_cluster_ha.get"](
-            cluster_name=cluster_name,
-            datacenter_name=datacenter_name,
-            service_instance=service_instance,
-        )
+        ret["ha_enabled"] = cluster_ref.configurationEx.dasConfig.enabled
+        if ret["ha_enabled"]:
+            ret["ha"] = __salt__["vmware_cluster_ha.get"](
+                cluster_name=cluster_name,
+                datacenter_name=datacenter_name,
+                service_instance=service_instance,
+            )
 
         # vSAN
         ret["vsan_enabled"] = cluster_ref.configurationEx.vsanConfigInfo.enabled

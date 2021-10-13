@@ -20,7 +20,6 @@ except ImportError:
 
 __virtualname__ = "vmware_cluster_ha"
 __proxyenabled__ = ["vmware_cluster_ha"]
-__func_alias__ = {"get_": "get"}
 
 
 def __virtual__():
@@ -317,7 +316,7 @@ def configure(
     return {cluster: True}
 
 
-def get_(cluster_name, datacenter_name, service_instance=None):
+def get(cluster_name, datacenter_name, service_instance=None):
     """
     Get HA info about a cluster in a datacenter
 
@@ -328,6 +327,9 @@ def get_(cluster_name, datacenter_name, service_instance=None):
         The datacenter name to which the cluster belongs
 
     .. code-block:: bash
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     salt '*' vmware_cluster_ha.get cluster_name=cl1 datacenter_name=dc1
 

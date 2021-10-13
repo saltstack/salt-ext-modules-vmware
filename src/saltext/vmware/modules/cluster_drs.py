@@ -107,7 +107,7 @@ def configure(
     return {cluster: True}
 
 
-def get_(cluster_name, datacenter_name, service_instance=None):
+def get(cluster_name, datacenter_name, service_instance=None):
     """
     Get DRS info about a cluster in a datacenter
 
@@ -116,6 +116,9 @@ def get_(cluster_name, datacenter_name, service_instance=None):
 
     datacenter_name
         The datacenter name to which the cluster belongs
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
