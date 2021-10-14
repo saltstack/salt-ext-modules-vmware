@@ -58,7 +58,7 @@ def get(
         The Id of SDDC for which the distributed firewall rules should be retrieved
 
     domain_id
-        The domain_id for which the distributed firewall rules should be retrieved
+        The domain_id for which the distributed firewall rules should be retrieved. Possible values: mgw, cgw
 
     security_policy_id
         Security policy id for which rule should be retrieved
@@ -155,7 +155,7 @@ def get_by_id(
         The Id of SDDC for which the distributed firewall rule should be retrieved
 
     domain_id
-        The domain_id for which the distributed firewall rule should be retrieved
+        The domain_id for which the distributed firewall rule should be retrieved. Possible values: mgw, cgw
 
     security_policy_id
         Security policy id for which rule should be retrieved
@@ -236,7 +236,7 @@ def delete(
         The Id of SDDC from which the distributed firewall rule should be deleted
 
     domain_id
-        The domain_id for which the distributed firewall rule should be deleted
+        The domain_id for which the distributed firewall rule should be deleted. Possible values: mgw, cgw
 
     security_policy_id
         Security policy id for which rule should be deleted
