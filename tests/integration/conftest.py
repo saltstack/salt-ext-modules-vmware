@@ -90,6 +90,14 @@ def patch_salt_globals():
         },
     )
     setattr(
+        cluster_mod,
+        "__salt__",
+        {
+            "vmware_cluster_drs.get": cluster_drs_mod.get,
+            "vmware_cluster_ha.get": cluster_ha_mod.get,
+        },
+    )
+    setattr(
         datacenter_st,
         "__opts__",
         {
