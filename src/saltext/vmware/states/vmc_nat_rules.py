@@ -86,7 +86,7 @@ def present(
         The domain_id for which the nat rules should belongs to. Possible values: mgw, cgw
 
     nat_rule
-        Id of the security_rule to be added to SDDC
+        Id of the nat rule to be added to SDDC
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -400,7 +400,7 @@ def absent(
         The domain_id for which the nat rules should belongs to. Possible values: mgw, cgw
 
     nat_rule
-        Id of the security_rule to be deleted from SDDC
+        Id of the nat rule to be deleted from SDDC
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
