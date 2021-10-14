@@ -35,7 +35,6 @@ from saltext.vmware.utils import vmc_constants
 from saltext.vmware.utils import vmc_state
 
 log = logging.getLogger(__name__)
-NAT_RULE_NOT_FOUND_ERROR = "could not be found"
 
 
 def present(
@@ -224,7 +223,7 @@ def present(
 
     input_dict = {k: v for k, v in input_dict.items() if v != vmc_constants.VMC_NONE}
 
-    get_nat_rule = __salt__["vmc_nat_rules.get_by_id"](
+    get_nat_rule_response = __salt__["vmc_nat_rules.get_by_id"](
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -237,19 +236,17 @@ def present(
         cert=cert,
     )
 
-    existing_nat_rule = None
-
-    if "error" not in get_nat_rule:
-        log.info("Nat rule found with Id %s", nat_rule)
-        existing_nat_rule = get_nat_rule
-    elif NAT_RULE_NOT_FOUND_ERROR not in get_nat_rule["error"]:
-        return vmc_state._create_state_response(
-            name=name, comment=get_nat_rule["error"], result=False
-        )
+    if "error" in get_nat_rule_response:
+        if "could not be found" in get_nat_rule_response["error"]:
+            get_nat_rule_response = None
+        else:
+            return vmc_state._create_state_response(
+                name=name, comment=get_nat_rule_response["error"], result=False
+            )
 
     if __opts__.get("test"):
         log.info("present is called with test option")
-        if existing_nat_rule:
+        if get_nat_rule_response:
             return vmc_state._create_state_response(
                 name=name, comment="State present will update nat rule {}".format(nat_rule)
             )
@@ -258,10 +255,10 @@ def present(
                 name=name, comment="State present will create nat rule {}".format(nat_rule)
             )
 
-    if existing_nat_rule:
+    if get_nat_rule_response:
         updatable_keys = input_dict.keys()
         is_update_required = vmc_state._check_for_updates(
-            existing_nat_rule, input_dict, updatable_keys, ["translated_ports", "tags"]
+            get_nat_rule_response, input_dict, updatable_keys, ["translated_ports", "tags"]
         )
 
         if is_update_required:
@@ -297,7 +294,7 @@ def present(
                     name=name, comment=updated_nat_rule["error"], result=False
                 )
 
-            get_nat_rule_after_update = __salt__["vmc_nat_rules.get_by_id"](
+            updated_nat_rule = __salt__["vmc_nat_rules.get_by_id"](
                 hostname=hostname,
                 refresh_key=refresh_key,
                 authorization_host=authorization_host,
@@ -310,16 +307,16 @@ def present(
                 cert=cert,
             )
 
-            if "error" in get_nat_rule_after_update:
+            if "error" in updated_nat_rule:
                 return vmc_state._create_state_response(
-                    name=name, comment=get_nat_rule_after_update["error"], result=False
+                    name=name, comment=updated_nat_rule["error"], result=False
                 )
 
             return vmc_state._create_state_response(
                 name=name,
                 comment="Updated nat rule {}".format(nat_rule),
-                old_state=existing_nat_rule,
-                new_state=get_nat_rule_after_update,
+                old_state=get_nat_rule_response,
+                new_state=updated_nat_rule,
                 result=True,
             )
         else:
@@ -416,7 +413,7 @@ def absent(
     """
 
     log.info("Checking if nat rule with Id %s is present", nat_rule)
-    get_nat_rule = __salt__["vmc_nat_rules.get_by_id"](
+    get_nat_rule_response = __salt__["vmc_nat_rules.get_by_id"](
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -429,19 +426,17 @@ def absent(
         cert=cert,
     )
 
-    existing_nat_rule = None
-
-    if "error" not in get_nat_rule:
-        log.info("Nat rule found with Id %s", nat_rule)
-        existing_nat_rule = get_nat_rule
-    elif NAT_RULE_NOT_FOUND_ERROR not in get_nat_rule["error"]:
-        return vmc_state._create_state_response(
-            name=name, comment=get_nat_rule["error"], result=False
-        )
+    if "error" in get_nat_rule_response:
+        if "could not be found" in get_nat_rule_response["error"]:
+            get_nat_rule_response = None
+        else:
+            return vmc_state._create_state_response(
+                name=name, comment=get_nat_rule_response["error"], result=False
+            )
 
     if __opts__.get("test"):
         log.info("absent is called with test option")
-        if existing_nat_rule:
+        if get_nat_rule_response:
             return vmc_state._create_state_response(
                 name=name, comment="State absent will delete nat rule with Id {}".format(nat_rule)
             )
@@ -453,7 +448,7 @@ def absent(
                 ),
             )
 
-    if existing_nat_rule:
+    if get_nat_rule_response:
         log.info("Security found with Id %s", nat_rule)
         deleted_nat_rule = __salt__["vmc_nat_rules.delete"](
             hostname=hostname,
@@ -476,7 +471,7 @@ def absent(
         return vmc_state._create_state_response(
             name=name,
             comment="Deleted nat rule {}".format(nat_rule),
-            old_state=existing_nat_rule,
+            old_state=get_nat_rule_response,
             result=True,
         )
     else:
