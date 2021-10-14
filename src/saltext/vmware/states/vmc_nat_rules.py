@@ -97,9 +97,9 @@ def present(
         The certificate can be retrieved from browser.
 
     action
-        specify type of NAT Rule it can have value REFLEXIVE, DNAT
+        specify type of nat rule it can have value REFLEXIVE, DNAT
 
-            REFLEXIVE NAT Rule require
+            REFLEXIVE nat rule require
                 source_network
                 translated_network
                 service should be empty
@@ -141,7 +141,7 @@ def present(
             will be realized on NSX Manager as the destination_port. If there is no sevice configured,
             the port will be ignored.
     enabled
-        (Optional) Policy NAT Rule enabled flag
+        (Optional) Policy nat rule enabled flag
 
             The flag, which suggests whether the NAT rule is enabled or
             disabled. The default is True.
@@ -155,11 +155,11 @@ def present(
             Default: "MATCH_INTERNAL_ADDRESS"
 
     logging
-        (Optional) Policy NAT Rule logging flag
+        (Optional) Policy nat rule logging flag
             default: False
 
     description
-        (Optional) Description of of NAT Rule
+        (Optional) Description of of nat rule
 
     tags
         (Optional) Opaque identifiers meaningful to the API user. Maximum 30 tags can be associated:
