@@ -930,6 +930,7 @@ def list_pkgs(
 ):
     """
     List the packages installed on matching EXSi hosts.
+    Note: Appropriate filters are recommended for large installations.
 
     pkg_name
         Filter by this package name. (optional)
@@ -965,22 +966,22 @@ def list_pkgs(
     try:
         for h in hosts:
             host_pkg_manager = h.configManager.imageConfigManager
-            ret[h.name] = {}
             if not host_pkg_manager:
                 continue
+            ret[h.name] = {}
             pkgs = host_pkg_manager.FetchSoftwarePackages()
             for pkg in pkgs:
                 if pkg_name and pkg.name != pkg_name:
                     continue
-                ret[h.name][pkg.name] = dict(
-                    version=pkg.version,
-                    vendor=pkg.vendor,
-                    summary=pkg.summary,
-                    description=pkg.description,
-                    acceptance_level=pkg.acceptanceLevel,
-                    maintenance_mode_required=pkg.maintenanceModeRequired,
-                    creation_date=pkg.creationDate,
-                )
+                ret[h.name][pkg.name] = {
+                    "version": pkg.version,
+                    "vendor": pkg.vendor,
+                    "summary": pkg.summary,
+                    "description": pkg.description,
+                    "acceptance_level": pkg.acceptanceLevel,
+                    "maintenance_mode_required": pkg.maintenanceModeRequired,
+                    "creation_date": pkg.creationDate,
+                }
         return ret
     except (
         vim.fault.InvalidState,
