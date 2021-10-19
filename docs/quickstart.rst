@@ -221,9 +221,9 @@ Your First State
 ----------------
 
 New states and modules are being created weekly. The most up-to-date list can
-be found in the complete list of :ref:`all the states/modules`. Each state or module will list the
-required arguments. Check the :ref:`vmc_sddc module docs
-<saltext.vmware.modules.vmc_sddc>` for information about what pillar values are
+be found in the complete list of :ref:`all the states/modules`. Each state or
+module will list the required arguments. For this example, find the vmc_sddc
+module in that list to get more information about what pillar values are
 required, but you could write this state:
 
 .. code:: yaml
