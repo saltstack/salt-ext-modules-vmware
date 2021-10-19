@@ -7,6 +7,11 @@ vSphere, vCenter, ESXi, and friends.
 
 If you think you've found a security vulnerability, see [Salt's security guide][security].
 
+## User Documentation
+
+This README is more for contributing to the project. If you just want to get
+started, check out the [User Documentation][docs].
+
 
 ## Contributing
 
@@ -97,3 +102,4 @@ that's where you'll find the rest of the documentation.
 [discussions]: https://github.com/saltstack/salt-ext-modules-vmware/discussions
 [comments]: https://conventionalcomments.org/
 [cla-faq]: https://cla.vmware.com/faq
+[docs]: https://docs.saltproject.io/salt/extensions/salt-ext-modules-vmware/en/latest/index.html
