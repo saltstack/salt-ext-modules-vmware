@@ -59,7 +59,8 @@ def update_vmc_nsx_config(nsx_reverse_proxy_server, args):
     parser.set("vmc_nsx_connect", "authorization_host", args.authorization_host)
     parser.set("vmc_nsx_connect", "org_id", args.org_id)
     parser.set("vmc_nsx_connect", "sddc_id", args.sddc_id)
-
+    # TODO will change this when handling of cert generation is done
+    parser.set("vmc_nsx_connect", "verify_ssl", "false")
     with open(abs_file_path, "w+") as configfile:
         parser.write(configfile)
 
@@ -124,6 +125,10 @@ def update_vmc_vcenter_config(vcenter_server_detail, args):
     parser.set("vmc_vcenter_connect", "hostname", vcenter_server_detail["vcenter_server"])
     parser.set("vmc_vcenter_connect", "username", vcenter_server_detail["username"])
     parser.set("vmc_vcenter_connect", "password", vcenter_server_detail["password"])
+    # TODO will change this when handling of cert generation is done
+    parser.set("vmc_connect", "verify_ssl", "false")
+    parser.set("vmc_vcenter_connect", "verify_ssl", "false")
+
     with open(abs_file_path, "w+") as configfile:
         parser.write(configfile)
 
