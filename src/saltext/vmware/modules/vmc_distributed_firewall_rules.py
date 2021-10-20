@@ -161,7 +161,8 @@ def get_by_id(
         Security policy id for which rule should be retrieved
 
     rule_id
-        Id of the distribute firewall rule to be retrieved from SDDC
+        The distribute firewall rule id, any static unique string identifying the rule.
+        Also same as the display_name by default.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -242,7 +243,8 @@ def delete(
         Security policy id for which rule should be deleted
 
     rule_id
-        Id of the distribute firewall rule to be deleted from SDDC
+        The distribute firewall rule id, any static unique string identifying the rule.
+        Also same as the display_name by default.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
