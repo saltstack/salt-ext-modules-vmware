@@ -15,14 +15,16 @@ def test_get(vmware_cluster, service_instance):
     """
     # Get a non existent cluster. Should return False
     cl1_name, dc1_name = str(uuid.uuid4()), str(uuid.uuid4())
-    cl1 = cluster.get_(name=cl1_name, datacenter=dc1_name, service_instance=service_instance)
+    cl1 = cluster.get(
+        cluster_name=cl1_name, datacenter_name=dc1_name, service_instance=service_instance
+    )
     assert cl1[cl1_name] is False
     assert "reason" in cl1
 
     # Now get the created cluster. Should return properties of cluster.
-    cl1 = cluster.get_(
-        name=vmware_cluster.name,
-        datacenter=vmware_cluster.datacenter,
+    cl1 = cluster.get(
+        cluster_name=vmware_cluster.name,
+        datacenter_name=vmware_cluster.datacenter,
         service_instance=service_instance,
     )
     assert cl1["drs_enabled"] is False
@@ -88,12 +90,19 @@ def test_configure_drs(vmware_cluster, service_instance):
     assert cl_drs[vmware_cluster.name]
 
     # Verify drs is enabled
-    cl = cluster_drs.get_(
-        cluster=vmware_cluster.name,
-        datacenter=vmware_cluster.datacenter,
+    cl = cluster_drs.get(
+        cluster_name=vmware_cluster.name,
+        datacenter_name=vmware_cluster.datacenter,
         service_instance=service_instance,
     )
     assert cl["enabled"]
+
+    cl1 = cluster.get(
+        cluster_name=vmware_cluster.name,
+        datacenter_name=vmware_cluster.datacenter,
+        service_instance=service_instance,
+    )
+    assert cl1["drs"]["enabled"]
 
 
 def test_configure_ha(vmware_cluster, service_instance):
@@ -108,13 +117,19 @@ def test_configure_ha(vmware_cluster, service_instance):
     )
     assert cl_ha[vmware_cluster.name]
 
-    # Verify drs is enabled
-    cl = cluster_ha.get_(
-        cluster=vmware_cluster.name,
-        datacenter=vmware_cluster.datacenter,
+    cl = cluster_ha.get(
+        cluster_name=vmware_cluster.name,
+        datacenter_name=vmware_cluster.datacenter,
         service_instance=service_instance,
     )
     assert cl["enabled"]
+
+    cl1 = cluster.get(
+        cluster_name=vmware_cluster.name,
+        datacenter_name=vmware_cluster.datacenter,
+        service_instance=service_instance,
+    )
+    assert cl1["ha"]["enabled"]
 
 
 def test_vm_affinity_rule(integration_test_config, service_instance):

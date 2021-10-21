@@ -1,7 +1,12 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
+import os
+from unittest.mock import MagicMock
+
 import pytest
+import salt.exceptions
 import saltext.vmware.modules.esxi as esxi
+import saltext.vmware.utils.esxi
 
 
 def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integration_test_config):
@@ -122,6 +127,44 @@ def test_esxi_host_capability_params(service_instance, integration_test_config, 
     for host_id in capabilities:
         expected_value = integration_test_config["esxi_capabilities"][host_id][arg_name]
         assert capabilities[host_id][arg_name] == expected_value
+
+
+def test_list_pkgs(service_instance):
+    """
+    Test list packages on ESXi host
+    """
+    ret = esxi.list_pkgs(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+        for pkg in ret[host]:
+            assert sorted(list(ret[host][pkg])) == sorted(
+                [
+                    "version",
+                    "vendor",
+                    "summary",
+                    "description",
+                    "acceptance_level",
+                    "maintenance_mode_required",
+                    "creation_date",
+                ]
+            )
+
+    host = MagicMock()
+    host.configManager.imageConfigManager.FetchSoftwarePackages.side_effect = (
+        salt.exceptions.VMwareApiError
+    )
+    setattr(saltext.vmware.utils.esxi, "get_hosts", MagicMock(return_value=[host]))
+    with pytest.raises(salt.exceptions.SaltException) as exc:
+        ret = esxi.list_pkgs(
+            service_instance=service_instance,
+            datacenter_name="Datacenter",
+            cluster_name="Cluster",
+        )
 
 
 def test_manage_service(service_instance):

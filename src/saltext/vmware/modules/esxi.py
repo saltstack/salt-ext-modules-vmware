@@ -919,3 +919,75 @@ def add(
         service_instance,
     )
     return {"state": state}
+
+
+def list_pkgs(
+    pkg_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    List the packages installed on matching EXSi hosts.
+    Note: Appropriate filters are recommended for large installations.
+
+    pkg_name
+        Filter by this package name. (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_pkgs
+    """
+    log.debug("Running vmware_esxi.list_pkgs")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            host_pkg_manager = h.configManager.imageConfigManager
+            if not host_pkg_manager:
+                continue
+            ret[h.name] = {}
+            pkgs = host_pkg_manager.FetchSoftwarePackages()
+            for pkg in pkgs:
+                if pkg_name and pkg.name != pkg_name:
+                    continue
+                ret[h.name][pkg.name] = {
+                    "version": pkg.version,
+                    "vendor": pkg.vendor,
+                    "summary": pkg.summary,
+                    "description": pkg.description,
+                    "acceptance_level": pkg.acceptanceLevel,
+                    "maintenance_mode_required": pkg.maintenanceModeRequired,
+                    "creation_date": pkg.creationDate,
+                }
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
