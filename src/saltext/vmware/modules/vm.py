@@ -331,3 +331,70 @@ def power_state(name, state, datacenter_name=None, service_instance=None):
         "changes": {"state": result_ref_vm.summary.runtime.powerState},
     }
     return result
+
+
+def boot_manager(
+    name,
+    order,
+    delay=0,
+    enter_bois_setup=False,
+    retry_enabled=False,
+    retry_delay=10000,
+    efi_secure_boot_enabled=False,
+    service_instance=None,
+):
+    """
+    Manage boot option for a virtual machine
+
+    order
+        (List of strings) Boot order of devices. Acceptable strings: cdrom, disk, ethernet, floppy
+
+    delay
+        (integer, optional) Boot delay. When powering on or resetting, delay boot order by given milliseconds. Defaults to 0.
+
+    enter_bois_setup
+        (boolean, optional) During the next boot, force entry into the BIOS setup screen. Defaults to False.
+
+    retry_enabled
+        (boolean, optional) If the VM fails to find boot device retry. Defaults to False.
+
+    retry_delay
+        (integer, optional) If the VM fails to find boot device, automatically retry after given milliseconds. Defaults to 10000.
+
+    efi_secure_boot_enabled
+        (boolean, optional) Defaults to False.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    vm = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
+
+    boot_order_list = utils_vm.options_order_list(vm, order)
+
+    check_bo = utils_vm.check_boot_options(
+        vm,
+        boot_order_list,
+        delay,
+        enter_bois_setup,
+        retry_enabled,
+        retry_delay,
+        efi_secure_boot_enabled,
+    )
+
+    if not check_bo["diff"]:
+        return {"status": "already configured this way"}
+
+    ret = utils_vm.change_boot_options(
+        vm,
+        boot_order_list,
+        delay,
+        enter_bois_setup,
+        retry_enabled,
+        retry_delay,
+        efi_secure_boot_enabled,
+    )
+
+    return ret

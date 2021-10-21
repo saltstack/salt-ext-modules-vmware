@@ -634,3 +634,186 @@ def get_mac_address(vm):
         if isinstance(device, vim.vm.device.VirtualEthernetCard):
             mac_address.append(device.macAddress)
     return mac_address
+
+
+def options_order_list(vm, order):
+    """
+    Get list of vim bootable divice objects in given order from virtual machine.
+
+    vm
+        Reference to virtual machine to check options on.
+
+    order
+        (List of strings) Boot order of devices. Acceptable strings: cdrom, disk, ethernet, floppy
+    """
+    valid_list = ["cdrom", "disk", "ethernet", "floppy"]
+    boot_order_list = []
+    for device_name in order:
+        if device_name not in valid_list:
+            raise salt.exceptions.VMwareRuntimeError("invalid order name")
+        elif device_name == "cdrom":
+            cdrom = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualCdrom)
+            ]
+            if cdrom:
+                boot_order_list.append(vim.vm.BootOptions.BootableCdromDevice())
+        elif device_name == "disk":
+            hdd = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualDisk)
+            ]
+            if hdd:
+                boot_order_list.append(vim.vm.BootOptions.BootableDiskDevice(deviceKey=hdd[0].key))
+        elif device_name == "ethernet":
+            ether = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualEthernetCard)
+            ]
+            if ether:
+                boot_order_list.append(
+                    vim.vm.BootOptions.BootableEthernetDevice(deviceKey=ether[0].key)
+                )
+        elif device_name == "floppy":
+            floppy = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualFloppy)
+            ]
+            if floppy:
+                boot_order_list.append(vim.vm.BootOptions.BootableFloppyDevice())
+    return boot_order_list
+
+
+def check_boot_options(
+    vm,
+    boot_order_list,
+    delay,
+    enter_bois_setup,
+    retry_enabled,
+    retry_delay,
+    efi_secure_boot_enabled,
+):
+    """
+    Check if current boot options match input options.
+
+    vm
+        Reference to virtual machine to check options on.
+
+    boot_order_list
+        list of vim bootable divice objects in given order from virtual machine.
+
+    delay
+        (integer) Boot delay. When powering on or resetting, delay boot order by given milliseconds.
+
+    enter_bois_setup
+        (Boolean) During the next boot, force entry into the BIOS setup screen.
+
+    retry_enabled
+        (Boolean) If the VM fails to find boot device retry.
+
+    retry_delay
+        (integer) If the VM fails to find boot device, automatically retry after given milliseconds.
+
+    efi_secure_boot_enabled
+        (Boolean)
+    """
+    ret = {"diff": True, "changes": {}}
+
+    lists_same = True
+    if len(boot_order_list) == len(vm.config.bootOptions.bootOrder):
+        for i, item in enumerate(vm.config.bootOptions.bootOrder):
+            if boot_order_list[i].deviceKey != item.deviceKey:
+                lists_same = False
+    else:
+        lists_same = False
+    if (
+        lists_same
+        and delay == vm.config.bootOptions.bootDelay
+        and enter_bois_setup == vm.config.bootOptions.enterBIOSSetup
+        and retry_enabled == vm.config.bootOptions.bootRetryEnabled
+        and retry_delay == vm.config.bootOptions.bootRetryDelay
+        and efi_secure_boot_enabled == vm.config.bootOptions.efiSecureBootEnabled
+    ):
+        ret["diff"] = False
+        return ret
+    else:
+        if not lists_same:
+            old = [i.deviceKey for i in vm.config.bootOptions.bootOrder]
+            new = [i.deviceKey for i in boot_order_list]
+            ret["changes"]["order"] = {"old": old, "new": new}
+        if not delay == vm.config.bootOptions.bootDelay:
+            ret["changes"]["delay"] = {"old": vm.config.bootOptions.bootDelay, "new": delay}
+        if not enter_bois_setup == vm.config.bootOptions.enterBIOSSetup:
+            ret["changes"]["enter_bois_setup"] = {
+                "old": vm.config.bootOptions.enterBIOSSetup,
+                "new": enter_bois_setup,
+            }
+        if not retry_enabled == vm.config.bootOptions.bootRetryEnabled:
+            ret["changes"]["retry_enabled"] = {
+                "old": vm.config.bootOptions.bootRetryEnabled,
+                "new": retry_enabled,
+            }
+        if not retry_delay == vm.config.bootOptions.bootRetryDelay:
+            ret["changes"]["retry_delay"] = {
+                "old": vm.config.bootOptions.bootRetryDelay,
+                "new": retry_delay,
+            }
+        if not efi_secure_boot_enabled == vm.config.bootOptions.efiSecureBootEnabled:
+            ret["changes"]["efi_secure_boot_enabled"] = {
+                "old": vm.config.bootOptions.efiSecureBootEnabled,
+                "new": efi_secure_boot_enabled,
+            }
+        return ret
+
+
+def change_boot_options(
+    vm,
+    boot_order_list,
+    delay,
+    enter_bois_setup,
+    retry_enabled,
+    retry_delay,
+    efi_secure_boot_enabled,
+):
+    """
+    Changes boot options on given vm.
+
+    vm
+        Reference to virtual machine to check options on.
+
+    boot_order_list
+        list of vim bootable divice objects in given order from virtual machine.
+
+    delay
+        (integer) Boot delay. When powering on or resetting, delay boot order by given milliseconds.
+
+    enter_bois_setup
+        (Boolean) During the next boot, force entry into the BIOS setup screen.
+
+    retry_enabled
+        (Boolean) If the VM fails to find boot device retry.
+
+    retry_delay
+        (integer) If the VM fails to find boot device, automatically retry after given milliseconds.
+
+    efi_secure_boot_enabled
+        (Boolean)
+    """
+    boot_opts = {
+        "bootOrder": boot_order_list,
+        "bootDelay": delay,
+        "enterBIOSSetup": enter_bois_setup,
+        "bootRetryEnabled": retry_enabled,
+        "bootRetryDelay": retry_delay,
+        "efiSecureBootEnabled": efi_secure_boot_enabled,
+    }
+    vm_conf = vim.vm.ConfigSpec()
+    vm_conf.bootOptions = vim.vm.BootOptions(**boot_opts)
+    task = vm.ReconfigVM_Task(vm_conf)
+    utils_common.wait_for_task(task, vm.name, "configure boot options")
+
+    return {"status": "changed"}

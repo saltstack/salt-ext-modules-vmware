@@ -4,6 +4,7 @@ import os
 import tarfile
 
 import pytest
+import salt.exceptions
 import saltext.vmware.modules.vm as virtual_machine
 
 
@@ -112,3 +113,19 @@ def test_powered_on(integration_test_config, patch_salt_globals_vm):
             assert res["comment"] == f"Virtual machine {state} action succeeded"
     else:
         pass
+
+
+def test_boot_manager(patch_salt_globals_vm):
+    """
+    Test boot options manager
+    """
+    res = virtual_machine.boot_manager("test1", ["disk", "ethernet"])
+    assert res["status"] == "changed"
+
+
+def test_boot_manager_same_settings(patch_salt_globals_vm):
+    """
+    Test boot option duplicates
+    """
+    res = virtual_machine.boot_manager("test1", ["disk", "ethernet"])
+    assert res["status"] == "already configured this way"
