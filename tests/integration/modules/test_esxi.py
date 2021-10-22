@@ -417,3 +417,28 @@ def test_manage_remove(integration_test_config, service_instance):
         )
     else:
         pytest.skip("test requires esxi manage test instance credentials")
+
+
+def test_esxi_get(service_instance):
+    """
+    Test get configuration on ESXi host
+    """
+    ret = esxi.get(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]["cpu_model"]
+        assert ret[host]["capabilities"]
+        assert ret[host]["nics"]
+        assert ret[host]["num_cpu_cores"]
+
+    ret = esxi.get(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        host_name="no_host",
+    )
+    assert not ret
