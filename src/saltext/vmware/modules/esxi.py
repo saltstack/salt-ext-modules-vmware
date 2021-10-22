@@ -118,14 +118,14 @@ def _get_capability_attribs(host):
         "service_package_info_supported": capability.servicePackageInfoSupported,
         "shutdown_supported": capability.shutdownSupported,
         "smart_card_authentication_supported": capability.smartCardAuthenticationSupported,
-        "smp_ft_compatibility_issues_list": list(capability.smpFtCompatibilityIssues),
+        "smp_ft_compatibility_issues": list(capability.smpFtCompatibilityIssues),
         "smp_ft_supported": capability.smpFtSupported,
         "snapshot_relayout_supported": capability.snapshotRelayoutSupported,
         "standby_supported": capability.standbySupported,
         "storage_iorm_supported": capability.storageIORMSupported,
         "storage_policy_supported": capability.storagePolicySupported,
         "storage_vmotion_supported": capability.storageVMotionSupported,
-        "supported_vmfs_major_version_list": list(capability.supportedVmfsMajorVersion),
+        "supported_vmfs_major_version": list(capability.supportedVmfsMajorVersion),
         "suspended_relocate_supported": capability.suspendedRelocateSupported,
         "tpm_supported": capability.tpmSupported,
         "turn_disk_locator_led_supported": capability.turnDiskLocatorLedSupported,
@@ -997,7 +997,6 @@ def list_pkgs(
         salt.exceptions.VMwareApiError,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
-<<<<<<< HEAD
 
 
 def get(
