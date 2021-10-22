@@ -997,6 +997,7 @@ def list_pkgs(
         salt.exceptions.VMwareApiError,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
+<<<<<<< HEAD
 
 
 def get(
