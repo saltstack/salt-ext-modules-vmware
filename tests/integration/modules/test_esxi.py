@@ -15,9 +15,7 @@ def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integratio
     assert actual_ids == expected_lun_ids
 
 
-@pytest.mark.parametrize(
-    "arg_name",
-    [
+HOST_CAPABILITIES = [
         "accel3d_supported",
         "background_snapshots_supported",
         "checkpoint_ft_compatibility_issues",
@@ -117,17 +115,18 @@ def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integratio
         "vmotion_with_storage_vmotion_supported",
         "vr_nfc_nic_selection_supported",
         "vsan_supported",
-    ],
-)
-def test_esxi_host_capability_params(service_instance, integration_test_config, arg_name):
+    ]
+
+
+def test_esxi_host_capability_params(service_instance, integration_test_config):
     """
     Test we are returning the same values from get_capabilities
     as our connected vcenter instance.
     """
     capabilities = esxi.get_capabilities(service_instance=service_instance)
     for host_id in capabilities:
-        expected_value = integration_test_config["esxi_capabilities"][host_id][arg_name]
-        assert capabilities[host_id][arg_name] == expected_value
+        for arg_name in HOST_CAPABILITIES:
+            assert capabilities[host_id][arg_name] == integration_test_config["esxi_capabilities"][host_id][arg_name]
 
 
 def test_list_pkgs(service_instance):
