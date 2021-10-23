@@ -1,7 +1,6 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
 import logging
-import re
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
@@ -20,17 +19,11 @@ except ImportError:
 
 __virtualname__ = "vmware_esxi"
 
-CAMELCASE_PATTERN = re.compile("((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))")
-
 
 def __virtual__():
     if not HAS_PYVMOMI:
         return False, "Unable to import pyVmomi module."
     return __virtualname__
-
-
-def _camel_to_snake_case(attrib):
-    return CAMELCASE_PATTERN.sub(r"_\1", attrib).lower()
 
 
 def get_lun_ids(service_instance=None):
@@ -58,7 +51,7 @@ def _get_capability_attribs(host):
         val = getattr(host.capability, attrib)
         if isinstance(val, list):
             val = list(val)
-        ret.update({_camel_to_snake_case(attrib): val})
+        ret.update({utils_common.camel_to_snake_case(attrib): val})
     return ret
 
 
@@ -994,7 +987,11 @@ def get(
             ret[h.name]["system_uuid"] = h.hardware.systemInfo.uuid
             for info in h.hardware.systemInfo.otherIdentifyingInfo:
                 ret[h.name].setdefault("other_info", {}).update(
-                    {_camel_to_snake_case(info.identifierType.key): info.identifierValue}
+                    {
+                        utils_common.camel_to_snake_case(
+                            info.identifierType.key
+                        ): info.identifierValue
+                    }
                 )
             if include_host_capabilities:
                 ret[h.name]["capabilities"] = _get_capability_attribs(host=h)
