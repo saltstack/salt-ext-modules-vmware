@@ -1,6 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
 import logging
+import re
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
@@ -19,11 +20,17 @@ except ImportError:
 
 __virtualname__ = "vmware_esxi"
 
+CAMELCASE_PATTERN = re.compile("((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))")
+
 
 def __virtual__():
     if not HAS_PYVMOMI:
         return False, "Unable to import pyVmomi module."
     return __virtualname__
+
+
+def _camel_to_snake_case(attrib):
+    return CAMELCASE_PATTERN.sub(r"_\1", attrib).lower()
 
 
 def get_lun_ids(service_instance=None):
@@ -44,111 +51,14 @@ def get_lun_ids(service_instance=None):
 
 
 def _get_capability_attribs(host):
-    capability = host.capability
-    ret = {
-        "accel3d_supported": capability.accel3dSupported,
-        "background_snapshots_supported": capability.backgroundSnapshotsSupported,
-        "checkpoint_ft_compatibility_issues": list(capability.smpFtCompatibilityIssues),
-        "checkpoint_ft_supported": capability.smpFtSupported,
-        "clone_from_snapshot_supported": capability.cloneFromSnapshotSupported,
-        "cpu_hw_mmu_supported": capability.cpuHwMmuSupported,
-        "cpu_memory_resource_configuration_supported": capability.cpuMemoryResourceConfigurationSupported,
-        "crypto_supported": capability.cryptoSupported,
-        "datastore_principal_supported": capability.datastorePrincipalSupported,
-        "delta_disk_backings_supported": capability.deltaDiskBackingsSupported,
-        "eight_plus_host_vmfs_sharedAccess_supported": capability.eightPlusHostVmfsSharedAccessSupported,
-        "encrypted_vmotion_supported": capability.encryptedVMotionSupported,
-        "encryption_cbrc_supported": capability.encryptionCBRCSupported,
-        "encryption_change_on_add_remove_supported": capability.encryptionChangeOnAddRemoveSupported,
-        "encryption_fault_tolerance_supported": capability.encryptionFaultToleranceSupported,
-        "encryption_hbr_supported": capability.encryptionHBRSupported,
-        "encryption_hot_operation_supported": capability.encryptionHotOperationSupported,
-        "encryption_memory_save_supported": capability.encryptionMemorySaveSupported,
-        "encryption_rdm_supported": capability.encryptionRDMSupported,
-        "encryption_vflash_supported": capability.encryptionVFlashSupported,
-        "encryption_with_snapshots_supported": capability.encryptionWithSnapshotsSupported,
-        "feature_capabilities_supported": capability.featureCapabilitiesSupported,
-        "firewall_ip_rules_supported": capability.firewallIpRulesSupported,
-        "ft_compatibility_issues": list(capability.ftCompatibilityIssues),
-        "ft_supported": capability.ftSupported,
-        "gateway_on_nic_supported": capability.gatewayOnNicSupported,
-        "hbr_nic_selection_supported": capability.hbrNicSelectionSupported,
-        "high_guest_mem_supported": capability.highGuestMemSupported,
-        "host_access_manager_supported": capability.hostAccessManagerSupported,
-        "inter_vm_communication_through_vmci_supported": capability.interVMCommunicationThroughVMCISupported,
-        "ipmi_supported": capability.ipmiSupported,
-        "iscsi_supported": capability.iscsiSupported,
-        "latency_sensitivity_supported": capability.latencySensitivitySupported,
-        "local_swap_datastore_supported": capability.localSwapDatastoreSupported,
-        "login_by_ssl_thumbprint_supported": capability.loginBySSLThumbprintSupported,
-        "maintenance_mode_supported": capability.maintenanceModeSupported,
-        "mark_as_local_supported": capability.markAsLocalSupported,
-        "mark_as_ssd_supported": capability.markAsSsdSupported,
-        "max_host_running_vms": capability.maxHostRunningVms,
-        "max_host_supported_vcpus": capability.maxHostSupportedVcpus,
-        "max_num_disks_sv_motion": capability.maxNumDisksSVMotion,
-        "max_registered_vms": capability.maxRegisteredVMs,
-        "max_running_vms": capability.maxRunningVMs,
-        "max_supported_vms": capability.maxSupportedVMs,
-        "max_supported_vcpus": capability.maxSupportedVcpus,
-        "max_vcpus_per_ft_vm": capability.maxVcpusPerFtVm,
-        "message_bus_proxy_supported": capability.messageBusProxySupported,
-        "multiple_network_stack_instance_supported": capability.multipleNetworkStackInstanceSupported,
-        "nested_hv_supported": capability.nestedHVSupported,
-        "nfs_41_krb5i_supported": capability.nfs41Krb5iSupported,
-        "nfs_41_supported": capability.nfs41Supported,
-        "nfs_supported": capability.nfsSupported,
-        "nic_teaming_supported": capability.nicTeamingSupported,
-        "one_k_volume_apis_supported": capability.oneKVolumeAPIsSupported,
-        "per_vm_network_traffic_shaping_supported": capability.perVMNetworkTrafficShapingSupported,
-        "per_vm_swap_files": capability.perVmSwapFiles,
-        "pre_assigned_pci_unit_numbers_supported": capability.preAssignedPCIUnitNumbersSupported,
-        "provisioning_nic_selection_supported": capability.provisioningNicSelectionSupported,
-        "reboot_supported": capability.rebootSupported,
-        "record_replay_supported": capability.recordReplaySupported,
-        "recursive_resource_pools_supported": capability.recursiveResourcePoolsSupported,
-        "reliable_memory_aware": capability.reliableMemoryAware,
-        "replay_compatibility_issues": list(capability.replayCompatibilityIssues),
-        "replay_unsupported_reason": capability.replayUnsupportedReason,
-        "restricted_snapshot_relocate_supported": capability.restrictedSnapshotRelocateSupported,
-        "san_supported": capability.sanSupported,
-        "scaled_screenshot_supported": capability.scaledScreenshotSupported,
-        "scheduled_hardware_upgrade_supported": capability.scheduledHardwareUpgradeSupported,
-        "screenshot_supported": capability.screenshotSupported,
-        "service_package_info_supported": capability.servicePackageInfoSupported,
-        "shutdown_supported": capability.shutdownSupported,
-        "smart_card_authentication_supported": capability.smartCardAuthenticationSupported,
-        "smp_ft_compatibility_issues": list(capability.smpFtCompatibilityIssues),
-        "smp_ft_supported": capability.smpFtSupported,
-        "snapshot_relayout_supported": capability.snapshotRelayoutSupported,
-        "standby_supported": capability.standbySupported,
-        "storage_iorm_supported": capability.storageIORMSupported,
-        "storage_policy_supported": capability.storagePolicySupported,
-        "storage_vmotion_supported": capability.storageVMotionSupported,
-        "supported_vmfs_major_version": list(capability.supportedVmfsMajorVersion),
-        "suspended_relocate_supported": capability.suspendedRelocateSupported,
-        "tpm_supported": capability.tpmSupported,
-        "turn_disk_locator_led_supported": capability.turnDiskLocatorLedSupported,
-        "unshared_swap_vmotion_supported": capability.unsharedSwapVMotionSupported,
-        "upit_supported": capability.upitSupported,
-        "vflash_supported": capability.vFlashSupported,
-        "vpmc_supported": capability.vPMCSupported,
-        "vstorage_capable": capability.vStorageCapable,
-        "virtual_exec_usage_supported": capability.virtualExecUsageSupported,
-        "virtual_volume_datastore_supported": capability.virtualVolumeDatastoreSupported,
-        "vlan_tagging_supported": capability.vlanTaggingSupported,
-        "vm_direct_path_gen_2_supported": capability.vmDirectPathGen2Supported,
-        "vm_direct_path_gen_2_unsupported_reason": list(
-            capability.vmDirectPathGen2UnsupportedReason
-        ),
-        "vm_direct_path_gen_2_unsupported_reason_extended": capability.vmDirectPathGen2UnsupportedReasonExtended,
-        "vmfs_datastore_mount_capable": capability.vmfsDatastoreMountCapable,
-        "vmotion_across_network_supported": capability.vmotionAcrossNetworkSupported,
-        "vmotion_supported": capability.vmotionSupported,
-        "vmotion_with_storage_vmotion_supported": capability.vmotionWithStorageVMotionSupported,
-        "vr_nfc_nic_selection_supported": capability.vrNfcNicSelectionSupported,
-        "vsan_supported": capability.vsanSupported,
-    }
+    ret = {}
+    for attrib in dir(host.capability):
+        if attrib.startswith("_") or attrib.lower() == "array":
+            continue
+        val = getattr(host.capability, attrib)
+        if isinstance(val, list):
+            val = list(val)
+        ret.update({_camel_to_snake_case(attrib): val})
     return ret
 
 
@@ -1003,6 +913,7 @@ def get(
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
+    include_host_capabilities=True,
     service_instance=None,
 ):
     """
@@ -1016,6 +927,9 @@ def get(
 
     host_name
         Filter by this ESXi hostname (optional)
+
+    include_host_capabilities
+        Specify whether to include host capabilities in the return data. Default "True". (optional)
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -1073,16 +987,17 @@ def get(
             ret[h.name]["host_name"] = h.summary.config.name
             ret[h.name]["system_vendor"] = h.hardware.systemInfo.vendor
             ret[h.name]["system_model"] = h.hardware.systemInfo.model
-            ret[h.name]["bois_release_date"] = h.hardware.biosInfo.releaseDate
-            ret[h.name]["bois_release_version"] = h.hardware.biosInfo.biosVersion
+            ret[h.name]["bios_release_date"] = h.hardware.biosInfo.releaseDate
+            ret[h.name]["bios_release_version"] = h.hardware.biosInfo.biosVersion
             ret[h.name]["uptime"] = h.summary.quickStats.uptime
             ret[h.name]["in_maintenance_mode"] = h.runtime.inMaintenanceMode
             ret[h.name]["system_uuid"] = h.hardware.systemInfo.uuid
             for info in h.hardware.systemInfo.otherIdentifyingInfo:
                 ret[h.name].setdefault("other_info", {}).update(
-                    {info.identifierType.key: info.identifierValue}
+                    {_camel_to_snake_case(info.identifierType.key): info.identifierValue}
                 )
-            ret[h.name]["capabilities"] = _get_capability_attribs(host=h)
+            if include_host_capabilities:
+                ret[h.name]["capabilities"] = _get_capability_attribs(host=h)
         return ret
     except (
         vim.fault.InvalidState,

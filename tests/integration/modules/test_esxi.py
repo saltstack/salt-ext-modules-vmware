@@ -440,6 +440,19 @@ def test_esxi_get(service_instance):
         service_instance=service_instance,
         datacenter_name="Datacenter",
         cluster_name="Cluster",
+        include_host_capabilities=False,
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]["cpu_model"]
+        assert "capabilities" not in ret[host]
+        assert ret[host]["nics"]
+        assert ret[host]["num_cpu_cores"]
+
+    ret = esxi.get(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
         host_name="no_host",
     )
     assert not ret
