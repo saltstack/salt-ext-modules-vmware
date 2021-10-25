@@ -444,7 +444,7 @@ def test_esxi_get(service_instance):
         service_instance=service_instance,
         datacenter_name="Datacenter",
         cluster_name="Cluster",
-        config_type=["datastores", "nics"]
+        config_type=["datastores", "nics"],
     )
     assert ret
     for host in ret:
