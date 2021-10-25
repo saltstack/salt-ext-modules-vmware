@@ -948,10 +948,10 @@ def get(
     try:
         for h in hosts:
             ret[h.name] = {}
-            vsan_manager = h.configManager.vsanSystem
-            if vsan_manager:
-                if not config_type or config_type == "vsan":
-                    ret[h.name]["vsan"] = {}
+            if not config_type or config_type == "vsan":
+                ret[h.name]["vsan"] = {}
+                vsan_manager = h.configManager.vsanSystem
+                if vsan_manager:
                     vsan = vsan_manager.QueryHostStatus()
                     ret[h.name]["vsan"]["cluster_uuid"] = vsan.uuid
                     ret[h.name]["vsan"]["node_uuid"] = vsan.nodeUuid
