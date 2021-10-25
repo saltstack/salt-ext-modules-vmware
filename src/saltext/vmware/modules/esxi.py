@@ -49,6 +49,7 @@ def _get_capability_attribs(host):
         if attrib.startswith("_") or attrib.lower() == "array":
             continue
         val = getattr(host.capability, attrib)
+        # Convert all pyvmomi str[], bool[] and int[] to list.
         if isinstance(val, list):
             val = list(val)
         ret.update({utils_common.camel_to_snake_case(attrib): val})
@@ -906,7 +907,7 @@ def get(
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
-    include_host_capabilities=True,
+    config_type=None,
     service_instance=None,
 ):
     """
@@ -921,8 +922,9 @@ def get(
     host_name
         Filter by this ESXi hostname (optional)
 
-    include_host_capabilities
-        Specify whether to include host capabilities in the return data. Default "True". (optional)
+    config_type
+        Filter by this configuration type. Valid values: "vsan", "nics", "datastores", "other_info", "capabilities".
+        (optional)
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -948,52 +950,60 @@ def get(
             ret[h.name] = {}
             vsan_manager = h.configManager.vsanSystem
             if vsan_manager:
-                vsan = vsan_manager.QueryHostStatus()
-                ret[h.name]["vsan_cluster_uuid"] = vsan.uuid
-                ret[h.name]["vsan_node_uuid"] = vsan.nodeUuid
-                ret[h.name]["vsan_health"] = vsan.health
+                if not config_type or config_type == "vsan":
+                    ret[h.name]["vsan"] = {}
+                    vsan = vsan_manager.QueryHostStatus()
+                    ret[h.name]["vsan"]["cluster_uuid"] = vsan.uuid
+                    ret[h.name]["vsan"]["node_uuid"] = vsan.nodeUuid
+                    ret[h.name]["vsan"]["health"] = vsan.health
 
-            ret[h.name]["cpu_model"] = h.summary.hardware.cpuModel
-            ret[h.name]["num_cpu_cores"] = h.summary.hardware.numCpuCores
-            ret[h.name]["num_cpu_pkgs"] = h.summary.hardware.numCpuPkgs
-            ret[h.name]["num_cpu_threads"] = h.summary.hardware.numCpuThreads
-            ret[h.name]["memory_size"] = h.summary.hardware.memorySize
-            ret[h.name]["overall_memory_usage"] = h.summary.quickStats.overallMemoryUsage
+            if not config_type or config_type == "datastores":
+                ret[h.name]["datastores"] = {}
+                for store in h.datastore:
+                    ret[h.name]["datastores"][store.name] = {}
+                    ret[h.name]["datastores"][store.name]["capacity"] = store.summary.capacity
+                    ret[h.name]["datastores"][store.name]["free_space"] = store.summary.freeSpace
 
-            for store in h.datastore:
-                ret[h.name][store.name] = {}
-                ret[h.name][store.name]["capacity"] = store.summary.capacity
-                ret[h.name][store.name]["free_space"] = store.summary.freeSpace
+            if not config_type or config_type == "nics":
+                ret[h.name]["nics"] = {}
+                for nic in h.config.network.vnic:
+                    ret[h.name]["nics"][nic.device] = {}
+                    ret[h.name]["nics"][nic.device]["ip_address"] = nic.spec.ip.ipAddress
+                    ret[h.name]["nics"][nic.device]["subnet_mask"] = nic.spec.ip.subnetMask
+                    ret[h.name]["nics"][nic.device]["mac"] = nic.spec.mac
+                    ret[h.name]["nics"][nic.device]["mtu"] = nic.spec.mtu
 
-            ret[h.name]["nics"] = {}
-            for nic in h.config.network.vnic:
-                ret[h.name]["nics"][nic.device] = {}
-                ret[h.name]["nics"][nic.device]["ip_address"] = nic.spec.ip.ipAddress
-                ret[h.name]["nics"][nic.device]["subnet_mask"] = nic.spec.ip.subnetMask
-                ret[h.name]["nics"][nic.device]["mac"] = nic.spec.mac
-                ret[h.name]["nics"][nic.device]["mtu"] = nic.spec.mtu
-
-            ret[h.name]["product_name"] = h.config.product.name
-            ret[h.name]["product_version"] = h.config.product.version
-            ret[h.name]["product_build"] = h.config.product.build
-            ret[h.name]["product_os_type"] = h.config.product.osType
-            ret[h.name]["host_name"] = h.summary.config.name
-            ret[h.name]["system_vendor"] = h.hardware.systemInfo.vendor
-            ret[h.name]["system_model"] = h.hardware.systemInfo.model
-            ret[h.name]["bios_release_date"] = h.hardware.biosInfo.releaseDate
-            ret[h.name]["bios_release_version"] = h.hardware.biosInfo.biosVersion
-            ret[h.name]["uptime"] = h.summary.quickStats.uptime
-            ret[h.name]["in_maintenance_mode"] = h.runtime.inMaintenanceMode
-            ret[h.name]["system_uuid"] = h.hardware.systemInfo.uuid
-            for info in h.hardware.systemInfo.otherIdentifyingInfo:
-                ret[h.name].setdefault("other_info", {}).update(
-                    {
-                        utils_common.camel_to_snake_case(
-                            info.identifierType.key
-                        ): info.identifierValue
-                    }
-                )
-            if include_host_capabilities:
+            if not config_type or config_type == "other_info":
+                ret[h.name]["other_info"] = {}
+                ret[h.name]["other_info"]["cpu_model"] = h.summary.hardware.cpuModel
+                ret[h.name]["other_info"]["num_cpu_cores"] = h.summary.hardware.numCpuCores
+                ret[h.name]["other_info"]["num_cpu_pkgs"] = h.summary.hardware.numCpuPkgs
+                ret[h.name]["other_info"]["num_cpu_threads"] = h.summary.hardware.numCpuThreads
+                ret[h.name]["other_info"]["memory_size"] = h.summary.hardware.memorySize
+                ret[h.name]["other_info"][
+                    "overall_memory_usage"
+                ] = h.summary.quickStats.overallMemoryUsage
+                ret[h.name]["other_info"]["product_name"] = h.config.product.name
+                ret[h.name]["other_info"]["product_version"] = h.config.product.version
+                ret[h.name]["other_info"]["product_build"] = h.config.product.build
+                ret[h.name]["other_info"]["product_os_type"] = h.config.product.osType
+                ret[h.name]["other_info"]["host_name"] = h.summary.config.name
+                ret[h.name]["other_info"]["system_vendor"] = h.hardware.systemInfo.vendor
+                ret[h.name]["other_info"]["system_model"] = h.hardware.systemInfo.model
+                ret[h.name]["other_info"]["bios_release_date"] = h.hardware.biosInfo.releaseDate
+                ret[h.name]["other_info"]["bios_release_version"] = h.hardware.biosInfo.biosVersion
+                ret[h.name]["other_info"]["uptime"] = h.summary.quickStats.uptime
+                ret[h.name]["other_info"]["in_maintenance_mode"] = h.runtime.inMaintenanceMode
+                ret[h.name]["other_info"]["system_uuid"] = h.hardware.systemInfo.uuid
+                for info in h.hardware.systemInfo.otherIdentifyingInfo:
+                    ret[h.name]["other_info"].update(
+                        {
+                            utils_common.camel_to_snake_case(
+                                info.identifierType.key
+                            ): info.identifierValue
+                        }
+                    )
+            if not config_type or config_type == "capabilities":
                 ret[h.name]["capabilities"] = _get_capability_attribs(host=h)
         return ret
     except (
