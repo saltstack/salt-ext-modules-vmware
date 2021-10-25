@@ -923,7 +923,8 @@ def get(
         Filter by this ESXi hostname (optional)
 
     config_type
-        Filter by this configuration type. Valid values: "vsan", "nics", "datastores", "other_info", "capabilities".
+        Filter by this configuration type. Valid values: "vsan", "nics", "datastores", "system", "capabilities".
+        User can specify either a string or a list to match.
         (optional)
 
     service_instance
@@ -945,10 +946,13 @@ def get(
         get_all_hosts=host_name is None,
     )
 
+    if isinstance(config_type, str):
+        config_type = [config_type]
+
     try:
         for h in hosts:
             ret[h.name] = {}
-            if not config_type or config_type == "vsan":
+            if not config_type or "vsan" in config_type:
                 ret[h.name]["vsan"] = {}
                 vsan_manager = h.configManager.vsanSystem
                 if vsan_manager:
@@ -957,14 +961,14 @@ def get(
                     ret[h.name]["vsan"]["node_uuid"] = vsan.nodeUuid
                     ret[h.name]["vsan"]["health"] = vsan.health
 
-            if not config_type or config_type == "datastores":
+            if not config_type or "datastores" in config_type:
                 ret[h.name]["datastores"] = {}
                 for store in h.datastore:
                     ret[h.name]["datastores"][store.name] = {}
                     ret[h.name]["datastores"][store.name]["capacity"] = store.summary.capacity
                     ret[h.name]["datastores"][store.name]["free_space"] = store.summary.freeSpace
 
-            if not config_type or config_type == "nics":
+            if not config_type or "nics" in config_type:
                 ret[h.name]["nics"] = {}
                 for nic in h.config.network.vnic:
                     ret[h.name]["nics"][nic.device] = {}
@@ -973,37 +977,37 @@ def get(
                     ret[h.name]["nics"][nic.device]["mac"] = nic.spec.mac
                     ret[h.name]["nics"][nic.device]["mtu"] = nic.spec.mtu
 
-            if not config_type or config_type == "other_info":
-                ret[h.name]["other_info"] = {}
-                ret[h.name]["other_info"]["cpu_model"] = h.summary.hardware.cpuModel
-                ret[h.name]["other_info"]["num_cpu_cores"] = h.summary.hardware.numCpuCores
-                ret[h.name]["other_info"]["num_cpu_pkgs"] = h.summary.hardware.numCpuPkgs
-                ret[h.name]["other_info"]["num_cpu_threads"] = h.summary.hardware.numCpuThreads
-                ret[h.name]["other_info"]["memory_size"] = h.summary.hardware.memorySize
-                ret[h.name]["other_info"][
+            if not config_type or "system" in config_type:
+                ret[h.name]["system"] = {}
+                ret[h.name]["system"]["cpu_model"] = h.summary.hardware.cpuModel
+                ret[h.name]["system"]["num_cpu_cores"] = h.summary.hardware.numCpuCores
+                ret[h.name]["system"]["num_cpu_pkgs"] = h.summary.hardware.numCpuPkgs
+                ret[h.name]["system"]["num_cpu_threads"] = h.summary.hardware.numCpuThreads
+                ret[h.name]["system"]["memory_size"] = h.summary.hardware.memorySize
+                ret[h.name]["system"][
                     "overall_memory_usage"
                 ] = h.summary.quickStats.overallMemoryUsage
-                ret[h.name]["other_info"]["product_name"] = h.config.product.name
-                ret[h.name]["other_info"]["product_version"] = h.config.product.version
-                ret[h.name]["other_info"]["product_build"] = h.config.product.build
-                ret[h.name]["other_info"]["product_os_type"] = h.config.product.osType
-                ret[h.name]["other_info"]["host_name"] = h.summary.config.name
-                ret[h.name]["other_info"]["system_vendor"] = h.hardware.systemInfo.vendor
-                ret[h.name]["other_info"]["system_model"] = h.hardware.systemInfo.model
-                ret[h.name]["other_info"]["bios_release_date"] = h.hardware.biosInfo.releaseDate
-                ret[h.name]["other_info"]["bios_release_version"] = h.hardware.biosInfo.biosVersion
-                ret[h.name]["other_info"]["uptime"] = h.summary.quickStats.uptime
-                ret[h.name]["other_info"]["in_maintenance_mode"] = h.runtime.inMaintenanceMode
-                ret[h.name]["other_info"]["system_uuid"] = h.hardware.systemInfo.uuid
+                ret[h.name]["system"]["product_name"] = h.config.product.name
+                ret[h.name]["system"]["product_version"] = h.config.product.version
+                ret[h.name]["system"]["product_build"] = h.config.product.build
+                ret[h.name]["system"]["product_os_type"] = h.config.product.osType
+                ret[h.name]["system"]["host_name"] = h.summary.config.name
+                ret[h.name]["system"]["system_vendor"] = h.hardware.systemInfo.vendor
+                ret[h.name]["system"]["system_model"] = h.hardware.systemInfo.model
+                ret[h.name]["system"]["bios_release_date"] = h.hardware.biosInfo.releaseDate
+                ret[h.name]["system"]["bios_release_version"] = h.hardware.biosInfo.biosVersion
+                ret[h.name]["system"]["uptime"] = h.summary.quickStats.uptime
+                ret[h.name]["system"]["in_maintenance_mode"] = h.runtime.inMaintenanceMode
+                ret[h.name]["system"]["system_uuid"] = h.hardware.systemInfo.uuid
                 for info in h.hardware.systemInfo.otherIdentifyingInfo:
-                    ret[h.name]["other_info"].update(
+                    ret[h.name]["system"].update(
                         {
                             utils_common.camel_to_snake_case(
                                 info.identifierType.key
                             ): info.identifierValue
                         }
                     )
-            if not config_type or config_type == "capabilities":
+            if not config_type or "capabilities" in config_type:
                 ret[h.name]["capabilities"] = _get_capability_attribs(host=h)
         return ret
     except (
