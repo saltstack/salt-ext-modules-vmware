@@ -52,7 +52,7 @@ def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
     Test deploy virtual machine through an OVF
     """
     res = virtual_machine.deploy_ovf(
-        name="test1",
+        vm_name="test1",
         host_name=integration_test_config["esxi_host_name"],
         ovf_path="tests/test_files/centos-7-tools.ovf",
     )
@@ -67,7 +67,7 @@ def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
     tar.add("tests/test_files/centos-7-tools.ovf")
     tar.close()
     res = virtual_machine.deploy_ova(
-        name="test2",
+        vm_name="test2",
         host_name=integration_test_config["esxi_host_name"],
         ova_path="tests/test_files/sample.tar",
     )
@@ -81,7 +81,7 @@ def test_template_deploy(integration_test_config, patch_salt_globals_vm):
     """
     if integration_test_config["virtual_machines_templates"]:
         res = virtual_machine.deploy_template(
-            name="test_template_vm",
+            vm_name="test_template_vm",
             template_name=integration_test_config["virtual_machines_templates"][0],
             host_name=integration_test_config["esxi_host_name"],
         )
@@ -96,7 +96,7 @@ def test_path(integration_test_config, patch_salt_globals_vm):
     """
     if integration_test_config["virtual_machine_paths"].items:
         for k, v in integration_test_config["virtual_machine_paths"].items():
-            res = virtual_machine.path(name=k)
+            res = virtual_machine.path(vm_name=k)
             assert res == v
     else:
         pass
