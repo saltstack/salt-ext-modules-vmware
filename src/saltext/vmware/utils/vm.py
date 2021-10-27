@@ -687,131 +687,103 @@ def options_order_list(vm, order):
     return boot_order_list
 
 
-def check_boot_options(
-    vm,
-    boot_order_list,
-    delay,
-    enter_bios_setup,
-    retry_enabled,
-    retry_delay,
-    efi_secure_boot_enabled,
-):
+def compare_boot_order_list(new, current):
     """
-    Check if current boot options match input options.
+    Compares current boot order list and input boot order list.
 
-    vm
-        Reference to virtual machine to check options on.
+    new
+        List of vim bootable device objects.
 
-    boot_order_list
-        List of vim bootable device objects in given order from virtual machine.
-
-    delay
-        (integer) Boot delay. When powering on or resetting, delay boot order by given milliseconds.
-
-    enter_bios_setup
-        (Boolean) During the next boot, force entry into the BIOS setup screen.
-
-    retry_enabled
-        (Boolean) If the VM fails to find boot device retry.
-
-    retry_delay
-        (integer) If the VM fails to find boot device, automatically retry after given milliseconds.
-
-    efi_secure_boot_enabled
-        (Boolean)
+    current
+        List of vim bootable device objects.
     """
-    ret = {"diff": True, "changes": {}}
-
-    lists_same = True
-    if len(boot_order_list) == len(vm.config.bootOptions.bootOrder):
-        for provided, existing in zip(boot_order_list, vm.config.bootOptions.bootOrder):
+    if len(new) == len(current):
+        for provided, existing in zip(new, current):
             if provided.deviceKey != existing.deviceKey:
-                list_same = False
+                return False
+        return True
     else:
-        lists_same = False
+        return False
+
+
+def compare_boot_options(input_opts, current):
+    """
+    Compares current boot options and input options.
+
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
+
+    current
+        Pyvmomi virtual machine boot options object.
+    """
+
+    lists_same = compare_boot_order_list(input_opts["bootOrder"], current.bootOrder)
     if (
         lists_same
-        and delay == vm.config.bootOptions.bootDelay
-        and enter_bios_setup == vm.config.bootOptions.enterBIOSSetup
-        and retry_enabled == vm.config.bootOptions.bootRetryEnabled
-        and retry_delay == vm.config.bootOptions.bootRetryDelay
-        and efi_secure_boot_enabled == vm.config.bootOptions.efiSecureBootEnabled
+        and current.bootDelay == input_opts["bootDelay"]
+        and current.enterBIOSSetup == input_opts["enterBIOSSetup"]
+        and current.bootRetryEnabled == input_opts["bootRetryEnabled"]
+        and current.bootRetryDelay == input_opts["bootRetryDelay"]
+        and current.efiSecureBootEnabled == input_opts["efiSecureBootEnabled"]
     ):
-        ret["diff"] = False
-        return ret
+        return True
     else:
-        if not lists_same:
-            old = [i.deviceKey for i in vm.config.bootOptions.bootOrder]
-            new = [i.deviceKey for i in boot_order_list]
-            ret["changes"]["order"] = {"old": old, "new": new}
-        if not delay == vm.config.bootOptions.bootDelay:
-            ret["changes"]["delay"] = {"old": vm.config.bootOptions.bootDelay, "new": delay}
-        if not enter_bios_setup == vm.config.bootOptions.enterBIOSSetup:
-            ret["changes"]["enter_bois_setup"] = {
-                "old": vm.config.bootOptions.enterBIOSSetup,
-                "new": enter_bios_setup,
-            }
-        if not retry_enabled == vm.config.bootOptions.bootRetryEnabled:
-            ret["changes"]["retry_enabled"] = {
-                "old": vm.config.bootOptions.bootRetryEnabled,
-                "new": retry_enabled,
-            }
-        if not retry_delay == vm.config.bootOptions.bootRetryDelay:
-            ret["changes"]["retry_delay"] = {
-                "old": vm.config.bootOptions.bootRetryDelay,
-                "new": retry_delay,
-            }
-        if not efi_secure_boot_enabled == vm.config.bootOptions.efiSecureBootEnabled:
-            ret["changes"]["efi_secure_boot_enabled"] = {
-                "old": vm.config.bootOptions.efiSecureBootEnabled,
-                "new": efi_secure_boot_enabled,
-            }
-        return ret
+        return False
 
 
-def change_boot_options(
-    vm,
-    boot_order_list,
-    delay,
-    enter_bios_setup,
-    retry_enabled,
-    retry_delay,
-    efi_secure_boot_enabled,
-):
+def boot_options_dif(input_opts, current):
+    """
+    Returns the difference between two dictionaries of virtual machine boot options.
+
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
+
+    current
+        Pyvmomi virtual machine boot options object.
+    """
+    ret = {}
+    lists_same = compare_boot_order_list(input_opts["bootOrder"], current.bootOrder)
+    if not lists_same:
+        old = [i.deviceKey for i in current.bootOrder]
+        new = [i.deviceKey for i in input_opts["bootOrder"]]
+        ret["order"] = {"old": old, "new": new}
+    if not current.bootDelay == input_opts["bootDelay"]:
+        ret["delay"] = {"old": current.bootDelay, "new": input_opts["bootDelay"]}
+    if not current.enterBIOSSetup == input_opts["enterBIOSSetup"]:
+        ret["enter_bois_setup"] = {
+            "old": current.enterBIOSSetup,
+            "new": input_opts["enterBIOSSetup"],
+        }
+    if not current.bootRetryEnabled == input_opts["bootRetryEnabled"]:
+        ret["retry_enabled"] = {
+            "old": current.bootRetryEnabled,
+            "new": input_opts["bootRetryEnabled"],
+        }
+    if not current.bootRetryDelay == input_opts["bootRetryDelay"]:
+        ret["retry_delay"] = {
+            "old": current.bootRetryDelay,
+            "new": input_opts["bootRetryDelay"],
+        }
+    if not current.efiSecureBootEnabled == input_opts["efiSecureBootEnabled"]:
+        ret["efi_secure_boot_enabled"] = {
+            "old": current.efiSecureBootEnabled,
+            "new": input_opts["efiSecureBootEnabled"],
+        }
+    return ret
+
+
+def change_boot_options(vm, input_opts):
     """
     Changes boot options on given vm.
 
     vm
-        Reference to virtual machine to check options on.
+        Reference to virtual machine to change options on.
 
-    boot_order_list
-        list of vim bootable device objects in given order from virtual machine.
-
-    delay
-        (integer) Boot delay. When powering on or resetting, delay boot order by given milliseconds.
-
-    enter_bios_setup
-        (Boolean) During the next boot, force entry into the BIOS setup screen.
-
-    retry_enabled
-        (Boolean) If the VM fails to find boot device retry.
-
-    retry_delay
-        (integer) If the VM fails to find boot device, automatically retry after given milliseconds.
-
-    efi_secure_boot_enabled
-        (Boolean)
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
     """
-    boot_opts = {
-        "bootOrder": boot_order_list,
-        "bootDelay": delay,
-        "enterBIOSSetup": enter_bios_setup,
-        "bootRetryEnabled": retry_enabled,
-        "bootRetryDelay": retry_delay,
-        "efiSecureBootEnabled": efi_secure_boot_enabled,
-    }
     vm_conf = vim.vm.ConfigSpec()
-    vm_conf.bootOptions = vim.vm.BootOptions(**boot_opts)
+    vm_conf.bootOptions = vim.vm.BootOptions(**input_opts)
     task = vm.ReconfigVM_Task(vm_conf)
     utils_common.wait_for_task(task, vm.name, "configure boot options")
 

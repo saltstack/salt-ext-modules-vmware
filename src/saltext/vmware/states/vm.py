@@ -27,9 +27,9 @@ def __virtual__():
 
 def set_boot_manager(
     name,
-    boot_order,
+    boot_order=["cdrom", "disk", "ethernet", "floppy"],
     delay=0,
-    enter_bois_setup=False,
+    enter_bios_setup=False,
     retry_enabled=False,
     retry_delay=10000,
     efi_secure_boot_enabled=False,
@@ -38,13 +38,16 @@ def set_boot_manager(
     """
     Manage boot option for a virtual machine
 
+    name
+        The name of the virtual machine.
+
     boot_order
         (List of strings) Boot order of devices. Acceptable strings: cdrom, disk, ethernet, floppy
 
     delay
         (integer, optional) Boot delay. When powering on or resetting, delay boot order by given milliseconds. Defaults to 0.
 
-    enter_bois_setup
+    enter_bios_setup
         (boolean, optional) During the next boot, force entry into the BIOS setup screen. Defaults to False.
 
     retry_enabled
@@ -64,28 +67,24 @@ def set_boot_manager(
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     vm = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
     boot_order_list = utils_vm.options_order_list(vm, boot_order)
-    check_bo = utils_vm.check_boot_options(
-        vm,
-        boot_order_list,
-        delay,
-        enter_bois_setup,
-        retry_enabled,
-        retry_delay,
-        efi_secure_boot_enabled,
-    )
-    ret["changes"] = check_bo["changes"]
+    input_opts = {
+        "bootOrder": boot_order_list,
+        "bootDelay": delay,
+        "enterBIOSSetup": enter_bios_setup,
+        "bootRetryEnabled": retry_enabled,
+        "bootRetryDelay": retry_delay,
+        "efiSecureBootEnabled": efi_secure_boot_enabled,
+    }
+    if utils_vm.compare_boot_options(input_opts, vm.config.bootOptions):
+        ret["comment"] = "already configured this way"
+        return ret
+
+    ret["changes"] = utils_vm.boot_options_dif(input_opts, vm.config.bootOptions)
+
     if __opts__["test"]:
         ret["comment"] = "These options are set to change."
         return ret
 
-    result = utils_vm.change_boot_options(
-        vm,
-        boot_order_list,
-        delay,
-        enter_bois_setup,
-        retry_enabled,
-        retry_delay,
-        efi_secure_boot_enabled,
-    )
+    result = utils_vm.change_boot_options(vm, input_opts)
     ret["comment"] = result["status"]
     return ret

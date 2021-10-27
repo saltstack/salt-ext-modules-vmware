@@ -377,27 +377,18 @@ def boot_manager(
 
     boot_order_list = utils_vm.options_order_list(vm, order)
 
-    check_bo = utils_vm.check_boot_options(
-        vm,
-        boot_order_list,
-        delay,
-        enter_bios_setup,
-        retry_enabled,
-        retry_delay,
-        efi_secure_boot_enabled,
-    )
+    input_opts = {
+        "bootOrder": boot_order_list,
+        "bootDelay": delay,
+        "enterBIOSSetup": enter_bios_setup,
+        "bootRetryEnabled": retry_enabled,
+        "bootRetryDelay": retry_delay,
+        "efiSecureBootEnabled": efi_secure_boot_enabled,
+    }
 
-    if not check_bo["diff"]:
+    if utils_vm.compare_boot_options(input_opts, vm.config.bootOptions):
         return {"status": "already configured this way"}
 
-    ret = utils_vm.change_boot_options(
-        vm,
-        boot_order_list,
-        delay,
-        enter_bios_setup,
-        retry_enabled,
-        retry_delay,
-        efi_secure_boot_enabled,
-    )
+    ret = utils_vm.change_boot_options(vm, input_opts)
 
     return ret

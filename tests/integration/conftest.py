@@ -15,7 +15,7 @@ import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
-from pyVim import connect
+import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
 
 
@@ -127,6 +127,38 @@ def patch_salt_globals_vm(vmware_conf):
     setattr(virtual_machine, "__pillar__", vmware_conf)
 
 
+@pytest.fixture
+def patch_salt_globals_vm_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        virtual_machine_state,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(virtual_machine_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_vm_state_test(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        virtual_machine_state,
+        "__opts__",
+        {
+            "test": True,
+        },
+    )
+    setattr(virtual_machine_state, "__pillar__", vmware_conf)
+
+
 @pytest.fixture(scope="function")
 def vmware_cluster(vmware_datacenter, service_instance):
     """
@@ -194,3 +226,8 @@ def vmware_conf(integration_test_config):
             "user": config["user"],
         }
     }
+
+
+@pytest.fixture()
+def vm_ops():
+    return {"test": False}
