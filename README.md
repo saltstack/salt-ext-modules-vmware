@@ -48,11 +48,12 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     # Build the docs, serve, and view in your web browser:
     python -m nox -e docs && (cd docs/_build/html; python -m webbrowser localhost:8000; python -m http.server; cd -)
 
-    # If you want to run tests against an actual vCenter, make
-    # a local salt dir
+    # If you want to run tests against an actual vCenter:
+
+    # 1. Make a local salt dir
     mkdir -p local/etc/salt
 
-    # Create a minion config
+    # 2. Create a minion config
     cat << EOF> local/etc/salt/minion
     user: $(whoami)
     root_dir: $PWD/local/
@@ -62,7 +63,7 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     master_port: 55506
     EOF
 
-    # Create a test config file:
+    # 3. Create a test config file:
     python tools/test_value_scraper.py -c local/vcenter.conf
 
 
