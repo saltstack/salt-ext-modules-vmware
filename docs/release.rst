@@ -30,6 +30,26 @@ Salt. This will ensure that any breaking changes within Salt are detected
 ahead of time, and can either be accounted for within this module, or upstream
 bugs can be filed.
 
+Build
+-----
+
+To prepare for a release, the first step is to ensure you're on the latest
+commit on the main branch and build the release artifact, along with
+dependencies:
+
+.. code::
+
+    git fetch salt
+    git stash  # if needed
+    git checkout salt/main
+    # If pip and wheel are not already installed/up-to-date
+    python -m pip install --upgrade pip wheel
+    python -m pip wheel .\[dev,tests,release\] -w dist/
+
+This will create a ``.whl`` file for the extension module, as well as all of
+the dependencies, in the ``dist/`` directory.
+
+
 Ensure Version
 --------------
 
@@ -50,25 +70,7 @@ When the release is deemed ready, the version would be ``10.8.14.0``.
 If the incorrect version is present in the ``main`` branch, it should be
 updated, committed, and pushed before continuing this process.
 
-Build
------
-
-To prepare for a release, the first step is to ensure you're on the latest
-commit on the main branch and build the release artifact, along with
-dependencies:
-
-.. code::
-
-    git fetch salt
-    git stash  # if needed
-    git checkout salt/main
-    # If pip and wheel are not already installed/up-to-date
-    python -m pip install --upgrade pip wheeel
-    python -m pip wheel .[dev,tests,release] -w dist/
-
-This will create a ``.whl`` file for the extension module, as well as all of
-the dependencies, in the ``dist/`` directory.
-
+Commit ``src/saltext/vmware/version.py``, rebuild and continue testing. Do **not** merge into https://github.com/saltstack/salt-ext-modules-vmware/.
 
 Install and Test the Build
 --------------------------
@@ -83,7 +85,7 @@ the local source, which helps to ensure the complete install process is tested.
 .. code::
 
     deactivate  # if a venv is already activated
-    python -m venv /tmp/test_saltext --prompt test-vmw-ext
+    python3 -m venv /tmp/test_saltext --prompt test-vmw-ext
     source /tmp/test_saltext/bin/activate
     python -m pip install --upgrade pip wheel
     python -m pip install --no-index --find-links dist/ saltext.vmware[dev,tests,release]
@@ -116,6 +118,11 @@ Then you would run:
 .. code::
 
     twine upload --repository test_saltext_vmware dist/saltext.vmware-VERSION-py2.py3-none-any.whl
+
+Merge the Version Update into the Main Repo
+-------------------------------------------
+
+Now that the build has been tested and verified, create a merge request with the new ``__version__`` to https://github.com/saltstack/salt-ext-modules-vmware/.
 
 Versions, Tagging, and Changelog
 --------------------------------
