@@ -24,7 +24,7 @@ Dev Environment
 ---------------
 
 Since this extension module is currently under active development, it's a good
-idea to hava a dev system. This guide also assumes that you have installed
+idea to have a dev system. This guide also assumes that you have installed
 Salt, by following directions on `<https://repo.saltproject.io/>`_. If you
 don't have an install of Salt, a quick way would be:
 
@@ -170,7 +170,9 @@ makes managing the versions much easier!
     module should be installed on the Salt master (unless you have a specific
     minion that you want to communicate with vSphere). If you have a minion
     that should communicate with your SDDC, replace ``salt-call`` with
-    ``salt yourminion ...``.
+    ``salt yourminion ...``. One reason you might need to have a particular
+    minion is if your salt master IP is on a blocklist or not on an allowlist
+    for your SDDC, but your minion is allowed.
 
 .. code::
 
