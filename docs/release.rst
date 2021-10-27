@@ -30,6 +30,8 @@ Salt. This will ensure that any breaking changes within Salt are detected
 ahead of time, and can either be accounted for within this module, or upstream
 bugs can be filed.
 
+.. _build:
+
 Build
 -----
 
@@ -123,6 +125,8 @@ Merge the Version Update into the Main Repo
 -------------------------------------------
 
 Now that the build has been tested and verified, create a merge request with the new ``__version__`` to https://github.com/saltstack/salt-ext-modules-vmware/.
+
+With the new version committed, go back and :ref:`build a new artifact<build>`.
 
 Versions, Tagging, and Changelog
 --------------------------------
