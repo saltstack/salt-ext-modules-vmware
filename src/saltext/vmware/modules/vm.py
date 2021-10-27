@@ -338,8 +338,7 @@ def boot_manager(
     order=["cdrom", "disk", "ethernet", "floppy"],
     delay=0,
     enter_bios_setup=False,
-    retry_enabled=False,
-    retry_delay=10000,
+    retry_delay=None,
     efi_secure_boot_enabled=False,
     service_instance=None,
 ):
@@ -358,11 +357,8 @@ def boot_manager(
     enter_bios_setup
         (boolean, optional) During the next boot, force entry into the BIOS setup screen. Defaults to False.
 
-    retry_enabled
-        (boolean, optional) If the VM fails to find boot device retry. Defaults to False.
-
     retry_delay
-        (integer, optional) If the VM fails to find boot device, automatically retry after given milliseconds. Defaults to 10000, has no effect unless retry_enabled is True.
+        (integer, optional) If the VM fails to find boot device, automatically retry after given milliseconds. Defaults to None, has no effect unless retry_enabled is True.
 
     efi_secure_boot_enabled
         (boolean, optional) Defaults to False.
@@ -377,11 +373,12 @@ def boot_manager(
 
     boot_order_list = utils_vm.options_order_list(vm, order)
 
+    # we removed the ability to individually set bootRetryEnabled, easily implemented if asked for
     input_opts = {
         "bootOrder": boot_order_list,
         "bootDelay": delay,
         "enterBIOSSetup": enter_bios_setup,
-        "bootRetryEnabled": retry_enabled,
+        "bootRetryEnabled": bool(retry_delay),
         "bootRetryDelay": retry_delay,
         "efiSecureBootEnabled": efi_secure_boot_enabled,
     }

@@ -646,6 +646,7 @@ def options_order_list(vm, order):
     order
         (List of strings) Boot order of devices. Acceptable strings: cdrom, disk, ethernet, floppy
     """
+
     boot_order_list = []
     for device_name in order:
         if device_name == "cdrom":
