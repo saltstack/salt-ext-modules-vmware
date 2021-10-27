@@ -37,7 +37,7 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     sudo apt-get install -y enchant
 
     # Install extension + test/dev/doc dependencies into your environment
-    python -m pip install -e .[tests,dev,docs]
+    python -m pip install -e .\[tests,dev,docs\]
 
     # Run tests!
     python -m nox -e tests-3
