@@ -88,7 +88,7 @@ the local source, which helps to ensure the complete install process is tested.
     python3 -m venv /tmp/test_saltext --prompt test-vmw-ext
     source /tmp/test_saltext/bin/activate
     python -m pip install --upgrade pip wheel
-    python -m pip install --no-index --find-links dist/ saltext.vmware[dev,tests,release]
+    python -m pip install --no-index --find-links dist/ saltext.vmware\[dev,tests,release\]
     pytest --cov=saltext.vmware tests/
 
 This will run tests against the build artifact. If all tests pass this nightly
