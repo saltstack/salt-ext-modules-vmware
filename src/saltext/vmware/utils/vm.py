@@ -634,3 +634,158 @@ def get_mac_address(vm):
         if isinstance(device, vim.vm.device.VirtualEthernetCard):
             mac_address.append(device.macAddress)
     return mac_address
+
+
+def options_order_list(vm, order):
+    """
+    Converts a text order into internal representation for setting the boot order.
+
+    vm
+        Reference to virtual machine to check options on.
+
+    order
+        (List of strings) Boot order of devices. Acceptable strings: cdrom, disk, ethernet, floppy
+    """
+
+    boot_order_list = []
+    for device_name in order:
+        if device_name == "cdrom":
+            cdrom = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualCdrom)
+            ]
+            if cdrom:
+                boot_order_list.append(vim.vm.BootOptions.BootableCdromDevice())
+        elif device_name == "disk":
+            hdd = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualDisk)
+            ]
+            if hdd:
+                boot_order_list.append(vim.vm.BootOptions.BootableDiskDevice(deviceKey=hdd[0].key))
+        elif device_name == "ethernet":
+            ether = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualEthernetCard)
+            ]
+            if ether:
+                boot_order_list.append(
+                    vim.vm.BootOptions.BootableEthernetDevice(deviceKey=ether[0].key)
+                )
+        elif device_name == "floppy":
+            floppy = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualFloppy)
+            ]
+            if floppy:
+                boot_order_list.append(vim.vm.BootOptions.BootableFloppyDevice())
+        else:
+            raise salt.exceptions.VMwareRuntimeError("invalid order name")
+    return boot_order_list
+
+
+def compare_boot_order_list(new, current):
+    """
+    Compares current boot order list and input boot order list.
+
+    new
+        List of vim bootable device objects.
+
+    current
+        List of vim bootable device objects.
+    """
+    if len(new) == len(current):
+        for provided, existing in zip(new, current):
+            if provided.deviceKey != existing.deviceKey:
+                return False
+        return True
+    else:
+        return False
+
+
+def compare_boot_options(input_opts, current):
+    """
+    Compares current boot options and input options.
+
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
+
+    current
+        Pyvmomi virtual machine boot options object.
+    """
+
+    lists_same = compare_boot_order_list(input_opts["bootOrder"], current.bootOrder)
+    if (
+        lists_same
+        and current.bootDelay == input_opts["bootDelay"]
+        and current.enterBIOSSetup == input_opts["enterBIOSSetup"]
+        and current.bootRetryEnabled == input_opts["bootRetryEnabled"]
+        and current.bootRetryDelay == input_opts["bootRetryDelay"]
+        and current.efiSecureBootEnabled == input_opts["efiSecureBootEnabled"]
+    ):
+        return True
+    else:
+        return False
+
+
+def boot_options_dif(input_opts, current):
+    """
+    Returns the difference between two dictionaries of virtual machine boot options.
+
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
+
+    current
+        Pyvmomi virtual machine boot options object.
+    """
+    ret = {}
+    lists_same = compare_boot_order_list(input_opts["bootOrder"], current.bootOrder)
+    if not lists_same:
+        old = [i.deviceKey for i in current.bootOrder]
+        new = [i.deviceKey for i in input_opts["bootOrder"]]
+        ret["order"] = {"old": old, "new": new}
+    if not current.bootDelay == input_opts["bootDelay"]:
+        ret["delay"] = {"old": current.bootDelay, "new": input_opts["bootDelay"]}
+    if not current.enterBIOSSetup == input_opts["enterBIOSSetup"]:
+        ret["enter_bois_setup"] = {
+            "old": current.enterBIOSSetup,
+            "new": input_opts["enterBIOSSetup"],
+        }
+    if not current.bootRetryEnabled == input_opts["bootRetryEnabled"]:
+        ret["retry_enabled"] = {
+            "old": current.bootRetryEnabled,
+            "new": input_opts["bootRetryEnabled"],
+        }
+    if not current.bootRetryDelay == input_opts["bootRetryDelay"]:
+        ret["retry_delay"] = {
+            "old": current.bootRetryDelay,
+            "new": input_opts["bootRetryDelay"],
+        }
+    if not current.efiSecureBootEnabled == input_opts["efiSecureBootEnabled"]:
+        ret["efi_secure_boot_enabled"] = {
+            "old": current.efiSecureBootEnabled,
+            "new": input_opts["efiSecureBootEnabled"],
+        }
+    return ret
+
+
+def change_boot_options(vm, input_opts):
+    """
+    Changes boot options on given vm.
+
+    vm
+        Reference to virtual machine to change options on.
+
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
+    """
+    vm_conf = vim.vm.ConfigSpec()
+    vm_conf.bootOptions = vim.vm.BootOptions(**input_opts)
+    task = vm.ReconfigVM_Task(vm_conf)
+    utils_common.wait_for_task(task, vm.name, "configure boot options")
+
+    return {"status": "changed"}
