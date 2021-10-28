@@ -433,38 +433,22 @@ def test_esxi_get(service_instance):
     )
     assert ret
     for host in ret:
-        assert ret[host]["system"]["cpu_model"]
+        assert ret[host]["cpu_model"]
         assert ret[host]["capabilities"]
         assert ret[host]["nics"]
         assert ret[host]["vsan"]
         assert ret[host]["datastores"]
-        assert ret[host]["system"]["num_cpu_cores"]
+        assert ret[host]["num_cpu_cores"]
 
     ret = esxi.get(
         service_instance=service_instance,
         datacenter_name="Datacenter",
         cluster_name="Cluster",
-        config_type=["datastores", "nics"],
+        key="vsan:health",
     )
     assert ret
     for host in ret:
-        assert "capabilities" not in ret[host]
-        assert "vsan" not in ret[host]
-        assert "system" not in ret[host]
-        assert ret[host]["nics"]
-        assert ret[host]["datastores"]
-
-    config_types = {"vsan", "nics", "datastores", "system", "capabilities"}
-    for config_type in config_types:
-        ret = esxi.get(
-            service_instance=service_instance,
-            datacenter_name="Datacenter",
-            cluster_name="Cluster",
-            config_type=config_type,
-        )
-        assert ret
-        for host in ret:
-            assert list(ret[host]) == [config_type]
+        assert ret[host] == "unknown"
 
     ret = esxi.get(
         service_instance=service_instance,

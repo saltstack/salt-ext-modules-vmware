@@ -5,6 +5,7 @@ import logging
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.esxi as utils_esxi
+from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
@@ -907,7 +908,9 @@ def get(
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
-    config_type=None,
+    key=None,
+    default="",
+    delimiter=DEFAULT_TARGET_DELIM,
     service_instance=None,
 ):
     """
@@ -922,10 +925,25 @@ def get(
     host_name
         Filter by this ESXi hostname (optional)
 
-    config_type
-        Filter by this configuration type. Valid values: "vsan", "nics", "datastores", "system", "capabilities".
-        User can specify either a string or a list to match.
-        (optional)
+    key
+
+        Attempt to retrieve the named value from ESXi host configuration data, if the named value is not
+        available return the passed default. The default return is an empty string.
+        Follows the grains.get filter semantics. (optional)
+
+        The value can also represent a value in a nested dict using a ":" delimiter
+        for the dict. This means that if a dict in ESXi host configuration looks like this::
+
+        {'vsan': {'health': 'good'}}
+
+        To retrieve the value associated with the apache key in the pkg dict this
+        key can be passed::
+
+        vsan:health
+
+    delimiter
+        Specify an alternate delimiter to use when traversing a nested dict.
+        This is useful for when the desired key contains a colon. (optional)
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -946,69 +964,64 @@ def get(
         get_all_hosts=host_name is None,
     )
 
-    if isinstance(config_type, str):
-        config_type = [config_type]
-
     try:
         for h in hosts:
             ret[h.name] = {}
-            if not config_type or "vsan" in config_type:
-                ret[h.name]["vsan"] = {}
-                vsan_manager = h.configManager.vsanSystem
-                if vsan_manager:
-                    vsan = vsan_manager.QueryHostStatus()
-                    ret[h.name]["vsan"]["cluster_uuid"] = vsan.uuid
-                    ret[h.name]["vsan"]["node_uuid"] = vsan.nodeUuid
-                    ret[h.name]["vsan"]["health"] = vsan.health
+            ret[h.name]["vsan"] = {}
+            vsan_manager = h.configManager.vsanSystem
+            if vsan_manager:
+                vsan = vsan_manager.QueryHostStatus()
+                ret[h.name]["vsan"]["cluster_uuid"] = vsan.uuid
+                ret[h.name]["vsan"]["node_uuid"] = vsan.nodeUuid
+                ret[h.name]["vsan"]["health"] = vsan.health
 
-            if not config_type or "datastores" in config_type:
-                ret[h.name]["datastores"] = {}
-                for store in h.datastore:
-                    ret[h.name]["datastores"][store.name] = {}
-                    ret[h.name]["datastores"][store.name]["capacity"] = store.summary.capacity
-                    ret[h.name]["datastores"][store.name]["free_space"] = store.summary.freeSpace
+            ret[h.name]["datastores"] = {}
+            for store in h.datastore:
+                ret[h.name]["datastores"][store.name] = {}
+                ret[h.name]["datastores"][store.name]["capacity"] = store.summary.capacity
+                ret[h.name]["datastores"][store.name]["free_space"] = store.summary.freeSpace
 
-            if not config_type or "nics" in config_type:
-                ret[h.name]["nics"] = {}
-                for nic in h.config.network.vnic:
-                    ret[h.name]["nics"][nic.device] = {}
-                    ret[h.name]["nics"][nic.device]["ip_address"] = nic.spec.ip.ipAddress
-                    ret[h.name]["nics"][nic.device]["subnet_mask"] = nic.spec.ip.subnetMask
-                    ret[h.name]["nics"][nic.device]["mac"] = nic.spec.mac
-                    ret[h.name]["nics"][nic.device]["mtu"] = nic.spec.mtu
+            ret[h.name]["nics"] = {}
+            for nic in h.config.network.vnic:
+                ret[h.name]["nics"][nic.device] = {}
+                ret[h.name]["nics"][nic.device]["ip_address"] = nic.spec.ip.ipAddress
+                ret[h.name]["nics"][nic.device]["subnet_mask"] = nic.spec.ip.subnetMask
+                ret[h.name]["nics"][nic.device]["mac"] = nic.spec.mac
+                ret[h.name]["nics"][nic.device]["mtu"] = nic.spec.mtu
 
-            if not config_type or "system" in config_type:
-                ret[h.name]["system"] = {}
-                ret[h.name]["system"]["cpu_model"] = h.summary.hardware.cpuModel
-                ret[h.name]["system"]["num_cpu_cores"] = h.summary.hardware.numCpuCores
-                ret[h.name]["system"]["num_cpu_pkgs"] = h.summary.hardware.numCpuPkgs
-                ret[h.name]["system"]["num_cpu_threads"] = h.summary.hardware.numCpuThreads
-                ret[h.name]["system"]["memory_size"] = h.summary.hardware.memorySize
-                ret[h.name]["system"][
-                    "overall_memory_usage"
-                ] = h.summary.quickStats.overallMemoryUsage
-                ret[h.name]["system"]["product_name"] = h.config.product.name
-                ret[h.name]["system"]["product_version"] = h.config.product.version
-                ret[h.name]["system"]["product_build"] = h.config.product.build
-                ret[h.name]["system"]["product_os_type"] = h.config.product.osType
-                ret[h.name]["system"]["host_name"] = h.summary.config.name
-                ret[h.name]["system"]["system_vendor"] = h.hardware.systemInfo.vendor
-                ret[h.name]["system"]["system_model"] = h.hardware.systemInfo.model
-                ret[h.name]["system"]["bios_release_date"] = h.hardware.biosInfo.releaseDate
-                ret[h.name]["system"]["bios_release_version"] = h.hardware.biosInfo.biosVersion
-                ret[h.name]["system"]["uptime"] = h.summary.quickStats.uptime
-                ret[h.name]["system"]["in_maintenance_mode"] = h.runtime.inMaintenanceMode
-                ret[h.name]["system"]["system_uuid"] = h.hardware.systemInfo.uuid
-                for info in h.hardware.systemInfo.otherIdentifyingInfo:
-                    ret[h.name]["system"].update(
-                        {
-                            utils_common.camel_to_snake_case(
-                                info.identifierType.key
-                            ): info.identifierValue
-                        }
-                    )
-            if not config_type or "capabilities" in config_type:
-                ret[h.name]["capabilities"] = _get_capability_attribs(host=h)
+            ret[h.name]["cpu_model"] = h.summary.hardware.cpuModel
+            ret[h.name]["num_cpu_cores"] = h.summary.hardware.numCpuCores
+            ret[h.name]["num_cpu_pkgs"] = h.summary.hardware.numCpuPkgs
+            ret[h.name]["num_cpu_threads"] = h.summary.hardware.numCpuThreads
+            ret[h.name]["memory_size"] = h.summary.hardware.memorySize
+            ret[h.name]["overall_memory_usage"] = h.summary.quickStats.overallMemoryUsage
+            ret[h.name]["product_name"] = h.config.product.name
+            ret[h.name]["product_version"] = h.config.product.version
+            ret[h.name]["product_build"] = h.config.product.build
+            ret[h.name]["product_os_type"] = h.config.product.osType
+            ret[h.name]["host_name"] = h.summary.config.name
+            ret[h.name]["system_vendor"] = h.hardware.systemInfo.vendor
+            ret[h.name]["system_model"] = h.hardware.systemInfo.model
+            ret[h.name]["bios_release_date"] = h.hardware.biosInfo.releaseDate
+            ret[h.name]["bios_release_version"] = h.hardware.biosInfo.biosVersion
+            ret[h.name]["uptime"] = h.summary.quickStats.uptime
+            ret[h.name]["in_maintenance_mode"] = h.runtime.inMaintenanceMode
+            ret[h.name]["system_uuid"] = h.hardware.systemInfo.uuid
+            for info in h.hardware.systemInfo.otherIdentifyingInfo:
+                ret[h.name].update(
+                    {
+                        utils_common.camel_to_snake_case(
+                            info.identifierType.key
+                        ): info.identifierValue
+                    }
+                )
+            ret[h.name]["capabilities"] = _get_capability_attribs(host=h)
+
+            if key:
+                ret[h.name] = salt.utils.data.traverse_dict_and_list(
+                    ret[h.name], key, default, delimiter
+                )
+
         return ret
     except (
         vim.fault.InvalidState,
