@@ -55,46 +55,46 @@ def do_it(*, config_file):
                     rule.name
                 ] = utils_cluster.drs_rule_info(rule)
     hosts = si.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
-    host = hosts[0]
-    config["esxi_host_name"] = host.name
-    config["esxi_datastore_disk_names"] = [
-        extent.diskName for datastore in host.datastore for extent in datastore.info.vmfs.extent
-    ]
-    config["esxi_capabilities"] = {host.name: dict(host.capability.__dict__) for host in hosts}
-    config["virtual_machines"] = {}
-    config["vm_info"] = {}
     for host in hosts:
-        config["virtual_machines"] = []
-        config["virtual_machines_templates"] = []
-        config["virtual_machine_paths"] = {}
-        for vm in host.vm:
-            if vm.config.template:
-                config["virtual_machines_templates"].append(vm.name)
-            else:
-                config["virtual_machines"].append(vm.name)
-            datacenter_ref = utils_common.get_parent_type(vm, vim.Datacenter)
-            mac_address = utils_vm.get_mac_address(vm)
-            network = utils_vm.get_network(vm)
-            tags = []
-            for tag in vm.tag:
-                tags.append(tag.name)
-            folder_path = utils_common.get_path(vm, si)
-            config["virtual_machine_paths"][vm.name] = folder_path
-            config["vm_info"][vm.name] = {
-                "guest_name": vm.summary.config.name,
-                "guest_fullname": vm.summary.guest.guestFullName,
-                "power_state": vm.summary.runtime.powerState,
-                "ip_address": vm.summary.guest.ipAddress,
-                "mac_address": mac_address,
-                "uuid": vm.summary.config.uuid,
-                "vm_network": network,
-                "esxi_hostname": vm.summary.runtime.host.name,
-                "datacenter": datacenter_ref.name,
-                "cluster": vm.summary.runtime.host.parent.name,
-                "tags": tags,
-                "folder": folder_path,
-                "moid": vm._moId,
-            }
+        config["esxi_host_name"] = host.name
+        config["esxi_datastore_disk_names"] = [
+            extent.diskName for datastore in host.datastore for extent in datastore.info.vmfs.extent
+        ]
+        config["esxi_capabilities"] = {host.name: dict(host.capability.__dict__) for host in hosts}
+    config["virtual_machines"] = []
+    config["virtual_machines_templates"] = []
+    config["virtual_machine_paths"] = {}
+    config["vm_info"] = {}
+    for dc in si.content.rootFolder.childEntity:
+        for vm in dc.vmFolder.childEntity:
+            if isinstance(vm, vim.VirtualMachine):
+                if vm.config.template:
+                    config["virtual_machines_templates"].append(vm.name)
+                else:
+                    config["virtual_machines"].append(vm.name)
+                datacenter_ref = utils_common.get_parent_type(vm, vim.Datacenter)
+                mac_address = utils_vm.get_mac_address(vm)
+                network = utils_vm.get_network(vm)
+                tags = []
+                for tag in vm.tag:
+                    tags.append(tag.name)
+                folder_path = utils_common.get_path(vm, si)
+                config["virtual_machine_paths"][vm.name] = folder_path
+                config["vm_info"][vm.name] = {
+                    "guest_name": vm.summary.config.name,
+                    "guest_fullname": vm.summary.guest.guestFullName,
+                    "power_state": vm.summary.runtime.powerState,
+                    "ip_address": vm.summary.guest.ipAddress,
+                    "mac_address": mac_address,
+                    "uuid": vm.summary.config.uuid,
+                    "vm_network": network,
+                    "esxi_hostname": vm.summary.runtime.host.name,
+                    "datacenter": datacenter_ref.name,
+                    "cluster": vm.summary.runtime.host.parent.name,
+                    "tags": tags,
+                    "folder": folder_path,
+                    "moid": vm._moId,
+                }
 
     json_config = json.dumps(config, indent=2, sort_keys=True)
     config_file.write_text(json_config)
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     config_file = args.CONFIG_FILE
     if not config_file.is_file():
         if args.create:
-            host = input("vSphere host name/ip: ").strip()
+            host = input("vCenter host name/ip: ").strip()
             user = (
                 input("Admin username [administrator@vsphere.local]: ").strip()
                 or "administrator@vsphere.local"

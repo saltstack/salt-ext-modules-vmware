@@ -1,3 +1,5 @@
+.. _welcome:
+
 Welcome to Salt Extension Modules for VMware
 ============================================
 
@@ -14,6 +16,7 @@ What are you most interested in?
 * I want to :ref:`manage an NSX-T device<managing nsx devices>`.
 * I want to :ref:`manage a vSphere/vCenter<managing vsphere>`.
 * I just want a :ref:`complete list of states and modules<all the states/modules>`.
+* Just give me a :ref:`quickstart`!
 
 .. toctree::
   :maxdepth: 2
@@ -25,6 +28,8 @@ What are you most interested in?
   nsx.rst
   vmc.rst
   utils.rst
+  quickstart.rst
+  GitHub Repository <https://github.com/saltstack/salt-ext-modules-vmware>
 
 
 .. toctree::

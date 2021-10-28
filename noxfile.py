@@ -119,7 +119,7 @@ def _install_requirements(
 
 @nox.session(python=PYTHON_VERSIONS)
 def tests(session):
-    _install_requirements(session, install_source=True)
+    _install_requirements(session, install_source=True, install_extras=["tests"])
 
     sitecustomize_dir = session.run("salt-factories", "--coverage", silent=True, log=False)
     python_path_env_var = os.environ.get("PYTHONPATH") or None
@@ -153,6 +153,8 @@ def tests(session):
         "--showlocals",
         "-ra",
         "-s",
+        "--cov",
+        "src",
     ]
     if session._runner.global_config.forcecolor:
         args.append("--color=yes")
@@ -175,46 +177,7 @@ def tests(session):
                 continue
         else:
             args.append("tests/")
-    try:
-        session.run("coverage", "run", "-m", "pytest", *args, env=env)
-    finally:
-        # Always combine and generate the XML coverage report
-        try:
-            session.run("coverage", "combine")
-        except CommandFailed:
-            # Sometimes some of the coverage files are corrupt which would
-            # trigger a CommandFailed exception
-            pass
-        # Generate report for salt code coverage
-        session.run(
-            "coverage",
-            "xml",
-            "-o",
-            str(COVERAGE_REPORT_PROJECT),
-            "--omit=tests/*",
-            "--include=src/saltext/vmware/*",
-        )
-        # Generate report for tests code coverage
-        session.run(
-            "coverage",
-            "xml",
-            "-o",
-            str(COVERAGE_REPORT_TESTS),
-            "--omit=src/saltext/vmware/*",
-            "--include=tests/*",
-        )
-        try:
-            session.run("coverage", "report", "--show-missing", "--include=src/saltext/vmware/*")
-            # If you also want to display the code coverage report on the CLI
-            # for the tests, comment the call above and uncomment the line below
-            # session.run(
-            #    "coverage", "report", "--show-missing",
-            #    "--include=src/saltext/vmware/*,tests/*"
-            # )
-        finally:
-            # Move the coverage DB to artifacts/coverage in order for it to be archived by CI
-            if COVERAGE_REPORT_DB.exists():
-                shutil.move(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / COVERAGE_REPORT_DB.name))
+    session.run("pytest", *args, env=env)
 
 
 class Tee:
@@ -391,15 +354,15 @@ def docs(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
-    session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
-    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
+    session.run("make", "linkcheck", "SPHINXOPTS=-Wn --keep-going", external=True)
+    session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
         with open(docs_coverage_file) as rfh:
             contents = rfh.readlines()[2:]
             if contents:
                 session.error("\n" + "".join(contents))
-    session.run("make", "html", "SPHINXOPTS=-W", external=True)
+    session.run("make", "html", "SPHINXOPTS=-Wn --keep-going", external=True)
     os.chdir(str(REPO_ROOT))
 
 

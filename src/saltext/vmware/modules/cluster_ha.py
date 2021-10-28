@@ -20,7 +20,6 @@ except ImportError:
 
 __virtualname__ = "vmware_cluster_ha"
 __proxyenabled__ = ["vmware_cluster_ha"]
-__func_alias__ = {"get_": "get"}
 
 
 def __virtual__():
@@ -146,6 +145,7 @@ def configure(
     vm_terminate_delay_for_apd_sec=180,
     admission_control_policy=None,
     advanced_options=None,
+    service_instance=None,
 ):
     """
     Configure HA for a given cluster
@@ -261,7 +261,8 @@ def configure(
 
         salt '*' vmware_cluster_ha.configure cluster1 dc1 enable=True
     """
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     admission_control_policy = admission_control_policy or {}
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
@@ -315,21 +316,30 @@ def configure(
     return {cluster: True}
 
 
-def get_(cluster, datacenter):
+def get(cluster_name, datacenter_name, service_instance=None):
     """
     Get HA info about a cluster in a datacenter
 
-    cluster
+    cluster_name
         The cluster name
 
-    datacenter
+    datacenter_name
         The datacenter name to which the cluster belongs
+
+    .. code-block:: bash
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    salt '*' vmware_cluster_ha.get cluster_name=cl1 datacenter_name=dc1
+
     """
     ret = {}
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
-        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster)
+        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
         das_config = cluster_ref.configurationEx.dasConfig
         ret["enabled"] = das_config.enabled
         ret["host_monitoring"] = das_config.hostMonitoring
@@ -402,5 +412,5 @@ def get_(cluster, datacenter):
         for obj in cluster_ref.configurationEx.dasConfig.option:
             ret["advanced_settings"][obj.key] = obj.value
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareRuntimeError) as exc:
-        return {cluster: False, "reason": str(exc)}
+        return {cluster_name: False, "reason": str(exc)}
     return ret

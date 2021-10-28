@@ -430,3 +430,126 @@ def delete(
         verify_ssl=verify_ssl,
         cert=cert,
     )
+
+
+def update_name(
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    sddc_new_name,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Updates name for Given SDDC
+
+    Please refer the `VMC Patch SDDC documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/patch/>`_ to get insight of functionality and input parameters
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt minion-key-id vmc_sddc.update_name hostname=vmc.vmware.com sddc_id ...
+
+    hostname
+        The host name of VMC
+
+    refresh_key
+        API Token of the user which is used to get the Access Token required for VMC operations
+
+    authorization_host
+        Hostname of the Cloud Services Platform (CSP)
+
+    org_id
+        The Id of organization to which the SDDC belongs to
+
+    sddc_id
+        sddc_id for which name will update
+
+    sddc_new_name
+        The new name of the SDDC to be changed to
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+        The certificate can be retrieved from browser.
+
+    """
+    log.info("Updating sddc name for the SDDC %s", sddc_id)
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = "{base_url}vmc/api/orgs/{org_id}/sddcs/{sddc_id}".format(
+        base_url=api_url_base, org_id=org_id, sddc_id=sddc_id
+    )
+
+    data = {"name": sddc_new_name}
+    return vmc_request.call_api(
+        method=vmc_constants.PATCH_REQUEST_METHOD,
+        url=api_url,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        description="vmc_sddc.update_name",
+        data=data,
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
+
+
+def get_vcenter_detail(
+    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl=True, cert=None
+):
+    """
+    Retrieves vcenter Details from the Given SDDC
+
+    Please refer the `VMC Get SDDC documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/get/>`_ to get insight of functionality and input parameters
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt minion-key-id vmc_sddc.get_vcenter_detail hostname=vmc.vmware.com sddc_id ...
+
+    hostname
+        The host name of VMC
+
+    refresh_key
+        API Token of the user which is used to get the Access Token required for VMC operations
+
+    authorization_host
+        Hostname of the Cloud Services Platform (CSP)
+
+    org_id
+        The Id of organization to which the SDDC belongs to
+
+    sddc_id
+        sddc_id from which vcenter details should be retrieved
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+        The certificate can be retrieved from browser.
+
+    """
+    log.info("Retrieving the vCenter detail for the given SDDC %s", sddc_id)
+    sddc_detail = get_by_id(
+        hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert
+    )
+    if "error" in sddc_detail:
+        return sddc_detail
+    vcenter_url = sddc_detail["resource_config"]["vc_url"]
+    username = sddc_detail["resource_config"]["cloud_username"]
+    password = sddc_detail["resource_config"]["cloud_password"]
+    vcenter_detail = {
+        "vcenter_url": vcenter_url,
+        "username": username,
+        "password": password,
+    }
+    result = {"description": "vmc_sddc.get_vcenter_detail", "vcenter_detail": vcenter_detail}
+    return result

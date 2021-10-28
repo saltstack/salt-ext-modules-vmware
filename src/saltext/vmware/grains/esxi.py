@@ -8,7 +8,6 @@ Generate baseline proxy minion grains for ESXi hosts.
 import logging
 
 import salt.utils.proxy
-import saltext.vmware.modules.info
 from salt.exceptions import SaltSystemExit
 
 __proxyenabled__ = ["esxi"]
@@ -18,7 +17,7 @@ log = logging.getLogger(__file__)
 
 GRAINS_CACHE = {}
 
-__salt__ = {"vmware_info.system_info": saltext.vmware.modules.info.system_info}
+# __salt__ = {"vmware_info.system_info": saltext.vmware.modules.info.system_info}
 
 
 def __virtual__():

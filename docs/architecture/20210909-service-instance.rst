@@ -1,4 +1,4 @@
-service_instance performance
+2021-09-09 service_instance performance
 =================================================
 
 TLDR; service_instance is unlikely to be cached for the foreseeable future.
@@ -43,8 +43,15 @@ when necessary, we could cache it or make it a singleton, something like this:
  def load_service_instance():
      return get_service_instance(opts=__opts__, pillar=__pillar__)
 
+<<<<<<< HEAD
  SI = lazy_object_proxy.Proxy(load_service_instance)
 
+=======
+
+ SI = lazy_object_proxy.Proxy(load_service_instance)
+
+
+>>>>>>> upstream/main
  def foo(service_instance=SI):
      pass
 

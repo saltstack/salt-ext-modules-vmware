@@ -15,7 +15,7 @@ import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
-from pyVim import connect
+import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
 
 
@@ -90,6 +90,14 @@ def patch_salt_globals():
         },
     )
     setattr(
+        cluster_mod,
+        "__salt__",
+        {
+            "vmware_cluster_drs.get": cluster_drs_mod.get,
+            "vmware_cluster_ha.get": cluster_ha_mod.get,
+        },
+    )
+    setattr(
         datacenter_st,
         "__opts__",
         {
@@ -99,14 +107,14 @@ def patch_salt_globals():
 
 
 @pytest.fixture(scope="function")
-def vmware_datacenter(patch_salt_globals):
+def vmware_datacenter(patch_salt_globals, service_instance):
     """
     Return a vmware_datacenter during start of a test and tear it down once the test ends
     """
     dc_name = str(uuid.uuid4())
-    dc = datacenter_mod.create(name=dc_name)
+    dc = datacenter_mod.create(name=dc_name, service_instance=service_instance)
     yield dc_name
-    datacenter_mod.delete(name=dc_name)
+    datacenter_mod.delete(name=dc_name, service_instance=service_instance)
 
 
 @pytest.fixture
@@ -119,17 +127,53 @@ def patch_salt_globals_vm(vmware_conf):
     setattr(virtual_machine, "__pillar__", vmware_conf)
 
 
+@pytest.fixture
+def patch_salt_globals_vm_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        virtual_machine_state,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(virtual_machine_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_vm_state_test(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        virtual_machine_state,
+        "__opts__",
+        {
+            "test": True,
+        },
+    )
+    setattr(virtual_machine_state, "__pillar__", vmware_conf)
+
+
 @pytest.fixture(scope="function")
-def vmware_cluster(vmware_datacenter):
+def vmware_cluster(vmware_datacenter, service_instance):
     """
     Return a vmware_cluster during start of a test and tear it down once the test ends
     """
     cluster_name = str(uuid.uuid4())
-    _ = cluster_mod.create(name=cluster_name, datacenter=vmware_datacenter)
+    _ = cluster_mod.create(
+        name=cluster_name, datacenter=vmware_datacenter, service_instance=service_instance
+    )
     Cluster = namedtuple("Cluster", ["name", "datacenter"])
     cluster = Cluster(name=cluster_name, datacenter=vmware_datacenter)
     yield cluster
-    cluster_mod.delete(name=cluster_name, datacenter=vmware_datacenter)
+    cluster_mod.delete(
+        name=cluster_name, datacenter=vmware_datacenter, service_instance=service_instance
+    )
 
 
 @pytest.fixture(scope="session")
@@ -182,3 +226,8 @@ def vmware_conf(integration_test_config):
             "user": config["user"],
         }
     }
+
+
+@pytest.fixture()
+def vm_ops():
+    return {"test": False}

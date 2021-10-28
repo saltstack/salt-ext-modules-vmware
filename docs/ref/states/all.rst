@@ -18,7 +18,9 @@ State Modules
     saltext.vmware.states.nsxt_policy_segment
     saltext.vmware.states.nsxt_policy_tier0
     saltext.vmware.states.nsxt_policy_tier1
+    saltext.vmware.states.nsxt_transport_node
     saltext.vmware.states.nsxt_transport_node_profiles
     saltext.vmware.states.nsxt_transport_zone
     saltext.vmware.states.nsxt_uplink_profiles
+    saltext.vmware.states.vm
     saltext.vmware.states.vmc_security_rules

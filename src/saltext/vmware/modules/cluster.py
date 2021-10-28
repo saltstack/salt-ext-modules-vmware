@@ -20,7 +20,7 @@ except ImportError:
 
 __virtualname__ = "vmware_cluster"
 __proxyenabled__ = ["vmware_cluster"]
-__func_alias__ = {"list_": "list", "get_": "get"}
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -29,7 +29,7 @@ def __virtual__():
     return __virtualname__
 
 
-def list_():
+def list_(service_instance=None):
     """
     Returns a dictionary containing a list of clusters for each datacenter.
 
@@ -38,7 +38,8 @@ def list_():
         salt '*' vmware_cluster.list
     """
     ret = {}
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         datacenters = utils_datacenter.get_datacenters(service_instance, get_all_datacenters=True)
         for datacenter in datacenters:
@@ -55,7 +56,7 @@ def list_():
     return ret
 
 
-def create(name, datacenter):
+def create(name, datacenter, service_instance=None):
     """
     Creates a cluster.
 
@@ -71,7 +72,8 @@ def create(name, datacenter):
 
         salt '*' vmware_cluster.create dc1 cluster1
     """
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_spec = vim.cluster.ConfigSpecEx()
@@ -81,43 +83,57 @@ def create(name, datacenter):
     return {name: True}
 
 
-def get_(name, datacenter):
+def get(cluster_name, datacenter_name, service_instance=None):
     """
     Get the properties of a cluster.
 
-    Supported proxies: esxcluster
-
-    name
+    cluster_name
         The cluster name
 
-    datacenter
+    datacenter_name
         The datacenter name to which the cluster belongs
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: bash
 
-        salt '*' vmware_cluster.get dc1
+        salt '*' vmware_cluster.get cluster_name=cl1 datacenter_name=dc1
     """
     ret = {}
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
-        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
-        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=name)
+        dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+        cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
 
         # DRS config
         ret["drs_enabled"] = cluster_ref.configurationEx.drsConfig.enabled
+        if ret["drs_enabled"]:
+            ret["drs"] = __salt__["vmware_cluster_drs.get"](
+                cluster_name=cluster_name,
+                datacenter_name=datacenter_name,
+                service_instance=service_instance,
+            )
 
         # HA config
-        ret["ha_enabled"] = cluster_ref.configurationEx.drsConfig.enabled
+        ret["ha_enabled"] = cluster_ref.configurationEx.dasConfig.enabled
+        if ret["ha_enabled"]:
+            ret["ha"] = __salt__["vmware_cluster_ha.get"](
+                cluster_name=cluster_name,
+                datacenter_name=datacenter_name,
+                service_instance=service_instance,
+            )
 
         # vSAN
         ret["vsan_enabled"] = cluster_ref.configurationEx.vsanConfigInfo.enabled
 
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
-        return {name: False, "reason": str(exc)}
+        return {cluster_name: False, "reason": str(exc)}
     return ret
 
 
-def delete(name, datacenter):
+def delete(name, datacenter, service_instance=None):
     """
     Deletes a cluster.
 
@@ -133,7 +149,8 @@ def delete(name, datacenter):
 
         salt '*' vmware_cluster.delete cl1 dc1
     """
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     try:
         utils_cluster.delete_cluster(service_instance, name, datacenter)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
