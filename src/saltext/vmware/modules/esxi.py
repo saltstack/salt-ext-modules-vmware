@@ -932,12 +932,12 @@ def get(
         Follows the grains.get filter semantics. (optional)
 
         The value can also represent a value in a nested dict using a ":" delimiter
-        for the dict. This means that if a dict in ESXi host configuration looks like this::
+        for the dict. This means that if a dict in ESXi host configuration looks like this:
 
         {'vsan': {'health': 'good'}}
 
         To retrieve the value associated with the apache key in the pkg dict this
-        key can be passed::
+        key can be passed:
 
         vsan:health
 
