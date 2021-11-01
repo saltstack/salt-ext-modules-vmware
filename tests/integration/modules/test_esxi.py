@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 import salt.exceptions
 import saltext.vmware.modules.esxi as esxi
+import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.esxi
 
 
@@ -15,118 +16,120 @@ def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integratio
     assert actual_ids == expected_lun_ids
 
 
-@pytest.mark.parametrize(
-    "arg_name",
-    [
-        "accel3dSupported",
-        "backgroundSnapshotsSupported",
-        "cloneFromSnapshotSupported",
-        "cpuHwMmuSupported",
-        "cpuMemoryResourceConfigurationSupported",
-        "cryptoSupported",
-        "datastorePrincipalSupported",
-        "deltaDiskBackingsSupported",
-        "eightPlusHostVmfsSharedAccessSupported",
-        "encryptedVMotionSupported",
-        "encryptionCBRCSupported",
-        "encryptionChangeOnAddRemoveSupported",
-        "encryptionFaultToleranceSupported",
-        "encryptionHBRSupported",
-        "encryptionHotOperationSupported",
-        "encryptionMemorySaveSupported",
-        "encryptionRDMSupported",
-        "encryptionVFlashSupported",
-        "encryptionWithSnapshotsSupported",
-        "featureCapabilitiesSupported",
-        "firewallIpRulesSupported",
-        "ftCompatibilityIssues",
-        "ftSupported",
-        "gatewayOnNicSupported",
-        "hbrNicSelectionSupported",
-        "highGuestMemSupported",
-        "hostAccessManagerSupported",
-        "interVMCommunicationThroughVMCISupported",
-        "ipmiSupported",
-        "iscsiSupported",
-        "latencySensitivitySupported",
-        "localSwapDatastoreSupported",
-        "loginBySSLThumbprintSupported",
-        "maintenanceModeSupported",
-        "markAsLocalSupported",
-        "markAsSsdSupported",
-        "maxHostRunningVms",
-        "maxHostSupportedVcpus",
-        "maxNumDisksSVMotion",
-        "maxRegisteredVMs",
-        "maxRunningVMs",
-        "maxSupportedVMs",
-        "maxSupportedVcpus",
-        "maxVcpusPerFtVm",
-        "messageBusProxySupported",
-        "multipleNetworkStackInstanceSupported",
-        "nestedHVSupported",
-        "nfs41Krb5iSupported",
-        "nfs41Supported",
-        "nfsSupported",
-        "nicTeamingSupported",
-        "oneKVolumeAPIsSupported",
-        "perVMNetworkTrafficShapingSupported",
-        "perVmSwapFiles",
-        "preAssignedPCIUnitNumbersSupported",
-        "provisioningNicSelectionSupported",
-        "rebootSupported",
-        "recordReplaySupported",
-        "recursiveResourcePoolsSupported",
-        "reliableMemoryAware",
-        "replayCompatibilityIssues",
-        "replayUnsupportedReason",
-        "restrictedSnapshotRelocateSupported",
-        "sanSupported",
-        "scaledScreenshotSupported",
-        "scheduledHardwareUpgradeSupported",
-        "screenshotSupported",
-        "servicePackageInfoSupported",
-        "shutdownSupported",
-        "smartCardAuthenticationSupported",
-        "smpFtCompatibilityIssues",
-        "smpFtSupported",
-        "snapshotRelayoutSupported",
-        "standbySupported",
-        "storageIORMSupported",
-        "storagePolicySupported",
-        "storageVMotionSupported",
-        "supportedVmfsMajorVersion",
-        "suspendedRelocateSupported",
-        "tpmSupported",
-        "turnDiskLocatorLedSupported",
-        "unsharedSwapVMotionSupported",
-        "upitSupported",
-        "vFlashSupported",
-        "vPMCSupported",
-        "vStorageCapable",
-        "virtualExecUsageSupported",
-        "virtualVolumeDatastoreSupported",
-        "vlanTaggingSupported",
-        "vmDirectPathGen2Supported",
-        "vmDirectPathGen2UnsupportedReason",
-        "vmDirectPathGen2UnsupportedReasonExtended",
-        "vmfsDatastoreMountCapable",
-        "vmotionAcrossNetworkSupported",
-        "vmotionSupported",
-        "vmotionWithStorageVMotionSupported",
-        "vrNfcNicSelectionSupported",
-        "vsanSupported",
-    ],
-)
-def test_esxi_host_capability_params(service_instance, integration_test_config, arg_name):
+HOST_CAPABILITIES = [
+    "accel3dSupported",
+    "backgroundSnapshotsSupported",
+    "cloneFromSnapshotSupported",
+    "cpuHwMmuSupported",
+    "cpuMemoryResourceConfigurationSupported",
+    "cryptoSupported",
+    "datastorePrincipalSupported",
+    "deltaDiskBackingsSupported",
+    "eightPlusHostVmfsSharedAccessSupported",
+    "encryptedVMotionSupported",
+    "encryptionCBRCSupported",
+    "encryptionChangeOnAddRemoveSupported",
+    "encryptionFaultToleranceSupported",
+    "encryptionHBRSupported",
+    "encryptionHotOperationSupported",
+    "encryptionMemorySaveSupported",
+    "encryptionRDMSupported",
+    "encryptionVFlashSupported",
+    "encryptionWithSnapshotsSupported",
+    "featureCapabilitiesSupported",
+    "firewallIpRulesSupported",
+    "ftCompatibilityIssues",
+    "ftSupported",
+    "gatewayOnNicSupported",
+    "hbrNicSelectionSupported",
+    "highGuestMemSupported",
+    "hostAccessManagerSupported",
+    "interVMCommunicationThroughVMCISupported",
+    "ipmiSupported",
+    "iscsiSupported",
+    "latencySensitivitySupported",
+    "localSwapDatastoreSupported",
+    "loginBySSLThumbprintSupported",
+    "maintenanceModeSupported",
+    "markAsLocalSupported",
+    "markAsSsdSupported",
+    "maxHostRunningVms",
+    "maxHostSupportedVcpus",
+    "maxNumDisksSVMotion",
+    "maxRegisteredVMs",
+    "maxRunningVMs",
+    "maxSupportedVMs",
+    "maxSupportedVcpus",
+    "maxVcpusPerFtVm",
+    "messageBusProxySupported",
+    "multipleNetworkStackInstanceSupported",
+    "nestedHVSupported",
+    "nfs41Krb5iSupported",
+    "nfs41Supported",
+    "nfsSupported",
+    "nicTeamingSupported",
+    "oneKVolumeAPIsSupported",
+    "perVMNetworkTrafficShapingSupported",
+    "perVmSwapFiles",
+    "preAssignedPCIUnitNumbersSupported",
+    "provisioningNicSelectionSupported",
+    "rebootSupported",
+    "recordReplaySupported",
+    "recursiveResourcePoolsSupported",
+    "reliableMemoryAware",
+    "replayCompatibilityIssues",
+    "replayUnsupportedReason",
+    "restrictedSnapshotRelocateSupported",
+    "sanSupported",
+    "scaledScreenshotSupported",
+    "scheduledHardwareUpgradeSupported",
+    "screenshotSupported",
+    "servicePackageInfoSupported",
+    "shutdownSupported",
+    "smartCardAuthenticationSupported",
+    "smpFtCompatibilityIssues",
+    "smpFtSupported",
+    "snapshotRelayoutSupported",
+    "standbySupported",
+    "storageIORMSupported",
+    "storagePolicySupported",
+    "storageVMotionSupported",
+    "supportedVmfsMajorVersion",
+    "suspendedRelocateSupported",
+    "tpmSupported",
+    "turnDiskLocatorLedSupported",
+    "unsharedSwapVMotionSupported",
+    "upitSupported",
+    "vFlashSupported",
+    "vPMCSupported",
+    "vStorageCapable",
+    "virtualExecUsageSupported",
+    "virtualVolumeDatastoreSupported",
+    "vlanTaggingSupported",
+    "vmDirectPathGen2Supported",
+    "vmDirectPathGen2UnsupportedReason",
+    "vmDirectPathGen2UnsupportedReasonExtended",
+    "vmfsDatastoreMountCapable",
+    "vmotionAcrossNetworkSupported",
+    "vmotionSupported",
+    "vmotionWithStorageVMotionSupported",
+    "vrNfcNicSelectionSupported",
+    "vsanSupported",
+]
+
+
+def test_esxi_host_capability_params(service_instance, integration_test_config):
     """
     Test we are returning the same values from get_capabilities
     as our connected vcenter instance.
     """
     capabilities = esxi.get_capabilities(service_instance=service_instance)
     for host_id in capabilities:
-        expected_value = integration_test_config["esxi_capabilities"][host_id][arg_name]
-        assert capabilities[host_id][arg_name] == expected_value
+        for arg_name in HOST_CAPABILITIES:
+            assert (
+                capabilities[host_id][utils_common.camel_to_snake_case(arg_name)]
+                == integration_test_config["esxi_capabilities"][host_id][arg_name]
+            )
 
 
 def test_list_pkgs(service_instance):
@@ -417,3 +420,40 @@ def test_manage_remove(integration_test_config, service_instance):
         )
     else:
         pytest.skip("test requires esxi manage test instance credentials")
+
+
+def test_esxi_get(service_instance):
+    """
+    Test get configuration on ESXi host
+    """
+    ret = esxi.get(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]["cpu_model"]
+        assert ret[host]["capabilities"]
+        assert ret[host]["nics"]
+        assert ret[host]["vsan"]
+        assert ret[host]["datastores"]
+        assert ret[host]["num_cpu_cores"]
+
+    ret = esxi.get(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        key="vsan:health",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host] == "unknown"
+
+    ret = esxi.get(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        host_name="no_host",
+    )
+    assert not ret
