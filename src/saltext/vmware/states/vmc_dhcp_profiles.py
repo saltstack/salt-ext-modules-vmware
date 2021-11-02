@@ -122,7 +122,6 @@ def present(
 
             for dhcp-server-profiles:
 
-            display_name: dhcp-test
             server_addresses:
               - 10.22.12.2/23
             tags:
@@ -132,7 +131,6 @@ def present(
 
             for dhcp-relay-profiles:
 
-            display_name: dhcp-test
             server_addresses:
               - 10.1.1.1
             tags:
