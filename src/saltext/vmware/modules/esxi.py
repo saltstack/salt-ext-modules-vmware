@@ -668,7 +668,7 @@ def get_firewall_config(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.get_dns_config
+        salt '*' vmware_esxi.get_firewall_config
     """
     log.debug("Running vmware_esxi.get_firewall_config")
     ret = {}
