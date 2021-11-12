@@ -15,8 +15,8 @@ def configure_loader_modules():
 
 
 @pytest.fixture
-def get_mocked_data():
-    mocked_ok_response = {
+def mocked_ok_response():
+    response = {
         "sequence_number": 0,
         "action": "REFLEXIVE",
         "source_network": "192.168.1.1",
@@ -44,15 +44,18 @@ def get_mocked_data():
         "_revision": 0,
     }
 
-    mocked_error_response = {
+    return response
+
+
+@pytest.fixture
+def mocked_error_response():
+    error_response = {
         "error": "The credentials were incorrect or the account specified has been locked."
     }
-    mocked_hostname = "nsx-t.vmwarevmc.com"
-    return mocked_hostname, mocked_ok_response, mocked_error_response
+    return error_response
 
 
-def test_present_state_when_error_from_get_by_id(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_present_state_when_error_from_get_by_id(mocked_ok_response, mocked_error_response):
     mock_get_by_id = create_autospec(
         vmc_nat_rules_exec.get_by_id, return_value=mocked_error_response
     )
@@ -60,7 +63,7 @@ def test_present_state_when_error_from_get_by_id(get_mocked_data):
     with patch.dict(vmc_nat_rules.__salt__, {"vmc_nat_rules.get_by_id": mock_get_by_id}):
         result = vmc_nat_rules.present(
             name="test_present",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -79,8 +82,7 @@ def test_present_state_when_error_from_get_by_id(get_mocked_data):
     assert not result["result"]
 
 
-def test_present_state_when_error_from_create(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_present_state_when_error_from_create(mocked_error_response):
     mock_get_by_id = create_autospec(vmc_nat_rules_exec.get_by_id, return_value={})
     mock_create = create_autospec(vmc_nat_rules_exec.create, return_value=mocked_error_response)
 
@@ -93,7 +95,7 @@ def test_present_state_when_error_from_create(get_mocked_data):
     ):
         result = vmc_nat_rules.present(
             name="test_present",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -112,8 +114,7 @@ def test_present_state_when_error_from_create(get_mocked_data):
     assert not result["result"]
 
 
-def test_present_state_when_error_from_update(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_present_state_when_error_from_update(mocked_ok_response, mocked_error_response):
     mock_get_by_id = create_autospec(vmc_nat_rules_exec.get_by_id, return_value=mocked_ok_response)
     mock_update = create_autospec(vmc_nat_rules_exec.update, return_value=mocked_error_response)
 
@@ -126,7 +127,7 @@ def test_present_state_when_error_from_update(get_mocked_data):
     ):
         result = vmc_nat_rules.present(
             name="test_present",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -146,8 +147,7 @@ def test_present_state_when_error_from_update(get_mocked_data):
     assert not result["result"]
 
 
-def test_present_state_during_update_to_add_a_new_field(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_present_state_during_update_to_add_a_new_field(mocked_ok_response):
     mocked_updated_response = mocked_ok_response.copy()
     mocked_ok_response.pop("display_name")
     mock_get_by_id = create_autospec(
@@ -167,7 +167,7 @@ def test_present_state_during_update_to_add_a_new_field(get_mocked_data):
     ):
         result = vmc_nat_rules.present(
             name="test_present",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -215,8 +215,7 @@ def test_present_state_during_update_to_add_a_new_field(get_mocked_data):
         ),
     ],
 )
-def test_present_state_during_update_should_correctly_pass_args(get_mocked_data, actual_args):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_present_state_during_update_should_correctly_pass_args(mocked_ok_response, actual_args):
     mocked_updated_response = mocked_ok_response.copy()
     mocked_ok_response.pop("display_name")
     mock_get_by_id = create_autospec(
@@ -224,7 +223,7 @@ def test_present_state_during_update_should_correctly_pass_args(get_mocked_data,
     )
 
     common_actual_args = {
-        "hostname": mocked_hostname,
+        "hostname": "hostname",
         "refresh_key": "refresh_key",
         "authorization_host": "authorization_host",
         "org_id": "org_id",
@@ -260,9 +259,7 @@ def test_present_state_during_update_should_correctly_pass_args(get_mocked_data,
     assert result["result"]
 
 
-def test_present_to_create_when_module_returns_success_response(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
+def test_present_to_create_when_module_returns_success_response(mocked_ok_response):
     mock_get_by_id_response = create_autospec(vmc_nat_rules_exec.get_by_id, return_value={})
     mock_create_response = create_autospec(
         vmc_nat_rules_exec.create, return_value=mocked_ok_response
@@ -278,7 +275,7 @@ def test_present_to_create_when_module_returns_success_response(get_mocked_data)
     ):
         result = vmc_nat_rules.present(
             name="test_present",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -322,8 +319,7 @@ def test_present_to_create_when_module_returns_success_response(get_mocked_data)
         ),
     ],
 )
-def test_present_state_during_create_should_correctly_pass_args(get_mocked_data, actual_args):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_present_state_during_create_should_correctly_pass_args(mocked_ok_response, actual_args):
     mocked_updated_response = mocked_ok_response.copy()
     mock_get_by_id_response = create_autospec(vmc_nat_rules_exec.get_by_id, return_value={})
     mock_create_response = create_autospec(
@@ -331,7 +327,7 @@ def test_present_state_during_create_should_correctly_pass_args(get_mocked_data,
     )
 
     common_actual_args = {
-        "hostname": mocked_hostname,
+        "hostname": "hostname",
         "refresh_key": "refresh_key",
         "authorization_host": "authorization_host",
         "org_id": "org_id",
@@ -367,8 +363,7 @@ def test_present_state_during_create_should_correctly_pass_args(get_mocked_data,
     assert result["result"]
 
 
-def test_present_to_update_when_module_returns_success_response(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_present_to_update_when_module_returns_success_response(mocked_ok_response):
     mocked_updated_nat_rule = mocked_ok_response.copy()
     mocked_updated_nat_rule["display_name"] = "rule-1"
 
@@ -389,7 +384,7 @@ def test_present_to_update_when_module_returns_success_response(get_mocked_data)
     ):
         result = vmc_nat_rules.present(
             name="test_present",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -407,8 +402,9 @@ def test_present_to_update_when_module_returns_success_response(get_mocked_data)
     assert result["result"]
 
 
-def test_present_to_update_when_get_by_id_after_update_returns_error(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_present_to_update_when_get_by_id_after_update_returns_error(
+    mocked_ok_response, mocked_error_response
+):
     mocked_updated_nat_rule = mocked_ok_response.copy()
     mocked_updated_nat_rule["display_name"] = "rule-1"
 
@@ -429,7 +425,7 @@ def test_present_to_update_when_get_by_id_after_update_returns_error(get_mocked_
     ):
         result = vmc_nat_rules.present(
             name="test_present",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -450,10 +446,8 @@ def test_present_to_update_when_get_by_id_after_update_returns_error(get_mocked_
 
 
 def test_present_to_update_when_user_input_and_existing_nat_rule_has_identical_fields(
-    get_mocked_data,
+    mocked_ok_response,
 ):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
     mock_get_by_id_response = create_autospec(
         vmc_nat_rules_exec.get_by_id, return_value=mocked_ok_response
     )
@@ -464,7 +458,7 @@ def test_present_to_update_when_user_input_and_existing_nat_rule_has_identical_f
     ):
         result = vmc_nat_rules.present(
             name="test_present",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -480,9 +474,7 @@ def test_present_to_update_when_user_input_and_existing_nat_rule_has_identical_f
     assert result["result"]
 
 
-def test_present_state_for_create_when_opts_test_is_true(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
+def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
     mock_get_by_id_response = create_autospec(vmc_nat_rules_exec.get_by_id, return_value={})
     nat_rule = mocked_ok_response["id"]
 
@@ -493,7 +485,7 @@ def test_present_state_for_create_when_opts_test_is_true(get_mocked_data):
         with patch.dict(vmc_nat_rules.__opts__, {"test": True}):
             result = vmc_nat_rules.present(
                 name="test_present",
-                hostname=mocked_hostname,
+                hostname="hostname",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
@@ -509,9 +501,7 @@ def test_present_state_for_create_when_opts_test_is_true(get_mocked_data):
     assert result["result"] is None
 
 
-def test_present_state_for_update_when_opts_test_is_true(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
+def test_present_state_for_update_when_opts_test_is_true(mocked_ok_response):
     mock_get_by_id_response = create_autospec(
         vmc_nat_rules_exec.get_by_id, return_value=mocked_ok_response
     )
@@ -524,7 +514,7 @@ def test_present_state_for_update_when_opts_test_is_true(get_mocked_data):
         with patch.dict(vmc_nat_rules.__opts__, {"test": True}):
             result = vmc_nat_rules.present(
                 name="test_present",
-                hostname=mocked_hostname,
+                hostname="hostname",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
@@ -540,9 +530,7 @@ def test_present_state_for_update_when_opts_test_is_true(get_mocked_data):
     assert result["result"] is None
 
 
-def test_absent_state_to_delete_when_module_returns_success_response(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
+def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_response):
     mock_get_by_id_response = create_autospec(
         vmc_nat_rules_exec.get_by_id, return_value=mocked_ok_response
     )
@@ -560,7 +548,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(get_mocked_
     ):
         result = vmc_nat_rules.absent(
             name="test_absent",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -576,9 +564,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(get_mocked_
     assert result["result"]
 
 
-def test_absent_state_when_object_to_delete_does_not_exists(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
+def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
     mock_get_by_id_response = create_autospec(vmc_nat_rules_exec.get_by_id, return_value={})
     nat_rule = mocked_ok_response["id"]
 
@@ -588,7 +574,7 @@ def test_absent_state_when_object_to_delete_does_not_exists(get_mocked_data):
     ):
         result = vmc_nat_rules.absent(
             name="test_absent",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -604,9 +590,7 @@ def test_absent_state_when_object_to_delete_does_not_exists(get_mocked_data):
     assert result["result"]
 
 
-def test_absent_state_to_delete_when_opts_test_mode_is_true(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
+def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
     mock_get_by_id_response = create_autospec(
         vmc_nat_rules_exec.get_by_id, return_value={"results": [mocked_ok_response]}
     )
@@ -619,7 +603,7 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(get_mocked_data):
         with patch.dict(vmc_nat_rules.__opts__, {"test": True}):
             result = vmc_nat_rules.absent(
                 name="test_absent",
-                hostname=mocked_hostname,
+                hostname="hostname",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
@@ -636,10 +620,8 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(get_mocked_data):
 
 
 def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_is_true(
-    get_mocked_data,
+    mocked_ok_response,
 ):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
     mock_get_by_id_response = create_autospec(vmc_nat_rules_exec.get_by_id, return_value={})
     nat_rule = mocked_ok_response["id"]
 
@@ -650,7 +632,7 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
         with patch.dict(vmc_nat_rules.__opts__, {"test": True}):
             result = vmc_nat_rules.absent(
                 name="test_absent",
-                hostname=mocked_hostname,
+                hostname="hostname",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
@@ -668,9 +650,7 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
     assert result["result"] is None
 
 
-def test_absent_with_error_from_delete(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
-
+def test_absent_with_error_from_delete(mocked_ok_response, mocked_error_response):
     mock_get_by_id = create_autospec(
         vmc_nat_rules_exec.get_by_id, return_value={"results": [mocked_ok_response]}
     )
@@ -685,7 +665,7 @@ def test_absent_with_error_from_delete(get_mocked_data):
     ):
         result = vmc_nat_rules.absent(
             name="test_absent",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
@@ -704,8 +684,7 @@ def test_absent_with_error_from_delete(get_mocked_data):
     assert not result["result"]
 
 
-def test_absent_state_when_error_from_get_by_id(get_mocked_data):
-    mocked_hostname, mocked_ok_response, mocked_error_response = get_mocked_data
+def test_absent_state_when_error_from_get_by_id(mocked_ok_response, mocked_error_response):
     mock_get_by_id = create_autospec(
         vmc_nat_rules_exec.get_by_id, return_value=mocked_error_response
     )
@@ -713,7 +692,7 @@ def test_absent_state_when_error_from_get_by_id(get_mocked_data):
     with patch.dict(vmc_nat_rules.__salt__, {"vmc_nat_rules.get_by_id": mock_get_by_id}):
         result = vmc_nat_rules.absent(
             name="test_absent",
-            hostname=mocked_hostname,
+            hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
