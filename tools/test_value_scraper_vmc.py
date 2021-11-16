@@ -38,9 +38,11 @@ import saltext.vmware.modules.vmc_sddc as vmc_sddc
 
 
 def update_vmc_nsx_config(nsx_reverse_proxy_server, args):
-    abs_file_path = Path(__file__).parent.parent / "tests" / "integration" / "vmc_config.ini"
+    config_file = Path(__file__).parent.parent / "tests" / "integration" / "vmc_config.ini"
+    if not config_file.is_file():
+        exit(f"ERROR: {config_file} does not exist.")
     parser = ConfigParser()
-    parser.read(abs_file_path)
+    parser.read(config_file)
     parser.set("vmc_nsx_connect", "hostname", nsx_reverse_proxy_server)
     parser.set("vmc_nsx_connect", "refresh_key", args.refresh_key)
     parser.set("vmc_nsx_connect", "authorization_host", args.authorization_host)
@@ -48,7 +50,7 @@ def update_vmc_nsx_config(nsx_reverse_proxy_server, args):
     parser.set("vmc_nsx_connect", "sddc_id", args.sddc_id)
     # TODO will change this when handling of cert generation is done
     parser.set("vmc_nsx_connect", "verify_ssl", "false")
-    with open(abs_file_path, "w") as configfile:
+    with open(config_file, "w") as configfile:
         parser.write(configfile)
 
 
@@ -86,7 +88,7 @@ def get_vcenter_server_detail(args):
         False,
     )
     if "error" in output:
-        print(f'Error while getting nsx reverse proxy: {output["error"]}')
+        print(f'Error while getting vcenter details: {output["error"]}')
         sys.exit()
 
     output["vcenter_detail"]["vcenter_server"] = get_server_from_url(
@@ -96,9 +98,12 @@ def get_vcenter_server_detail(args):
 
 
 def update_vmc_vcenter_config(vcenter_server_detail, args):
-    abs_file_path = Path(__file__).parent.parent / "tests" / "integration" / "vmc_config.ini"
+    config_file = Path(__file__).parent.parent / "tests" / "integration" / "vmc_config.ini"
+    if not config_file.is_file():
+        exit(f"ERROR: {config_file} does not exist.")
+
     parser = ConfigParser()
-    parser.read(abs_file_path)
+    parser.read(config_file)
     parser.set("vmc_connect", "hostname", args.vmc_hostname)
     parser.set("vmc_connect", "vcenter_hostname", vcenter_server_detail["vcenter_server"])
     parser.set("vmc_connect", "refresh_key", args.refresh_key)
@@ -113,7 +118,7 @@ def update_vmc_vcenter_config(vcenter_server_detail, args):
     parser.set("vmc_connect", "verify_ssl", "false")
     parser.set("vmc_vcenter_connect", "verify_ssl", "false")
 
-    with open(abs_file_path, "w") as configfile:
+    with open(config_file, "w") as configfile:
         parser.write(configfile)
 
 
@@ -131,7 +136,7 @@ if __name__ == "__main__":
         "--authorization_host",
         dest="authorization_host",
         default="console-stg.cloud.vmware.com",
-        help="cloud console for SDDC",
+        help="cloud console for sddc",
     )
     parser.add_argument(
         "-r", "--refresh_key", dest="refresh_key", help="Developer token for accessing REST API"
