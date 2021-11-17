@@ -27,8 +27,7 @@ It's not an ideal way to test, but it does at least provide some automation
 to the process.
  """
 import argparse
-import json
-import subprocess
+import shutil
 import sys
 import urllib.parse
 from configparser import ConfigParser
@@ -37,10 +36,7 @@ from pathlib import Path
 import saltext.vmware.modules.vmc_sddc as vmc_sddc
 
 
-def update_vmc_nsx_config(nsx_reverse_proxy_server, args):
-    config_file = Path(__file__).parent.parent / "tests" / "integration" / "vmc_config.ini"
-    if not config_file.is_file():
-        exit(f"ERROR: {config_file} does not exist.")
+def update_vmc_nsx_config(config_file, nsx_reverse_proxy_server, args):
     parser = ConfigParser()
     parser.read(config_file)
     parser.set("vmc_nsx_connect", "hostname", nsx_reverse_proxy_server)
@@ -97,11 +93,7 @@ def get_vcenter_server_detail(args):
     return output["vcenter_detail"]
 
 
-def update_vmc_vcenter_config(vcenter_server_detail, args):
-    config_file = Path(__file__).parent.parent / "tests" / "integration" / "vmc_config.ini"
-    if not config_file.is_file():
-        exit(f"ERROR: {config_file} does not exist.")
-
+def update_vmc_vcenter_config(config_file, vcenter_server_detail, args):
     parser = ConfigParser()
     parser.read(config_file)
     parser.set("vmc_connect", "hostname", args.vmc_hostname)
@@ -118,12 +110,30 @@ def update_vmc_vcenter_config(vcenter_server_detail, args):
     parser.set("vmc_connect", "verify_ssl", "false")
     parser.set("vmc_vcenter_connect", "verify_ssl", "false")
 
-    with open(config_file, "w") as configfile:
-        parser.write(configfile)
+    with open(config_file, "w") as cf:
+        parser.write(cf)
+
+
+def do_it(config_file):
+    nsx_reverse_proxy_server = get_nsx_reverse_proxy_server(args)
+    print("******** updating vmc nsx config *********")
+    update_vmc_nsx_config(config_file, nsx_reverse_proxy_server, args)
+    vcenter_server_detail = get_vcenter_server_detail(args)
+    print("******** updating vmc vcenter config *********")
+    update_vmc_vcenter_config(config_file, vcenter_server_detail, args)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        dest="create",
+        action="store_true",
+        default=False,
+        help="Create config file if not exists.",
+    )
+    parser.add_argument("CONFIG_FILE", type=Path, help="Path to vmc config file")
+
     parser.add_argument(
         "-v",
         "--vmc_hostname",
@@ -144,9 +154,15 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--org_id", dest="org_id", help="Organization id")
     parser.add_argument("-s", "--sddc_id", dest="sddc_id", help="sddc id")
     args = parser.parse_args()
-    nsx_reverse_proxy_server = get_nsx_reverse_proxy_server(args)
-    print("******** updating vmc nsx config *********")
-    update_vmc_nsx_config(nsx_reverse_proxy_server, args)
-    vcenter_server_detail = get_vcenter_server_detail(args)
-    print("******** updating vmc vcenter config *********")
-    update_vmc_vcenter_config(vcenter_server_detail, args)
+
+    config_file = args.CONFIG_FILE
+    print(config_file)
+    if not config_file.is_file():
+        if args.create:
+            source_file = Path(__file__).parent.parent / "tests" / "integration" / "vmc_config.ini"
+            shutil.copyfile(source_file, config_file)
+            do_it(config_file=config_file)
+        else:
+            exit(f"ERROR: {config_file} does not exist.")
+    else:
+        do_it(config_file=config_file)
