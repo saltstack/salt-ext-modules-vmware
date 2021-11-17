@@ -146,7 +146,7 @@ def vmc_config():
     return {s: dict(parser.items(s)) for s in parser.sections()}
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def vmc_nsx_connect(vmc_config):
     vmc_nsx_config = vmc_config["vmc_nsx_connect"]
     verify_ssl = True
