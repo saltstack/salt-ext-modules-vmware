@@ -32,20 +32,22 @@ def create(folder_name, dc_name, type, service_instance=None):
 
     folder_name
         Name of folder.
-    
+
     dc_name
         Name of datacenter where folder will be created.
-    
+
     type
         (vm, host, datastore, network) Type of folder to be created.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
-    folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref)
+    folder = utils_common.get_mor_by_property(
+        service_instance, vim.Folder, folder_name, "name", dc_ref
+    )
     if type == "vm":
         dc_ref.vmFolder.CreateFolder(folder_name)
     elif type == "host":
@@ -65,13 +67,13 @@ def destroy(folder_name, dc_name, type, service_instance=None):
 
     folder_name
         Name of folder.
-    
+
     dc_name
         Name of datacenter where folder will be Destroyed.
-    
+
     type
         (vm, host, datastore, network) Type of folder to be destroyed.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -79,13 +81,21 @@ def destroy(folder_name, dc_name, type, service_instance=None):
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.vmFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.vmFolder
+        )
     elif type == "host":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.hostFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.hostFolder
+        )
     elif type == "datastore":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.datastoreFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.datastoreFolder
+        )
     elif type == "network":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.networkFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.networkFolder
+        )
     else:
         raise salt.exceptions.CommandExecutionError("invalid type")
     folder.Destroy_Task()
@@ -98,16 +108,16 @@ def rename(folder_name, new_folder_name, dc_name, type, service_instance=None):
 
     folder_name
         Name of folder.
-    
+
     new_folder_name
         Name to rename folder.
-    
+
     dc_name
         Name of datacenter where folder will be renamed.
-    
+
     type
         (vm, host, datastore, network) Type of folder to be renamed.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -115,13 +125,21 @@ def rename(folder_name, new_folder_name, dc_name, type, service_instance=None):
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.vmFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.vmFolder
+        )
     elif type == "host":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.hostFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.hostFolder
+        )
     elif type == "datastore":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.datastoreFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.datastoreFolder
+        )
     elif type == "network":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.networkFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.networkFolder
+        )
     else:
         raise salt.exceptions.CommandExecutionError("invalid type")
     folder.Rename_Task(new_folder_name)
@@ -134,16 +152,16 @@ def move(folder_name, destination_folder_name, dc_name, type, service_instance=N
 
     folder_name
         Name of folder.
-    
+
     destination_folder_name
         Destination folder for named folder.
-    
+
     dc_name
         Name of datacenter where folder will be moved.
-    
+
     type
         (vm, host, datastore, network) Type of folder to be moved.
-    
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -151,17 +169,33 @@ def move(folder_name, destination_folder_name, dc_name, type, service_instance=N
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.vmFolder)
-        destination = utils_common.get_mor_by_property(service_instance, vim.Folder, destination_folder_name, "name", dc_ref.vmFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.vmFolder
+        )
+        destination = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, destination_folder_name, "name", dc_ref.vmFolder
+        )
     elif type == "host":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.hostFolder)
-        destination = utils_common.get_mor_by_property(service_instance, vim.Folder, destination_folder_name, "name", dc_ref.hostFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.hostFolder
+        )
+        destination = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, destination_folder_name, "name", dc_ref.hostFolder
+        )
     elif type == "datastore":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.datastoreFolder)
-        destination = utils_common.get_mor_by_property(service_instance, vim.Folder, destination_folder_name, "name", dc_ref.datastoreFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.datastoreFolder
+        )
+        destination = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, destination_folder_name, "name", dc_ref.datastoreFolder
+        )
     elif type == "network":
-        folder = utils_common.get_mor_by_property(service_instance, vim.Folder, folder_name, "name", dc_ref.networkFolder)
-        destination = utils_common.get_mor_by_property(service_instance, vim.Folder, destination_folder_name, "name", dc_ref.networkFolder)
+        folder = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, folder_name, "name", dc_ref.networkFolder
+        )
+        destination = utils_common.get_mor_by_property(
+            service_instance, vim.Folder, destination_folder_name, "name", dc_ref.networkFolder
+        )
     else:
         raise salt.exceptions.CommandExecutionError("invalid type")
     task = destination.MoveIntoFolder_Task([folder])
