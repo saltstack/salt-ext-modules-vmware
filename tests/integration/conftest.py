@@ -138,9 +138,11 @@ def vmware_cluster(vmware_datacenter, service_instance):
 
 @pytest.fixture(scope="session")
 def vmc_config():
-    abs_file_path = Path(__file__).parent / "vmc_config.ini"
+    default_path = Path().parent.parent / "local" / "vmc_config.ini"
+    config_path = os.environ.get("VMC_CONFIG", default_path)
+
     parser = ConfigParser()
-    parser.read(abs_file_path)
+    parser.read(config_path)
     return {s: dict(parser.items(s)) for s in parser.sections()}
 
 
