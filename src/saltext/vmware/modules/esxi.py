@@ -645,6 +645,85 @@ def set_advanced_config(
     )
 
 
+def get_firewall_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get Firewall configuration on matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_firewall_config
+    """
+    log.debug("Running vmware_esxi.get_firewall_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            firewall_config = h.configManager.firewallSystem
+            if not firewall_config:
+                continue
+            for ruleset in firewall_config.firewallInfo.ruleset:
+                ret.setdefault(h.name, []).append(
+                    {
+                        "allowed_hosts": {
+                            "ip_address": list(ruleset.allowedHosts.ipAddress),
+                            "all_ip": ruleset.allowedHosts.allIp,
+                            "ip_network": [
+                                "{}/{}".format(ip.network, ip.prefixLength)
+                                for ip in ruleset.allowedHosts.ipNetwork
+                            ],
+                        },
+                        "key": ruleset.key,
+                        "service": ruleset.service,
+                        "enabled": ruleset.enabled,
+                        "rule": [
+                            {
+                                "port": r.port,
+                                "end_port": r.endPort,
+                                "direction": r.direction,
+                                "port_type": r.portType,
+                                "protocol": r.protocol,
+                            }
+                            for r in ruleset.rule
+                        ],
+                    }
+                )
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
 def get_dns_config(
     datacenter_name=None,
     cluster_name=None,
