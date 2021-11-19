@@ -115,17 +115,27 @@ def test_powered_on(integration_test_config, patch_salt_globals_vm):
         pass
 
 
-def test_boot_manager(patch_salt_globals_vm):
+def test_boot_manager(integration_test_config, patch_salt_globals_vm):
     """
     Test boot options manager
     """
-    res = virtual_machine.boot_manager("test1", ["disk", "ethernet"])
-    assert res["status"] == "changed"
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.boot_manager(
+            integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
+        )
+        assert res["status"] == "changed"
+    else:
+        pytest.skip("test requires at least one virtual machine")
 
 
-def test_boot_manager_same_settings(patch_salt_globals_vm):
+def test_boot_manager_same_settings(integration_test_config, patch_salt_globals_vm):
     """
     Test boot option duplicates
     """
-    res = virtual_machine.boot_manager("test1", ["disk", "ethernet"])
-    assert res["status"] == "already configured this way"
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.boot_manager(
+            integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
+        )
+        assert res["status"] == "already configured this way"
+    else:
+        pytest.skip("test requires at least one virtual machine")

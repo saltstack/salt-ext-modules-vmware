@@ -13,8 +13,10 @@ import saltext.vmware.modules.cluster as cluster_mod
 import saltext.vmware.modules.cluster_drs as cluster_drs_mod
 import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
+import saltext.vmware.modules.folder as folder
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
+import saltext.vmware.states.folder as folder_state
 import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -115,6 +117,48 @@ def vmware_datacenter(patch_salt_globals, service_instance):
     dc = datacenter_mod.create(name=dc_name, service_instance=service_instance)
     yield dc_name
     datacenter_mod.delete(name=dc_name, service_instance=service_instance)
+
+
+@pytest.fixture
+def patch_salt_globals_folder(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(folder, "__opts__", {})
+    setattr(folder, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_folder_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        folder_state,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(folder_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_folder_state_test(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        folder_state,
+        "__opts__",
+        {
+            "test": True,
+        },
+    )
+    setattr(folder_state, "__pillar__", vmware_conf)
 
 
 @pytest.fixture

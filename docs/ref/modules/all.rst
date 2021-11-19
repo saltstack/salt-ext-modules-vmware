@@ -14,6 +14,7 @@ Execution Modules
     saltext.vmware.modules.datacenter
     saltext.vmware.modules.dvswitch
     saltext.vmware.modules.esxi
+    saltext.vmware.modules.folder
     saltext.vmware.modules.nsxt_compute_manager
     saltext.vmware.modules.nsxt_ip_blocks
     saltext.vmware.modules.nsxt_ip_pools
