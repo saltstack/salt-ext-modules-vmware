@@ -1,3 +1,4 @@
+# Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 """
 Common functions used across modules
@@ -213,6 +214,8 @@ def get_mors_with_properties(
         Flag specigying whether the properties to be retrieved are local to the
         container. If that is the case, the traversal spec needs to be None.
     """
+    log.debug("start get_mors_with_properties")
+
     # Get all the content
     content_args = [service_instance, object_type]
     content_kwargs = {
@@ -230,12 +233,16 @@ def get_mors_with_properties(
             raise
         content = get_content(*content_args, **content_kwargs)
 
+    log.debug("get_mors_with_properties, get object_list")
     object_list = []
     for obj in content:
         properties = {}
+        log.debug("get_mors_with_properties, get properites from object")
         for prop in obj.propSet:
             properties[prop.name] = prop.val
+        log.debug("get_mors_with_properties, update properites for object")
         properties["object"] = obj.obj
+        log.debug("get_mors_with_properties, append properites to object_list")
         object_list.append(properties)
     log.trace("Retrieved %s objects", len(object_list))
     return object_list
@@ -304,6 +311,7 @@ def list_objects(service_instance, vim_object, properties=None):
     items = []
     item_list = get_mors_with_properties(service_instance, vim_object, properties)
     for item in item_list:
+        log.debug(f"appending item '{name}' to list of objects to return")
         items.append(item["name"])
     return items
 
@@ -791,3 +799,60 @@ def datastore_exit_maintenance_mode(datastore_ref):
     if datastore_ref.summary.maintenanceMode == "normal":
         return True
     return False
+
+
+def get_license_mgrs(service_instance, license_mgr_names=None, get_all_license_mgrs=False):
+    """
+    Returns all license managers in a vCenter.
+
+    service_instance
+        The Service Instance Object from which to obtain cluster.
+
+    license_mgr_names
+        List of license manager names to filter by. Default value is None.
+
+    get_all_license_mgrs
+        Flag specifying whether to retrieve all license managers.
+        Default value is None.
+    """
+    log.debug("started get all License Managers")
+    items = [
+        i["object"]
+        for i in get_mors_with_properties(
+            service_instance, vim.LicenseAssignmentManager, property_list=["name"]
+        )
+        if get_all_license_mgrs or (license_mgr_names and i["name"] in license_mgr_names)
+    ]
+    log.debug("exited get all License Managers")
+    return items
+
+
+def get_license_mgr(service_instance, license_mgr_name):
+    """
+    Returns a vim.LicenseAssignmentManager managed object.
+
+    service_instance
+        The Service Instance Object from which to obtain license manager.
+
+    license_mgr_name
+        The license manager name
+    """
+    log.debug(f"started get License Manager '{license_mgr_name}'")
+    items = get_license_mgrs(service_instance, license_mgr_names=[license_mgr_name])
+    if not items:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            f"license manager '{license_mgr_name}' was not found"
+        )
+    log.debug(f"exit License Manager '{license_mgr_name}'")
+    return items[0]
+
+
+def list_license_mgrs(service_instance):
+    """
+    Returns a list of license managers associated with a given service instance.
+
+    service_instance
+        The Service Instance Object from which to obtain license managers.
+    """
+    log.debug("start list of License Managers")
+    return list_objects(service_instance, vim.LicenseAssignmentManager)

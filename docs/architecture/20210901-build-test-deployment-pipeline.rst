@@ -241,7 +241,7 @@ same process as any other build. Our confidence should be high that our test
 suite and full pipeline will succeed, with such trivial non-code changes.
 
 The only difference between the regular "nightly build" process, and a PyPI
-releas, will be that if there is a tag corresponding to the commit that created
+release, will be that if there is a tag corresponding to the commit that created
 this build, in addition to uploading the artifacts to our archive, the
 artifacts will also be released to PyPI and whatever location is hosting our
 docs.

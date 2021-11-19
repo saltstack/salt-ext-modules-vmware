@@ -1,3 +1,4 @@
+# Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 # pylint: disable=no-name-in-module
 import logging
