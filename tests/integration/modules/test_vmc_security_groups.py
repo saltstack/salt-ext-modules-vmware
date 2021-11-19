@@ -111,13 +111,10 @@ def create_security_group(get_security_groups, security_group_url, request_heade
     response.raise_for_status()
 
 
-def test_create_security_group_smoke_test(
-    salt_call_cli, delete_security_group, common_data, server_addresses
-):
+def test_create_security_group_smoke_test(salt_call_cli, delete_security_group, common_data):
     expected_security_group_id = common_data["security_group_id"]
     ret = salt_call_cli.run(
         "vmc_security_groups.create",
-        server_addresses=server_addresses,
         **common_data,
     )
     result_as_json = ret.json
@@ -125,7 +122,7 @@ def test_create_security_group_smoke_test(
 
 
 def test_get_security_groups_smoke_test(salt_call_cli, get_security_groups, common_data):
-    # No profile ID here
+    # No security group id here
     del common_data["security_group_id"]
     ret = salt_call_cli.run("vmc_security_groups.get", **common_data)
     result_as_json = ret.json
@@ -139,6 +136,8 @@ def test_delete_security_group_smoke_test(salt_call_cli, create_security_group, 
 
 
 def test_update_security_group_smoke_test(salt_call_cli, common_data, create_security_group):
-    ret = salt_call_cli.run("vmc_security_groups.update", **common_data, display_name="fnord")
+    ret = salt_call_cli.run(
+        "vmc_security_groups.update", **common_data, display_name="updated_security_group"
+    )
     result = ret.json
     assert result["result"] == "success"
