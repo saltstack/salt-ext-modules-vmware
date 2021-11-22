@@ -483,3 +483,33 @@ def test_esxi_get(service_instance):
         host_name="no_host",
     )
     assert not ret
+
+
+def test_get_ntp_config(service_instance):
+    """
+    Test get ntp configuration on ESXi host
+    """
+    ret = esxi.get_ntp_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    assert ret
+    expected = {
+        "ntp_config_file",
+        "time_zone",
+        "time_zone_description",
+        "time_zone_name",
+        "ntp_servers",
+        "time_zone_gmt_offset",
+    }
+    for host in ret:
+        assert not expected - set(ret[host])
+
+    ret = esxi.get_ntp_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        host_name="no_host",
+    )
+    assert not ret
