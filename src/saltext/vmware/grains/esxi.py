@@ -17,8 +17,6 @@ log = logging.getLogger(__file__)
 
 GRAINS_CACHE = {}
 
-# __salt__ = {"vmware_info.system_info": saltext.vmware.modules.info.system_info}
-
 
 def __virtual__():
 
