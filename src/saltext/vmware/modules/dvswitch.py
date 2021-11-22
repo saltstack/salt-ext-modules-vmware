@@ -323,7 +323,7 @@ def remove_hosts(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
     try:
         for h in hosts:
@@ -391,7 +391,7 @@ def add_hosts(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
     try:
         for h in hosts:
@@ -476,7 +476,7 @@ def update_hosts(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
     try:
         for h in hosts:

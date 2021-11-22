@@ -13,9 +13,11 @@ import saltext.vmware.modules.cluster as cluster_mod
 import saltext.vmware.modules.cluster_drs as cluster_drs_mod
 import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
+import saltext.vmware.modules.folder as folder
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
-from pyVim import connect
+import saltext.vmware.states.folder as folder_state
+import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
 
 
@@ -90,6 +92,14 @@ def patch_salt_globals():
         },
     )
     setattr(
+        cluster_mod,
+        "__salt__",
+        {
+            "vmware_cluster_drs.get": cluster_drs_mod.get,
+            "vmware_cluster_ha.get": cluster_ha_mod.get,
+        },
+    )
+    setattr(
         datacenter_st,
         "__opts__",
         {
@@ -110,6 +120,48 @@ def vmware_datacenter(patch_salt_globals, service_instance):
 
 
 @pytest.fixture
+def patch_salt_globals_folder(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(folder, "__opts__", {})
+    setattr(folder, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_folder_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        folder_state,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(folder_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_folder_state_test(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        folder_state,
+        "__opts__",
+        {
+            "test": True,
+        },
+    )
+    setattr(folder_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
 def patch_salt_globals_vm(vmware_conf):
     """
     Patch __opts__ and __pillar__
@@ -117,6 +169,38 @@ def patch_salt_globals_vm(vmware_conf):
 
     setattr(virtual_machine, "__opts__", {})
     setattr(virtual_machine, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_vm_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        virtual_machine_state,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(virtual_machine_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_vm_state_test(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        virtual_machine_state,
+        "__opts__",
+        {
+            "test": True,
+        },
+    )
+    setattr(virtual_machine_state, "__pillar__", vmware_conf)
 
 
 @pytest.fixture(scope="function")
@@ -188,3 +272,8 @@ def vmware_conf(integration_test_config):
             "user": config["user"],
         }
     }
+
+
+@pytest.fixture()
+def vm_ops():
+    return {"test": False}

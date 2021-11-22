@@ -49,11 +49,11 @@ def list_templates(service_instance=None):
     return utils_vm.list_vm_templates(service_instance)
 
 
-def path(name, service_instance=None):
+def path(vm_name, service_instance=None):
     """
     Returns specified virtual machine path.
 
-    name
+    vm_name
         The name of the virtual machine.
 
     service_instance
@@ -64,7 +64,7 @@ def path(name, service_instance=None):
     vm_ref = utils_common.get_mor_by_property(
         service_instance,
         vim.VirtualMachine,
-        name,
+        vm_name,
     )
     return utils_common.get_path(vm_ref, service_instance)
 
@@ -142,11 +142,11 @@ def _deploy_ovf(name, host_name, ovf, service_instance=None):
     return vm_ref
 
 
-def deploy_ovf(name, host_name, ovf_path, service_instance=None):
+def deploy_ovf(vm_name, host_name, ovf_path, service_instance=None):
     """
     Deploy a virtual machine from an OVF
 
-    name
+    vm_name
         The name of the virtual machine to be created.
 
     host_name
@@ -159,15 +159,15 @@ def deploy_ovf(name, host_name, ovf_path, service_instance=None):
         (optional) The Service Instance from which to obtain managed object references.
     """
     ovf = utils_vm.read_ovf_file(ovf_path)
-    _deploy_ovf(name, host_name, ovf, service_instance)
+    _deploy_ovf(vm_name, host_name, ovf, service_instance)
     return {"deployed": True}
 
 
-def deploy_ova(name, host_name, ova_path, service_instance=None):
+def deploy_ova(vm_name, host_name, ova_path, service_instance=None):
     """
     Deploy a virtual machine from an OVA
 
-    name
+    vm_name
         The name of the virtual machine to be created.
 
     host_name
@@ -180,15 +180,15 @@ def deploy_ova(name, host_name, ova_path, service_instance=None):
         (optional) The Service Instance from which to obtain managed object references.
     """
     ovf = utils_vm.read_ovf_from_ova(ova_path)
-    _deploy_ovf(name, host_name, ovf, service_instance)
+    _deploy_ovf(vm_name, host_name, ovf, service_instance)
     return {"deployed": True}
 
 
-def deploy_template(name, template_name, host_name, service_instance=None):
+def deploy_template(vm_name, template_name, host_name, service_instance=None):
     """
     Deploy a virtual machine from a template virtual machine.
 
-    name
+    vm_name
         The name of the virtual machine to be created.
 
     template_name
@@ -204,7 +204,7 @@ def deploy_template(name, template_name, host_name, service_instance=None):
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
 
     vms = list_(service_instance)
-    if name in vms:
+    if vm_name in vms:
         raise salt.exceptions.CommandExecutionError("Duplicate virtual machine name.")
 
     template_vms = list_templates(service_instance)
@@ -220,15 +220,15 @@ def deploy_template(name, template_name, host_name, service_instance=None):
     clonespec = vim.vm.CloneSpec()
     clonespec.location = relospec
 
-    utils_vm.clone_vm(name, resources["datacenter"].vmFolder, template, clonespec)
+    utils_vm.clone_vm(vm_name, resources["datacenter"].vmFolder, template, clonespec)
     return {"deployed": True}
 
 
-def info(name=None, service_instance=None):
+def info(vm_name=None, service_instance=None):
     """
     Return basic info about a vSphere VM guest
 
-    name
+    vm_name
         (optional) The name of the virtual machine to get info on.
 
     service_instance
@@ -239,12 +239,12 @@ def info(name=None, service_instance=None):
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    if name:
+    if vm_name:
         vms.append(
             utils_common.get_mor_by_property(
                 service_instance,
                 vim.VirtualMachine,
-                name,
+                vm_name,
             )
         )
 
@@ -280,11 +280,11 @@ def info(name=None, service_instance=None):
     return info
 
 
-def power_state(name, state, datacenter_name=None, service_instance=None):
+def power_state(vm_name, state, datacenter_name=None, service_instance=None):
     """
     Manages the power state of a virtual machine.
 
-    name
+    vm_name
         The name of the virtual machine.
 
     state
@@ -296,17 +296,17 @@ def power_state(name, state, datacenter_name=None, service_instance=None):
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
-    log.trace(f"Managing power state of virtual machine {name} to {state}")
+    log.trace(f"Managing power state of virtual machine {vm_name} to {state}")
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
         vm_ref = utils_common.get_mor_by_property(
-            service_instance, vim.VirtualMachine, name, "name", dc_ref
+            service_instance, vim.VirtualMachine, vm_name, "name", dc_ref
         )
     else:
-        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
     if state == "powered-on" and vm_ref.summary.runtime.powerState == "poweredOn":
         result = {
             "comment": "Virtual machine is already powered on",
@@ -331,3 +331,61 @@ def power_state(name, state, datacenter_name=None, service_instance=None):
         "changes": {"state": result_ref_vm.summary.runtime.powerState},
     }
     return result
+
+
+def boot_manager(
+    vm_name,
+    order=["cdrom", "disk", "ethernet", "floppy"],
+    delay=0,
+    enter_bios_setup=False,
+    retry_delay=None,
+    efi_secure_boot_enabled=False,
+    service_instance=None,
+):
+    """
+    Manage boot option for a virtual machine
+
+    vm_name
+        The name of the virtual machine.
+
+    order
+        (List of strings) Boot order of devices. Acceptable strings: cdrom, disk, ethernet, floppy
+
+    delay
+        (integer, optional) Boot delay. When powering on or resetting, delay boot order by given milliseconds. Defaults to 0.
+
+    enter_bios_setup
+        (boolean, optional) During the next boot, force entry into the BIOS setup screen. Defaults to False.
+
+    retry_delay
+        (integer, optional) If the VM fails to find boot device, automatically retry after given milliseconds. Defaults to None, has no effect unless retry_enabled is True.
+
+    efi_secure_boot_enabled
+        (boolean, optional) Defaults to False.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    vm = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+
+    boot_order_list = utils_vm.options_order_list(vm, order)
+
+    # we removed the ability to individually set bootRetryEnabled, easily implemented if asked for
+    input_opts = {
+        "bootOrder": boot_order_list,
+        "bootDelay": delay,
+        "enterBIOSSetup": enter_bios_setup,
+        "bootRetryEnabled": bool(retry_delay),
+        "bootRetryDelay": retry_delay,
+        "efiSecureBootEnabled": efi_secure_boot_enabled,
+    }
+
+    if utils_vm.compare_boot_options(input_opts, vm.config.bootOptions):
+        return {"status": "already configured this way"}
+
+    ret = utils_vm.change_boot_options(vm, input_opts)
+
+    return ret
