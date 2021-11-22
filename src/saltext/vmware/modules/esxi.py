@@ -823,18 +823,17 @@ def get_ntp_config(
     try:
         for h in hosts:
             ntp_config = h.configManager.dateTimeSystem
-            if not ntp_config:
-                continue
-            ret[h.name] = {
-                "time_zone": ntp_config.dateTimeInfo.timeZone.key,
-                "time_zone_name": ntp_config.dateTimeInfo.timeZone.name,
-                "time_zone_description": ntp_config.dateTimeInfo.timeZone.description,
-                "time_zone_gmt_offset": ntp_config.dateTimeInfo.timeZone.gmtOffset,
-                "ntp_servers": list(ntp_config.dateTimeInfo.ntpConfig.server),
-                "ntp_config_file": list(ntp_config.dateTimeInfo.ntpConfig.configFile)
-                if ntp_config.dateTimeInfo.ntpConfig.configFile
-                else None,
-            }
+            if ntp_config:
+                ret[h.name] = {
+                    "time_zone": ntp_config.dateTimeInfo.timeZone.key,
+                    "time_zone_name": ntp_config.dateTimeInfo.timeZone.name,
+                    "time_zone_description": ntp_config.dateTimeInfo.timeZone.description,
+                    "time_zone_gmt_offset": ntp_config.dateTimeInfo.timeZone.gmtOffset,
+                    "ntp_servers": list(ntp_config.dateTimeInfo.ntpConfig.server),
+                    "ntp_config_file": list(ntp_config.dateTimeInfo.ntpConfig.configFile)
+                    if ntp_config.dateTimeInfo.ntpConfig.configFile
+                    else None,
+                }
         return ret
     except (
         vim.fault.InvalidState,
@@ -844,7 +843,6 @@ def get_ntp_config(
         salt.exceptions.VMwareApiError,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
-    return ret
 
 
 def connect(host, service_instance=None):

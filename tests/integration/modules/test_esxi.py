@@ -495,17 +495,16 @@ def test_get_ntp_config(service_instance):
         cluster_name="Cluster",
     )
     assert ret
+    expected = {
+        "ntp_config_file",
+        "time_zone",
+        "time_zone_description",
+        "time_zone_name",
+        "ntp_servers",
+        "time_zone_gmt_offset",
+    }
     for host in ret:
-        assert sorted(list(ret[host])) == sorted(
-            [
-                "ntp_config_file",
-                "time_zone",
-                "time_zone_description",
-                "time_zone_name",
-                "ntp_servers",
-                "time_zone_gmt_offset",
-            ]
-        )
+        assert not expected - set(ret[host])
 
     ret = esxi.get_ntp_config(
         service_instance=service_instance,
