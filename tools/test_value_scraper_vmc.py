@@ -56,8 +56,8 @@ vmc_config_dict = {
     },
     "vmc_vcenter_connect": {
         "hostname": "vcenter.sddc-10-182-150-47.vmwarevmc.com",
-        "username": "cloudadmin@vmc.local",
-        "password": "2uAx+I!SnMTsa7R",
+        "username": "********@vmc.local",
+        "password": "**********",
         "verify_ssl": True,
         "cert": "/tmp/test.cert",
     },
@@ -71,8 +71,8 @@ vmc_config_dict = {
     "vmc_vm_stats_spec": {"vm_id": "vm-37", "stats_type": "cpu"},
     "vmc_vcenter_admin_connect": {
         "hostname": "vcenter.sddc-10-182-150-47.vmwarevmc.com",
-        "username": "administrator@vmc.local",
-        "password": "2uAx+I!SnMTsa7R",
+        "username": "*********@vmc.local",
+        "password": "**********",
         "verify_ssl": True,
         "cert": "/tmp/test.cert",
     },
@@ -97,7 +97,6 @@ def update_vmc_nsx_config(config, nsx_reverse_proxy_server, args):
 
 
 def get_server_from_url(url):
-    # https://nsx-10-182-144-253.rp.stg.vmwarevmc.com/vmc/reverse-proxy/api/
     return urllib.parse.urlparse(url).netloc
 
 
@@ -177,9 +176,11 @@ def do_it(config_file):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run this before runnning integration tests for vmc",
-        epilog="""Example  usage creation of file local/vmc_config.json
-                                              python tools/test_value_scraper_vmc.py -c local/vmc_config.json -s 1f225622-17ba-4bae-b0ec-a995123a5330 -r <Change Me> -o 10e1092f-51d0-473a-80f8-137652fd0c39""",
+        description="Run this before running integration tests for vmc",
+        epilog="""
+        Example  usage creation of file local/vmc_config.json:
+        python tools/test_value_scraper_vmc.py -c local/vmc_config.json -s 1f225622-17ba-4bae-b0ec-a995123a5330 -r <Change Me> -o 10e1092f-51d0-473a-80f8-137652fd0c39
+        """,
     )
     parser.add_argument(
         "-c",
@@ -195,24 +196,24 @@ if __name__ == "__main__":
         "--vmc_hostname",
         dest="vmc_hostname",
         default="stg.skyscraper.vmware.com",
-        help="VMC console for getting sddc details",
+        help="VMC console",
     )
     parser.add_argument(
         "-a",
         "--authorization_host",
         dest="authorization_host",
         default="console-stg.cloud.vmware.com",
-        help="cloud console for sddc",
+        help="Hostname of the Cloud Services Platform (CSP)",
     )
     parser.add_argument(
         "-r",
         "--refresh_key",
         dest="refresh_key",
         required=True,
-        help="Developer token for accessing REST API",
+        help="CSP API token for accessing VMC ",
     )
     parser.add_argument("-o", "--org_id", dest="org_id", required=True, help="Organization id")
-    parser.add_argument("-s", "--sddc_id", dest="sddc_id", required=True, help="sddc id")
+    parser.add_argument("-s", "--sddc_id", dest="sddc_id", required=True, help="SDDC id")
     args = parser.parse_args()
 
     config_file = args.CONFIG_FILE
