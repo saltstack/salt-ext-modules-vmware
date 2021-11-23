@@ -66,6 +66,10 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     # 3. Create a test config file:
     python tools/test_value_scraper.py -c local/vcenter.conf
 
+    # 4. Create a test config file for VMC:
+    python tools/test_value_scraper_vmc.py --help
+    This command will return the required information.
+
 
 For code contributions, as part of VMware we require [a signed CLA][cla-faq].
 If you've already signed the VMware CLA, you're probably good to go.

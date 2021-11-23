@@ -233,17 +233,13 @@ def vmc_config():
 @pytest.fixture(scope="session")
 def vmc_nsx_connect(vmc_config):
     vmc_nsx_config = vmc_config["vmc_nsx_connect"]
-    verify_ssl = True
-    if vmc_nsx_config["verify_ssl"].lower() == "false":
-        verify_ssl = False
-
     return (
         vmc_nsx_config["hostname"],
         vmc_nsx_config["refresh_key"],
         vmc_nsx_config["authorization_host"],
         vmc_nsx_config["org_id"],
         vmc_nsx_config["sddc_id"],
-        verify_ssl,
+        vmc_nsx_config["verify_ssl"],
         vmc_nsx_config["cert"],
     )
 
