@@ -181,6 +181,7 @@ if __name__ == "__main__":
         Example  usage creation of file local/vmc_config.json:
         python tools/test_value_scraper_vmc.py -c local/vmc_config.json -s 1f225622-17ba-4bae-b0ec-a995123a5330 -r <Change Me> -o 10e1092f-51d0-473a-80f8-137652fd0c39
         """,
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
         "-c",
