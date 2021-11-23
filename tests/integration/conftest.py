@@ -52,6 +52,10 @@ def salt_call_cli(minion):
 def integration_test_config():
     default_path = Path().parent.parent / "local" / "vcenter.conf"
     config_path = os.environ.get("VCENTER_CONFIG", default_path)
+
+    if isinstance(config_path, str):
+        config_path = Path(config_path)
+
     try:
         with config_path.open() as f:
             return json.load(f)
@@ -225,9 +229,14 @@ def vmc_config():
     default_path = Path().parent.parent / "local" / "vmc_config.json"
     config_path = os.environ.get("VMC_CONFIG", default_path)
 
-    with config_path.open() as f:
-        config = json.load(f)
-    return config
+    if isinstance(config_path, str):
+        config_path = Path(config_path)
+
+    try:
+        with config_path.open() as f:
+            return json.load(f)
+    except Exception as e:  # pylint: disable=broad-except
+        return None
 
 
 @pytest.fixture(scope="session")
