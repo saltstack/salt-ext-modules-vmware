@@ -27,27 +27,73 @@ It's not an ideal way to test, but it does at least provide some automation
 to the process.
  """
 import argparse
-import shutil
+import json
 import sys
 import urllib.parse
-from configparser import ConfigParser
 from pathlib import Path
 
 import saltext.vmware.modules.vmc_sddc as vmc_sddc
 
+vmc_config_dict = {
+    "vmc_connect": {
+        "hostname": "stg.skyscraper.vmware.com",
+        "vcenter_hostname": "vcenter.sddc-10-206-87-173.vmwarevmc.com",
+        "refresh_key": "CHANGE ME",
+        "authorization_host": "console-stg.cloud.vmware.com",
+        "org_id": "a0c6eb59-66c8-4b70-93df-f578f3b7ea3e",
+        "sddc_id": "d4c278c3-1549-4c70-8cab-e6250d35fc1e",
+        "verify_ssl": True,
+        "cert": "/tmp/test.cert",
+    },
+    "vmc_nsx_connect": {
+        "hostname": "nsx-10-182-160-142.rp.stg.vmwarevmc.com",
+        "refresh_key": "CHANGE ME",
+        "authorization_host": "console-stg.cloud.vmware.com",
+        "org_id": "a0c6eb59-66c8-4b70-93df-f578f3b7ea3e",
+        "sddc_id": "d4c278c3-1549-4c70-8cab-e6250d35fc1e",
+        "verify_ssl": True,
+        "cert": "/tmp/test.cert",
+    },
+    "vmc_vcenter_connect": {
+        "hostname": "vcenter.sddc-10-182-150-47.vmwarevmc.com",
+        "username": "cloudadmin@vmc.local",
+        "password": "2uAx+I!SnMTsa7R",
+        "verify_ssl": True,
+        "cert": "/tmp/test.cert",
+    },
+    "vmc_vcenter_disk_spec": {
+        "vm_id": "vm-1003",
+        "disk_id": 3001,
+        "bus_adapter_type": "SATA",
+        "vmdk_file": "[WorkloadDatastore] 332c9d60-4c65-5926-734b-0200a8af7ca2/TESTVPNL3_2_2.vmdk",
+        "type": "VMDK_FILE",
+    },
+    "vmc_vm_stats_spec": {"vm_id": "vm-37", "stats_type": "cpu"},
+    "vmc_vcenter_admin_connect": {
+        "hostname": "vcenter.sddc-10-182-150-47.vmwarevmc.com",
+        "username": "administrator@vmc.local",
+        "password": "2uAx+I!SnMTsa7R",
+        "verify_ssl": True,
+        "cert": "/tmp/test.cert",
+    },
+    "vmc_vcenter_monitoring_spec": {
+        "start_time": "2021-05-06T22:13:05.651Z",
+        "end_time": "2021-05-10T22:13:05.651Z",
+        "interval": "HOURS2",
+        "function": "COUNT",
+        "names": "cpu.util,mem.util",
+    },
+}
 
-def update_vmc_nsx_config(config_file, nsx_reverse_proxy_server, args):
-    parser = ConfigParser()
-    parser.read(config_file)
-    parser.set("vmc_nsx_connect", "hostname", nsx_reverse_proxy_server)
-    parser.set("vmc_nsx_connect", "refresh_key", args.refresh_key)
-    parser.set("vmc_nsx_connect", "authorization_host", args.authorization_host)
-    parser.set("vmc_nsx_connect", "org_id", args.org_id)
-    parser.set("vmc_nsx_connect", "sddc_id", args.sddc_id)
+
+def update_vmc_nsx_config(config, nsx_reverse_proxy_server, args):
+    config["hostname"] = nsx_reverse_proxy_server
+    config["refresh_key"] = args.refresh_key
+    config["authorization_host"] = args.authorization_host
+    config["org_id"] = args.org_id
+    config["sddc_id"] = args.sddc_id
     # TODO will change this when handling of cert generation is done
-    parser.set("vmc_nsx_connect", "verify_ssl", "false")
-    with open(config_file, "w") as configfile:
-        parser.write(configfile)
+    config["verify_ssl"] = False
 
 
 def get_server_from_url(url):
@@ -93,38 +139,48 @@ def get_vcenter_server_detail(args):
     return output["vcenter_detail"]
 
 
-def update_vmc_vcenter_config(config_file, vcenter_server_detail, args):
-    parser = ConfigParser()
-    parser.read(config_file)
-    parser.set("vmc_connect", "hostname", args.vmc_hostname)
-    parser.set("vmc_connect", "vcenter_hostname", vcenter_server_detail["vcenter_server"])
-    parser.set("vmc_connect", "refresh_key", args.refresh_key)
-    parser.set("vmc_connect", "authorization_host", args.authorization_host)
-    parser.set("vmc_connect", "org_id", args.org_id)
-    parser.set("vmc_connect", "sddc_id", args.sddc_id)
-
-    parser.set("vmc_vcenter_connect", "hostname", vcenter_server_detail["vcenter_server"])
-    parser.set("vmc_vcenter_connect", "username", vcenter_server_detail["username"])
-    parser.set("vmc_vcenter_connect", "password", vcenter_server_detail["password"])
+def update_vmc_vcenter_config(config, config_vcenter, vcenter_server_detail, args):
+    config["hostname"] = args.vmc_hostname
+    config["vcenter_hostname"] = vcenter_server_detail["vcenter_server"]
+    config["refresh_key"] = args.refresh_key
+    config["authorization_host"] = args.authorization_host
+    config["org_id"] = args.org_id
+    config["sddc_id"] = args.sddc_id
     # TODO will change this when handling of cert generation is done
-    parser.set("vmc_connect", "verify_ssl", "false")
-    parser.set("vmc_vcenter_connect", "verify_ssl", "false")
+    config["verify_ssl"] = False
 
-    with open(config_file, "w") as cf:
-        parser.write(cf)
+    config_vcenter["hostname"] = vcenter_server_detail["vcenter_server"]
+    config_vcenter["username"] = vcenter_server_detail["username"]
+    config_vcenter["password"] = vcenter_server_detail["password"]
+    config_vcenter["verify_ssl"] = False
 
 
 def do_it(config_file):
+    try:
+        with config_file.open() as f:
+            config = json.load(f)
+    except Exception as e:
+        exit(f"Bad config: {e}")
+
     nsx_reverse_proxy_server = get_nsx_reverse_proxy_server(args)
     print("******** updating vmc nsx config *********")
-    update_vmc_nsx_config(config_file, nsx_reverse_proxy_server, args)
+    update_vmc_nsx_config(config["vmc_nsx_connect"], nsx_reverse_proxy_server, args)
     vcenter_server_detail = get_vcenter_server_detail(args)
     print("******** updating vmc vcenter config *********")
-    update_vmc_vcenter_config(config_file, vcenter_server_detail, args)
+    update_vmc_vcenter_config(
+        config["vmc_connect"], config["vmc_vcenter_connect"], vcenter_server_detail, args
+    )
+
+    json_config = json.dumps(config, indent=2, sort_keys=True)
+    config_file.write_text(json_config)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Run this before runnning integration tests for vmc",
+        epilog="""Example  usage creation of file local/vmc_config.json
+                                              python tools/test_value_scraper_vmc.py -c local/vmc_config.json -s 1f225622-17ba-4bae-b0ec-a995123a5330 -r <Change Me> -o 10e1092f-51d0-473a-80f8-137652fd0c39""",
+    )
     parser.add_argument(
         "-c",
         dest="create",
@@ -149,18 +205,21 @@ if __name__ == "__main__":
         help="cloud console for sddc",
     )
     parser.add_argument(
-        "-r", "--refresh_key", dest="refresh_key", help="Developer token for accessing REST API"
+        "-r",
+        "--refresh_key",
+        dest="refresh_key",
+        required=True,
+        help="Developer token for accessing REST API",
     )
-    parser.add_argument("-o", "--org_id", dest="org_id", help="Organization id")
-    parser.add_argument("-s", "--sddc_id", dest="sddc_id", help="sddc id")
+    parser.add_argument("-o", "--org_id", dest="org_id", required=True, help="Organization id")
+    parser.add_argument("-s", "--sddc_id", dest="sddc_id", required=True, help="sddc id")
     args = parser.parse_args()
 
     config_file = args.CONFIG_FILE
     print(config_file)
     if not config_file.is_file():
         if args.create:
-            source_file = Path(__file__).parent.parent / "tests" / "integration" / "vmc_config.ini"
-            shutil.copyfile(source_file, config_file)
+            config_file.write_text(json.dumps(vmc_config_dict))
             do_it(config_file=config_file)
         else:
             exit(f"ERROR: {config_file} does not exist.")

@@ -222,12 +222,12 @@ def vmware_cluster(vmware_datacenter, service_instance):
 
 @pytest.fixture(scope="session")
 def vmc_config():
-    default_path = Path().parent.parent / "local" / "vmc_config.ini"
+    default_path = Path().parent.parent / "local" / "vmc_config.json"
     config_path = os.environ.get("VMC_CONFIG", default_path)
 
-    parser = ConfigParser()
-    parser.read(config_path)
-    return {s: dict(parser.items(s)) for s in parser.sections()}
+    with config_path.open() as f:
+        config = json.load(f)
+    return config
 
 
 @pytest.fixture(scope="session")
