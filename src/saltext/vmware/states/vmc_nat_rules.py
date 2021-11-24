@@ -246,14 +246,12 @@ def present(
 
     if __opts__.get("test"):
         log.info("present is called with test option")
-        if get_nat_rule_response:
-            return vmc_state._create_state_response(
-                name=name, comment="State present will update nat rule {}".format(nat_rule)
-            )
-        else:
-            return vmc_state._create_state_response(
-                name=name, comment="State present will create nat rule {}".format(nat_rule)
-            )
+        return vmc_state._create_state_response(
+            name=name,
+            comment="State present will {} nat rule {}".format(
+                "update" if get_nat_rule_response else "create", nat_rule
+            ),
+        )
 
     if get_nat_rule_response:
         updatable_keys = input_dict.keys()
