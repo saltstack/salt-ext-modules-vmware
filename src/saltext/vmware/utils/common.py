@@ -38,7 +38,9 @@ def get_root_folder(service_instance):
 
     service_instance
         The Service Instance Object for which to obtain the root folder.
+
     """
+    log.debug("start get_root_folder")
     try:
         log.trace("Retrieving root folder")
         return service_instance.RetrieveContent().rootFolder
@@ -46,6 +48,29 @@ def get_root_folder(service_instance):
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
             "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+
+
+def get_service_content(service_instance):
+    """
+    Returns the service content for a Service Instance.
+
+    service_instance
+        The Service Instance from which to obtain service content.
+    """
+    log.debug("start get_service_content")
+    try:
+        return service_instance.RetrieveServiceContent()
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            f"Not enough permissions. Required privilege: '{exc.privilegeId}'"
         )
     except vim.fault.VimFault as exc:
         log.exception(exc)
@@ -91,6 +116,8 @@ def get_content(
         Flag specifying whether the properties to be retrieved are local to the
         container. If that is the case, the traversal spec needs to be None.
     """
+    log.debug("start get_content")
+
     # Start at the rootFolder if container starting point not specified
     if not container_ref:
         container_ref = get_root_folder(service_instance)
@@ -211,7 +238,7 @@ def get_mors_with_properties(
         ``Traverse All`` spec
 
     local_properties
-        Flag specigying whether the properties to be retrieved are local to the
+        Flag specifying whether the properties to be retrieved are local to the
         container. If that is the case, the traversal spec needs to be None.
     """
     log.debug("start get_mors_with_properties")

@@ -23,90 +23,37 @@ def __virtual__():
     return __virtualname__
 
 
-## DGM Don't believe you can create a License Manager - Check TBD
-
-
-def present(name):
+def absent(license_key):
     """
-    Create a license manager
+    Remove a license
+
+    license
+        License Key to remove form license manager
 
     .. code-block:: yaml
 
-    Create license manager:
-      vmware_license_mgr.present:
-        - name: licmgr1
+    Remove license from License Manager:
+      vmware_license_mgr.absent:
+        - license: license_key
 
     """
-    ret = {"name": name, "result": None, "comment": "", "changes": {}}
-    licmgrs = __salt__["vmware_license_mgr.list"]()
-    if name in licmgrs:
-        ret["comment"] = "license manager {} is already present. No changes made.".format(name)
-        ret["result"] = True
-    else:
-        ret["comment"] = "license manager {} not found.".format(name)
-        ret["result"] = False
+    ret = __salt__["vmware_license_mgr.remove"](license_key)
     return ret
 
 
-## def present(name):
-##     """
-##     Create a license manager
-##
-##     .. code-block:: yaml
-##
-##     Create license manager:
-##       vmware_license_mgr.present:
-##         - name: dc1
-##
-##     """
-##     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-##     dcs = __salt__["vmware_license_mgr.list"]()
-##     if name in dcs:
-##         ret["comment"] = "license manager {} is already present. No changes made.".format(name)
-##         ret["result"] = True
-##     elif __opts__["test"]:
-##         ret["comment"] = "license manager {} will be created.".format(name)
-##         ret["result"] = None
-##     else:
-##         dc = __salt__["vmware_license_mgr.create"](name)
-##         if isinstance(dc, dict) and dc.get(name) is not False:
-##             ret["comment"] = "license manager - {} created.".format(name)
-##             ret["changes"] = dc
-##             ret["result"] = True
-##
-##         else:
-##             ret["comment"] = dc["reason"]
-##             ret["result"] = False
-##     return ret
+def present(license_key):
+    """
+    Remove a license
+
+    license
+        License Key to add to license manager
 
 
-## DGM don't believe you can delete a License Manager - Check TBD
-## def absent(name):
-##     """
-##     Delete a license manager.
-##
-##     .. code-block:: yaml
-##
-##     Delete license manager:
-##       vmware_license_mgr.absent:
-##         - name: dc1
-##     """
-##     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-##     dcs = __salt__["vmware_license_mgr.list"]()
-##     if name not in dcs:
-##         ret["comment"] = "license manager {} does not exist. No changes made.".format(name)
-##         ret["result"] = True
-##     elif __opts__["test"]:
-##         ret["comment"] = "license manager {} will be deleted.".format(name)
-##         ret["result"] = None
-##     else:
-##         dc = __salt__["vmware_license_mgr.delete"](name)
-##         if isinstance(dc, dict) and dc.get(name) is not False:
-##             ret["comment"] = "license manager - {} deleted.".format(name)
-##             ret["changes"] = dc
-##             ret["result"] = True
-##
-##         else:
-##             ret["comment"] = dc["reason"]
-##             ret["result"] = False
-##     return ret
+    .. code-block:: yaml
+
+    Remove license from License Manager:
+      vmware_license_mgr.present:
+        - license: license_key
+    """
+    ret = __salt__["vmware_license_mgr.add"](license_key)
+    return ret

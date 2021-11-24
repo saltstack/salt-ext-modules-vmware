@@ -29,9 +29,80 @@ def __virtual__():
     return __virtualname__
 
 
+def add(license, service_instance=None):
+    """
+    Add a license manager
+
+    Supported proxies: esxi host
+
+    license:
+        License to remove from license manager
+
+    .. code-block: bash
+
+        salt '*' vmware_license_mgr.add license
+    """
+    log.debug("DGM vmware ext license_mgr add lic entered")
+    ret = {}
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    log.debug("DGM vmware ext license_mgr add lic retrieved service_instance")
+
+    if not utils_license_mgr.is_vcenter(service_instance):
+        ret["comment"] = "Failed, not connected to a vCenter"
+        ret["result"] = False
+        return ret
+
+    try:
+        result = utils_license_mgr.add_license(service_instance, license)
+    except (
+        salt.exceptions.VMwareApiError,
+        salt.exceptions.VMwareObjectRetrievalError,
+        salt.exceptions.VMwareRuntimeError,
+    ) as exc:
+        ret["comment"] = f"Failed to remove a license due to Exception '{str(exc)}'"
+        ret["result"] = False
+        return ret
+
+    if not result:
+        ret["comment"] = f"Failed specified license was not added to License Manager"
+        ret["result"] = False
+
+    return ret
+
+
+def get_(service_instance=None):
+    """
+    Get the properties of a License Manager
+
+    name
+        The vcenter name
+
+    .. code-block:: bash
+
+        salt '*' vmware_license_mgr.get
+    """
+    ret = {}
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    try:
+        licmgr_ref = utils_lic_mgr.get_license_mgr(service_instance)
+        licmgr = utils_common.get_mors_with_properties(
+            service_instance,
+            vim.LicenseManager,
+            container_ref=vc_ref,
+            local_properties=True,
+        )
+        if licmgr:
+            ret = licmgr[0]
+    except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
+        return {name: False, "reason": str(exc)}
+    return ret
+
+
 def list_(service_instance=None):
     """
-    Returns a list of license managers for the specified host.
+    Returns a list of licenses for the specified Service Instance
 
     .. code-block:: bash
 
@@ -43,78 +114,47 @@ def list_(service_instance=None):
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     log.debug("DGM vmware ext license_mgr list retrieved service_instance")
-    return utils_license_mgr.list_license_mgrs(service_instance)
+    return utils_license_mgr.list_licenses(service_instance)
 
 
-## def create(name, service_instance=None):
-##     """
-##     Creates a datacenter.
-##
-##     Supported proxies: esxdatacenter
-##
-##     name
-##         The datacenter name
-##
-##     .. code-block:: bash
-##
-##         salt '*' vmware_datacenter.create dc1
-##     """
-##     if service_instance is None:
-##         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-##     try:
-##         utils_datacenter.create_datacenter(service_instance, name)
-##     except salt.exceptions.VMwareApiError as exc:
-##         return {name: False, "reason": str(exc)}
-##     return {name: True}
-
-
-def get_(name, service_instance=None):
+def remove(license, service_instance=None):
     """
-    Get the properties of a License Manager
+    Remove a license manager
 
-    name
-        The vcenter name
+    Supported proxies: esxi host
 
-    .. code-block:: bash
+    license:
+        License to remove from license manager
 
-        salt '*' vmware_license_mgr.get dc1
+    .. code-block: bash
+
+        salt '*' vmware_license_mgr.remove license
     """
-    log.debug(f"DGM vmware ext license_mgr get entered, with name '{name}'")
+    log.debug("DGM vmware ext license_mgr remove lic entered")
     ret = {}
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    log.debug("DGM vmware ext license_mgr remove lic retrieved service_instance")
+
+    if not utils_license_mgr.is_vcenter(service_instance):
+        ret["comment"] = "Failed, not connected to a vCenter"
+        ret["result"] = False
+        return ret
+
     try:
-        licmgr_ref = utils_lic_mgr.get_license_mgr(service_instance, name)
-        licmgr = utils_common.get_mors_with_properties(
-            service_instance,
-            vim.LicenseAssignmentManager,
-            container_ref=vc_ref,
-            local_properties=True,
-        )
-        if licmgr:
-            ret = licmgr[0]
-    except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
-        return {name: False, "reason": str(exc)}
+        result = utils_license_mgr.remove_license(service_instance, license)
+    except (
+        salt.exceptions.VMwareApiError,
+        salt.exceptions.VMwareObjectRetrievalErrori,
+        salt.exceptions.VMwareRuntimeError,
+    ) as exc:
+        ret["comment"] = f"Failed to remove a license due to Exception '{str(exc)}'"
+        ret["result"] = False
+        return ret
+
+    if not result:
+        ret["comment"] = f"Failed specified license was not found in License Manager"
+        ret["result"] = False
+
     return ret
-
-
-## def delete(name, service_instance=None):
-##     """
-##     Deletes a datacenter.
-##
-##     Supported proxies: esxdatacenter
-##
-##     name
-##         The datacenter name
-##
-##     .. code-block:: bash
-##
-##         salt '*' vmware_datacenter.delete dc1
-##     """
-##     if service_instance is None:
-##         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-##     try:
-##         utils_datacenter.delete_datacenter(service_instance, name)
-##     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
-##         return {name: False, "reason": str(exc)}
-##     return {name: True}
