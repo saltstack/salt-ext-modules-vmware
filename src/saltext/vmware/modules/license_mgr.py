@@ -29,14 +29,24 @@ def __virtual__():
     return __virtualname__
 
 
-def add(license, service_instance=None):
+def add(license, datacenter_name=None, cluster_name=None, esxi_hostname=None):
     """
-    Add a license manager
+    Add a license to specified Cluster, ESXI Server or vCenter
+    If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
-    Supported proxies: esxi host
+    license
+        License Key to add to license manager
 
-    license:
-        License to remove from license manager
+    datacenter_name
+        Datacenter name to use for the operation [default None]
+
+    cluster_name
+        Name of the cluster to add license [default None]
+
+    esxi_hostname
+        Hostname of the ESXI Server to add license [default None]
+
+    CLI Example:
 
     .. code-block: bash
 
@@ -44,8 +54,7 @@ def add(license, service_instance=None):
     """
     log.debug("DGM vmware ext license_mgr add lic entered")
     ret = {}
-    if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     log.debug("DGM vmware ext license_mgr add lic retrieved service_instance")
 
     if not utils_license_mgr.is_vcenter(service_instance):
@@ -54,7 +63,9 @@ def add(license, service_instance=None):
         return ret
 
     try:
-        result = utils_license_mgr.add_license(service_instance, license)
+        result = utils_license_mgr.add_license(
+            service_instance, license, datacenter_name, cluster_name, esxi_hostname
+        )
     except (
         salt.exceptions.VMwareApiError,
         salt.exceptions.VMwareObjectRetrievalError,
@@ -117,14 +128,24 @@ def list_(service_instance=None):
     return utils_license_mgr.list_licenses(service_instance)
 
 
-def remove(license, service_instance=None):
+def remove(license, datacenter_name=None, cluster_name=None, esxi_hostname=None):
     """
-    Remove a license manager
+    Remove a license from specified Cluster, ESXI Server or vCenter
+    If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
-    Supported proxies: esxi host
+    license
+        License Key to add to license manager
 
-    license:
-        License to remove from license manager
+    datacenter_name
+        Datacenter name to use for the operation [default None]
+
+    cluster_name
+        Name of the cluster to add license [default None]
+
+    esxi_hostname
+        Hostname of the ESXI Server to add license [default None]
+
+    CLI Example:
 
     .. code-block: bash
 
@@ -132,8 +153,7 @@ def remove(license, service_instance=None):
     """
     log.debug("DGM vmware ext license_mgr remove lic entered")
     ret = {}
-    if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
     log.debug("DGM vmware ext license_mgr remove lic retrieved service_instance")
 
@@ -143,7 +163,9 @@ def remove(license, service_instance=None):
         return ret
 
     try:
-        result = utils_license_mgr.remove_license(service_instance, license)
+        result = utils_license_mgr.remove_license(
+            service_instance, license, datacenter_name, cluster_name, esxi_hostname
+        )
     except (
         salt.exceptions.VMwareApiError,
         salt.exceptions.VMwareObjectRetrievalErrori,

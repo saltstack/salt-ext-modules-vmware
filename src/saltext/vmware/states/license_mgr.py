@@ -23,12 +23,24 @@ def __virtual__():
     return __virtualname__
 
 
-def absent(license_key):
+def absent(license_key, datacenter_name=None, cluster_name=None, esxi_hostname=None):
     """
-    Remove a license
+    Remove a license from specified Cluster, ESXI Server or vCenter
+    If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
     license
-        License Key to remove form license manager
+        License Key to remove from license manager
+
+    datacenter_name
+        Datacenter name to use for the operation [default None]
+
+    cluster_name
+        Name of the cluster from which to remove license [default None]
+
+    esxi_hostname
+        Hostname of the ESXI Server from which to remove the license [default None]
+
+    CLI Example:
 
     .. code-block:: yaml
 
@@ -37,23 +49,38 @@ def absent(license_key):
         - license: license_key
 
     """
-    ret = __salt__["vmware_license_mgr.remove"](license_key)
+    ret = __salt__["vmware_license_mgr.remove"](
+        license_key, datacenter_name, cluster_name, esxi_hostname
+    )
     return ret
 
 
-def present(license_key):
+def present(license_key, datacenter_name=None, cluster_name=None, esxi_hostname=None):
     """
-    Remove a license
+    Add a license to specified Cluster, ESXI Server or vCenter
+    If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
     license
         License Key to add to license manager
 
+    datacenter_name
+        Datacenter name to use for the operation [default None]
+
+    cluster_name
+        Name of the cluster to add license [default None]
+
+    esxi_hostname
+        Hostname of the ESXI Server to add license [default None]
+
+    CLI Example:
 
     .. code-block:: yaml
 
-    Remove license from License Manager:
+    Add license to License Manager:
       vmware_license_mgr.present:
         - license: license_key
     """
-    ret = __salt__["vmware_license_mgr.add"](license_key)
+    ret = __salt__["vmware_license_mgr.add"](
+        license_key, datacenter_name, cluster_name, esxi_hostname
+    )
     return ret

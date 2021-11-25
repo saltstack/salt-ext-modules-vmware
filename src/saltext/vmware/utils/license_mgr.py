@@ -123,16 +123,29 @@ def list_licenses(service_instance):
     return ret
 
 
-def add_license(service_instance, license):
+def add_license(
+    service_instance, license, datacenter_name=None, cluster_name=None, esxi_hostname=None
+):
     """
-    Add a license to the License Manager associated with the specified Service Instance
-    Adds the license to the pool of available licenses associated with the License Manager
+    Add license to the pool of available licenses associated with the License Manager
+    and assign it to the specified Cluster, ESXI Server or vCenter
+
+    If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
     service_instance:
         Service Instance containing a License Manager
 
     license
-        License to add to the license manager
+        License to add to license manager
+
+    datacenter_name
+        Datacenter name to use for the operation [default None]
+
+    cluster_name
+        Name of the cluster to add license [default None]
+
+    esxi_hostname
+        Hostname of the ESXI Server to add license [default None]
 
     Returns:
         True - if successful or license already present
@@ -157,16 +170,38 @@ def add_license(service_instance, license):
         #   3 cluster - entity_id = cluster _moId
 
         entity_id = None  # TBD miracle happens here and have value
+        datacenter_mobj = None
+        if datacenter_name:
+            # need to get named datacenter's managed object
+            # TBD
+            datacenter_mobj = get_datacenter(service_instance, datacenter_name)
+            log.debug(
+                f"retrieved datacenter mobj '{datacenter_mobj }' for datacenter '{datacenter_name}'"
+            )
 
-        # TBD do vCenter for now
-        srv_content = get_service_content(service_instance)
-        entity_id = srv_content.about.instanceUuid
+        if cluster_name:
+            # need to get named cluster's managed object
+            # TBD
+            # need a function to retreive clusters or cluster handling
+            pass
+
+        elif esxi_hostname:
+            # need to get named esxi server
+            # TBD
+            # need a function to retreive esxi servers or esxi server handling
+            pass
+
+        else:
+            # default to applying to vCenter
+            srv_content = get_service_content(service_instance)
+            entity_id = srv_content.about.instanceUuid
+
         lic_assign_mgr = get_license_assignment_mgr(service_instance)
         if entity_id:
             assigned_lic = lic_assign_mgr.QueryAssignedLicenses(entityId=entity_id)
 
             log.debug(
-                "assigning license, entity identifier '{entity_id}' has assigned license '{assigned_lic}'"
+                f"assigning license, entity identifier '{entity_id}' has assigned license '{assigned_lic}'"
             )
             if not assigned_lic or (
                 len(assigned_lic) != 0 and assigned_lic[0].assignedLicense.licenseKey != license
@@ -183,10 +218,14 @@ def add_license(service_instance, license):
     return True
 
 
-def remove_license(service_instance, license):
+def remove_license(
+    service_instance, license, datacenter_name=None, cluster_name=None, esxi_hostname=None
+):
     """
-    Remove specified license from the License Manager associated with the specified Service Instance
-    Removes the license from the pool of available licenses associated with the License Manager
+    Remove license from the pool of available licenses associated with the License Manager
+    and unassign it from the specified Cluster, ESXI Server or vCenter
+
+    If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
     service_instance:
         Service Instance containing a License Manager
@@ -194,8 +233,17 @@ def remove_license(service_instance, license):
     license
         License to remove from the license manager
 
+    datacenter_name
+        Datacenter name to use for the operation [default None]
+
+    cluster_name
+        Name of the cluster to add license [default None]
+
+    esxi_hostname
+        Hostname of the ESXI Server to add license [default None]
+
     Returns:
-        True - if successful or license already present
+        True - if successful, license removed
     """
     lic_mgr = get_license_mgr(service_instance)
     if not lic_mgr:
@@ -208,6 +256,9 @@ def remove_license(service_instance, license):
     if license not in lic_keys:
         return False
 
+    # TBD need to determine if can 'RemoveAssignedLicense' or if simple
+    # 'RemoveLicense' will unassign any assigned licenses when the license
+    # is removed
     try:
         lic_mgr.RemoveLicense(licenseKey=license)
     except vim.fault.VimFault as exc:
