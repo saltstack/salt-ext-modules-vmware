@@ -51,10 +51,7 @@ def salt_call_cli(minion):
 @pytest.fixture(scope="session")
 def integration_test_config():
     default_path = Path().parent.parent / "local" / "vcenter.conf"
-    config_path = os.environ.get("VCENTER_CONFIG", default_path)
-
-    if isinstance(config_path, str):
-        config_path = Path(config_path)
+    config_path = Path(os.environ.get("VCENTER_CONFIG", default_path))
 
     try:
         with config_path.open() as f:
@@ -227,10 +224,7 @@ def vmware_cluster(vmware_datacenter, service_instance):
 @pytest.fixture(scope="session")
 def vmc_config():
     default_path = Path().parent.parent / "local" / "vmc_config.json"
-    config_path = os.environ.get("VMC_CONFIG", default_path)
-
-    if isinstance(config_path, str):
-        config_path = Path(config_path)
+    config_path = Path(os.environ.get("VMC_CONFIG", default_path))
 
     try:
         with config_path.open() as f:

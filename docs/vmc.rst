@@ -3,28 +3,9 @@
 Managing VMC Sddc with Salt
 ================================
 
-Modules and States for controlling VMC SDDC:
-
-.. toctree::
-   :glob:
-   :maxdepth: 2
-   :caption: VMC Execution Modules
-
-   ref/modules/saltext.vmware.modules.vmc*
-
-
-
-.. toctree::
-   :glob:
-   :maxdepth: 2
-   :caption: VMC State Modules
-
-   ref/states/saltext.vmware.states.vmc*
-
-
-Things to know to run VMC modules and states
---------------------------------------------
-To create CSP API token which is referred as `refresh_key` across all the VMC modules and states:
+Things to know about running VMC modules & states
+-------------------------------------------------
+To create CSP API token which is referred to as `refresh_key` across all the VMC modules and states:
     Please refer `Generate API Token <https://docs.vmware.com/en/vRealize-Operations-Manager/8.4/com.vmware.vcom.core.doc/GUID-3B8C8821-FB07-412F-A2E4-C5CA34D8A473.html>`_.
 
 To get the org_id:
@@ -34,10 +15,10 @@ To get the org_id:
 To create an SDDC in the Organization:
     Execute the `create` function from vmc_sddc module. This function will return the ID of the created SDDC.
 
-To get the sddc_id:
+Alternatively, to get the ``sddc_id`` from the UI:
     Navigate to the support tab of an SDDC on UI.
 
-To find the nsx-reverse-proxy-host which is referred as `hostname` in some of the VMC modules and states:
+To find the nsx-reverse-proxy-host which is referred to as `hostname` in some of the VMC modules and states:
     Execute `vmc_sddc.get_by_id` and get the `nsx_reverse_proxy_url` from the output.
 
     For example,
@@ -58,11 +39,11 @@ To find the hostname, username and password for vCenter associated with the SDDC
 
         "vcenter_detail": {
             "vcenter_url": "https://vcenter.sddc-10-182-160-142.vmwarevmc.com/",
-            "username": "***@vmc.local",
-            "password": "*************"
+            "username": "user@example.local",
+            "password": "Password123"
         }
 
-To find the VirtualMachine Identifier which is referred as `vm_id` in some of the VMC modules:
+To find the VirtualMachine Identifier which is referred to as `vm_id` in some of the VMC modules:
     Login to vCenter Console using the above credentials, and click on any of the virtual machines available in VC.
     We can see the url like,
 
@@ -80,3 +61,22 @@ Below command will return the required information to create vmc_config.json whi
 .. code-block:: bash
 
     python tools/test_value_scraper_vmc.py --help
+
+
+Modules and States for controlling VMC SDDC:
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+   :caption: VMC Execution Modules
+
+   ref/modules/saltext.vmware.modules.vmc*
+
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+   :caption: VMC State Modules
+
+   ref/states/saltext.vmware.states.vmc*

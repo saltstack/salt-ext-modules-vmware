@@ -36,52 +36,16 @@ import saltext.vmware.modules.vmc_sddc as vmc_sddc
 
 vmc_config_dict = {
     "vmc_connect": {
-        "hostname": "stg.skyscraper.vmware.com",
-        "vcenter_hostname": "vcenter.sddc-10-206-87-173.vmwarevmc.com",
-        "refresh_key": "CHANGE ME",
-        "authorization_host": "console-stg.cloud.vmware.com",
-        "org_id": "a0c6eb59-66c8-4b70-93df-f578f3b7ea3e",
-        "sddc_id": "d4c278c3-1549-4c70-8cab-e6250d35fc1e",
-        "verify_ssl": True,
-        "cert": "/tmp/test.cert",
+        "cert": None,
     },
     "vmc_nsx_connect": {
-        "hostname": "nsx-10-182-160-142.rp.stg.vmwarevmc.com",
-        "refresh_key": "CHANGE ME",
-        "authorization_host": "console-stg.cloud.vmware.com",
-        "org_id": "a0c6eb59-66c8-4b70-93df-f578f3b7ea3e",
-        "sddc_id": "d4c278c3-1549-4c70-8cab-e6250d35fc1e",
-        "verify_ssl": True,
-        "cert": "/tmp/test.cert",
+        "cert": None,
     },
     "vmc_vcenter_connect": {
-        "hostname": "vcenter.sddc-10-182-150-47.vmwarevmc.com",
-        "username": "********@vmc.local",
-        "password": "**********",
-        "verify_ssl": True,
-        "cert": "/tmp/test.cert",
+        "cert": None,
     },
-    "vmc_vcenter_disk_spec": {
-        "vm_id": "vm-1003",
-        "disk_id": 3001,
-        "bus_adapter_type": "SATA",
-        "vmdk_file": "[WorkloadDatastore] 332c9d60-4c65-5926-734b-0200a8af7ca2/TESTVPNL3_2_2.vmdk",
-        "type": "VMDK_FILE",
-    },
-    "vmc_vm_stats_spec": {"vm_id": "vm-37", "stats_type": "cpu"},
     "vmc_vcenter_admin_connect": {
-        "hostname": "vcenter.sddc-10-182-150-47.vmwarevmc.com",
-        "username": "*********@vmc.local",
-        "password": "**********",
-        "verify_ssl": True,
-        "cert": "/tmp/test.cert",
-    },
-    "vmc_vcenter_monitoring_spec": {
-        "start_time": "2021-05-06T22:13:05.651Z",
-        "end_time": "2021-05-10T22:13:05.651Z",
-        "interval": "HOURS2",
-        "function": "COUNT",
-        "names": "cpu.util,mem.util",
+        "cert": None,
     },
 }
 
@@ -154,7 +118,7 @@ def update_vmc_vcenter_config(config, config_vcenter, vcenter_server_detail, arg
     config_vcenter["verify_ssl"] = False
 
 
-def do_it(config_file):
+def do_it(args, config_file):
     try:
         with config_file.open() as f:
             config = json.load(f)
@@ -222,8 +186,8 @@ if __name__ == "__main__":
     if not config_file.is_file():
         if args.create:
             config_file.write_text(json.dumps(vmc_config_dict))
-            do_it(config_file=config_file)
+            do_it(args, config_file=config_file)
         else:
             exit(f"ERROR: {config_file} does not exist.")
     else:
-        do_it(config_file=config_file)
+        do_it(args, config_file=config_file)
