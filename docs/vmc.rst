@@ -16,6 +16,18 @@ To get the ``org_id``:
 To create an SDDC in the Organization:
     Execute the ``create`` function from vmc_sddc module. This function will return the ID of the created SDDC.
 
+    For example,
+
+    .. code-block:: bash
+
+        salt '*' vmc_sddc.create hostname=stg.example.com refresh_key=7TUPdyffgs authorization_host=console.example.com org_id=10e1092e-51d0-473a-80f8-137652fd0b39 provider=AWS num_hosts=1 sddc_name='test-sddc' region='us-west-2' verify_ssl=False  --output=json | python -m json.tool | grep '"id"'
+
+    returns,
+
+    .. code::
+
+        "id": "332e384f-43b1-4c7d-b125-450d5c25a332"
+
 Alternatively, to get the ``sddc_id`` from the UI:
     Navigate to the support tab of an SDDC on UI.
 
