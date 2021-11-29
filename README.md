@@ -10,7 +10,8 @@ If you think you've found a security vulnerability, see [Salt's security guide][
 ## User Documentation
 
 This README is more for contributing to the project. If you just want to get
-started, check out the [User Documentation][docs].
+started, check out the [User Documentation][docs]. Note: See the [Managing VMC SDDC with Salt][vmc-docs] section
+for more information about how to configure `properties required for VMC operations`
 
 
 ## Contributing
@@ -108,3 +109,4 @@ that's where you'll find the rest of the documentation.
 [comments]: https://conventionalcomments.org/
 [cla-faq]: https://cla.vmware.com/faq
 [docs]: https://docs.saltproject.io/salt/extensions/salt-ext-modules-vmware/en/latest/index.html
+[vmc-docs]: https://docs.saltproject.io/salt/extensions/salt-ext-modules-vmware/en/latest/vmc.html
