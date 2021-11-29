@@ -8,6 +8,9 @@ import salt.modules.cmdmod
 import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
+import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.esxi as utils_esxi
 from saltext.vmware.utils.common import get_service_content as get_service_content
 
 try:
@@ -170,27 +173,42 @@ def add_license(
         #   3 cluster - entity_id = cluster _moId
 
         entity_id = None  # TBD miracle happens here and have value
-        datacenter_mobj = None
+        datacenter_ref = None
         if datacenter_name:
-            # need to get named datacenter's managed object
-            # TBD
-            datacenter_mobj = get_datacenter(service_instance, datacenter_name)
+            # need to get named datacenter's reference
+            datacenter_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
             log.debug(
-                f"retrieved datacenter mobj '{datacenter_mobj }' for datacenter '{datacenter_name}'"
+                f"retrieved datacenter ref '{datacenter_ref }' for datacenter '{datacenter_name}'"
             )
 
         if cluster_name:
-            # need to get named cluster's managed object
-            # TBD
-            # need a function to retreive clusters or cluster handling
-            pass
-
+            # need to get named cluster's reference
+            cluster_ref = utils_cluster.get_cluster(dc_ref=datacenter_ref, cluster=cluster_name)
+            entityId = cluster_ref._moId
+            log.debug(
+                f"retrieved entityId '{entityId}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
+            )
         elif esxi_hostname:
             # need to get named esxi server
-            # TBD
-            # need a function to retreive esxi servers or esxi server handling
-            pass
+            esxi_hosts = utils_esxi.get_hosts(service_instance, None, esxi_hostname)
 
+            # returns hosts list of dicts
+            if not esxi_hosts:
+                log.debug(f"Failed to find esxi hostname '{esxi_hostname}'")
+                return False
+
+            if len(esxi_hosts) > 1:
+                log.error(
+                    f"Failed, found multiple instances of esxi hostname '{esxi_hostname}', hosts returned '{esxi_hosts}'"
+                )
+                return False
+
+            entityID = esxi_hosts[0]["object"]._moId
+            if "esx" not in license.editionKey:
+                log.error(
+                    f"Error, License '{license}' does not contain a suitable Edition key '{license.editionKey}' for an ESXi Server"
+                )
+                return False
         else:
             # default to applying to vCenter
             srv_content = get_service_content(service_instance)
