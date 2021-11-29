@@ -146,6 +146,7 @@ if __name__ == "__main__":
         python tools/test_value_scraper_vmc.py -c local/vmc_config.json -s 1f225622-17ba-4bae-b0ec-a995123a5330 -r <Change Me> -o 10e1092f-51d0-473a-80f8-137652fd0c39
         """,
         formatter_class=argparse.RawTextHelpFormatter,
+        usage=" test_value_scraper_vmc.py -h for more detail. Please build the docs and head over to http://localhost:8000/vmc.html for more detail of refersh_key, org id and sddc id",
     )
     parser.add_argument(
         "-c",
@@ -179,7 +180,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("-o", "--org_id", dest="org_id", required=True, help="Organization id")
     parser.add_argument("-s", "--sddc_id", dest="sddc_id", required=True, help="SDDC id")
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except Exception as e:
+        print(e)
 
     config_file = args.CONFIG_FILE
     print(config_file)
