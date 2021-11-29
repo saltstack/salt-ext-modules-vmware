@@ -1,6 +1,6 @@
 .. _managing vmc sddc:
 
-Managing VMC Sddc with Salt
+Managing VMC SDDC with Salt
 ================================
 
 Things to know about running VMC modules & states
