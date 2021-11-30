@@ -29,33 +29,52 @@ def __virtual__():
     return __virtualname__
 
 
-def add(license, datacenter_name=None, cluster_name=None, esxi_hostname=None):
+def add(license, **kwargs):
     """
     Add a license to specified Cluster, ESXI Server or vCenter
     If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
-    license
-        License Key to add to license manager
+    Parameters:
+      Required:
+        * license
+            License Key to add to license manager
 
-    datacenter_name
-        Datacenter name to use for the operation [default None]
+      Optional:
+        * service_instance
+            Use this vCenter service connection instance instead of creating a new one [default None]
 
-    cluster_name
-        Name of the cluster to add license [default None]
+        * datacenter_name
+            Datacenter name to use for the operation [default None]
 
-    esxi_hostname
-        Hostname of the ESXI Server to add license [default None]
+        * cluster_name
+            Name of the cluster to add license [default None]
+
+        * esxi_hostname
+            Hostname of the ESXI Server to add license [default None]
 
     CLI Example:
 
     .. code-block: bash
 
-        salt '*' vmware_license_mgr.add license
+        salt '*' vmware_license_mgr.add license datacenter_name=dc1
     """
     log.debug("DGM vmware ext license_mgr add lic entered")
     ret = {}
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    log.debug("DGM vmware ext license_mgr add lic retrieved service_instance")
+    op = {}
+    for key, value in kwargs.items():
+        op[key] = value
+
+    service_instance = op.pop("service_instance", None)
+    datacenter_name = op.pop("datacenter_name", None)
+    cluster_name = op.pop("cluster_name", None)
+    esxi_hostname = op.pop("esxi_hostname", None)
+
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    log.debug(
+        "DGM vmware ext license_mgr add lic retrieved service_instance, with opts '{__opts__}', pillar '{__pillar__}'"
+    )
 
     if not utils_license_mgr.is_vcenter(service_instance):
         ret["comment"] = "Failed, not connected to a vCenter"
@@ -71,7 +90,7 @@ def add(license, datacenter_name=None, cluster_name=None, esxi_hostname=None):
         salt.exceptions.VMwareObjectRetrievalError,
         salt.exceptions.VMwareRuntimeError,
     ) as exc:
-        ret["comment"] = f"Failed to remove a license due to Exception '{str(exc)}'"
+        ret["comment"] = f"Failed to add a license due to Exception '{str(exc)}'"
         ret["result"] = False
         return ret
 
@@ -86,8 +105,8 @@ def get_(service_instance=None):
     """
     Get the properties of a License Manager
 
-    name
-        The vcenter name
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one [default None]
 
     .. code-block:: bash
 
@@ -105,7 +124,7 @@ def get_(service_instance=None):
             local_properties=True,
         )
         if licmgr:
-            ret = licmgr[0]
+            ret["stdout"] = licmgr[0]
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
         return {name: False, "reason": str(exc)}
     return ret
@@ -115,35 +134,44 @@ def list_(service_instance=None):
     """
     Returns a list of licenses for the specified Service Instance
 
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one [default None]
+
     .. code-block:: bash
 
         salt '*' vmware_license_mgr.list
     """
-    pu.db
-
     log.debug("DGM vmware ext license_mgr list entered")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    log.debug("DGM vmware ext license_mgr list retrieved service_instance")
+    log.debug(
+        "DGM vmware ext license_mgr list retrieved service_instance, with opts '{__opts__}', pillar '{__pillar__}'"
+    )
     return utils_license_mgr.list_licenses(service_instance)
 
 
-def remove(license, datacenter_name=None, cluster_name=None, esxi_hostname=None):
+def remove(license, **kwargs):
     """
     Remove a license from specified Cluster, ESXI Server or vCenter
     If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
-    license
-        License Key to add to license manager
+    Parameters:
+      Required:
+        * license
+            License Key to add to license manager
 
-    datacenter_name
-        Datacenter name to use for the operation [default None]
+      Optional:
+        * service_instance
+            Use this vCenter service connection instance instead of creating a new one [default None]
 
-    cluster_name
-        Name of the cluster to add license [default None]
+        * datacenter_name
+            Datacenter name to use for the operation [default None]
 
-    esxi_hostname
-        Hostname of the ESXI Server to add license [default None]
+        * cluster_name
+            Name of the cluster to add license [default None]
+
+        * esxi_hostname
+            Hostname of the ESXI Server to add license [default None]
 
     CLI Example:
 
@@ -152,10 +180,27 @@ def remove(license, datacenter_name=None, cluster_name=None, esxi_hostname=None)
         salt '*' vmware_license_mgr.remove license
     """
     log.debug("DGM vmware ext license_mgr remove lic entered")
-    ret = {}
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    ## service_instance = None
+    ## datacenter_name = None
+    ## cluster_name = None
+    ## esxi_hostname = None
 
-    log.debug("DGM vmware ext license_mgr remove lic retrieved service_instance")
+    ret = {}
+    op = {}
+    for key, value in kwargs.items():
+        op[key] = value
+
+    service_instance = op.pop("service_instance", None)
+    datacenter_name = op.pop("datacenter_name", None)
+    cluster_name = op.pop("cluster_name", None)
+    esxi_hostname = op.pop("esxi_hostname", None)
+
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    log.debug(
+        "DGM vmware ext license_mgr remove lic retrieved service_instance, with opts '{__opts__}', pillar '{__pillar__}'"
+    )
 
     if not utils_license_mgr.is_vcenter(service_instance):
         ret["comment"] = "Failed, not connected to a vCenter"

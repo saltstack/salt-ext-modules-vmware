@@ -77,6 +77,9 @@ def get_license_mgr(service_instance):
     """
     Return a license manager from specified Service Instance
 
+    service_instance
+        vCenter service connection instance
+
     Note: returns LicenseManager
     """
     lic_mgr = None
@@ -92,6 +95,9 @@ def get_license_mgr(service_instance):
 def get_license_assignment_mgr(service_instance):
     """
     Return a license assignment manager from specified Service Instance
+
+    service_instance
+        vCenter service connection instance
 
     Note: returns LicenseAssignmentManager
     """
@@ -174,41 +180,43 @@ def add_license(
 
         entity_id = None  # TBD miracle happens here and have value
         datacenter_ref = None
-        if datacenter_name:
-            # need to get named datacenter's reference
-            datacenter_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
-            log.debug(
-                f"retrieved datacenter ref '{datacenter_ref }' for datacenter '{datacenter_name}'"
-            )
-
-        if cluster_name:
-            # need to get named cluster's reference
-            cluster_ref = utils_cluster.get_cluster(dc_ref=datacenter_ref, cluster=cluster_name)
-            entityId = cluster_ref._moId
-            log.debug(
-                f"retrieved entityId '{entityId}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
-            )
-        elif esxi_hostname:
-            # need to get named esxi server
-            esxi_hosts = utils_esxi.get_hosts(service_instance, None, esxi_hostname)
-
-            # returns hosts list of dicts
-            if not esxi_hosts:
-                log.debug(f"Failed to find esxi hostname '{esxi_hostname}'")
-                return False
-
-            if len(esxi_hosts) > 1:
-                log.error(
-                    f"Failed, found multiple instances of esxi hostname '{esxi_hostname}', hosts returned '{esxi_hosts}'"
+        if datacenter_name or cluster_name or esxi_hostname:
+            if datacenter_name:
+                # need to get named datacenter's reference
+                datacenter_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+                log.debug(
+                    f"retrieved datacenter ref '{datacenter_ref }' for datacenter '{datacenter_name}'"
                 )
-                return False
 
-            entityID = esxi_hosts[0]["object"]._moId
-            if "esx" not in license.editionKey:
-                log.error(
-                    f"Error, License '{license}' does not contain a suitable Edition key '{license.editionKey}' for an ESXi Server"
+            if cluster_name:
+                # need to get named cluster's reference
+                cluster_ref = utils_cluster.get_cluster(dc_ref=datacenter_ref, cluster=cluster_name)
+                entityId = cluster_ref._moId
+                log.debug(
+                    f"retrieved entityId '{entityId}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
                 )
-                return False
+
+            if esxi_hostname:
+                # need to get named esxi server
+                esxi_hosts = utils_esxi.get_hosts(service_instance, datacenter_name, esxi_hostname)
+
+                # returns hosts list of dicts
+                if not esxi_hosts:
+                    log.debug(f"Failed to find esxi hostname '{esxi_hostname}'")
+                    return False
+
+                if len(esxi_hosts) > 1:
+                    log.error(
+                        f"Failed, found multiple instances of esxi hostname '{esxi_hostname}', hosts returned '{esxi_hosts}'"
+                    )
+                    return False
+
+                entityID = esxi_hosts[0]._moId
+                if "esx" not in license.editionKey:
+                    log.error(
+                        f"Error, License '{license}' does not contain a suitable Edition key '{license.editionKey}' for an ESXi Server"
+                    )
+                    return False
         else:
             # default to applying to vCenter
             srv_content = get_service_content(service_instance)
