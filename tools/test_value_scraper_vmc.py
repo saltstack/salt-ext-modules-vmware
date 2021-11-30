@@ -146,7 +146,8 @@ if __name__ == "__main__":
         python tools/test_value_scraper_vmc.py -c local/vmc_config.json -s 1f225622-17ba-4bae-b0ec-a995123a5330 -r <Change Me> -o 10e1092f-51d0-473a-80f8-137652fd0c39
         """,
         formatter_class=argparse.RawTextHelpFormatter,
-        usage=" test_value_scraper_vmc.py -h for more detail. Please build the docs and head over to http://localhost:8000/vmc.html for more detail of refersh_key, org id and sddc id",
+        usage=" test_value_scraper_vmc.py -h for more detail. \n"
+        "See the https://docs.saltproject.io/salt/extensions/salt-ext-modules-vmware/en/latest/vmc.html section for more information on refersh_key, org id and sddc id",
     )
     parser.add_argument(
         "-c",
@@ -155,7 +156,12 @@ if __name__ == "__main__":
         default=False,
         help="Create config file if not exists.",
     )
-    parser.add_argument("CONFIG_FILE", type=Path, help="Path to vmc config file")
+    parser.add_argument(
+        "CONFIG_FILE",
+        type=Path,
+        help="Path to vmc config file. \n"
+        "Tests will read from local/vmc_config.json or user can specify path using the environment variable `VMC_CONFIG`",
+    )
 
     parser.add_argument(
         "-v",
