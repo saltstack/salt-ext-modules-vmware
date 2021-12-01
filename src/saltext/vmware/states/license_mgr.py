@@ -28,20 +28,17 @@ def absent(license_key, **kwargs):
     Remove a license from specified Cluster, ESXI Server or vCenter
     If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
-    Parameters:
-      Required:
-        * license
-            License Key to remove from license manager
+    license
+        License Key to remove from license manager
 
-      Optional:
-        * datacenter_name
-            Datacenter name to use for the operation [default None]
+    datacenter_name
+        Datacenter name to use for the operation [default None]
 
-        * cluster_name
-            Name of the cluster from which to remove license [default None]
+    cluster_name
+        Name of the cluster from which to remove license [default None]
 
-        * esxi_hostname
-            Hostname of the ESXI Server from which to remove the license [default None]
+    esxi_hostname
+        Hostname of the ESXI Server from which to remove the license [default None]
 
     CLI Example:
 
@@ -62,20 +59,17 @@ def present(license_key, datacenter_name=None, cluster_name=None, esxi_hostname=
     Add a license to specified Cluster, ESXI Server or vCenter
     If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
-    Parameters:
-      Required:
-        * license
-            License Key to add to license manager
+    license
+        License Key to add to license manager
 
-      Optional:
-        * datacenter_name
-            Datacenter name to use for the operation [default None]
+    datacenter_name
+        Datacenter name to use for the operation [default None]
 
-        * cluster_name
-            Name of the cluster to add license [default None]
+    cluster_name
+        Name of the cluster to add license [default None]
 
-        * esxi_hostname
-            Hostname of the ESXI Server to add license [default None]
+    esxi_hostname
+        Hostname of the ESXI Server to add license [default None]
 
     CLI Example:
 
