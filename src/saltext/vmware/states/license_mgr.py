@@ -54,7 +54,7 @@ def absent(license_key, **kwargs):
     return ret
 
 
-def present(license_key, datacenter_name=None, cluster_name=None, esxi_hostname=None):
+def present(license_key, **kwargs):
     """
     Add a license to specified Cluster, ESXI Server or vCenter
     If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
@@ -80,7 +80,11 @@ def present(license_key, datacenter_name=None, cluster_name=None, esxi_hostname=
         - license: license_key
         - datacenter_name: dc1
     """
-    ret = __salt__["vmware_license_mgr.add"](
-        license_key, datacenter_name, cluster_name, esxi_hostname
-    )
+    ret = __salt__["vmware_license_mgr.list"]()
+    if license_key in ret["licenses"]:
+        ret["comment"] = f"License key '{license_key}' is already present. No changes made"
+        ret["result"] = True
+        return ret
+
+    ret = __salt__["vmware_license_mgr.add"](license_key, **kwargs)
     return ret

@@ -2,11 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
-import pudb
-import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.license_mgr as utils_license_mgr
 from saltext.vmware.utils.connect import get_service_instance
+
+import salt.exceptions
+
+## import pudb
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +58,7 @@ def add(license, **kwargs):
         salt '*' vmware_license_mgr.add license datacenter_name=dc1
     """
     log.debug("start vmware ext license_mgr add license")
+
     ret = {}
     op = {}
     for key, value in kwargs.items():
@@ -79,9 +82,17 @@ def add(license, **kwargs):
         return ret
 
     try:
+        if "test" in __opts__:
+            ret["licenses"] = license_key
+            ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
+            return ret
+
         result = utils_license_mgr.add_license(
             service_instance, license, datacenter_name, cluster_name, esxi_hostname
         )
+        if result:
+            ret["licenses"] = license_key
+
     except (
         salt.exceptions.VMwareApiError,
         salt.exceptions.VMwareObjectRetrievalError,
@@ -144,6 +155,12 @@ def list_(service_instance=None):
     log.debug(
         "vmware ext license_mgr list retrieved service_instance, with opts '{__opts__}', pillar '{__pillar__}'"
     )
+
+    if "test" in __opts__:
+        ret["licenses"] = "DGMTT-FAKED-TESTS-LICEN-SE012"
+        ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
+        return ret
+
     return utils_license_mgr.list_licenses(service_instance)
 
 
@@ -174,10 +191,6 @@ def remove(license, **kwargs):
         salt '*' vmware_license_mgr.remove license
     """
     log.debug("start vmware ext license_mgr remove license")
-    ## service_instance = None
-    ## datacenter_name = None
-    ## cluster_name = None
-    ## esxi_hostname = None
 
     ret = {}
     op = {}
@@ -202,6 +215,11 @@ def remove(license, **kwargs):
         return ret
 
     try:
+        if "test" in __opts__:
+            ret["licenses"] = license_key
+            ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
+            return ret
+
         result = utils_license_mgr.remove_license(
             service_instance, license, datacenter_name, cluster_name, esxi_hostname
         )
