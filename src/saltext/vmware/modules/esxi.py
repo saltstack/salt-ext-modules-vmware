@@ -784,6 +784,68 @@ def get_dns_config(
     return ret
 
 
+def get_ntp_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get NTP configuration on matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_ntp_config
+    """
+    log.debug("Running vmware_esxi.get_ntp_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            ntp_config = h.configManager.dateTimeSystem
+            if ntp_config:
+                ret[h.name] = {
+                    "time_zone": ntp_config.dateTimeInfo.timeZone.key,
+                    "time_zone_name": ntp_config.dateTimeInfo.timeZone.name,
+                    "time_zone_description": ntp_config.dateTimeInfo.timeZone.description,
+                    "time_zone_gmt_offset": ntp_config.dateTimeInfo.timeZone.gmtOffset,
+                    "ntp_servers": list(ntp_config.dateTimeInfo.ntpConfig.server),
+                    "ntp_config_file": list(ntp_config.dateTimeInfo.ntpConfig.configFile)
+                    if ntp_config.dateTimeInfo.ntpConfig.configFile
+                    else None,
+                }
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
 def connect(host, service_instance=None):
     """
     Connect an ESXi instance to a vCenter instance.

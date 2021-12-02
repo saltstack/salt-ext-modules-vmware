@@ -51,7 +51,8 @@ def salt_call_cli(minion):
 @pytest.fixture(scope="session")
 def integration_test_config():
     default_path = Path().parent.parent / "local" / "vcenter.conf"
-    config_path = os.environ.get("VCENTER_CONFIG", default_path)
+    config_path = Path(os.environ.get("VCENTER_CONFIG", default_path))
+
     try:
         with config_path.open() as f:
             return json.load(f)
@@ -222,26 +223,26 @@ def vmware_cluster(vmware_datacenter, service_instance):
 
 @pytest.fixture(scope="session")
 def vmc_config():
-    abs_file_path = Path(__file__).parent / "vmc_config.ini"
-    parser = ConfigParser()
-    parser.read(abs_file_path)
-    return {s: dict(parser.items(s)) for s in parser.sections()}
+    default_path = Path().parent.parent / "local" / "vmc_config.json"
+    config_path = Path(os.environ.get("VMC_CONFIG", default_path))
+
+    try:
+        with config_path.open() as f:
+            return json.load(f)
+    except Exception as e:  # pylint: disable=broad-except
+        return None
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def vmc_nsx_connect(vmc_config):
     vmc_nsx_config = vmc_config["vmc_nsx_connect"]
-    verify_ssl = True
-    if vmc_nsx_config["verify_ssl"].lower() == "false":
-        verify_ssl = False
-
     return (
         vmc_nsx_config["hostname"],
         vmc_nsx_config["refresh_key"],
         vmc_nsx_config["authorization_host"],
         vmc_nsx_config["org_id"],
         vmc_nsx_config["sddc_id"],
-        verify_ssl,
+        vmc_nsx_config["verify_ssl"],
         vmc_nsx_config["cert"],
     )
 
