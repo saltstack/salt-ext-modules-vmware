@@ -48,6 +48,7 @@ def create(folder_name, dc_name, type, service_instance=None):
     folder = utils_common.get_mor_by_property(
         service_instance, vim.Folder, folder_name, "name", dc_ref
     )
+    breakpoint()
     if type == "vm":
         dc_ref.vmFolder.CreateFolder(folder_name)
     elif type == "host":

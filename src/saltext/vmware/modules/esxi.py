@@ -64,6 +64,7 @@ def get_capabilities(service_instance=None):
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
+    breakpoint()
     capabilities = {}
     for host in hosts:
         capabilities[host.name] = _get_capability_attribs(host)
