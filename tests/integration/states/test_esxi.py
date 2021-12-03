@@ -79,7 +79,6 @@ def test_user_present_absent_dry_run(vmware_datacenter, service_instance, dry_ru
 
     # Remove a non-existent user
     ret = esxi.user_absent(name=random_user)
-    print(ret)
     assert ret["result"] is None
     assert not ret["changes"]
     assert "will be deleted on 0 host" in ret["comment"]
