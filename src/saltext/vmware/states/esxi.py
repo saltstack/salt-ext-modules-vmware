@@ -34,16 +34,16 @@ def user_present(
     service_instance=None,
 ):
     """
-    Add local user on matching ESXi hosts.
+    Add local users_by_host on matching ESXi hosts.
 
     name
         User to create on matching ESXi hosts. (required).
 
     password
-        Password for the user. (required).
+        Password for the users_by_host. (required).
 
     description
-        Description of the user. (optional).
+        Description of the users_by_host. (optional).
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -71,7 +71,7 @@ def user_present(
     diff = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    user = __salt__["vmware_esxi.get_user"](
+    users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
         cluster_name=cluster_name,
@@ -85,10 +85,10 @@ def user_present(
         service_instance=service_instance,
     )
     for host in hosts:
-        if host in user:
-            # Cannot determine if password is changed. So, when the user is found on the host, update it.
+        if host in users_by_host:
+            # Cannot determine if password is changed. So, when the users_by_host is found on the host, update it.
             diff[host] = {
-                "old": {"name": name, "description": user[host][name]["description"]},
+                "old": {"name": name, "description": users_by_host[host][name]["description"]},
                 "new": {"name": name, "description": description},
                 "action": "update",
             }
@@ -114,11 +114,12 @@ def user_present(
                 host_name=host,
                 service_instance=service_instance,
             )
-            ret["comment"] = "User {} created on {} host(s) and updated on {} host(s).".format(
-                name, create, update
-            )
-            ret["changes"] = diff
-            ret["result"] = True
+            if not ret["comment"]:
+                ret["comment"] = "User {} created on {} host(s) and updated on {} host(s).".format(
+                    name, create, update
+                )
+                ret["changes"] = diff
+                ret["result"] = True
         else:
             __salt__["vmware_esxi.add_user"](
                 user_name=name,
@@ -129,11 +130,12 @@ def user_present(
                 host_name=host,
                 service_instance=service_instance,
             )
-            ret["comment"] = "User {} created on {} host(s) and updated on {} host(s).".format(
-                name, create, update
-            )
-            ret["changes"] = diff
-            ret["result"] = True
+            if not ret["comment"]:
+                ret["comment"] = "User {} created on {} host(s) and updated on {} host(s).".format(
+                    name, create, update
+                )
+                ret["changes"] = diff
+                ret["result"] = True
     return ret
 
 
@@ -145,7 +147,7 @@ def user_absent(
     service_instance=None,
 ):
     """
-    Remove local user on matching ESXi hosts.
+    Remove local users_by_host on matching ESXi hosts.
 
     name
         User to create on matching ESXi hosts. (required).
@@ -175,7 +177,7 @@ def user_absent(
     diff = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    user = __salt__["vmware_esxi.get_user"](
+    users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
         cluster_name=cluster_name,
@@ -189,7 +191,7 @@ def user_absent(
         service_instance=service_instance,
     )
     for host in hosts:
-        if host in user:
+        if host in users_by_host:
             delete += 1
             diff[host] = {name: True}
         else:
@@ -197,8 +199,9 @@ def user_absent(
 
     for host in diff:
         if __opts__["test"]:
-            ret["comment"] = "User {} will be deleted on {} host(s).".format(name, delete)
-            ret["result"] = None
+            if not ret["comment"]:
+                ret["comment"] = "User {} will be deleted on {} host(s).".format(name, delete)
+                ret["result"] = None
         elif diff[host][name]:
             __salt__["vmware_esxi.remove_user"](
                 user_name=name,
@@ -207,10 +210,12 @@ def user_absent(
                 host_name=host,
                 service_instance=service_instance,
             )
-            ret["comment"] = "User {} removed on {} host(s).".format(name, delete)
-            ret["changes"] = diff
-            ret["result"] = True
+            if not ret["comment"]:
+                ret["comment"] = "User {} removed on {} host(s).".format(name, delete)
+                ret["changes"] = diff
+                ret["result"] = True
         else:
-            ret["comment"] = "User {} doesn't exist on {} host(s).".format(name, delete)
-            ret["result"] = None
+            if not ret["comment"]:
+                ret["comment"] = "User {} doesn't exist on {} host(s).".format(name, delete)
+                ret["result"] = None
     return ret

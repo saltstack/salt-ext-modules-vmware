@@ -1093,7 +1093,7 @@ def remove_user(
 
 
 def get_user(
-    user_name=None,
+    user_name,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
