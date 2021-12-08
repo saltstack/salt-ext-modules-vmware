@@ -14,6 +14,7 @@ Execution Modules
     saltext.vmware.modules.datacenter
     saltext.vmware.modules.dvswitch
     saltext.vmware.modules.esxi
+    saltext.vmware.modules.folder
     saltext.vmware.modules.nsxt_compute_manager
     saltext.vmware.modules.nsxt_ip_blocks
     saltext.vmware.modules.nsxt_ip_pools
@@ -30,9 +31,11 @@ Execution Modules
     saltext.vmware.modules.vm
     saltext.vmware.modules.vmc_dhcp_profiles
     saltext.vmware.modules.vmc_direct_connect
+    saltext.vmware.modules.vmc_distributed_firewall_rules
     saltext.vmware.modules.vmc_dns_forwarder
     saltext.vmware.modules.vmc_nat_rules
     saltext.vmware.modules.vmc_networks
+    saltext.vmware.modules.vmc_public_ip
     saltext.vmware.modules.vmc_sddc
     saltext.vmware.modules.vmc_sddc_host
     saltext.vmware.modules.vmc_security_groups

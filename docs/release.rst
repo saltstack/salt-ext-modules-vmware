@@ -30,6 +30,7 @@ Salt. This will ensure that any breaking changes within Salt are detected
 ahead of time, and can either be accounted for within this module, or upstream
 bugs can be filed.
 
+.. _build:
 
 Build
 -----
@@ -43,11 +44,35 @@ dependencies:
     git fetch salt
     git stash  # if needed
     git checkout salt/main
-    python -m pip wheel .[dev,tests,release] -w dist/
+    # If pip and wheel are not already installed/up-to-date
+    python -m pip install --upgrade pip wheel
+    python -m pip wheel .\[dev,tests,release\] -w dist/
 
 This will create a ``.whl`` file for the extension module, as well as all of
 the dependencies, in the ``dist/`` directory.
 
+
+Ensure Version
+--------------
+
+When it comes time to build a release, ensure that
+``src/saltext/vmware/version.py`` contains the correct version. For an release
+candidate (RC) release the format should be ``YY.M.D.PATCHrcN``. Any subsequent RC
+releases should increment ``N``. The release manager should start cutting RCs
+far enough ahead of time to be able to cut a complete release on the target
+date. For a production release, the format should be ``YY.M.D.PATCH``. For
+instance, if we were going to release on 2010-08-14, we would start with
+
+.. code::
+
+    __version__ = '10.8.14.0rc1'
+
+When the release is deemed ready, the version would be ``10.8.14.0``.
+
+If the incorrect version is present in the ``main`` branch, it should be
+updated, committed, and pushed before continuing this process.
+
+Commit ``src/saltext/vmware/version.py``, rebuild and continue testing. Do **not** merge into https://github.com/saltstack/salt-ext-modules-vmware/.
 
 Install and Test the Build
 --------------------------
@@ -62,10 +87,10 @@ the local source, which helps to ensure the complete install process is tested.
 .. code::
 
     deactivate  # if a venv is already activated
-    python -m venv /tmp/test_saltext --prompt test-vmw-ext
+    python3 -m venv /tmp/test_saltext --prompt test-vmw-ext
     source /tmp/test_saltext/bin/activate
     python -m pip install --upgrade pip wheel
-    python -m pip install --no-index --find-links dist/ saltext.vmware[dev,tests,release]
+    python -m pip install --no-index --find-links dist/ saltext.vmware\[dev,tests,release\]
     pytest --cov=saltext.vmware tests/
 
 This will run tests against the build artifact. If all tests pass this nightly
@@ -96,6 +121,13 @@ Then you would run:
 
     twine upload --repository test_saltext_vmware dist/saltext.vmware-VERSION-py2.py3-none-any.whl
 
+Merge the Version Update into the Main Repo
+-------------------------------------------
+
+Now that the build has been tested and verified, create a merge request with the new ``__version__`` to https://github.com/saltstack/salt-ext-modules-vmware/.
+
+With the new version committed, go back and :ref:`build a new artifact<build>`.
+
 Versions, Tagging, and Changelog
 --------------------------------
 
@@ -104,7 +136,7 @@ You should have a ``[saltext_vmware]`` section in your pypirc file, similar to
 the test setting.
 
 In regards to version numbers, this project uses Calver_, with the
-``YY.MM.DD.PATCH`` style. Breaking (and any other) changes should be
+``YY.M.D.PATCH`` style. Breaking (and any other) changes should be
 communicated through the changelog_.
 
 .. _CalVer: https://calver.org/

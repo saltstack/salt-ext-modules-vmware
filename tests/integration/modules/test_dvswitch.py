@@ -13,7 +13,7 @@ def test_manage(service_instance):
     Test create and update of dvswitch.
     """
     switch_name = str(uuid.uuid4())
-    ret = dvswitch.manage(
+    ret = dvswitch.configure(
         switch_name=switch_name,
         datacenter_name="Datacenter",
         uplink_count=5,
@@ -33,7 +33,7 @@ def test_manage(service_instance):
     )
     assert ret
 
-    ret = dvswitch.manage(
+    ret = dvswitch.configure(
         switch_name=switch_name,
         datacenter_name="Datacenter",
         uplink_count=8,
@@ -54,7 +54,7 @@ def test_manage(service_instance):
     assert ret
 
     with pytest.raises(salt.exceptions.SaltException) as exc:
-        ret = dvswitch.manage(
+        ret = dvswitch.configure(
             switch_name=switch_name,
             datacenter_name="Datacenter",
             uplink_count=8,
@@ -73,3 +73,40 @@ def test_manage(service_instance):
             service_instance=service_instance,
         )
     assert ret
+
+
+def test_add_remove_host(service_instance):
+    """
+    Test create and update of dvswitch.
+    """
+    switch_name = "test_switch"
+    ret = dvswitch.configure(
+        switch_name=switch_name,
+        datacenter_name="Datacenter",
+        uplink_count=1,
+        service_instance=service_instance,
+    )
+    assert ret
+
+    ret = dvswitch.add_hosts(
+        switch_name=switch_name,
+        datacenter_name="Datacenter",
+        service_instance=service_instance,
+    )
+    assert set(ret.values()) == {True}
+
+    ret = dvswitch.update_hosts(
+        switch_name=switch_name,
+        datacenter_name="Datacenter",
+        mtu=1800,
+        num_ports=130,
+        service_instance=service_instance,
+    )
+    assert set(ret.values()) == {True}
+
+    ret = dvswitch.remove_hosts(
+        switch_name=switch_name,
+        datacenter_name="Datacenter",
+        service_instance=service_instance,
+    )
+    assert set(ret.values()) == {True}

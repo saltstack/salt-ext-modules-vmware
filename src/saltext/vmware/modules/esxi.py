@@ -5,6 +5,7 @@ import logging
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.esxi as utils_esxi
+from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
@@ -43,6 +44,19 @@ def get_lun_ids(service_instance=None):
     return ids
 
 
+def _get_capability_attribs(host):
+    ret = {}
+    for attrib in dir(host.capability):
+        if attrib.startswith("_") or attrib.lower() == "array":
+            continue
+        val = getattr(host.capability, attrib)
+        # Convert all pyvmomi str[], bool[] and int[] to list.
+        if isinstance(val, list):
+            val = list(val)
+        ret.update({utils_common.camel_to_snake_case(attrib): val})
+    return ret
+
+
 def get_capabilities(service_instance=None):
     """
     Return ESXi host's capability information.
@@ -52,110 +66,7 @@ def get_capabilities(service_instance=None):
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     capabilities = {}
     for host in hosts:
-        capability = host.capability
-        capabilities[host.name] = {
-            "accel3dSupported": capability.accel3dSupported,
-            "backgroundSnapshotsSupported": capability.backgroundSnapshotsSupported,
-            "checkpointFtCompatibilityIssues": list(capability.smpFtCompatibilityIssues),
-            "checkpointFtSupported": capability.smpFtSupported,
-            "cloneFromSnapshotSupported": capability.cloneFromSnapshotSupported,
-            "cpuHwMmuSupported": capability.cpuHwMmuSupported,
-            "cpuMemoryResourceConfigurationSupported": capability.cpuMemoryResourceConfigurationSupported,
-            "cryptoSupported": capability.cryptoSupported,
-            "datastorePrincipalSupported": capability.datastorePrincipalSupported,
-            "deltaDiskBackingsSupported": capability.deltaDiskBackingsSupported,
-            "eightPlusHostVmfsSharedAccessSupported": capability.eightPlusHostVmfsSharedAccessSupported,
-            "encryptedVMotionSupported": capability.encryptedVMotionSupported,
-            "encryptionCBRCSupported": capability.encryptionCBRCSupported,
-            "encryptionChangeOnAddRemoveSupported": capability.encryptionChangeOnAddRemoveSupported,
-            "encryptionFaultToleranceSupported": capability.encryptionFaultToleranceSupported,
-            "encryptionHBRSupported": capability.encryptionHBRSupported,
-            "encryptionHotOperationSupported": capability.encryptionHotOperationSupported,
-            "encryptionMemorySaveSupported": capability.encryptionMemorySaveSupported,
-            "encryptionRDMSupported": capability.encryptionRDMSupported,
-            "encryptionVFlashSupported": capability.encryptionVFlashSupported,
-            "encryptionWithSnapshotsSupported": capability.encryptionWithSnapshotsSupported,
-            "featureCapabilitiesSupported": capability.featureCapabilitiesSupported,
-            "firewallIpRulesSupported": capability.firewallIpRulesSupported,
-            "ftCompatibilityIssues": list(capability.ftCompatibilityIssues),
-            "ftSupported": capability.ftSupported,
-            "gatewayOnNicSupported": capability.gatewayOnNicSupported,
-            "hbrNicSelectionSupported": capability.hbrNicSelectionSupported,
-            "highGuestMemSupported": capability.highGuestMemSupported,
-            "hostAccessManagerSupported": capability.hostAccessManagerSupported,
-            "interVMCommunicationThroughVMCISupported": capability.interVMCommunicationThroughVMCISupported,
-            "ipmiSupported": capability.ipmiSupported,
-            "iscsiSupported": capability.iscsiSupported,
-            "latencySensitivitySupported": capability.latencySensitivitySupported,
-            "localSwapDatastoreSupported": capability.localSwapDatastoreSupported,
-            "loginBySSLThumbprintSupported": capability.loginBySSLThumbprintSupported,
-            "maintenanceModeSupported": capability.maintenanceModeSupported,
-            "markAsLocalSupported": capability.markAsLocalSupported,
-            "markAsSsdSupported": capability.markAsSsdSupported,
-            "maxHostRunningVms": capability.maxHostRunningVms,
-            "maxHostSupportedVcpus": capability.maxHostSupportedVcpus,
-            "maxNumDisksSVMotion": capability.maxNumDisksSVMotion,
-            "maxRegisteredVMs": capability.maxRegisteredVMs,
-            "maxRunningVMs": capability.maxRunningVMs,
-            "maxSupportedVMs": capability.maxSupportedVMs,
-            "maxSupportedVcpus": capability.maxSupportedVcpus,
-            "maxVcpusPerFtVm": capability.maxVcpusPerFtVm,
-            "messageBusProxySupported": capability.messageBusProxySupported,
-            "multipleNetworkStackInstanceSupported": capability.multipleNetworkStackInstanceSupported,
-            "nestedHVSupported": capability.nestedHVSupported,
-            "nfs41Krb5iSupported": capability.nfs41Krb5iSupported,
-            "nfs41Supported": capability.nfs41Supported,
-            "nfsSupported": capability.nfsSupported,
-            "nicTeamingSupported": capability.nicTeamingSupported,
-            "oneKVolumeAPIsSupported": capability.oneKVolumeAPIsSupported,
-            "perVMNetworkTrafficShapingSupported": capability.perVMNetworkTrafficShapingSupported,
-            "perVmSwapFiles": capability.perVmSwapFiles,
-            "preAssignedPCIUnitNumbersSupported": capability.preAssignedPCIUnitNumbersSupported,
-            "provisioningNicSelectionSupported": capability.provisioningNicSelectionSupported,
-            "rebootSupported": capability.rebootSupported,
-            "recordReplaySupported": capability.recordReplaySupported,
-            "recursiveResourcePoolsSupported": capability.recursiveResourcePoolsSupported,
-            "reliableMemoryAware": capability.reliableMemoryAware,
-            "replayCompatibilityIssues": list(capability.replayCompatibilityIssues),
-            "replayUnsupportedReason": capability.replayUnsupportedReason,
-            "restrictedSnapshotRelocateSupported": capability.restrictedSnapshotRelocateSupported,
-            "sanSupported": capability.sanSupported,
-            "scaledScreenshotSupported": capability.scaledScreenshotSupported,
-            "scheduledHardwareUpgradeSupported": capability.scheduledHardwareUpgradeSupported,
-            "screenshotSupported": capability.screenshotSupported,
-            "servicePackageInfoSupported": capability.servicePackageInfoSupported,
-            "shutdownSupported": capability.shutdownSupported,
-            "smartCardAuthenticationSupported": capability.smartCardAuthenticationSupported,
-            "smpFtCompatibilityIssues": list(capability.smpFtCompatibilityIssues),
-            "smpFtSupported": capability.smpFtSupported,
-            "snapshotRelayoutSupported": capability.snapshotRelayoutSupported,
-            "standbySupported": capability.standbySupported,
-            "storageIORMSupported": capability.storageIORMSupported,
-            "storagePolicySupported": capability.storagePolicySupported,
-            "storageVMotionSupported": capability.storageVMotionSupported,
-            "supportedVmfsMajorVersion": list(capability.supportedVmfsMajorVersion),
-            "suspendedRelocateSupported": capability.suspendedRelocateSupported,
-            "tpmSupported": capability.tpmSupported,
-            "turnDiskLocatorLedSupported": capability.turnDiskLocatorLedSupported,
-            "unsharedSwapVMotionSupported": capability.unsharedSwapVMotionSupported,
-            "upitSupported": capability.upitSupported,
-            "vFlashSupported": capability.vFlashSupported,
-            "vPMCSupported": capability.vPMCSupported,
-            "vStorageCapable": capability.vStorageCapable,
-            "virtualExecUsageSupported": capability.virtualExecUsageSupported,
-            "virtualVolumeDatastoreSupported": capability.virtualVolumeDatastoreSupported,
-            "vlanTaggingSupported": capability.vlanTaggingSupported,
-            "vmDirectPathGen2Supported": capability.vmDirectPathGen2Supported,
-            "vmDirectPathGen2UnsupportedReason": list(capability.vmDirectPathGen2UnsupportedReason),
-            "vmDirectPathGen2UnsupportedReasonExtended": capability.vmDirectPathGen2UnsupportedReasonExtended,
-            "vmfsDatastoreMountCapable": capability.vmfsDatastoreMountCapable,
-            "vmotionAcrossNetworkSupported": capability.vmotionAcrossNetworkSupported,
-            "vmotionSupported": capability.vmotionSupported,
-            "vmotionWithStorageVMotionSupported": capability.vmotionWithStorageVMotionSupported,
-            "vrNfcNicSelectionSupported": capability.vrNfcNicSelectionSupported,
-            "vsanSupported": capability.vsanSupported,
-        }
-
+        capabilities[host.name] = _get_capability_attribs(host)
     return capabilities
 
 
@@ -196,7 +107,7 @@ def power_state(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -267,7 +178,7 @@ def manage_service(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -348,7 +259,7 @@ def list_services(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -437,7 +348,7 @@ def get_acceptance_level(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -509,7 +420,7 @@ def set_acceptance_level(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -568,7 +479,7 @@ def get_advanced_config(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -640,7 +551,7 @@ def set_advanced_configs(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=True if not host_name else False,
+        get_all_hosts=host_name is None,
     )
 
     try:
@@ -732,3 +643,532 @@ def set_advanced_config(
         host_name=host_name,
         service_instance=service_instance,
     )
+
+
+def get_firewall_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get Firewall configuration on matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_firewall_config
+    """
+    log.debug("Running vmware_esxi.get_firewall_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            firewall_config = h.configManager.firewallSystem
+            if not firewall_config:
+                continue
+            for ruleset in firewall_config.firewallInfo.ruleset:
+                ret.setdefault(h.name, []).append(
+                    {
+                        "allowed_hosts": {
+                            "ip_address": list(ruleset.allowedHosts.ipAddress),
+                            "all_ip": ruleset.allowedHosts.allIp,
+                            "ip_network": [
+                                "{}/{}".format(ip.network, ip.prefixLength)
+                                for ip in ruleset.allowedHosts.ipNetwork
+                            ],
+                        },
+                        "key": ruleset.key,
+                        "service": ruleset.service,
+                        "enabled": ruleset.enabled,
+                        "rule": [
+                            {
+                                "port": r.port,
+                                "end_port": r.endPort,
+                                "direction": r.direction,
+                                "port_type": r.portType,
+                                "protocol": r.protocol,
+                            }
+                            for r in ruleset.rule
+                        ],
+                    }
+                )
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def get_dns_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get DNS configuration on matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_dns_config
+    """
+    log.debug("Running vmware_esxi.get_dns_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            dns_config = h.config.network.dnsConfig
+            if not dns_config:
+                continue
+            ret[h.name] = {}
+            ret[h.name]["dhcp"] = dns_config.dhcp
+            ret[h.name]["virtual_nic"] = dns_config.virtualNicDevice
+            ret[h.name]["host_name"] = dns_config.hostName
+            ret[h.name]["domain_name"] = dns_config.domainName
+            ret[h.name]["ip"] = list(dns_config.address)
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+    return ret
+
+
+def get_ntp_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get NTP configuration on matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_ntp_config
+    """
+    log.debug("Running vmware_esxi.get_ntp_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            ntp_config = h.configManager.dateTimeSystem
+            if ntp_config:
+                ret[h.name] = {
+                    "time_zone": ntp_config.dateTimeInfo.timeZone.key,
+                    "time_zone_name": ntp_config.dateTimeInfo.timeZone.name,
+                    "time_zone_description": ntp_config.dateTimeInfo.timeZone.description,
+                    "time_zone_gmt_offset": ntp_config.dateTimeInfo.timeZone.gmtOffset,
+                    "ntp_servers": list(ntp_config.dateTimeInfo.ntpConfig.server),
+                    "ntp_config_file": list(ntp_config.dateTimeInfo.ntpConfig.configFile)
+                    if ntp_config.dateTimeInfo.ntpConfig.configFile
+                    else None,
+                }
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def connect(host, service_instance=None):
+    """
+    Connect an ESXi instance to a vCenter instance.
+
+    host
+        Name of ESXi instance in vCenter.
+
+    service_instance
+        The Service Instance from which to obtain managed object references. (Optional)
+    """
+    log.debug(f"Connect ESXi instance {host}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    state = utils_esxi.reconnect_host(host, service_instance)
+    return {"state": state}
+
+
+def disconnect(host, service_instance=None):
+    """
+    Disconnect an ESXi instance.
+
+    host
+        Name of ESXi instance in vCenter.
+
+    service_instance
+        The Service Instance from which to obtain managed object references. (Optional)
+    """
+    log.debug(f"Disconnect ESXi instance {host}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    state = utils_esxi.disconnect_host(host, service_instance)
+    return {"state": state}
+
+
+def remove(host, service_instance=None):
+    """
+    Remove an ESXi instance from a vCenter instance.
+
+    host
+        Name of ESXi instance in vCenter.
+
+    service_instance
+        The Service Instance from which to obtain managed object references. (Optional)
+    """
+    log.debug(f"Remove ESXi instance {host}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    state = utils_esxi.remove_host(host, service_instance)
+    return {"state": state}
+
+
+def move(host, cluster_name, service_instance=None):
+    """
+    Move an ESXi instance to a different cluster.
+
+    host
+        Name of ESXi instance in vCenter.
+
+    cluster_name
+        Name of cluster to move host to.
+
+    service_instance
+        The Service Instance from which to obtain managed object references. (Optional)
+    """
+    log.debug(f"Move ESXi instance {host}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    state = utils_esxi.move_host(host, cluster_name, service_instance)
+    return {"state": state}
+
+
+def add(
+    host,
+    root_user,
+    password,
+    cluster_name,
+    datacenter_name,
+    verify_host_cert=True,
+    connect=True,
+    service_instance=None,
+):
+    """
+    Add an ESXi instance to a vCenter instance.
+
+    host
+        IP address or hostname of ESXi instance.
+
+    root_user
+        Username with root privilege to ESXi instance.
+
+    password
+        Password to root user.
+
+    cluster_name
+        Name of cluster ESXi host is being added to.
+
+    datacenter
+        Datacenter that contains cluster that ESXi instance is being added to.
+
+    verify_host_cert
+        Validates the host's SSL certificate is signed by a CA, and that the hostname in the certificate matches the host. Defaults to True.
+
+    connect
+        Specifies whether host should be connected after being added. Defaults to True.
+
+    service_instance
+        The Service Instance from which to obtain managed object references. (Optional)
+    """
+    log.debug(f"Adding ESXi instance {host}.")
+    if service_instance is None:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    state = utils_esxi.add_host(
+        host,
+        root_user,
+        password,
+        cluster_name,
+        datacenter_name,
+        verify_host_cert,
+        connect,
+        service_instance,
+    )
+    return {"state": state}
+
+
+def list_pkgs(
+    pkg_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    List the packages installed on matching EXSi hosts.
+    Note: Appropriate filters are recommended for large installations.
+
+    pkg_name
+        Filter by this package name. (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_pkgs
+    """
+    log.debug("Running vmware_esxi.list_pkgs")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            host_pkg_manager = h.configManager.imageConfigManager
+            if not host_pkg_manager:
+                continue
+            ret[h.name] = {}
+            pkgs = host_pkg_manager.FetchSoftwarePackages()
+            for pkg in pkgs:
+                if pkg_name and pkg.name != pkg_name:
+                    continue
+                ret[h.name][pkg.name] = {
+                    "version": pkg.version,
+                    "vendor": pkg.vendor,
+                    "summary": pkg.summary,
+                    "description": pkg.description,
+                    "acceptance_level": pkg.acceptanceLevel,
+                    "maintenance_mode_required": pkg.maintenanceModeRequired,
+                    "creation_date": pkg.creationDate,
+                }
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def get(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    key=None,
+    default="",
+    delimiter=DEFAULT_TARGET_DELIM,
+    service_instance=None,
+):
+    """
+    Get configuration information for matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    key
+
+        Attempt to retrieve the named value from ESXi host configuration data, if the named value is not
+        available return the passed default. The default return is an empty string.
+        Follows the grains.get filter semantics. (optional)
+
+        The value can also represent a value in a nested dict using a ":" delimiter
+        for the dict. This means that if a dict in ESXi host configuration looks like this:
+
+        {'vsan': {'health': 'good'}}
+
+        To retrieve the value associated with the apache key in the pkg dict this
+        key can be passed:
+
+        vsan:health
+
+    delimiter
+        Specify an alternate delimiter to use when traversing a nested dict.
+        This is useful for when the desired key contains a colon. (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get dc1 cl1
+    """
+    log.debug("Running vmware_esxi.get")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            ret[h.name] = {}
+            ret[h.name]["vsan"] = {}
+            vsan_manager = h.configManager.vsanSystem
+            if vsan_manager:
+                vsan = vsan_manager.QueryHostStatus()
+                ret[h.name]["vsan"]["cluster_uuid"] = vsan.uuid
+                ret[h.name]["vsan"]["node_uuid"] = vsan.nodeUuid
+                ret[h.name]["vsan"]["health"] = vsan.health
+
+            ret[h.name]["datastores"] = {}
+            for store in h.datastore:
+                ret[h.name]["datastores"][store.name] = {}
+                ret[h.name]["datastores"][store.name]["capacity"] = store.summary.capacity
+                ret[h.name]["datastores"][store.name]["free_space"] = store.summary.freeSpace
+
+            ret[h.name]["nics"] = {}
+            for nic in h.config.network.vnic:
+                ret[h.name]["nics"][nic.device] = {}
+                ret[h.name]["nics"][nic.device]["ip_address"] = nic.spec.ip.ipAddress
+                ret[h.name]["nics"][nic.device]["subnet_mask"] = nic.spec.ip.subnetMask
+                ret[h.name]["nics"][nic.device]["mac"] = nic.spec.mac
+                ret[h.name]["nics"][nic.device]["mtu"] = nic.spec.mtu
+
+            ret[h.name]["cpu_model"] = h.summary.hardware.cpuModel
+            ret[h.name]["num_cpu_cores"] = h.summary.hardware.numCpuCores
+            ret[h.name]["num_cpu_pkgs"] = h.summary.hardware.numCpuPkgs
+            ret[h.name]["num_cpu_threads"] = h.summary.hardware.numCpuThreads
+            ret[h.name]["memory_size"] = h.summary.hardware.memorySize
+            ret[h.name]["overall_memory_usage"] = h.summary.quickStats.overallMemoryUsage
+            ret[h.name]["product_name"] = h.config.product.name
+            ret[h.name]["product_version"] = h.config.product.version
+            ret[h.name]["product_build"] = h.config.product.build
+            ret[h.name]["product_os_type"] = h.config.product.osType
+            ret[h.name]["host_name"] = h.summary.config.name
+            ret[h.name]["system_vendor"] = h.hardware.systemInfo.vendor
+            ret[h.name]["system_model"] = h.hardware.systemInfo.model
+            ret[h.name]["bios_release_date"] = h.hardware.biosInfo.releaseDate
+            ret[h.name]["bios_release_version"] = h.hardware.biosInfo.biosVersion
+            ret[h.name]["uptime"] = h.summary.quickStats.uptime
+            ret[h.name]["in_maintenance_mode"] = h.runtime.inMaintenanceMode
+            ret[h.name]["system_uuid"] = h.hardware.systemInfo.uuid
+            for info in h.hardware.systemInfo.otherIdentifyingInfo:
+                ret[h.name].update(
+                    {
+                        utils_common.camel_to_snake_case(
+                            info.identifierType.key
+                        ): info.identifierValue
+                    }
+                )
+            ret[h.name]["capabilities"] = _get_capability_attribs(host=h)
+
+            if key:
+                ret[h.name] = salt.utils.data.traverse_dict_and_list(
+                    ret[h.name], key, default, delimiter
+                )
+
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))

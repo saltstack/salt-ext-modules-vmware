@@ -4,6 +4,7 @@ Common functions used across modules
 """
 import errno
 import logging
+import re
 import time
 from http.client import BadStatusLine
 
@@ -21,8 +22,13 @@ try:
 except ImportError:
     HAS_PYVMOMI = False
 
+CAMELCASE_PATTERN = re.compile("((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))")
 
 log = logging.getLogger(__name__)
+
+
+def camel_to_snake_case(attrib):
+    return CAMELCASE_PATTERN.sub(r"_\1", attrib).lower()
 
 
 def get_root_folder(service_instance):
@@ -718,6 +724,22 @@ def get_vm_datacenter(*, vm):
             break
         try:
             vm = vm.parent
+        except AttributeError:
+            break
+    return datacenter
+
+
+def get_mors_type(obj, type):
+    """
+    Return a vim type from managed object reference
+    """
+    datacenter = None
+    while True:
+        if isinstance(obj, type):
+            datacenter = obj
+            break
+        try:
+            obj = obj.parent
         except AttributeError:
             break
     return datacenter

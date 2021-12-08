@@ -115,7 +115,7 @@ if __name__ == "__main__":
     config_file = args.CONFIG_FILE
     if not config_file.is_file():
         if args.create:
-            host = input("vSphere host name/ip: ").strip()
+            host = input("vCenter host name/ip: ").strip()
             user = (
                 input("Admin username [administrator@vsphere.local]: ").strip()
                 or "administrator@vsphere.local"
