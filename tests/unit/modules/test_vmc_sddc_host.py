@@ -157,3 +157,36 @@ def test_manage_esx_host_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.POST_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_params",
+    [
+        # all actual args are None
+        (
+            {},
+            {},
+        ),
+        # all actual args have param values
+        (
+            {"action": "add"},
+            {"action": "add"},
+        ),
+    ],
+)
+def test_assert_manage_esx_host_should_correctly_filter_args(actual_args, expected_params):
+    common_actual_args = {
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "authorization_host": "authorization_host",
+        "org_id": "org_id",
+        "sddc_id": "sddc_id",
+        "num_hosts": 1,
+        "verify_ssl": False,
+    }
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        actual_args.update(common_actual_args)
+        vmc_sddc_host.manage(**actual_args)
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["params"] == expected_params
