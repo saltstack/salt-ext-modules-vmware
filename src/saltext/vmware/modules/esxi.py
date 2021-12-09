@@ -1146,6 +1146,7 @@ def get_user(
             )
             for user in users:
                 ret[h.name] = {
+                    # user.principal is the user name
                     user.principal: {
                         "description": user.fullName,
                         "group": user.group,
