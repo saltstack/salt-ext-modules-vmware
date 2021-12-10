@@ -27,6 +27,15 @@ def get_service_instance(opts=None, pillar=None):
     """
     Connect to VMware service instance
 
+    opts
+        (optional) Any additional options.
+    
+    pillar
+        (optional) If specified, allows for a dictionary of pillar data to be made
+        available to pillar and ext_pillar rendering. These pillar variables
+        will also override any variables of the same name in pillar or
+        ext_pillar.
+
     Pillar Example:
 
     .. code-block::
@@ -70,12 +79,40 @@ def get_service_instance(opts=None, pillar=None):
 def request(url, method, body=None, token=None, opts=None, pillar=None):
     """
     Make a request to VMware rest api
+
+    url
+        url address for request.
+    
+    method
+        Method for api request.
+
+    body
+        Body of the api request.
+    
+    token
+        (optional) Api session token for api access, will create new token if not passed.
+    
+    opts
+        (optional) Any additional options.
+    
+    pillar
+        (optional) If specified, allows for a dictionary of pillar data to be made
+        available to pillar and ext_pillar rendering. These pillar variables
+        will also override any variables of the same name in pillar or
+        ext_pillar.
     """
     host = (
         os.environ.get("VMWARE_CONFIG_REST_API_HOST")
         or opts.get("vmware_config", {}).get("rest_api_host")
         or pillar.get("vmware_config", {}).get("rest_api_host")
     )
+    cert = (
+        os.environ.get("VMWARE_CONFIG_REST_API_CERT")
+        or opts.get("vmware_config", {}).get("rest_api_cert")
+        or pillar.get("vmware_config", {}).get("rest_api_cert")
+    )
+    if not cert:
+        cert = False
     if token is None:
         user = (
         os.environ.get("VMWARE_CONFIG_REST_API_USER")
@@ -87,34 +124,47 @@ def request(url, method, body=None, token=None, opts=None, pillar=None):
             or opts.get("vmware_config", {}).get("rest_api_password")
             or pillar.get("vmware_config", {}).get("rest_api_password")
         )
-        token = _get_session(host, user, password)
+        token = _get_session(host, user, password, cert)
     headers = {"Accept": "application/json", "content-Type": "application/json","vmware-api-session-id": token}
     session = requests.Session()
     response = session.request(
             method=method,
             url=f'https://{host}{url}',
             headers=headers,
-            verify=False,
+            verify=cert,
             params=None,
             data=json.dumps(body),
         )
-    
-    return response.json()
+    return response
 
 
-def _get_session(host, user, password):
+def _get_session(host, user, password, cert):
     """
     Create REST API session
+
+    host
+        Host for api request.
+    
+    user
+        User to create session token for subsequent requests.
+    
+    password
+        Password to create session token for subsequent requests.
+    
+    cert
+        certificate for ssl verification.
     """
     headers = {"Accept": "application/json", "content-Type": "application/json"}
     session = requests.Session()
+    if not cert:
+        cert = False
     try:
         response = session.request(
                 method='POST',
                 url=f'https://{host}/rest/com/vmware/cis/session',
                 headers=headers,
                 auth=HTTPBasicAuth(user, password),
-                verify=False,
+                verify=cert,
                 params=None,
                 data=json.dumps(None),
             )
