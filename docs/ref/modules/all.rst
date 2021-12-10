@@ -28,6 +28,7 @@ Execution Modules
     saltext.vmware.modules.nsxt_transport_zone
     saltext.vmware.modules.nsxt_uplink_profiles
     saltext.vmware.modules.ssl_adapter
+    saltext.vmware.modules.tag
     saltext.vmware.modules.vm
     saltext.vmware.modules.vmc_dhcp_profiles
     saltext.vmware.modules.vmc_direct_connect

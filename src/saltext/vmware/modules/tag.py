@@ -1,6 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
 import logging
+
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
@@ -25,7 +26,7 @@ def __virtual__():
     return __virtualname__
 
 
-def create(tag_name, category_id, description=''):
+def create(tag_name, category_id, description=""):
     """
     Create a new tag.
 
@@ -36,15 +37,13 @@ def create(tag_name, category_id, description=''):
         (optional) Description for the tag being created.
     """
     data = {
-        "create_spec": {
-        "category_id": category_id,
-        "description": description,
-        "name": tag_name
-	    }
+        "create_spec": {"category_id": category_id, "description": description, "name": tag_name}
     }
-    response = connect.request('/rest/com/vmware/cis/tagging/tag', 'POST', body=data, opts=__opts__, pillar=__pillar__)
+    response = connect.request(
+        "/rest/com/vmware/cis/tagging/tag", "POST", body=data, opts=__opts__, pillar=__pillar__
+    )
     response = response.json()
-    return {'tag': response['value']}
+    return {"tag": response["value"]}
 
 
 def get(tag_id):
@@ -54,10 +53,10 @@ def get(tag_id):
     tag_id
         Tag ID of string of type: com.vmware.cis.tagging.Tag.
     """
-    url = f'/rest/com/vmware/cis/tagging/tag/id:{tag_id}'
-    response = connect.request(url, 'GET', opts=__opts__, pillar=__pillar__)
+    url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
+    response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
     response = response.json()
-    return {'tag': response['value']}
+    return {"tag": response["value"]}
 
 
 def update(tag_id, tag_name=None, description=None):
@@ -66,23 +65,27 @@ def update(tag_id, tag_name=None, description=None):
 
     tag_id
         Tag ID of string of type: com.vmware.cis.tagging.Tag.
-    
+
     tag_name
         Name of tag.
 
     description
         (optional) Description for the tag being created.
     """
-    spec = {"update_spec":{}}
+    spec = {"update_spec": {}}
     if tag_name:
         spec["update_spec"]["name"] = tag_name
     if description:
         spec["update_spec"]["description"] = description
-    url = f'/rest/com/vmware/cis/tagging/tag/id:{tag_id}'
-    response = connect.request(url, 'PATCH', body=spec, opts=__opts__, pillar=__pillar__)
+    url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
+    response = connect.request(url, "PATCH", body=spec, opts=__opts__, pillar=__pillar__)
     if response.status_code == 200:
-        return {'tag': 'updated'}
-    return {'tag': 'failed to update', 'status code': response.status_code, 'reason': response.reason}
+        return {"tag": "updated"}
+    return {
+        "tag": "failed to update",
+        "status code": response.status_code,
+        "reason": response.reason,
+    }
 
 
 def delete(tag_id):
@@ -92,26 +95,34 @@ def delete(tag_id):
     tag_id
         Tag ID of string of type: com.vmware.cis.tagging.Tag.
     """
-    url = f'/rest/com/vmware/cis/tagging/tag/id:{tag_id}'
-    response = connect.request(url, 'DELETE', opts=__opts__, pillar=__pillar__)
+    url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
+    response = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
     if response.status_code == 200:
-        return {'tag': 'deleted'}
-    return {'tag': 'failed to update', 'status code': response.status_code, 'reason': response.reason}
+        return {"tag": "deleted"}
+    return {
+        "tag": "failed to update",
+        "status code": response.status_code,
+        "reason": response.reason,
+    }
 
 
 def list_():
     """
     Lists IDs for all the tags on a given vCenter.
     """
-    response = connect.request('/rest/com/vmware/cis/tagging/tag', 'GET', opts=__opts__, pillar=__pillar__)
+    response = connect.request(
+        "/rest/com/vmware/cis/tagging/tag", "GET", opts=__opts__, pillar=__pillar__
+    )
     response = response.json()
-    return {'tags': response['value']}
+    return {"tags": response["value"]}
 
 
 def list_category():
     """
     Lists IDs for all the categories on a given vCenter.
     """
-    response = connect.request('/rest/com/vmware/cis/tagging/category', 'GET', opts=__opts__, pillar=__pillar__)
+    response = connect.request(
+        "/rest/com/vmware/cis/tagging/category", "GET", opts=__opts__, pillar=__pillar__
+    )
     response = response.json()
-    return {'categories': response['value']}
+    return {"categories": response["value"]}
