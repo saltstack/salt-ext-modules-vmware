@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
+import salt
 from saltext.vmware.utils.connect import get_service_instance
 
 
@@ -68,6 +69,7 @@ def user_present(
     log.debug("Running vmware_esxi.user_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     create = update = 0
+    failed_hosts = []
     diff = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -96,7 +98,7 @@ def user_present(
         else:
             diff[host] = {"new": {"name": name, "description": description}, "action": "create"}
             create += 1
-    for host in diff:
+    for host in diff.copy():
         if __opts__["test"]:
             ret[
                 "comment"
@@ -105,15 +107,27 @@ def user_present(
             )
             ret["result"] = None
         elif diff[host]["action"] == "update":
-            __salt__["vmware_esxi.update_user"](
-                user_name=name,
-                password=password,
-                description=description,
-                datacenter_name=datacenter_name,
-                cluster_name=cluster_name,
-                host_name=host,
-                service_instance=service_instance,
-            )
+            try:
+                __salt__["vmware_esxi.update_user"](
+                    user_name=name,
+                    password=password,
+                    description=description,
+                    datacenter_name=datacenter_name,
+                    cluster_name=cluster_name,
+                    host_name=host,
+                    service_instance=service_instance,
+                )
+            except salt.exceptions.SaltException as exc:
+                update -= 1
+                failed_hosts.append(host)
+                diff.pop(host)
+                ret[
+                    "comment"
+                ] = "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
+                    name, create, update, len(failed_hosts), ",".join(failed_hosts), exc
+                )
+                ret["changes"] = diff
+                ret["result"] = False
             if not ret["comment"]:
                 ret["comment"] = "User {} created on {} host(s) and updated on {} host(s).".format(
                     name, create, update
@@ -121,15 +135,27 @@ def user_present(
                 ret["changes"] = diff
                 ret["result"] = True
         else:
-            __salt__["vmware_esxi.add_user"](
-                user_name=name,
-                password=password,
-                description=description,
-                datacenter_name=datacenter_name,
-                cluster_name=cluster_name,
-                host_name=host,
-                service_instance=service_instance,
-            )
+            try:
+                __salt__["vmware_esxi.add_user"](
+                    user_name=name,
+                    password=password,
+                    description=description,
+                    datacenter_name=datacenter_name,
+                    cluster_name=cluster_name,
+                    host_name=host,
+                    service_instance=service_instance,
+                )
+            except salt.exceptions.SaltException as exc:
+                create -= 1
+                failed_hosts.append(host)
+                diff.pop(host)
+                ret[
+                    "comment"
+                ] = "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
+                    name, create, update, len(failed_hosts), ",".join(failed_hosts), exc
+                )
+                ret["changes"] = diff
+                ret["result"] = False
             if not ret["comment"]:
                 ret["comment"] = "User {} created on {} host(s) and updated on {} host(s).".format(
                     name, create, update
@@ -174,6 +200,7 @@ def user_absent(
     log.debug("Running vmware_esxi.user_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     delete = 0
+    failed_hosts = []
     diff = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -197,19 +224,31 @@ def user_absent(
         else:
             diff[host] = {name: False}
 
-    for host in diff:
+    for host in diff.copy():
         if __opts__["test"]:
             if not ret["comment"]:
                 ret["comment"] = "User {} will be deleted on {} host(s).".format(name, delete)
                 ret["result"] = None
         elif diff[host][name]:
-            __salt__["vmware_esxi.remove_user"](
-                user_name=name,
-                datacenter_name=datacenter_name,
-                cluster_name=cluster_name,
-                host_name=host,
-                service_instance=service_instance,
-            )
+            try:
+                __salt__["vmware_esxi.remove_user"](
+                    user_name=name,
+                    datacenter_name=datacenter_name,
+                    cluster_name=cluster_name,
+                    host_name=host,
+                    service_instance=service_instance,
+                )
+            except salt.exceptions.SaltException as exc:
+                delete -= 1
+                failed_hosts.append(host)
+                diff.pop(host)
+                ret[
+                    "comment"
+                ] = "User {} removed on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
+                    name, delete, len(failed_hosts), ",".join(failed_hosts), exc
+                )
+                ret["changes"] = diff
+                ret["result"] = False
             if not ret["comment"]:
                 ret["comment"] = "User {} removed on {} host(s).".format(name, delete)
                 ret["changes"] = diff

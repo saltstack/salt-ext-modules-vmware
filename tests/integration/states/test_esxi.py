@@ -1,8 +1,10 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import uuid
+from unittest.mock import MagicMock
 
 import pytest
+import salt
 import saltext.vmware.modules.esxi as esxi_mod
 import saltext.vmware.states.esxi as esxi
 
@@ -12,6 +14,27 @@ def dry_run():
     setattr(esxi, "__opts__", {"test": True})
     yield
     setattr(esxi, "__opts__", {"test": False})
+
+
+@pytest.fixture
+def user_add_error():
+    esxi.__salt__["vmware_esxi.add_user"] = MagicMock(
+        side_effect=salt.exceptions.salt.exceptions.SaltException("add error")
+    )
+
+
+@pytest.fixture
+def user_update_error():
+    esxi.__salt__["vmware_esxi.update_user"] = MagicMock(
+        side_effect=salt.exceptions.salt.exceptions.SaltException("update error")
+    )
+
+
+@pytest.fixture
+def user_remove_error():
+    esxi.__salt__["vmware_esxi.remove_user"] = MagicMock(
+        side_effect=salt.exceptions.salt.exceptions.SaltException("remove error")
+    )
 
 
 def test_user_present_absent(patch_salt_globals):
@@ -45,6 +68,48 @@ def test_user_present_absent(patch_salt_globals):
     ret = esxi.user_absent(name=random_user)
     assert ret["result"] is None
     assert not ret["changes"]
+
+
+def test_user_add_error(patch_salt_globals, user_add_error):
+    """
+    Test scenarios for user add error
+    """
+    user_name = "A{}".format(uuid.uuid4())
+    password = "Secret@123"
+    ret = esxi.user_present(name=user_name, password=password)
+    assert ret["result"] is False
+    assert not ret["changes"]
+    assert "add error" in ret["comment"]
+
+
+def test_user_remove_error(patch_salt_globals, user_remove_error):
+    """
+    Test scenarios for user remove error
+    """
+    # Remove the user
+    user_name = "A{}".format(uuid.uuid4())
+    password = "Secret@123"
+    ret = esxi.user_present(name=user_name, password=password)
+    assert ret["result"] is True
+    ret = esxi.user_absent(name=user_name)
+    assert ret["result"] is False
+    assert not ret["changes"]
+    assert "remove error" in ret["comment"]
+
+
+def test_user_update_error(patch_salt_globals, user_update_error):
+    """
+    Test scenarios for user remove error
+    """
+    # Remove the user
+    user_name = "A{}".format(uuid.uuid4())
+    password = "Secret@123"
+    ret = esxi.user_present(name=user_name, password=password)
+    assert ret["result"] is True
+    ret = esxi.user_present(name=user_name, password=password)
+    assert ret["result"] is False
+    assert not ret["changes"]
+    assert "update error" in ret["comment"]
 
 
 def test_user_present_absent_dry_run(vmware_datacenter, service_instance, dry_run):
