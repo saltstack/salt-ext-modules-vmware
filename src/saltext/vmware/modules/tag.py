@@ -32,6 +32,9 @@ def create(tag_name, category_id, description=""):
 
     tag_name
         Name of tag.
+    
+    category_id
+        (string) Category ID of type: com.vmware.cis.tagging.Tag.
 
     description
         (optional) Description for the tag being created.
@@ -51,7 +54,7 @@ def get(tag_id):
     Returns info on given tag.
 
     tag_id
-        Tag ID of string of type: com.vmware.cis.tagging.Tag.
+        (string) Tag ID of type: com.vmware.cis.tagging.Tag.
     """
     url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
     response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
@@ -64,7 +67,7 @@ def update(tag_id, tag_name=None, description=None):
     Updates give tag.
 
     tag_id
-        Tag ID of string of type: com.vmware.cis.tagging.Tag.
+        (string) Tag ID of type: com.vmware.cis.tagging.Tag.
 
     tag_name
         Name of tag.
@@ -93,7 +96,7 @@ def delete(tag_id):
     Delete given tag.
 
     tag_id
-        Tag ID of string of type: com.vmware.cis.tagging.Tag.
+        (string) Tag ID of type: com.vmware.cis.tagging.Tag.
     """
     url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
     response = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
