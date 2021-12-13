@@ -15,10 +15,10 @@ import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.folder as folder
 import saltext.vmware.modules.tag as tagging
-import saltext.vmware.states.tag as tagging_state
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
 import saltext.vmware.states.folder as folder_state
+import saltext.vmware.states.tag as tagging_state
 import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
 

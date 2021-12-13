@@ -25,13 +25,7 @@ def __virtual__():
     return __virtualname__
 
 
-def manage(
-    name,
-    tag_name=None,
-    tag_description=None,
-    tag_id=None,
-    category_id=None
-):
+def manage(name, tag_name=None, tag_description=None, tag_id=None, category_id=None):
     """
     Manage tag instance.
 
@@ -43,10 +37,10 @@ def manage(
 
     tag_description
         (boolean, optional) During the next boot, force entry into the BIOS setup screen. Defaults to False.
-    
+
     tag_id
         Tag ID of string of type: com.vmware.cis.tagging.Tag.
-    
+
     category_id
         (string) Category ID of type: com.vmware.cis.tagging.Tag.
     """
@@ -56,9 +50,12 @@ def manage(
         url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
         response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
         response = response.json()
-    
-    if name == 'update':
-        if response["value"]["name"] == tag_name and response["value"]["description"] == tag_description:
+
+    if name == "update":
+        if (
+            response["value"]["name"] == tag_name
+            and response["value"]["description"] == tag_description
+        ):
             ret["comment"] = "already configured this way"
             return ret
         else:
@@ -80,7 +77,11 @@ def manage(
 
     elif name == "create":
         spec = {
-        "create_spec": {"category_id": category_id, "description": tag_description, "name": tag_name}
+            "create_spec": {
+                "category_id": category_id,
+                "description": tag_description,
+                "name": tag_name,
+            }
         }
         response = connect.request(
             "/rest/com/vmware/cis/tagging/tag", "POST", body=spec, opts=__opts__, pillar=__pillar__
@@ -90,12 +91,14 @@ def manage(
         ret["comment"] = "created"
         return ret
 
-    elif name == 'delete':
+    elif name == "delete":
         url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
         response = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
         ret["comment"] = "deleted"
         return ret
-    
+
     else:
-        ret["comment"] = "Name not reconized, please choose one of the following: create, update, delete"
+        ret[
+            "comment"
+        ] = "Name not reconized, please choose one of the following: create, update, delete"
         return ret

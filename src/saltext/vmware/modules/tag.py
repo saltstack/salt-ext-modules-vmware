@@ -32,7 +32,7 @@ def create(tag_name, category_id, description=""):
 
     tag_name
         Name of tag.
-    
+
     category_id
         (string) Category ID of type: com.vmware.cis.tagging.Tag.
 
