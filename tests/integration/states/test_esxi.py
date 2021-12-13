@@ -19,21 +19,21 @@ def dry_run():
 @pytest.fixture
 def user_add_error():
     esxi.__salt__["vmware_esxi.add_user"] = MagicMock(
-        side_effect=salt.exceptions.salt.exceptions.SaltException("add error")
+        side_effect=salt.exceptions.SaltException("add error")
     )
 
 
 @pytest.fixture
 def user_update_error():
     esxi.__salt__["vmware_esxi.update_user"] = MagicMock(
-        side_effect=salt.exceptions.salt.exceptions.SaltException("update error")
+        side_effect=salt.exceptions.SaltException("update error")
     )
 
 
 @pytest.fixture
 def user_remove_error():
     esxi.__salt__["vmware_esxi.remove_user"] = MagicMock(
-        side_effect=salt.exceptions.salt.exceptions.SaltException("remove error")
+        side_effect=salt.exceptions.SaltException("remove error")
     )
 
 
