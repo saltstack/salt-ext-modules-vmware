@@ -129,3 +129,16 @@ def list_category():
     )
     response = response["response"].json()
     return {"categories": response["value"]}
+
+
+def get_category(category_id):
+    """
+    Returns info on given category.
+
+    category_id
+        (string) Category ID of type: com.vmware.cis.tagging.Category.
+    """
+    url = f"/rest/com/vmware/cis/tagging/category/id:{category_id}"
+    response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
+    response = response["response"].json()
+    return {"category": response["value"]}

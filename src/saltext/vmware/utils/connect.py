@@ -105,6 +105,9 @@ def request(url, method, body=None, token=None, opts=None, pillar=None):
         os.environ.get("VMWARE_CONFIG_REST_API_HOST")
         or opts.get("vmware_config", {}).get("rest_api_host")
         or pillar.get("vmware_config", {}).get("rest_api_host")
+        or os.environ.get("VMWARE_CONFIG_HOST")
+        or opts.get("vmware_config", {}).get("host")
+        or pillar.get("vmware_config", {}).get("host")
     )
     cert = (
         os.environ.get("VMWARE_CONFIG_REST_API_CERT")
@@ -118,11 +121,17 @@ def request(url, method, body=None, token=None, opts=None, pillar=None):
             os.environ.get("VMWARE_CONFIG_REST_API_USER")
             or opts.get("vmware_config", {}).get("rest_api_user")
             or pillar.get("vmware_config", {}).get("rest_api_user")
+            or os.environ.get("VMWARE_CONFIG_USER")
+            or opts.get("vmware_config", {}).get("user")
+            or pillar.get("vmware_config", {}).get("user")
         )
         password = (
             os.environ.get("VMWARE_CONFIG_REST_API_PASSWORD")
             or opts.get("vmware_config", {}).get("rest_api_password")
             or pillar.get("vmware_config", {}).get("rest_api_password")
+            or os.environ.get("VMWARE_CONFIG_PASSWORD")
+            or opts.get("vmware_config", {}).get("password")
+            or pillar.get("vmware_config", {}).get("password")
         )
         token = _get_session(host, user, password, cert)
     headers = {
