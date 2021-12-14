@@ -6,11 +6,23 @@ import saltext.vmware.modules.tag as tagging
 
 def test_category_list(patch_salt_globals_tag):
     """
-    Test create tag functionality
+    Test category list functionality
     """
     cats = tagging.list_category()
     if len(cats["categories"]) > 0:
         assert "urn:vmomi:InventoryServiceCategory" in cats["categories"][0]
+    else:
+        pytest.skip("test requires at least one category")
+
+
+def test_category_get(patch_salt_globals_tag):
+    """
+    Test category get functionality
+    """
+    cats = tagging.list_category()
+    if len(cats["categories"]) > 0:
+        cat = tagging.get_category(cats["categories"][0])
+        assert "urn:vmomi:InventoryServiceCategory" in cat["category"]["id"]
     else:
         pytest.skip("test requires at least one category")
 
