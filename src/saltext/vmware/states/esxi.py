@@ -199,7 +199,7 @@ def user_absent(
     """
     log.debug("Running vmware_esxi.user_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-    delete = 0
+    delete = no_user = 0
     failed_hosts = []
     diff = {}
     if not service_instance:
@@ -222,6 +222,7 @@ def user_absent(
             delete += 1
             diff[host] = {name: True}
         else:
+            no_user += 1
             diff[host] = {name: False}
 
     for host in diff.copy():
@@ -253,8 +254,7 @@ def user_absent(
                 ret["comment"] = "User {} removed on {} host(s).".format(name, delete)
                 ret["changes"] = diff
                 ret["result"] = True
-        else:
-            if not ret["comment"]:
-                ret["comment"] = "User {} doesn't exist on {} host(s).".format(name, delete)
-                ret["result"] = None
+    if not ret["comment"]:
+        ret["comment"] = "User {} doesn't exist on {} host(s).".format(name, no_user)
+        ret["result"] = None
     return ret
