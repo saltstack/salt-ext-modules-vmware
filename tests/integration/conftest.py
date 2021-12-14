@@ -13,9 +13,11 @@ import saltext.vmware.modules.cluster as cluster_mod
 import saltext.vmware.modules.cluster_drs as cluster_drs_mod
 import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
+import saltext.vmware.modules.esxi as esxi_mod
 import saltext.vmware.modules.folder as folder
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
+import saltext.vmware.states.esxi as esxi_st
 import saltext.vmware.states.folder as folder_state
 import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
@@ -83,6 +85,8 @@ def patch_salt_globals():
     setattr(cluster_ha_mod, "__pillar__", {})
     setattr(cluster_drs_mod, "__opts__", {})
     setattr(cluster_drs_mod, "__pillar__", {})
+    setattr(esxi_mod, "__pillar__", {})
+    setattr(esxi_st, "__pillar__", {})
     setattr(
         datacenter_st,
         "__salt__",
@@ -105,6 +109,24 @@ def patch_salt_globals():
         "__opts__",
         {
             "test": False,
+        },
+    )
+    setattr(
+        esxi_st,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(
+        esxi_st,
+        "__salt__",
+        {
+            "vmware_esxi.list_hosts": esxi_mod.list_hosts,
+            "vmware_esxi.add_user": esxi_mod.add_user,
+            "vmware_esxi.update_user": esxi_mod.update_user,
+            "vmware_esxi.remove_user": esxi_mod.remove_user,
+            "vmware_esxi.get_user": esxi_mod.get_user,
         },
     )
 

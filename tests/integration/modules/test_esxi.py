@@ -1,6 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import os
+import uuid
 from unittest.mock import MagicMock
 
 import pytest
@@ -511,5 +512,64 @@ def test_get_ntp_config(service_instance):
         datacenter_name="Datacenter",
         cluster_name="Cluster",
         host_name="no_host",
+    )
+    assert not ret
+
+
+def test_add_update_remove_user(service_instance):
+    """
+    Test add/update/remove a local ESXi user
+    """
+    user_name = "A{}".format(uuid.uuid4())
+    ret = esxi.add_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        user_name=user_name,
+        password="Secret@123",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+
+    ret = esxi.update_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        user_name=user_name,
+        password="Secret@123",
+        description="admin",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+
+    with pytest.raises(salt.exceptions.SaltException) as exc:
+        ret = esxi.update_user(
+            service_instance=service_instance,
+            datacenter_name="Datacenter",
+            cluster_name="Cluster",
+            user_name="nobody",
+            password="Secret@123",
+            description="admin",
+        )
+
+    ret = esxi.remove_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        user_name=user_name,
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+
+    ret = esxi.add_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        host_name="no_host",
+        user_name=user_name,
+        password="",
     )
     assert not ret

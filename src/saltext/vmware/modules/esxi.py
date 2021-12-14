@@ -845,6 +845,327 @@ def get_ntp_config(
         raise salt.exceptions.SaltException(str(exc))
 
 
+def list_hosts(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    List ESXi hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_hosts
+    """
+    log.debug("Running vmware_esxi.list_hosts")
+    ret = []
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            ret.append(h.name)
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def add_user(
+    user_name,
+    password,
+    description=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Add local user on matching ESXi hosts.
+
+    user_name
+        User to create on matching ESXi hosts. (required).
+
+    password
+        Password for the new user. (required).
+
+    description
+        Description for the new user. (optional).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.add_user user_name=foo password=bar@123 descripton="new user"
+    """
+    log.debug("Running vmware_esxi.add_user")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            account_spec = vim.host.LocalAccountManager.AccountSpecification()
+            account_spec.id = user_name
+            account_spec.password = password
+            account_spec.description = description
+            h.configManager.accountManager.CreateUser(account_spec)
+            ret[h.name] = True
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def update_user(
+    user_name,
+    password,
+    description=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Update local user on matching ESXi hosts.
+
+    user_name
+        Existing user to update on matching ESXi hosts. (required).
+
+    password
+        New Password for the existing user. (required).
+
+    description
+        New description for the existing user. (optional).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_user user_name=foo password=bar@123 descripton="existing user"
+    """
+    log.debug("Running vmware_esxi.update_user")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            account_spec = vim.host.LocalAccountManager.AccountSpecification()
+            account_spec.id = user_name
+            account_spec.password = password
+            account_spec.description = description
+            h.configManager.accountManager.UpdateUser(account_spec)
+            ret[h.name] = True
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.UserNotFound,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def remove_user(
+    user_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Remove local user on matching ESXi hosts.
+
+    user_name
+        User to delete on matching ESXi hosts. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.remove_user user_name=foo
+    """
+    log.debug("Running vmware_esxi.remove_user")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            h.configManager.accountManager.RemoveUser(user_name)
+            ret[h.name] = True
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.UserNotFound,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def get_user(
+    user_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get local user on matching ESXi hosts.
+
+    user_name
+        Filter by this user name (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_user user_name=foo
+    """
+    log.debug("Running vmware_esxi.get_user")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            users = h.configManager.userDirectory.RetrieveUserGroups(
+                searchStr=user_name,
+                belongsToGroup=None,
+                belongsToUser=None,
+                domain=None,
+                exactMatch=True,
+                findUsers=True,
+                findGroups=True,
+            )
+            for user in users:
+                ret[h.name] = {
+                    # user.principal is the user name
+                    user.principal: {
+                        "description": user.fullName,
+                        "group": user.group,
+                        "user_id": user.id,
+                        "shell_access": user.shellAccess,
+                    }
+                }
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
 def connect(host, service_instance=None):
     """
     Connect an ESXi instance to a vCenter instance.
