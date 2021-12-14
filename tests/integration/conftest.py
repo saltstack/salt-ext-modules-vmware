@@ -15,10 +15,12 @@ import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.esxi as esxi_mod
 import saltext.vmware.modules.folder as folder
+import saltext.vmware.modules.tag as tagging
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
 import saltext.vmware.states.esxi as esxi_st
 import saltext.vmware.states.folder as folder_state
+import saltext.vmware.states.tag as tagging_state
 import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -185,6 +187,26 @@ def patch_salt_globals_folder_state_test(vmware_conf):
 
 
 @pytest.fixture
+def patch_salt_globals_tag(vmware_conf_rest):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(tagging, "__opts__", {})
+    setattr(tagging, "__pillar__", vmware_conf_rest)
+
+
+@pytest.fixture
+def patch_salt_globals_tag_state(vmware_conf_rest):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(tagging_state, "__opts__", {})
+    setattr(tagging_state, "__pillar__", vmware_conf_rest)
+
+
+@pytest.fixture
 def patch_salt_globals_vm(vmware_conf):
     """
     Patch __opts__ and __pillar__
@@ -291,6 +313,18 @@ def vmware_conf(integration_test_config):
             "host": config["host"],
             "password": config["password"],
             "user": config["user"],
+        }
+    }
+
+
+@pytest.fixture()
+def vmware_conf_rest(integration_test_config):
+    config = integration_test_config
+    return {
+        "vmware_config": {
+            "rest_api_host": config["rest_api_host"],
+            "rest_api_password": config["rest_api_password"],
+            "rest_api_user": config["rest_api_user"],
         }
     }
 

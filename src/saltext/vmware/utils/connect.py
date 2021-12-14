@@ -1,6 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
+import json
+import logging
 import os
 import ssl
+
+import requests
+from requests.auth import HTTPBasicAuth
+from requests.exceptions import HTTPError
+from requests.exceptions import RequestException
+from requests.exceptions import SSLError
 
 # pylint: disable=no-name-in-module
 try:
@@ -12,10 +20,21 @@ try:
 except ImportError:
     HAS_PYVMOMI = False
 
+log = logging.getLogger(__name__)
+
 
 def get_service_instance(opts=None, pillar=None):
     """
     Connect to VMware service instance
+
+    opts
+        (optional) Any additional options.
+
+    pillar
+        (optional) If specified, allows for a dictionary of pillar data to be made
+        available to pillar and ext_pillar rendering. These pillar variables
+        will also override any variables of the same name in pillar or
+        ext_pillar.
 
     Pillar Example:
 
@@ -55,3 +74,129 @@ def get_service_instance(opts=None, pillar=None):
         sslContext=ctx,
     )
     return service_instance
+
+
+def request(url, method, body=None, token=None, opts=None, pillar=None):
+    """
+    Make a request to VMware rest api
+
+    url
+        url address for request.
+
+    method
+        Method for api request.
+
+    body
+        Body of the api request.
+
+    token
+        (optional) Api session token for api access, will create new token if not passed.
+
+    opts
+        (optional) Any additional options.
+
+    pillar
+        (optional) If specified, allows for a dictionary of pillar data to be made
+        available to pillar and ext_pillar rendering. These pillar variables
+        will also override any variables of the same name in pillar or
+        ext_pillar.
+    """
+    host = (
+        os.environ.get("VMWARE_CONFIG_REST_API_HOST")
+        or opts.get("vmware_config", {}).get("rest_api_host")
+        or pillar.get("vmware_config", {}).get("rest_api_host")
+    )
+    cert = (
+        os.environ.get("VMWARE_CONFIG_REST_API_CERT")
+        or opts.get("vmware_config", {}).get("rest_api_cert")
+        or pillar.get("vmware_config", {}).get("rest_api_cert")
+    )
+    if not cert:
+        cert = False
+    if token is None:
+        user = (
+            os.environ.get("VMWARE_CONFIG_REST_API_USER")
+            or opts.get("vmware_config", {}).get("rest_api_user")
+            or pillar.get("vmware_config", {}).get("rest_api_user")
+        )
+        password = (
+            os.environ.get("VMWARE_CONFIG_REST_API_PASSWORD")
+            or opts.get("vmware_config", {}).get("rest_api_password")
+            or pillar.get("vmware_config", {}).get("rest_api_password")
+        )
+        token = _get_session(host, user, password, cert)
+    headers = {
+        "Accept": "application/json",
+        "content-Type": "application/json",
+        "vmware-api-session-id": token,
+    }
+    session = requests.Session()
+    response = session.request(
+        method=method,
+        url=f"https://{host}{url}",
+        headers=headers,
+        verify=cert,
+        params=None,
+        data=json.dumps(body),
+    )
+    return {"response": response, "token": token}
+
+
+def _get_session(host, user, password, cert):
+    """
+    Create REST API session
+
+    host
+        Host for api request.
+
+    user
+        User to create session token for subsequent requests.
+
+    password
+        Password to create session token for subsequent requests.
+
+    cert
+        certificate for ssl verification.
+    """
+    headers = {"Accept": "application/json", "content-Type": "application/json"}
+    session = requests.Session()
+    if not cert:
+        cert = False
+    try:
+        response = session.request(
+            method="POST",
+            url=f"https://{host}/rest/com/vmware/cis/session",
+            headers=headers,
+            auth=HTTPBasicAuth(user, password),
+            verify=cert,
+            params=None,
+            data=json.dumps(None),
+        )
+        response.raise_for_status()
+        json_response = response.json()
+        return json_response["value"]
+
+    except HTTPError as e:
+        log.error(e)
+        result = {"error": "Error occurred while calling vCenter API."}
+        # if response contains json, extract error message from it
+        if e.response.text:
+            log.error(f"Response from vCenter {e.response.text}")
+            try:
+                error_json = e.response.json()
+                if error_json["error_message"]:
+                    result["error"] = e.response.json()["error_message"]
+            except ValueError:
+                log.error(
+                    "Couldn't parse the response as json. Returning response text as error message"
+                )
+                result["error"] = e.response.text
+        return result
+    except SSLError as se:
+        log.error(se)
+        result = {"error": "SSL Error occurred while calling vCenter API."}
+        return result
+    except RequestException as re:
+        log.error(re)
+        result = {"error": "Error occurred while calling vCenter API."}
+        return result
