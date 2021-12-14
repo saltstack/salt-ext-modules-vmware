@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
+from saltext.vmware.modules.tag import update
 
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
@@ -25,80 +26,101 @@ def __virtual__():
     return __virtualname__
 
 
-def manage(name, tag_name=None, tag_description=None, tag_id=None, category_id=None):
+def present(name, description=None, category_id=None):
     """
-    Manage tag instance.
+    Create and update a tag instance.
 
     name
-        Name of task to be preformed (create, update, delete)
+        Name of tag.
 
-    tag_name
-        (integer, optional) Boot delay. When powering on or resetting, delay boot order by given milliseconds. Defaults to 0.
-
-    tag_description
-        (boolean, optional) During the next boot, force entry into the BIOS setup screen. Defaults to False.
-
-    tag_id
-        Tag ID of string of type: com.vmware.cis.tagging.Tag.
+    description
+        Description of tag.
 
     category_id
-        (string) Category ID of type: com.vmware.cis.tagging.Tag.
+        (string) Category ID of type: com.vmware.cis.tagging.Tag. Only optional when updating
     """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
-    response = None
-    if tag_id:
-        url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
-        response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
-        response = response.json()
-
-    if name == "update":
-        if (
-            response["value"]["name"] == tag_name
-            and response["value"]["description"] == tag_description
-        ):
-            ret["comment"] = "already configured this way"
+    res = connect.request("/rest/com/vmware/cis/tagging/tag", "GET", opts=__opts__, pillar=__pillar__)
+    response = res["response"].json()
+    token = res["token"]
+    found = None
+    for tag in response["value"]:
+        url = f"/rest/com/vmware/cis/tagging/tag/id:{tag}"
+        tag_ref = connect.request(url, "GET", token=token, opts=__opts__, pillar=__pillar__)
+        tag_ref = tag_ref["response"].json()
+        if tag_ref["value"]["name"] == name:
+            found = tag_ref["value"]
+            break
+    if found:
+        if description == found["description"]:
+            ret["comment"] = "tag exists"
             return ret
         else:
-            ret["changes"]["new"] = {}
-            ret["changes"]["old"] = {}
-            spec = {"update_spec": {}}
-            if tag_name:
-                ret["changes"]["old"]["name"] = response["value"]["name"]
-                spec["update_spec"]["name"] = tag_name
-                ret["changes"]["new"]["name"] = tag_name
-            if tag_description:
-                ret["changes"]["old"]["description"] = response["value"]["description"]
-                spec["update_spec"]["description"] = tag_description
-                ret["changes"]["new"]["description"] = tag_description
-            url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
-            response = connect.request(url, "PATCH", body=spec, opts=__opts__, pillar=__pillar__)
-            ret["comment"] = "updated"
+            id = found["id"]
+            spec = {"update_spec": {"description": description}}
+            url = f"/rest/com/vmware/cis/tagging/tag/id:{id}"
+            updated = connect.request(url, "PATCH", body=spec, token=token, opts=__opts__, pillar=__pillar__)
+            if updated["response"].status_code == 200:
+                ret["changes"]["new"] = {}
+                ret["changes"]["old"] = {}
+                ret["changes"]["old"]["description"] = found["description"]
+                ret["changes"]["new"]["description"] = description
+                ret["comment"] = "updated"
+                return ret
+            ret["status_code"] = updated["response"].status_code
+            ret["reason"] = updated["response"].reason
+            ret["comment"] = "failed to update"
+            ret["result"] = False
+            return ret
+    else:
+        if category_id:
+            data = {
+            "create_spec": {"category_id": category_id, "description": description, "name": name}
+            }
+            create = connect.request(
+                "/rest/com/vmware/cis/tagging/tag", "POST", body=data, token=token, opts=__opts__, pillar=__pillar__
+            )
+            response = create["response"].json()
+            ret["changes"]["tag_id"] = response["value"]
+            ret["comment"] = "created"
+            return ret
+        else:
+            ret["result"] = False
+            ret["comment"] = "category_id required to create a tag"
             return ret
 
-    elif name == "create":
-        spec = {
-            "create_spec": {
-                "category_id": category_id,
-                "description": tag_description,
-                "name": tag_name,
-            }
-        }
-        response = connect.request(
-            "/rest/com/vmware/cis/tagging/tag", "POST", body=spec, opts=__opts__, pillar=__pillar__
-        )
-        response = response.json()
-        ret["changes"]["tag_id"] = response["value"]
-        ret["comment"] = "created"
-        return ret
 
-    elif name == "delete":
-        url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
-        response = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
-        ret["comment"] = "deleted"
-        return ret
+def absent(name):
+    """
+    Delete tag.
 
+    name
+        Name of tag.
+    """
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+    res = connect.request("/rest/com/vmware/cis/tagging/tag", "GET", opts=__opts__, pillar=__pillar__)
+    response = res["response"].json()
+    token = res["token"]
+    found = None
+    for tag in response["value"]:
+        url = f"/rest/com/vmware/cis/tagging/tag/id:{tag}"
+        tag_ref = connect.request(url, "GET", token=token, opts=__opts__, pillar=__pillar__)
+        tag_ref = tag_ref["response"].json()
+        if tag_ref["value"]["name"] == name:
+            found = tag_ref["value"]
+            break
+    if found:
+        id = found["id"]
+        url = f"/rest/com/vmware/cis/tagging/tag/id:{id}"
+        delete = connect.request(url, "DELETE", token=token, opts=__opts__, pillar=__pillar__)
+        if delete["response"].status_code == 200:
+            ret["comment"] = "deleted"
+            return ret
+        ret["status_code"] = delete["response"].status_code
+        ret["reason"] = delete["response"].reason
+        ret["comment"] = "failed to delete"
+        ret["result"] = False
+        return ret
     else:
-        ret[
-            "comment"
-        ] = "Name not reconized, please choose one of the following: create, update, delete"
+        ret["comment"] = "Tag does not exist"
         return ret

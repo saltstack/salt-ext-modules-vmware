@@ -45,7 +45,7 @@ def create(tag_name, category_id, description=""):
     response = connect.request(
         "/rest/com/vmware/cis/tagging/tag", "POST", body=data, opts=__opts__, pillar=__pillar__
     )
-    response = response.json()
+    response = response["response"].json()
     return {"tag": response["value"]}
 
 
@@ -58,7 +58,7 @@ def get(tag_id):
     """
     url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
     response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
-    response = response.json()
+    response = response["response"].json()
     return {"tag": response["value"]}
 
 
@@ -82,12 +82,12 @@ def update(tag_id, tag_name=None, description=None):
         spec["update_spec"]["description"] = description
     url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
     response = connect.request(url, "PATCH", body=spec, opts=__opts__, pillar=__pillar__)
-    if response.status_code == 200:
+    if response["response"].status_code == 200:
         return {"tag": "updated"}
     return {
         "tag": "failed to update",
-        "status code": response.status_code,
-        "reason": response.reason,
+        "status_code": response["response"].status_code,
+        "reason": response["response"].reason,
     }
 
 
@@ -100,11 +100,11 @@ def delete(tag_id):
     """
     url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
     response = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
-    if response.status_code == 200:
+    if response["response"].status_code == 200:
         return {"tag": "deleted"}
     return {
         "tag": "failed to update",
-        "status code": response.status_code,
+        "status_code": response.status_code,
         "reason": response.reason,
     }
 
@@ -116,7 +116,7 @@ def list_():
     response = connect.request(
         "/rest/com/vmware/cis/tagging/tag", "GET", opts=__opts__, pillar=__pillar__
     )
-    response = response.json()
+    response = response["response"].json()
     return {"tags": response["value"]}
 
 
@@ -127,5 +127,5 @@ def list_category():
     response = connect.request(
         "/rest/com/vmware/cis/tagging/category", "GET", opts=__opts__, pillar=__pillar__
     )
-    response = response.json()
+    response = response["response"].json()
     return {"categories": response["value"]}

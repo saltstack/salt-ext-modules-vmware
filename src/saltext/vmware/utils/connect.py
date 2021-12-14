@@ -139,7 +139,7 @@ def request(url, method, body=None, token=None, opts=None, pillar=None):
         params=None,
         data=json.dumps(body),
     )
-    return response
+    return {"response": response, "token": token}
 
 
 def _get_session(host, user, password, cert):
