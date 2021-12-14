@@ -58,6 +58,14 @@ def present(name, description=None, category_id=None):
             ret["comment"] = "tag exists"
             return ret
         else:
+            ret["changes"]["new"] = {}
+            ret["changes"]["old"] = {}
+            ret["changes"]["old"]["description"] = found["description"]
+            ret["changes"]["new"]["description"] = description
+            if __opts__["test"]:
+                ret["result"] = None
+                ret["comment"] = f"{name} tag will be updated"
+                return ret
             id = found["id"]
             spec = {"update_spec": {"description": description}}
             url = f"/rest/com/vmware/cis/tagging/tag/id:{id}"
@@ -65,10 +73,6 @@ def present(name, description=None, category_id=None):
                 url, "PATCH", body=spec, token=token, opts=__opts__, pillar=__pillar__
             )
             if updated["response"].status_code == 200:
-                ret["changes"]["new"] = {}
-                ret["changes"]["old"] = {}
-                ret["changes"]["old"]["description"] = found["description"]
-                ret["changes"]["new"]["description"] = description
                 ret["comment"] = "updated"
                 return ret
             ret["status_code"] = updated["response"].status_code
@@ -78,6 +82,10 @@ def present(name, description=None, category_id=None):
             return ret
     else:
         if category_id:
+            if __opts__["test"]:
+                ret["result"] = None
+                ret["comment"] = f"{name} tag will be created"
+                return ret
             data = {
                 "create_spec": {
                     "category_id": category_id,
@@ -125,6 +133,10 @@ def absent(name):
             found = tag_ref["value"]
             break
     if found:
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = f"{name} tag will be deleted"
+            return ret
         id = found["id"]
         url = f"/rest/com/vmware/cis/tagging/tag/id:{id}"
         delete = connect.request(url, "DELETE", token=token, opts=__opts__, pillar=__pillar__)
