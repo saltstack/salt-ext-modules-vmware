@@ -26,9 +26,7 @@ def test_manage_update(patch_salt_globals_tag_state, patch_salt_globals_tag):
     test tag manage update
     """
 
-    update_res = tagging_state.present(
-        "state tag", description="new discription"
-    )
+    update_res = tagging_state.present("state tag", description="new discription")
     assert "updated" in update_res["comment"]
 
 
