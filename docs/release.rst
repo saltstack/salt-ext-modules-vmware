@@ -178,7 +178,7 @@ upload the package with twine:
     # SIGNING_KEY should be replaced with the signing key, and FINAL-VERSION
     # with the actual version number
     gpg --detach-sign -u SIGNING_KEY dist/saltext.vmware-FINAL-VERSION-py2.py3.none-any.whl
-    twine upload --repository = saltext_vmware dist/saltext.vmware-FINAL-VERSION-py2.py3.none-any.whl
+    twine upload --repository saltext_vmware dist/saltext.vmware-FINAL-VERSION-py2.py3.none-any.whl
 
 Once the package has been uploaded to PyPI the tag should be pushed:
 
