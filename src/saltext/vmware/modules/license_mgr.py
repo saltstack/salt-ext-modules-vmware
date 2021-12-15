@@ -2,13 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
+import pudb
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.license_mgr as utils_license_mgr
 from saltext.vmware.utils.connect import get_service_instance
 
 import salt.exceptions
-
-## import pudb
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +56,8 @@ def add(license, **kwargs):
 
         salt '*' vmware_license_mgr.add license datacenter_name=dc1
     """
+    pu.db
+
     log.debug("start vmware ext license_mgr add license")
 
     ret = {}
@@ -82,8 +83,8 @@ def add(license, **kwargs):
         return ret
 
     try:
-        if "test" in __opts__:
-            ret["licenses"] = license_key
+        if "test" in __opts__ and __opts__["test"]:
+            ret["licenses"] = license
             ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
             return ret
 
@@ -156,7 +157,7 @@ def list_(service_instance=None):
         "vmware ext license_mgr list retrieved service_instance, with opts '{__opts__}', pillar '{__pillar__}'"
     )
 
-    if "test" in __opts__:
+    if "test" in __opts__ and __opts__["test"]:
         ret["licenses"] = "DGMTT-FAKED-TESTS-LICEN-SE012"
         ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
         return ret
@@ -215,8 +216,8 @@ def remove(license, **kwargs):
         return ret
 
     try:
-        if "test" in __opts__:
-            ret["licenses"] = license_key
+        if "test" in __opts__ and __opts__["test"]:
+            ret["licenses"] = license
             ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
             return ret
 
