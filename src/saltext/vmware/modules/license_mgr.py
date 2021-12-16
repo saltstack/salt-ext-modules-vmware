@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
-import pudb
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.license_mgr as utils_license_mgr
 from saltext.vmware.utils.connect import get_service_instance
@@ -21,7 +20,7 @@ except ImportError:
 
 __virtualname__ = "vmware_license_mgr"
 __proxyenabled__ = ["vmware_license_mgr"]
-__func_alias__ = {"list_": "list", "get_": "get"}
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -56,8 +55,6 @@ def add(license_key, **kwargs):
 
         salt '*' vmware_license_mgr.add license_key datacenter_name=dc1
     """
-    pu.db
-
     log.debug("start vmware ext license_mgr add license_key")
 
     ret = {}
@@ -73,19 +70,15 @@ def add(license_key, **kwargs):
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    ## log.debug(
-    ##     f"vmware ext license_mgr add lic retrieved service_instance, with opts '{__opts__}', pillar '{__pillar__}'"
-    ## )
-
     if not utils_license_mgr.is_vcenter(service_instance):
-        ret["comment"] = "Failed, not connected to a vCenter"
+        ret["message"] = "Failed, not connected to a vCenter"
         ret["result"] = False
         return ret
 
     try:
         if "test" in __opts__ and __opts__["test"]:
             ret["licenses"] = license_key
-            ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
+            ret["message"] = "Test dry-run, not really connected to a vCenter testing"
             return ret
 
         result = utils_license_mgr.add_license(
@@ -99,49 +92,18 @@ def add(license_key, **kwargs):
         salt.exceptions.VMwareObjectRetrievalError,
         salt.exceptions.VMwareRuntimeError,
     ) as exc:
-        ret["comment"] = f"Failed to add a license due to Exception '{str(exc)}'"
+        ret[
+            "message"
+        ] = f"Failed to add a license key '{license_key}' due to Exception '{str(exc)}'"
         ret["result"] = False
         return ret
 
     if not result:
-        ret["comment"] = f"Failed specified license was not added to License Manager"
+        ret[
+            "message"
+        ] = f"Failed specified license key '{license_key}' was not added to License Manager"
         ret["result"] = False
 
-    return ret
-
-
-def get_(service_instance=None):
-    """
-    Get the properties of a License Manager
-
-    service_instance
-        Use this vCenter service connection instance instead of creating a new one [default None]
-
-    .. code-block:: bash
-
-        salt '*' vmware_license_mgr.get
-    """
-    pu.db
-    ret = {}
-    if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    try:
-        licmgr_ref = utils_license_mgr.get_license_mgr(service_instance)
-        licmgr = utils_common.get_mors_with_properties(
-            service_instance,
-            vim.LicenseManager,
-            property_list=None,
-            container_ref=licmgr_ref,
-            traversal_spec=None,
-            local_properties=True,
-        )
-        if licmgr:
-            log.debug(f"license manager mors and properties '{licmgr[0]}'")
-
-            # TBD need a better way to pass back the dictionary
-            ret["mors_properties"] = licmgr[0]
-    except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:
-        return {name: False, "reason": str(exc)}
     return ret
 
 
@@ -156,18 +118,13 @@ def list_(service_instance=None):
 
         salt '*' vmware_license_mgr.list
     """
-    pu.db
     log.debug("start vmware ext license_mgr list")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    ## log.debug(
-    ##     f"vmware ext license_mgr list retrieved service_instance, with opts '{__opts__}', pillar '{__pillar__}'"
-    ## )
-
     if "test" in __opts__ and __opts__["test"]:
         ret["licenses"] = "DGMTT-FAKED-TESTS-LICEN-SE012"
-        ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
+        ret["message"] = "Test dry-run, not really connected to a vCenter testing"
         return ret
 
     return utils_license_mgr.list_licenses(service_instance)
@@ -200,7 +157,6 @@ def remove(license_key, **kwargs):
         salt '*' vmware_license_mgr.remove license_key
     """
     log.debug("start vmware ext license_mgr remove license_key")
-    pu.db
 
     ret = {}
     op = {}
@@ -215,19 +171,15 @@ def remove(license_key, **kwargs):
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    ## log.debug(
-    ##     f"vmware ext license_mgr remove lic retrieved service_instance, with opts '{__opts__}', pillar '{__pillar__}'"
-    ## )
-
     if not utils_license_mgr.is_vcenter(service_instance):
-        ret["comment"] = "Failed, not connected to a vCenter"
+        ret["message"] = "Failed, not connected to a vCenter"
         ret["result"] = False
         return ret
 
     try:
         if "test" in __opts__ and __opts__["test"]:
             ret["licenses"] = license_key
-            ret["comment"] = "Test dry-run, not really connected to a vCenter testing"
+            ret["message"] = "Test dry-run, not really connected to a vCenter testing"
             return ret
 
         result = utils_license_mgr.remove_license(
@@ -238,12 +190,16 @@ def remove(license_key, **kwargs):
         salt.exceptions.VMwareObjectRetrievalErrori,
         salt.exceptions.VMwareRuntimeError,
     ) as exc:
-        ret["comment"] = f"Failed to remove a license due to Exception '{str(exc)}'"
+        ret[
+            "message"
+        ] = f"Failed to remove license key '{license_key}' due to Exception '{str(exc)}'"
         ret["result"] = False
         return ret
 
     if not result:
-        ret["comment"] = f"Failed specified license was not found in License Manager"
+        ret[
+            "message"
+        ] = f"Failed specified license key '{license_key}' was not found in License Manager"
         ret["result"] = False
 
     return ret

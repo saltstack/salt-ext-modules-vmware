@@ -82,7 +82,7 @@ def present(license_key, **kwargs):
     """
     ret = __salt__["vmware_license_mgr.list"]()
     if license_key in ret["licenses"]:
-        ret["comment"] = f"License key '{license_key}' is already present. No changes made"
+        ret["message"] = f"License key '{license_key}' is already present. No changes made"
         ret["result"] = True
         return ret
 

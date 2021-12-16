@@ -149,7 +149,7 @@ def list_licenses(service_instance):
     log.debug(f"License Manager listing of licenses '{lic_mgr.licenses}'")
 
     if not lic_mgr:
-        ret["comment"] = "Failed, not connected to a vCenter"
+        ret["message"] = "Failed, not connected to a vCenter"
         ret["result"] = False
         return ret
 

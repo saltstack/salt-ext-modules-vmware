@@ -16,15 +16,15 @@ import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.datastore as datastore
 import saltext.vmware.modules.esxi as esxi_mod
 import saltext.vmware.modules.folder as folder
-import saltext.vmware.modules.tag as tagging
 import saltext.vmware.modules.license_mgr as license_mgr_mod
+import saltext.vmware.modules.tag as tagging
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
 import saltext.vmware.states.datastore as datastore_state
 import saltext.vmware.states.esxi as esxi_st
 import saltext.vmware.states.folder as folder_state
-import saltext.vmware.states.tag as tagging_state
 import saltext.vmware.states.license_mgr as license_mgr_st
+import saltext.vmware.states.tag as tagging_state
 import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
 
