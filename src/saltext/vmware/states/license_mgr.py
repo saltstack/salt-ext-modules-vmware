@@ -25,11 +25,11 @@ def __virtual__():
 
 def absent(license_key, **kwargs):
     """
-    Remove a license from specified Cluster, ESXI Server or vCenter
+    Remove a license specified by license_key from a Datacenter, Cluster, ESXI Server or vCenter
     If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
     license
-        License Key to remove from license manager
+        License Key which specifies license to remove from license manager
 
     datacenter_name
         Datacenter name to use for the operation [default None]
@@ -56,11 +56,11 @@ def absent(license_key, **kwargs):
 
 def present(license_key, **kwargs):
     """
-    Add a license to specified Cluster, ESXI Server or vCenter
+    Add a license specified by license key to a Datacenter, Cluster, ESXI Server or vCenter
     If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
 
-    license
-        License Key to add to license manager
+    license_key
+        License Key which specifies license to add to license manager
 
     datacenter_name
         Datacenter name to use for the operation [default None]

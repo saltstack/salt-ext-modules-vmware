@@ -29,7 +29,7 @@ def _list_lic_keys(licenses):
     Return a list of license keys
 
     licenses:
-       vCenter licenses as made available from licenseAssignmentManager
+       vCenter licenses as made available from licenseManager
 
     Note:
         skips evaluation licenses
@@ -41,6 +41,29 @@ def _list_lic_keys(licenses):
             continue
         lic_keys.append(lic.licenseKey)
     return lic_keys
+
+
+def _find_lic_for_key(licenses, license_key):
+    """
+    Return license which matches specified license_key
+
+    licenses:
+       vCenter licenses as made available from licenseManager
+
+    license_key
+        license key to search for
+
+    Note:
+        skips evaluation licenses
+    """
+    log.debug("started _find_lic_for_key")
+    lic_keys = []
+    for lic in licenses:
+        if lic.used is None:
+            continue
+        if license_key == lic.licenseKey:
+            return lic
+    return None
 
 
 def is_vcenter(service_instance):
@@ -123,7 +146,7 @@ def list_licenses(service_instance):
 
     ret = {}
     lic_mgr = get_license_mgr(service_instance)
-    log.debug(f"listing licenses from License Manager '{lic_mgr}'")
+    log.debug(f"License Manager listing of licenses '{lic_mgr.licenses}'")
 
     if not lic_mgr:
         ret["comment"] = "Failed, not connected to a vCenter"
@@ -135,7 +158,7 @@ def list_licenses(service_instance):
 
 
 def add_license(
-    service_instance, license, datacenter_name=None, cluster_name=None, esxi_hostname=None
+    service_instance, license_key, datacenter_name=None, cluster_name=None, esxi_hostname=None
 ):
     """
     Add license to the pool of available licenses associated with the License Manager
@@ -146,8 +169,8 @@ def add_license(
     service_instance:
         Service Instance containing a License Manager
 
-    license
-        License to add to license manager
+    license_key
+        License key which specifies license to add to license manager
 
     datacenter_name
         Datacenter name to use for the operation [default None]
@@ -167,12 +190,21 @@ def add_license(
 
     lic_keys = _list_lic_keys(lic_mgr.licenses)
     log.debug(
-        f"attempting to add license '{license}' to list of existing license keys '{lic_keys}'"
+        f"attempting to add license key '{license_key}' to list of existing license keys '{lic_keys}'"
     )
 
     try:
-        if not license in lic_keys:
-            lic_mgr.AddLicense(licenseKey=license)
+        if not license_key in lic_keys:
+            ##  lic_mgr.AddLicense(licenseKey=license_key)
+            dgm_test = True
+            if dgm_test:
+                lic_mgr.AddLicense(licenseKey=license_key)
+
+        # get license just added for specified license key
+        addedLic = _find_lic_for_key(lic_mgr.licenses, license_key)
+        if not addedLic:
+            log.error(f"Unable to find license for recently added license_key '{license_key}'")
+            return False
 
         # need to extract entity this license is intended for so that it can be assigned.
         # choices are:
@@ -193,9 +225,9 @@ def add_license(
             if cluster_name:
                 # need to get named cluster's reference
                 cluster_ref = utils_cluster.get_cluster(dc_ref=datacenter_ref, cluster=cluster_name)
-                entityId = cluster_ref._moId
+                entity_id = cluster_ref._moId
                 log.debug(
-                    f"retrieved entityId '{entityId}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
+                    f"retrieved entityId '{entity_id}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
                 )
 
             if esxi_hostname:
@@ -213,8 +245,8 @@ def add_license(
                     )
                     return False
 
-                entityID = esxi_hosts[0]._moId
-                if "esx" not in license.editionKey:
+                entity_id = esxi_hosts[0]._moId
+                if "esx" not in addedLic.editionKey:
                     log.error(
                         f"Error, License '{license}' does not contain a suitable Edition key '{license.editionKey}' for an ESXi Server"
                     )
@@ -232,9 +264,9 @@ def add_license(
                 f"assigning license, entity identifier '{entity_id}' has assigned license '{assigned_lic}'"
             )
             if not assigned_lic or (
-                len(assigned_lic) != 0 and assigned_lic[0].assignedLicense.licenseKey != license
+                len(assigned_lic) != 0 and assigned_lic[0].assignedLicense.licenseKey != license_key
             ):
-                lic_assign_mgr.UpdateAssignedLicense(entity=entity_id, licenseKey=license)
+                lic_assign_mgr.UpdateAssignedLicense(entity=entity_id, licenseKey=license_key)
 
     except vim.fault.VimFault as exc:
         log.exception(exc)
@@ -247,7 +279,7 @@ def add_license(
 
 
 def remove_license(
-    service_instance, license, datacenter_name=None, cluster_name=None, esxi_hostname=None
+    service_instance, license_key, datacenter_name=None, cluster_name=None, esxi_hostname=None
 ):
     """
     Remove license from the pool of available licenses associated with the License Manager
@@ -258,8 +290,8 @@ def remove_license(
     service_instance:
         Service Instance containing a License Manager
 
-    license
-        License to remove from the license manager
+    license_key
+        License key which specifies license to remove from the license manager
 
     datacenter_name
         Datacenter name to use for the operation [default None]
@@ -281,7 +313,7 @@ def remove_license(
     log.debug(
         f"attempting to remove license '{license}' from list of existing license keys '{lic_keys}'"
     )
-    if license not in lic_keys:
+    if license_key not in lic_keys:
         return False
 
     # TBD need to determine if can 'RemoveAssignedLicense' or if simple
@@ -289,7 +321,7 @@ def remove_license(
     # is removed
 
     try:
-        lic_mgr.RemoveLicense(licenseKey=license)
+        lic_mgr.RemoveLicense(licenseKey=license_key)
     except vim.fault.VimFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(exc.msg)
