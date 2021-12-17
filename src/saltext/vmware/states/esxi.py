@@ -25,6 +25,146 @@ def __virtual__():
     return __virtualname__
 
 
+def role_present(
+    name,
+    privilege_ids,
+    esxi_host_name=None,
+    esxi_user_name=None,
+    esxi_user_password=None,
+    service_instance=None,
+):
+    """
+    Ensure role is present on ESXi host.
+
+    role_name
+        Role to create/update on ESXi host. (required).
+
+    privilege_ids
+        List of privileges for the role. (required).
+        Refer: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.security.doc/GUID-ED56F3C4-77D0-49E3-88B6-B99B8B437B62.html
+
+    esxi_host_name
+        ESXi host name to use for creating the connection. (optional).
+
+    esxi_user_name
+         ESXi username to use for creating the connection. (optional).
+
+    esxi_user_password
+         Password to use for creating the connection. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    """
+    log.debug("Running vmware_esxi.role_present")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_user=esxi_user_name,
+            esxi_host=esxi_host_name,
+            esxi_password=esxi_user_password,
+        )
+    role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
+    sys_privs = {"System.Anonymous", "System.Read", "System.View"}
+    del_privs = list(set(role.get("privilege_ids", [])) - sys_privs - set(privilege_ids))
+    new_privs = list(set(privilege_ids) - set(role.get("privilege_ids", [])) - sys_privs)
+    changes = {
+        "new": {
+            "role_id": role.get("role_id"),
+            "role_name": name,
+            "privilege_ids": {
+                "added": new_privs,
+                "removed": del_privs,
+                "current": sorted(list(set(privilege_ids) | sys_privs)),
+            },
+        },
+        "old": role,
+    }
+    if not role:
+        if __opts__["test"]:
+            ret["comment"] = "Role {} will be created.".format(name)
+            ret["result"] = None
+        else:
+            role = __salt__["vmware_esxi.add_role"](
+                role_name=name, privilege_ids=privilege_ids, service_instance=service_instance
+            )
+            changes["new"]["role_id"] = role["role_id"]
+            ret["comment"] = "Role {} created.".format(name)
+            ret["result"] = True
+            ret["changes"] = changes
+    else:
+        if not new_privs and not del_privs:
+            ret["comment"] = "Role {} is in the correct state".format(name)
+            ret["result"] = None
+        elif __opts__["test"]:
+            ret[
+                "comment"
+            ] = "Role {} will be updated. {} privileges will be added. {} privileges will be removed.".format(
+                name, ",".join(new_privs) or "No", ",".join(del_privs) or "No"
+            )
+            ret["result"] = None
+        else:
+            __salt__["vmware_esxi.update_role"](
+                role_name=name, privilege_ids=privilege_ids, service_instance=service_instance
+            )
+            ret["comment"] = "Role {} updated.".format(name)
+            ret["result"] = True
+            ret["changes"] = changes
+    return ret
+
+
+def role_absent(
+    name,
+    esxi_host_name=None,
+    esxi_user_name=None,
+    esxi_user_password=None,
+    service_instance=None,
+):
+    """
+    Ensure role is absent on ESXi host.
+
+    role_name
+        Role to delete on ESXi host. (required).
+
+    esxi_host_name
+        ESXi host name to use for creating the connection. (optional).
+
+    esxi_user_name
+         ESXi username to use for creating the connection. (optional).
+
+    esxi_user_password
+         Password to use for creating the connection. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    """
+    log.debug("Running vmware_esxi.role_absent")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_user=esxi_user_name,
+            esxi_host=esxi_host_name,
+            esxi_password=esxi_user_password,
+        )
+    role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
+    if not role:
+        ret["comment"] = "Role {} is not present.".format(name)
+        ret["result"] = None
+    elif __opts__["test"]:
+        ret["comment"] = "Role {} will be deleted.".format(name)
+        ret["result"] = None
+    else:
+        __salt__["vmware_esxi.remove_role"](role_name=name, service_instance=service_instance)
+        ret["comment"] = "Role {} deleted.".format(name)
+        ret["result"] = True
+    return ret
+
+
 def user_present(
     name,
     password,

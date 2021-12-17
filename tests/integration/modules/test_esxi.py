@@ -573,3 +573,34 @@ def test_add_update_remove_user(service_instance):
         password="",
     )
     assert not ret
+
+
+def test_add_update_remove_role(service_instance):
+    """
+    Test add/update/remove a local ESXi role
+    """
+    role_name = "A{}".format(uuid.uuid4())
+    ret = esxi.add_role(
+        service_instance=service_instance,
+        role_name=role_name,
+        privilege_ids=["Folder.Create"],
+    )
+    assert ret["role_id"]
+
+    ret = esxi.update_role(
+        service_instance=service_instance,
+        role_name=role_name,
+        privilege_ids=["Folder.Create", "Folder.Delete"],
+    )
+    assert ret
+
+    with pytest.raises(salt.exceptions.SaltException) as exc:
+        ret = esxi.update_role(
+            service_instance=service_instance, role_name="nobody", privilege_ids=["Folder.Create"]
+        )
+
+    ret = esxi.remove_role(
+        service_instance=service_instance,
+        role_name=role_name,
+    )
+    assert ret

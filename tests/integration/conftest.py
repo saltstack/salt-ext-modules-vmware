@@ -129,6 +129,10 @@ def patch_salt_globals():
             "vmware_esxi.update_user": esxi_mod.update_user,
             "vmware_esxi.remove_user": esxi_mod.remove_user,
             "vmware_esxi.get_user": esxi_mod.get_user,
+            "vmware_esxi.add_role": esxi_mod.add_role,
+            "vmware_esxi.update_role": esxi_mod.update_role,
+            "vmware_esxi.remove_role": esxi_mod.remove_role,
+            "vmware_esxi.get_role": esxi_mod.get_role,
         },
     )
 
