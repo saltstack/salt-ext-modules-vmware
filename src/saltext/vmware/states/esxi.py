@@ -29,8 +29,6 @@ def role_present(
     name,
     privilege_ids,
     esxi_host_name=None,
-    esxi_user_name=None,
-    esxi_user_password=None,
     service_instance=None,
 ):
     """
@@ -47,12 +45,6 @@ def role_present(
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
 
-    esxi_user_name
-         ESXi username to use for creating the connection. (optional).
-
-    esxi_user_password
-         Password to use for creating the connection. (optional).
-
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
@@ -63,9 +55,7 @@ def role_present(
         service_instance = get_service_instance(
             opts=__opts__,
             pillar=__pillar__,
-            esxi_user=esxi_user_name,
             esxi_host=esxi_host_name,
-            esxi_password=esxi_user_password,
         )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     sys_privs = {"System.Anonymous", "System.Read", "System.View"}
@@ -118,8 +108,6 @@ def role_present(
 def role_absent(
     name,
     esxi_host_name=None,
-    esxi_user_name=None,
-    esxi_user_password=None,
     service_instance=None,
 ):
     """
@@ -131,12 +119,6 @@ def role_absent(
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
 
-    esxi_user_name
-         ESXi username to use for creating the connection. (optional).
-
-    esxi_user_password
-         Password to use for creating the connection. (optional).
-
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
@@ -147,9 +129,7 @@ def role_absent(
         service_instance = get_service_instance(
             opts=__opts__,
             pillar=__pillar__,
-            esxi_user=esxi_user_name,
             esxi_host=esxi_host_name,
-            esxi_password=esxi_user_password,
         )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     if not role:

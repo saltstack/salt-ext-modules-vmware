@@ -1170,8 +1170,6 @@ def add_role(
     role_name,
     privilege_ids,
     esxi_host_name=None,
-    esxi_user_name=None,
-    esxi_user_password=None,
     service_instance=None,
 ):
     """
@@ -1188,12 +1186,6 @@ def add_role(
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
 
-    esxi_user_name
-         ESXi username to use for creating the connection. (optional).
-
-    esxi_user_password
-         Password to use for creating the connection. (optional).
-
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
@@ -1207,9 +1199,7 @@ def add_role(
         service_instance = get_service_instance(
             opts=__opts__,
             pillar=__pillar__,
-            esxi_user=esxi_user_name,
             esxi_host=esxi_host_name,
-            esxi_password=esxi_user_password,
         )
     try:
         ret["role_id"] = service_instance.content.authorizationManager.AddAuthorizationRole(
@@ -1231,8 +1221,6 @@ def update_role(
     role_name,
     privilege_ids,
     esxi_host_name=None,
-    esxi_user_name=None,
-    esxi_user_password=None,
     service_instance=None,
 ):
     """
@@ -1249,12 +1237,6 @@ def update_role(
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
 
-    esxi_user_name
-         ESXi username to use for creating the connection. (optional).
-
-    esxi_user_password
-         Password to use for creating the connection. (optional).
-
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
@@ -1267,9 +1249,7 @@ def update_role(
         service_instance = get_service_instance(
             opts=__opts__,
             pillar=__pillar__,
-            esxi_user=esxi_user_name,
             esxi_host=esxi_host_name,
-            esxi_password=esxi_user_password,
         )
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
@@ -1294,8 +1274,6 @@ def remove_role(
     role_name,
     force=False,
     esxi_host_name=None,
-    esxi_user_name=None,
-    esxi_user_password=None,
     service_instance=None,
 ):
     """
@@ -1310,12 +1288,6 @@ def remove_role(
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
 
-    esxi_user_name
-         ESXi username to use for creating the connection. (optional).
-
-    esxi_user_password
-         Password to use for creating the connection. (optional).
-
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
@@ -1328,9 +1300,7 @@ def remove_role(
         service_instance = get_service_instance(
             opts=__opts__,
             pillar=__pillar__,
-            esxi_user=esxi_user_name,
             esxi_host=esxi_host_name,
-            esxi_password=esxi_user_password,
         )
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
@@ -1354,8 +1324,6 @@ def remove_role(
 def get_role(
     role_name,
     esxi_host_name=None,
-    esxi_user_name=None,
-    esxi_user_password=None,
     service_instance=None,
 ):
     """
@@ -1366,12 +1334,6 @@ def get_role(
 
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
-
-    esxi_user_name
-         ESXi username to use for creating the connection. (optional).
-
-    esxi_user_password
-         Password to use for creating the connection. (optional).
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
