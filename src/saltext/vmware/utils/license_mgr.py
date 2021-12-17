@@ -201,10 +201,7 @@ def add_license(
 
     try:
         if not license_key in lic_keys:
-            ##  lic_mgr.AddLicense(licenseKey=license_key)
-            dgm_test = True
-            if dgm_test:
-                lic_mgr.AddLicense(licenseKey=license_key)
+            lic_mgr.AddLicense(licenseKey=license_key)
 
         # get license just added for specified license key
         addedLic = _find_lic_for_key(lic_mgr.licenses, license_key)
