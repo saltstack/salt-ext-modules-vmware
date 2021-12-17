@@ -42,6 +42,7 @@ def role_present(
     privilege_ids
         List of privileges for the role. (required).
         Refer: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.security.doc/GUID-ED56F3C4-77D0-49E3-88B6-B99B8B437B62.html
+        Example: ['Folder.Create', 'Folder.Delete'].
 
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
@@ -94,24 +95,23 @@ def role_present(
             ret["comment"] = "Role {} created.".format(name)
             ret["result"] = True
             ret["changes"] = changes
+    elif not new_privs and not del_privs:
+        ret["comment"] = "Role {} is in the correct state".format(name)
+        ret["result"] = None
+    elif __opts__["test"]:
+        ret[
+            "comment"
+        ] = "Role {} will be updated. {} privileges will be added. {} privileges will be removed.".format(
+            name, ",".join(new_privs) or "No", ",".join(del_privs) or "No"
+        )
+        ret["result"] = None
     else:
-        if not new_privs and not del_privs:
-            ret["comment"] = "Role {} is in the correct state".format(name)
-            ret["result"] = None
-        elif __opts__["test"]:
-            ret[
-                "comment"
-            ] = "Role {} will be updated. {} privileges will be added. {} privileges will be removed.".format(
-                name, ",".join(new_privs) or "No", ",".join(del_privs) or "No"
-            )
-            ret["result"] = None
-        else:
-            __salt__["vmware_esxi.update_role"](
-                role_name=name, privilege_ids=privilege_ids, service_instance=service_instance
-            )
-            ret["comment"] = "Role {} updated.".format(name)
-            ret["result"] = True
-            ret["changes"] = changes
+        __salt__["vmware_esxi.update_role"](
+            role_name=name, privilege_ids=privilege_ids, service_instance=service_instance
+        )
+        ret["comment"] = "Role {} updated.".format(name)
+        ret["result"] = True
+        ret["changes"] = changes
     return ret
 
 

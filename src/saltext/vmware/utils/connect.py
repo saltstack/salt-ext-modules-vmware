@@ -39,13 +39,13 @@ def get_service_instance(
         ext_pillar.
 
     esxi_host
-        (optioal) If specified, uses this host name instead of other configuration.
+        (optional) If specified, uses this host name instead of other configuration.
 
     esxi_user
-        (optioal) If specified, uses this username instead of other configuration.
+        (optional) If specified, uses this username instead of other configuration.
 
     esxi_password
-        (optioal) If specified, uses this password instead of other configurations.
+        (optional) If specified, uses this password instead of other configurations.
 
     Pillar Example:
 

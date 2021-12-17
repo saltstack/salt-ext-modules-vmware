@@ -1183,6 +1183,7 @@ def add_role(
     privilege_ids
         List of privileges for the role. (required).
         Refer: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.security.doc/GUID-ED56F3C4-77D0-49E3-88B6-B99B8B437B62.html
+        Example: ['Folder.Create', 'Folder.Delete'].
 
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
@@ -1243,6 +1244,7 @@ def update_role(
     privilege_ids
         List of privileges for the role. (required).
         Refer: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.security.doc/GUID-ED56F3C4-77D0-49E3-88B6-B99B8B437B62.html
+        Example: ['Folder.Create', 'Folder.Delete'].
 
     esxi_host_name
         ESXi host name to use for creating the connection. (optional).
