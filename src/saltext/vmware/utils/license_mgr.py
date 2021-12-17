@@ -88,6 +88,12 @@ def is_vcenter(service_instance):
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    except AttributeError as exc:
+        log.exception(exc)
+        raise salt.exceptions.CommandExecutionError(exc.msg)
+    except TypeError as exc:
+        log.exception(exc)
+        raise salt.exceptions.CommandExecutionError(exc.msg)
 
     if apitype == "VirtualCenter":
         return True
@@ -248,7 +254,7 @@ def add_license(
                 entity_id = esxi_hosts[0]._moId
                 if "esx" not in addedLic.editionKey:
                     log.error(
-                        f"Error, License '{license}' does not contain a suitable Edition key '{license.editionKey}' for an ESXi Server"
+                        f"Error, License '{license_key}' does not contain a suitable Edition key '{license.editionKey}' for an ESXi Server"
                     )
                     return False
         else:
@@ -274,6 +280,12 @@ def add_license(
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    except AttributeError as exc:
+        log.exception(exc)
+        raise salt.exceptions.CommandExecutionError(exc.msg)
+    except TypeError as exc:
+        log.exception(exc)
+        raise salt.exceptions.CommandExecutionError(exc.msg)
 
     return True
 
@@ -307,26 +319,114 @@ def remove_license(
     """
     lic_mgr = get_license_mgr(service_instance)
     if not lic_mgr:
+        log.debug(
+            f"attempting to remove license '{license_key}' but unable to find license manager"
+        )
         return False
 
     lic_keys = _list_lic_keys(lic_mgr.licenses)
     log.debug(
-        f"attempting to remove license '{license}' from list of existing license keys '{lic_keys}'"
+        f"attempting to remove license '{license_key}' from list of existing license keys '{lic_keys}'"
     )
     if license_key not in lic_keys:
+        log.debug(
+            f"cannot remove license '{license_key}' since not found in list of existing license keys '{lic_keys}'"
+        )
         return False
 
-    # TBD need to determine if can 'RemoveAssignedLicense' or if simple
-    # 'RemoveLicense' will unassign any assigned licenses when the license
-    # is removed
+    # Need to fine where license key is assigned and then un-assign it,
+    # and only then can the license actually be removed, that is, RemoveLicense is a noop
+    # if the license is assigned
+    #
+    # RemoveAssignedLicense takes entityId, reason to find were license key is assigned
+    # Note: an entity can only have one license assigned
 
     try:
-        lic_mgr.RemoveLicense(licenseKey=license_key)
+        # need to extract entity this license is intended to be removed from
+        # choices are:
+        #   1 vCenter - entity_id = service_instance.content.about.instanceUuid
+        #   2 ESXi - entity_id = esxi host _moId
+        #   3 cluster - entity_id = cluster _moId
+
+        entity_id = None  # TBD miracle happens here and have value
+        datacenter_ref = None
+        if datacenter_name or cluster_name or esxi_hostname:
+            if datacenter_name:
+                # need to get named datacenter's reference
+                datacenter_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+                log.debug(
+                    f"retrieved datacenter ref '{datacenter_ref }' for datacenter '{datacenter_name}'"
+                )
+
+            if cluster_name:
+                # need to get named cluster's reference
+                cluster_ref = utils_cluster.get_cluster(dc_ref=datacenter_ref, cluster=cluster_name)
+                entity_id = cluster_ref._moId
+                log.debug(
+                    f"retrieved entityId '{entity_id}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
+                )
+
+            if esxi_hostname:
+                # need to get named esxi server
+                esxi_hosts = utils_esxi.get_hosts(service_instance, datacenter_name, esxi_hostname)
+
+                # returns hosts list of dicts
+                if not esxi_hosts:
+                    log.debug(f"Failed to find esxi hostname '{esxi_hostname}'")
+                    return False
+
+                if len(esxi_hosts) > 1:
+                    log.error(
+                        f"Failed, found multiple instances of esxi hostname '{esxi_hostname}', hosts returned '{esxi_hosts}'"
+                    )
+                    return False
+
+                entity_id = esxi_hosts[0]._moId
+        else:
+            # default to applying to vCenter
+            srv_content = get_service_content(service_instance)
+            entity_id = srv_content.about.instanceUuid
+
+        lic_assign_mgr = get_license_assignment_mgr(service_instance)
+        if entity_id:
+            assigned_lic = lic_assign_mgr.QueryAssignedLicenses(entityId=entity_id)
+
+            log.debug(
+                f"assigning license, entity identifier '{entity_id}' has assigned license '{assigned_lic}'"
+            )
+            if assigned_lic and assigned_lic[0].assignedLicense.licenseKey == license_key:
+                log.debug(
+                    f"Unassigning license key '{license_key}' from entity identifer '{entity_id}'"
+                )
+                lic_assign_mgr.RemoveAssignedLicense(entityId=entity_id)
+
+            else:
+                log.debug(
+                    f"no assigned license found, or the assigned license key for entity identifier '{entity_id}' did not match license key '{license_key}'"
+                )
+                return False
+
+            log.debug(
+                f"Removing license key '{license_key}' from License Managers pool of licenses"
+            )
+            lic_mgr.RemoveLicense(licenseKey=license_key)
+        else:
+            log.debug(
+                f"Unable to find entity for specified inputs when attempting to remove license key '{license_key}'"
+            )
+            return False
+
     except vim.fault.VimFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(exc.msg)
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    except AttributeError as exc:
+        log.exception(exc)
+        raise salt.exceptions.CommandExecutionError(exc.msg)
+    except TypeError as exc:
+        log.exception(exc)
+        raise salt.exceptions.CommandExecutionError(exc.msg)
 
     return True

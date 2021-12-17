@@ -56,7 +56,6 @@ def add(license_key, **kwargs):
         salt '*' vmware_license_mgr.add license_key datacenter_name=dc1
     """
     log.debug("start vmware ext license_mgr add license_key")
-
     ret = {}
     op = {}
     for key, value in kwargs.items():
@@ -91,7 +90,9 @@ def add(license_key, **kwargs):
         salt.exceptions.VMwareApiError,
         salt.exceptions.VMwareObjectRetrievalError,
         salt.exceptions.VMwareRuntimeError,
+        salt.exceptions.CommandExecutionError,
     ) as exc:
+        log.exception(exc)
         ret[
             "message"
         ] = f"Failed to add a license key '{license_key}' due to Exception '{str(exc)}'"
@@ -157,7 +158,6 @@ def remove(license_key, **kwargs):
         salt '*' vmware_license_mgr.remove license_key
     """
     log.debug("start vmware ext license_mgr remove license_key")
-
     ret = {}
     op = {}
     for key, value in kwargs.items():
@@ -187,9 +187,11 @@ def remove(license_key, **kwargs):
         )
     except (
         salt.exceptions.VMwareApiError,
-        salt.exceptions.VMwareObjectRetrievalErrori,
+        salt.exceptions.VMwareObjectRetrievalError,
         salt.exceptions.VMwareRuntimeError,
+        salt.exceptions.CommandExecutionError,
     ) as exc:
+        log.exception(exc)
         ret[
             "message"
         ] = f"Failed to remove license key '{license_key}' due to Exception '{str(exc)}'"

@@ -8,11 +8,6 @@ from unittest.mock import patch
 import pytest
 import saltext.vmware.modules.license_mgr as license_mgr_mod
 
-from salt.exceptions import VMwareApiError
-from salt.exceptions import VMwareObjectRetrievalError
-from salt.exceptions import VMwareRuntimeError
-
-
 log = logging.getLogger(__name__)
 
 
