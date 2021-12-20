@@ -32,7 +32,7 @@ def role_present(
     service_instance=None,
 ):
     """
-    Ensure role is present on ESXi host.
+    Ensure role is present on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
         Role to create/update on ESXi host. (required).
@@ -111,7 +111,7 @@ def role_absent(
     service_instance=None,
 ):
     """
-    Ensure role is absent on ESXi host.
+    Ensure role is absent on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
         Role to delete on ESXi host. (required).

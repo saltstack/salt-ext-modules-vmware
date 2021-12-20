@@ -1173,7 +1173,7 @@ def add_role(
     service_instance=None,
 ):
     """
-    Add local role on ESXi host.
+    Add local role to service instance, which may be an ESXi host or vCenter instance.
 
     role_name
         Role to create on ESXi host. (required).
@@ -1224,7 +1224,7 @@ def update_role(
     service_instance=None,
 ):
     """
-    Update local role on ESXi host.
+    Update local role on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
         Role to update on ESXi host. (required).
@@ -1277,7 +1277,7 @@ def remove_role(
     service_instance=None,
 ):
     """
-    Remove local role on ESXi host.
+    Remove local role on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
         Role to update on ESXi host. (required).
@@ -1327,7 +1327,7 @@ def get_role(
     service_instance=None,
 ):
     """
-    Get local role on ESXi host.
+    Get local role on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
         Retrieve this role on ESXi host. (required).
