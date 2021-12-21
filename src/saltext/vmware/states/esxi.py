@@ -35,7 +35,7 @@ def role_present(
     Ensure role is present on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
-        Role to create/update on ESXi host. (required).
+        Role to create/update on service instance. (required).
 
     privilege_ids
         List of privileges for the role. (required).
@@ -43,7 +43,7 @@ def role_present(
         Example: ['Folder.Create', 'Folder.Delete'].
 
     esxi_host_name
-        ESXi host name to use for creating the connection. (optional).
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -114,10 +114,10 @@ def role_absent(
     Ensure role is absent on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
-        Role to delete on ESXi host. (required).
+        Role to delete on service instance. (required).
 
     esxi_host_name
-        ESXi host name to use for creating the connection. (optional).
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).

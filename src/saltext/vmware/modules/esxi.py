@@ -1176,7 +1176,7 @@ def add_role(
     Add local role to service instance, which may be an ESXi host or vCenter instance.
 
     role_name
-        Role to create on ESXi host. (required).
+        Role to create on service instance. (required).
 
     privilege_ids
         List of privileges for the role. (required).
@@ -1184,7 +1184,7 @@ def add_role(
         Example: ['Folder.Create', 'Folder.Delete'].
 
     esxi_host_name
-        ESXi host name to use for creating the connection. (optional).
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -1227,7 +1227,7 @@ def update_role(
     Update local role on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
-        Role to update on ESXi host. (required).
+        Role to update on service instance. (required).
 
     privilege_ids
         List of privileges for the role. (required).
@@ -1235,7 +1235,7 @@ def update_role(
         Example: ['Folder.Create', 'Folder.Delete'].
 
     esxi_host_name
-        ESXi host name to use for creating the connection. (optional).
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -1280,13 +1280,13 @@ def remove_role(
     Remove local role on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
-        Role to update on ESXi host. (required).
+        Role to update on service instance. (required).
 
     force
         Forcefully remove a role even when in use. Default False. (optional).
 
     esxi_host_name
-        ESXi host name to use for creating the connection. (optional).
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -1330,10 +1330,10 @@ def get_role(
     Get local role on service instance, which may be an ESXi host or vCenter instance.
 
     role_name
-        Retrieve this role on ESXi host. (required).
+        Retrieve this role on service instance. (required).
 
     esxi_host_name
-        ESXi host name to use for creating the connection. (optional).
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
