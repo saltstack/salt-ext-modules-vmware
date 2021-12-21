@@ -25,7 +25,7 @@ def test_get_clusters(service_instance, integration_test_config):
     assert len(named_cluster) <= len(datacenter_clusters)
 
     # verify we get an exception with invalid parameters
-    with pytest.raises(salt.exceptions.SaltInvocationError):
+    with pytest.raises(salt.exceptions.ArgumentValueError):
         utils_common.get_clusters(service_instance, cluster_name=cluster_name)
 
     # verify we get 0 results with values that don't exist parameters
@@ -46,11 +46,11 @@ def test_get_cluster(service_instance, integration_test_config):
     cluster = utils_common.get_cluster(service_instance, "DNE"+datacenter_name, "DNE"+cluster_name)
     assert cluster is None
 
-    with pytest.raises(salt.exceptions.SaltInvocationError):
+    with pytest.raises(salt.exceptions.ArgumentValueError):
         utils_common.get_cluster(service_instance, None, None)
 
-    with pytest.raises(salt.exceptions.SaltInvocationError):
+    with pytest.raises(salt.exceptions.ArgumentValueError):
         utils_common.get_cluster(service_instance, datacenter_name, None)
 
-    with pytest.raises(salt.exceptions.SaltInvocationError):
+    with pytest.raises(salt.exceptions.ArgumentValueError):
         utils_common.get_cluster(service_instance, None, cluster_name)
