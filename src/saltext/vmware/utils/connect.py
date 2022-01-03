@@ -23,7 +23,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def get_service_instance(opts=None, pillar=None):
+def get_service_instance(opts=None, pillar=None, esxi_host=None):
     """
     Connect to VMware service instance
 
@@ -36,6 +36,9 @@ def get_service_instance(opts=None, pillar=None):
         will also override any variables of the same name in pillar or
         ext_pillar.
 
+    esxi_host
+        (optional) If specified, retrieves the configured username and password for this host.
+
     Pillar Example:
 
     .. code-block::
@@ -45,20 +48,39 @@ def get_service_instance(opts=None, pillar=None):
             password: ****
             user: @example.com
 
+        vmware_config:
+            host: 198.51.100.100
+            password: ****
+            user: @example.com
+            esxi_host:
+                198.52.100.105:
+                    user: admin
+                    password: ***
+                198.52.100.106:
+                    user: admin
+                    password: ***
+
     """
     ctx = ssl._create_unverified_context()
+    opts = opts or {}
+    pillar = pillar or {}
     host = (
-        os.environ.get("VMWARE_CONFIG_HOST")
+        esxi_host
+        or os.environ.get("VMWARE_CONFIG_HOST")
         or opts.get("vmware_config", {}).get("host")
         or pillar.get("vmware_config", {}).get("host")
     )
     password = (
-        os.environ.get("VMWARE_CONFIG_PASSWORD")
+        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
+        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
+        or os.environ.get("VMWARE_CONFIG_PASSWORD")
         or opts.get("vmware_config", {}).get("password")
         or pillar.get("vmware_config", {}).get("password")
     )
     user = (
-        os.environ.get("VMWARE_CONFIG_USER")
+        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
+        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
+        or os.environ.get("VMWARE_CONFIG_USER")
         or opts.get("vmware_config", {}).get("user")
         or pillar.get("vmware_config", {}).get("user")
     )

@@ -1166,6 +1166,210 @@ def get_user(
         raise salt.exceptions.SaltException(str(exc))
 
 
+def add_role(
+    role_name,
+    privilege_ids,
+    esxi_host_name=None,
+    service_instance=None,
+):
+    """
+    Add local role to service instance, which may be an ESXi host or vCenter instance.
+
+    role_name
+        Role to create on service instance. (required).
+
+    privilege_ids
+        List of privileges for the role. (required).
+        Refer: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.security.doc/GUID-ED56F3C4-77D0-49E3-88B6-B99B8B437B62.html
+        Example: ['Folder.Create', 'Folder.Delete'].
+
+    esxi_host_name
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.add_role role_name=foo privileges=['Folder.Create']
+    """
+    log.debug("Running vmware_esxi.add_role")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_host=esxi_host_name,
+        )
+    try:
+        ret["role_id"] = service_instance.content.authorizationManager.AddAuthorizationRole(
+            name=role_name, privIds=privilege_ids
+        )
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def update_role(
+    role_name,
+    privilege_ids,
+    esxi_host_name=None,
+    service_instance=None,
+):
+    """
+    Update local role on service instance, which may be an ESXi host or vCenter instance.
+
+    role_name
+        Role to update on service instance. (required).
+
+    privilege_ids
+        List of privileges for the role. (required).
+        Refer: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.security.doc/GUID-ED56F3C4-77D0-49E3-88B6-B99B8B437B62.html
+        Example: ['Folder.Create', 'Folder.Delete'].
+
+    esxi_host_name
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_role role_name=foo privileges=['Folder.Create']
+    """
+    log.debug("Running vmware_esxi.update_role")
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_host=esxi_host_name,
+        )
+    try:
+        role = get_role(role_name=role_name, service_instance=service_instance)
+        if not role:
+            raise salt.exceptions.SaltException("Role {} not found".format(role_name))
+        service_instance.content.authorizationManager.UpdateAuthorizationRole(
+            roleId=role["role_id"], newName=role_name, privIds=privilege_ids
+        )
+        return True
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def remove_role(
+    role_name,
+    force=False,
+    esxi_host_name=None,
+    service_instance=None,
+):
+    """
+    Remove local role on service instance, which may be an ESXi host or vCenter instance.
+
+    role_name
+        Role to update on service instance. (required).
+
+    force
+        Forcefully remove a role even when in use. Default False. (optional).
+
+    esxi_host_name
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.remove_role role_name=foo
+    """
+    log.debug("Running vmware_esxi.update_role")
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_host=esxi_host_name,
+        )
+    try:
+        role = get_role(role_name=role_name, service_instance=service_instance)
+        if not role:
+            raise salt.exceptions.SaltException("Role {} not found".format(role_name))
+        service_instance.content.authorizationManager.RemoveAuthorizationRole(
+            roleId=role["role_id"], failIfUsed=force
+        )
+        return True
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def get_role(
+    role_name,
+    esxi_host_name=None,
+    service_instance=None,
+):
+    """
+    Get local role on service instance, which may be an ESXi host or vCenter instance.
+
+    role_name
+        Retrieve this role on service instance. (required).
+
+    esxi_host_name
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_role role_name=foo
+    """
+    log.debug("Running vmware_esxi.get_role")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_user=esxi_user_name,
+            esxi_host=esxi_host_name,
+            esxi_password=esxi_user_password,
+        )
+    try:
+        for role in service_instance.content.authorizationManager.roleList:
+            if role.name == role_name:
+                ret["role_id"] = role.roleId
+                ret["role_name"] = role.name
+                ret["privilege_ids"] = list(role.privilege)
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
 def connect(host, service_instance=None):
     """
     Connect an ESXi instance to a vCenter instance.

@@ -147,3 +147,82 @@ def test_user_present_absent_dry_run(vmware_datacenter, service_instance, dry_ru
     assert ret["result"] is None
     assert not ret["changes"]
     assert "will be deleted on 0 host" in ret["comment"]
+
+
+def test_role_present_absent(patch_salt_globals):
+    """
+    Test scenarios for role_present state run
+    """
+    role_name = "A{}".format(uuid.uuid4())
+    random_role = "Random{}".format(uuid.uuid4())
+
+    # create a new role
+    ret = esxi.role_present(name=role_name, privilege_ids=["Folder.Create"])
+    assert ret["result"]
+    assert ret["changes"]["new"]["role_name"] == role_name
+    assert ret["changes"]["new"]["privilege_ids"]["added"] == ["Folder.Create"]
+    assert not ret["changes"]["new"]["privilege_ids"]["removed"]
+    assert "Folder.Create" in ret["changes"]["new"]["privilege_ids"]["current"]
+
+    # update the role
+    ret = esxi.role_present(name=role_name, privilege_ids=["Folder.Create", "Folder.Delete"])
+    assert ret["result"]
+    assert ret["changes"]["new"]["role_name"] == role_name
+    assert ret["changes"]["new"]["privilege_ids"]["added"] == ["Folder.Delete"]
+    assert not ret["changes"]["new"]["privilege_ids"]["removed"]
+    assert "Folder.Delete" in ret["changes"]["new"]["privilege_ids"]["current"]
+
+    # update the role
+    ret = esxi.role_present(name=role_name, privilege_ids=["Folder.Delete"])
+    assert ret["result"]
+    assert ret["changes"]["new"]["role_name"] == role_name
+    assert ret["changes"]["new"]["privilege_ids"]["removed"] == ["Folder.Create"]
+    assert not ret["changes"]["new"]["privilege_ids"]["added"]
+    assert "Folder.Delete" in ret["changes"]["new"]["privilege_ids"]["current"]
+
+    # Remove the role
+    ret = esxi.role_absent(name=role_name)
+    assert ret["result"]
+    assert "Role {} deleted.".format(role_name) == ret["comment"]
+
+    # Remove a non-existent user
+    ret = esxi.user_absent(name=random_role)
+    assert ret["result"] is None
+    assert not ret["changes"]
+
+
+def test_role_present_absent_dry_run(vmware_datacenter, service_instance, dry_run):
+    """
+    Test scenarios for vmware_esxi.role_present state run with test=True
+    """
+
+    role_name = "A{}".format(uuid.uuid4())
+    random_role = "Random{}".format(uuid.uuid4())
+
+    # create a new role
+    ret = esxi.role_present(name=role_name, privilege_ids=["Folder.Create"])
+    assert ret["result"] is None
+    assert not ret["changes"]
+    assert "Role {} will be created.".format(role_name) == ret["comment"]
+
+    # create the role using exec mod
+    ret = esxi_mod.add_role(
+        role_name=role_name, privilege_ids=["Folder.Create"], service_instance=service_instance
+    )
+    # update the role
+    ret = esxi.role_present(name=role_name, privilege_ids=["Folder.Delete"])
+    assert ret["result"] is None
+    assert not ret["changes"]
+    assert "Folder.Delete privileges will be added" in ret["comment"]
+    assert "Folder.Create privileges will be removed" in ret["comment"]
+
+    ret = esxi.role_absent(name=role_name)
+    assert ret["result"] is None
+    assert not ret["changes"]
+    assert "Role {} will be deleted.".format(role_name) == ret["comment"]
+
+    # Remove a non-existent user
+    ret = esxi.role_absent(name=random_role)
+    assert ret["result"] is None
+    assert not ret["changes"]
+    assert "Role {} is not present.".format(random_role) in ret["comment"]
