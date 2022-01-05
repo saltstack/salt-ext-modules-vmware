@@ -31,7 +31,7 @@ def test_add(patch_salt_globals, license_key, vmware_license_mgr_inst):
 
     assert (
         ret["message"]
-        == f"Failed specified license key '{license_key}' was not added to License Manager"
+        == f"Failed to add a license key '{license_key}' due to Exception 'License is not valid for this product'"
     )
     assert ret["result"] == False
 

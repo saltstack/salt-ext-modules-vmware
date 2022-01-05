@@ -201,7 +201,26 @@ def add_license(
 
     try:
         if not license_key in lic_keys:
-            lic_mgr.AddLicense(licenseKey=license_key)
+            licMgrLicInfo = lic_mgr.AddLicense(licenseKey=license_key)
+            log.debug(f"attempted AddLicense, returned license into '{licMgrLicInfo}'")
+            props_list = []
+            for prop in licMgrLicInfo.properties:
+                props_list.append({prop.key: prop.value})
+
+            # check for failure to add license
+            license_add_failure = False
+            license_add_failure_msg = ""
+            for prop_dict in props_list:
+                if "lc_error" in prop_dict:
+                    log.error(f"Failed AddLicense for license key '{license_key}'")
+                    license_add_failure = True
+                if "diagnostic" in prop_dict:
+                    license_add_failure_msg = prop_dict["diagnostic"]
+            if license_add_failure:
+                log.error(
+                    f"Failed to add license key '{license_key}', reason '{license_add_failure_msg}'"
+                )
+                raise salt.exceptions.CommandExecutionError(license_add_failure_msg)
 
         # get license just added for specified license key
         addedLic = _find_lic_for_key(lic_mgr.licenses, license_key)
