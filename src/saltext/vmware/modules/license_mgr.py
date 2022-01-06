@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
+# noreorder
+import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.license_mgr as utils_license_mgr
 from saltext.vmware.utils.connect import get_service_instance
-
-import salt.exceptions
 
 log = logging.getLogger(__name__)
 

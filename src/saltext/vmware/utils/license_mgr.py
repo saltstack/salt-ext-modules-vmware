@@ -3,16 +3,16 @@
 # pylint: disable=no-name-in-module
 import logging
 
-import saltext.vmware.utils.cluster as utils_cluster
-import saltext.vmware.utils.datacenter as utils_datacenter
-import saltext.vmware.utils.esxi as utils_esxi
-from saltext.vmware.utils.common import get_service_content as get_service_content
-
+# noreorder
 import salt.exceptions
 import salt.modules.cmdmod
 import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
+import saltext.vmware.utils.cluster as utils_cluster
+import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.esxi as utils_esxi
+from saltext.vmware.utils.common import get_service_content as get_service_content
 
 try:
     from pyVmomi import vim, vmodl
