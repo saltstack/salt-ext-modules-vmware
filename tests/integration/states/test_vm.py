@@ -44,7 +44,9 @@ def test_snapshot_present(integration_test_config, patch_salt_globals_vm_state):
     test snapshot present
     """
     if integration_test_config["virtual_machines"]:
-        ret = virtual_machine.snapshot_present(integration_test_config["virtual_machines"][0], 'test-snap')
+        ret = virtual_machine.snapshot_present(
+            integration_test_config["virtual_machines"][0], "test-snap"
+        )
         assert ret["comment"] == "created"
     else:
         pytest.skip("test requires at least one virtual machine")
@@ -55,7 +57,9 @@ def test_snapshot_absent(integration_test_config, patch_salt_globals_vm_state):
     test snapshot absent
     """
     if integration_test_config["virtual_machines"]:
-        ret = virtual_machine.snapshot_absent(integration_test_config["virtual_machines"][0], 'test-snap')
+        ret = virtual_machine.snapshot_absent(
+            integration_test_config["virtual_machines"][0], "test-snap"
+        )
         assert ret["comment"] == "destroyed"
     else:
         pytest.skip("test requires at least one virtual machine")

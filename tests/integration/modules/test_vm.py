@@ -147,7 +147,7 @@ def test_create_snapshot(integration_test_config, patch_salt_globals_vm):
     """
     if integration_test_config["virtual_machines"]:
         res = virtual_machine.create_snapshot(
-            integration_test_config["virtual_machines"][0], 'test-ss'
+            integration_test_config["virtual_machines"][0], "test-ss"
         )
         assert res["snapshot"] == "created"
     else:
@@ -159,10 +159,8 @@ def test_snapshot(integration_test_config, patch_salt_globals_vm):
     Test snapshot.
     """
     if integration_test_config["virtual_machines"]:
-        res = virtual_machine.snapshot(
-            integration_test_config["virtual_machines"][0]
-        )
-        assert 'creation_time' in res['snapshots'][0]
+        res = virtual_machine.snapshot(integration_test_config["virtual_machines"][0])
+        assert "creation_time" in res["snapshots"][0]
     else:
         pytest.skip("test requires at least one virtual machine")
 
@@ -173,7 +171,7 @@ def test_destroy_snapshot(integration_test_config, patch_salt_globals_vm):
     """
     if integration_test_config["virtual_machines"]:
         res = virtual_machine.destroy_snapshot(
-            integration_test_config["virtual_machines"][0], 'test-ss'
+            integration_test_config["virtual_machines"][0], "test-ss"
         )
         assert res["snapshot"] == "destroyed"
     else:

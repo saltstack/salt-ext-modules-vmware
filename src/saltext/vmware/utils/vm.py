@@ -797,16 +797,16 @@ def create_snapshot(vm_ref, snapshot_name, description, memory, quiesce):
 
     vm_ref
         Reference to virtual machine.
-    
+
     snapshot_name
         The name for the snapshot being created. Not unique
-    
+
     description
         Description for the snapshot.
-    
+
     memory
         (boolean) If TRUE, a dump of the internal state of the virtual machine (basically a memory dump) is included in the snapshot.
-    
+
     quiesce
         (boolean) If TRUE and the virtual machine is powered on when the snapshot is taken, VMware Tools is used to quiesce the file system in the virtual machine.
     """
@@ -821,7 +821,7 @@ def snapshot_recursive(snapshot_tree_root, snaps):
 
     snapshot_tree_root
         Root node of snapshot tree.
-    
+
     snaps
         List of snapshot info.
     """
@@ -832,7 +832,7 @@ def snapshot_recursive(snapshot_tree_root, snaps):
             "id": ss.id,
             "name": ss.name,
             "state": ss.state,
-            "quiesced": ss.quiesced
+            "quiesced": ss.quiesced,
         }
         snaps.append(current)
         if len(ss.childSnapshotList) > 0:
@@ -846,10 +846,10 @@ def snapshot_recursive_search(snapshot_tree_root, snapshot_name, snapshot_id):
 
     snapshot_tree_root
         Root node of snapshot tree.
-    
+
     snapshot_name
         Name of snapshot to find.
-    
+
     snapshot_id
         id of snapshot to find.
     """
@@ -871,7 +871,6 @@ def snapshot_recursive_search(snapshot_tree_root, snapshot_name, snapshot_id):
     return snaps
 
 
-
 def get_snapshots(vm_ref):
     """
     Returns list of snapshot info for a given vm.
@@ -881,21 +880,20 @@ def get_snapshots(vm_ref):
     """
     snaps = []
     tree = vm_ref.snapshot
-    if hasattr(tree,'rootSnapshotList') and len(tree.rootSnapshotList) > 0:
+    if hasattr(tree, "rootSnapshotList") and len(tree.rootSnapshotList) > 0:
         snaps = snapshot_recursive(tree.rootSnapshotList, snaps)
     else:
-        snaps = {'msg':'no snapshots'}
+        snaps = {"msg": "no snapshots"}
     return snaps
 
 
 def get_snapshot(vm_ref, snapshot_name, snapshot_id):
-    """
-    """
+    """"""
     tree = vm_ref.snapshot
-    if hasattr(tree,'rootSnapshotList') and len(tree.rootSnapshotList) > 0:
+    if hasattr(tree, "rootSnapshotList") and len(tree.rootSnapshotList) > 0:
         snap = snapshot_recursive_search(tree.rootSnapshotList, snapshot_name, snapshot_id)
     else:
-        snap = {'msg':'no snapshots'}
+        snap = {"msg": "no snapshots"}
     return snap
 
 
@@ -905,7 +903,7 @@ def destroy_snapshot(snapshot, remove_children):
 
     snapshot
         Reference to a vim.vm.Snapshot object.
-    
+
     remove_children
         Remove subtree of snapshots.
     """

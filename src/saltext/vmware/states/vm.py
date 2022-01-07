@@ -90,22 +90,30 @@ def set_boot_manager(
     return ret
 
 
-def snapshot_present(name, snapshot_name, description='', memory=False, quiesce=False, datacenter_name=None, service_instance=None):
+def snapshot_present(
+    name,
+    snapshot_name,
+    description="",
+    memory=False,
+    quiesce=False,
+    datacenter_name=None,
+    service_instance=None,
+):
     """
     Create virtual machine snapshot.
 
     name
         The name of the virtual machine.
-    
+
     snapshot_name
         The name for the snapshot being created. Not unique
-    
+
     description
         Description for the snapshot.
-    
+
     memory
         (boolean, optional) If TRUE, a dump of the internal state of the virtual machine (basically a memory dump) is included in the snapshot.
-    
+
     quiesce
         (boolean, optional) If TRUE and the virtual machine is powered on when the snapshot is taken, VMware Tools is used to quiesce the file system in the virtual machine.
 
@@ -129,16 +137,16 @@ def snapshot_present(name, snapshot_name, description='', memory=False, quiesce=
     if utils_vm.get_snapshot(vm_ref, snapshot_name, None):
         ret["comment"] = "snapshot was already created"
         return ret
-    
+
     if __opts__["test"]:
-        ret["changes"]['new'] = f"Snapshot {snapshot_name} will be created."
+        ret["changes"]["new"] = f"Snapshot {snapshot_name} will be created."
         ret["comment"] = "These options are set to change."
         return ret
 
     snapshot = utils_vm.create_snapshot(vm_ref, snapshot_name, description, memory, quiesce)
 
     if isinstance(snapshot, vim.vm.Snapshot):
-        ret["changes"]['new'] = f"Snapshot {snapshot_name} created."
+        ret["changes"]["new"] = f"Snapshot {snapshot_name} created."
         ret["comment"] = "created"
         return ret
     else:
@@ -146,19 +154,26 @@ def snapshot_present(name, snapshot_name, description='', memory=False, quiesce=
         return ret
 
 
-def snapshot_absent(name, snapshot_name, snapshot_id=None, remove_children=False, datacenter_name=None, service_instance=None):
+def snapshot_absent(
+    name,
+    snapshot_name,
+    snapshot_id=None,
+    remove_children=False,
+    datacenter_name=None,
+    service_instance=None,
+):
     """
     Create virtual machine snapshot.
 
     name
         The name of the virtual machine.
-    
+
     snapshot_name
         The name for the snapshot being destroyed. Not unique
-    
+
     snapshot_id
         (optional) ID of snapshot to be destroyed.
-    
+
     remove_children
         (optional, Bool) Remove snapshots below snapshot being removed in tree.
 
@@ -184,14 +199,14 @@ def snapshot_absent(name, snapshot_name, snapshot_id=None, remove_children=False
     if snapshot is None:
         ret["comment"] = f"Snapshot {snapshot_name} doesn't exist"
         return ret
-    
+
     if __opts__["test"]:
-        ret["changes"]['new'] = f"Snapshot {snapshot_name} will be destroyed."
+        ret["changes"]["new"] = f"Snapshot {snapshot_name} will be destroyed."
         ret["comment"] = "These options are set to change."
         return ret
 
     utils_vm.destroy_snapshot(snapshot.snapshot, remove_children)
 
-    ret["changes"]['new'] = f"Snapshot {snapshot_name} destroyed."
+    ret["changes"]["new"] = f"Snapshot {snapshot_name} destroyed."
     ret["comment"] = "destroyed"
     return ret
