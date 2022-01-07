@@ -185,7 +185,6 @@ jobs:
       max-parallel: 3
       matrix:
         python-version:
-          - 3.6
           - 3.7
         salt-version:
           - 3004
