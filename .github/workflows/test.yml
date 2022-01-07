@@ -186,6 +186,7 @@ jobs:
       matrix:
         python-version:
           - 3.7
+          - 3.8
         salt-version:
           - 3004
 
