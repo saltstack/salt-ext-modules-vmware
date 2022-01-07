@@ -39,103 +39,142 @@ def test_vm_list(integration_test_config, patch_salt_globals_vm):
     assert all == integration_test_config["virtual_machines"]
 
 
-def test_vm_list_templates(integration_test_config, patch_salt_globals_vm):
-    """
-    Test vm list_templates
-    """
-    all = virtual_machine.list_templates()
-    assert all == integration_test_config["virtual_machines_templates"]
+# def test_vm_list_templates(integration_test_config, patch_salt_globals_vm):
+#     """
+#     Test vm list_templates
+#     """
+#     all = virtual_machine.list_templates()
+#     assert all == integration_test_config["virtual_machines_templates"]
 
 
-def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
-    """
-    Test deploy virtual machine through an OVF
-    """
-    res = virtual_machine.deploy_ovf(
-        vm_name="test1",
-        host_name=integration_test_config["esxi_host_name"],
-        ovf_path="tests/test_files/centos-7-tools.ovf",
-    )
-    assert res["deployed"] == True
+# def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
+#     """
+#     Test deploy virtual machine through an OVF
+#     """
+#     res = virtual_machine.deploy_ovf(
+#         vm_name="test1",
+#         host_name=integration_test_config["esxi_host_name"],
+#         ovf_path="tests/test_files/centos-7-tools.ovf",
+#     )
+#     assert res["deployed"] == True
 
 
-def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
-    """
-    Test deploy virtual machine through an OVA
-    """
-    tar = tarfile.open("tests/test_files/sample.tar", "w")
-    tar.add("tests/test_files/centos-7-tools.ovf")
-    tar.close()
-    res = virtual_machine.deploy_ova(
-        vm_name="test2",
-        host_name=integration_test_config["esxi_host_name"],
-        ova_path="tests/test_files/sample.tar",
-    )
-    os.remove("tests/test_files/sample.tar")
-    assert res["deployed"] == True
+# def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
+#     """
+#     Test deploy virtual machine through an OVA
+#     """
+#     tar = tarfile.open("tests/test_files/sample.tar", "w")
+#     tar.add("tests/test_files/centos-7-tools.ovf")
+#     tar.close()
+#     res = virtual_machine.deploy_ova(
+#         vm_name="test2",
+#         host_name=integration_test_config["esxi_host_name"],
+#         ova_path="tests/test_files/sample.tar",
+#     )
+#     os.remove("tests/test_files/sample.tar")
+#     assert res["deployed"] == True
 
 
-def test_template_deploy(integration_test_config, patch_salt_globals_vm):
-    """
-    Test deploy virtual machine through an template
-    """
-    if integration_test_config["virtual_machines_templates"]:
-        res = virtual_machine.deploy_template(
-            vm_name="test_template_vm",
-            template_name=integration_test_config["virtual_machines_templates"][0],
-            host_name=integration_test_config["esxi_host_name"],
-        )
-        assert res["deployed"] == True
-    else:
-        pass
+# def test_template_deploy(integration_test_config, patch_salt_globals_vm):
+#     """
+#     Test deploy virtual machine through an template
+#     """
+#     if integration_test_config["virtual_machines_templates"]:
+#         res = virtual_machine.deploy_template(
+#             vm_name="test_template_vm",
+#             template_name=integration_test_config["virtual_machines_templates"][0],
+#             host_name=integration_test_config["esxi_host_name"],
+#         )
+#         assert res["deployed"] == True
+#     else:
+#         pass
 
 
-def test_path(integration_test_config, patch_salt_globals_vm):
-    """
-    Test deploy virtual machine through an template
-    """
-    if integration_test_config["virtual_machine_paths"].items:
-        for k, v in integration_test_config["virtual_machine_paths"].items():
-            res = virtual_machine.path(vm_name=k)
-            assert res == v
-    else:
-        pass
+# def test_path(integration_test_config, patch_salt_globals_vm):
+#     """
+#     Test deploy virtual machine through an template
+#     """
+#     if integration_test_config["virtual_machine_paths"].items:
+#         for k, v in integration_test_config["virtual_machine_paths"].items():
+#             res = virtual_machine.path(vm_name=k)
+#             assert res == v
+#     else:
+#         pass
 
 
-def test_powered_on(integration_test_config, patch_salt_globals_vm):
+# def test_powered_on(integration_test_config, patch_salt_globals_vm):
+#     """
+#     Test deploy virtual machine through an template
+#     """
+#     if integration_test_config["virtual_machines"]:
+#         states = ["powered-on", "suspend", "powered-on", "reset", "powered-off"]
+#         for state in states:
+#             res = virtual_machine.power_state(integration_test_config["virtual_machines"][0], state)
+#             assert res["comment"] == f"Virtual machine {state} action succeeded"
+#     else:
+#         pass
+
+
+# def test_boot_manager(integration_test_config, patch_salt_globals_vm):
+#     """
+#     Test boot options manager
+#     """
+#     if integration_test_config["virtual_machines"]:
+#         res = virtual_machine.boot_manager(
+#             integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
+#         )
+#         assert res["status"] == "changed"
+#     else:
+#         pytest.skip("test requires at least one virtual machine")
+
+
+# def test_boot_manager_same_settings(integration_test_config, patch_salt_globals_vm):
+#     """
+#     Test boot option duplicates
+#     """
+#     if integration_test_config["virtual_machines"]:
+#         res = virtual_machine.boot_manager(
+#             integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
+#         )
+#         assert res["status"] == "already configured this way"
+#     else:
+#         pytest.skip("test requires at least one virtual machine")
+
+
+def test_create_snapshot(integration_test_config, patch_salt_globals_vm):
     """
-    Test deploy virtual machine through an template
+    Test create snapshot.
     """
     if integration_test_config["virtual_machines"]:
-        states = ["powered-on", "suspend", "powered-on", "reset", "powered-off"]
-        for state in states:
-            res = virtual_machine.power_state(integration_test_config["virtual_machines"][0], state)
-            assert res["comment"] == f"Virtual machine {state} action succeeded"
-    else:
-        pass
-
-
-def test_boot_manager(integration_test_config, patch_salt_globals_vm):
-    """
-    Test boot options manager
-    """
-    if integration_test_config["virtual_machines"]:
-        res = virtual_machine.boot_manager(
-            integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
+        res = virtual_machine.create_snapshot(
+            integration_test_config["virtual_machines"][0], 'test-ss'
         )
-        assert res["status"] == "changed"
+        assert res["snapshot"] == "created"
     else:
         pytest.skip("test requires at least one virtual machine")
 
 
-def test_boot_manager_same_settings(integration_test_config, patch_salt_globals_vm):
+def test_snapshot(integration_test_config, patch_salt_globals_vm):
     """
-    Test boot option duplicates
+    Test snapshot.
     """
     if integration_test_config["virtual_machines"]:
-        res = virtual_machine.boot_manager(
-            integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
+        res = virtual_machine.snapshot(
+            integration_test_config["virtual_machines"][0]
         )
-        assert res["status"] == "already configured this way"
+        assert 'creation_time' in res['snapshots'][0]
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_destroy_snapshot(integration_test_config, patch_salt_globals_vm):
+    """
+    Test destroy snapshot.
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.destroy_snapshot(
+            integration_test_config["virtual_machines"][0], 'test-ss'
+        )
+        assert res["snapshot"] == "destroyed"
     else:
         pytest.skip("test requires at least one virtual machine")
