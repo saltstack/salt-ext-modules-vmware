@@ -204,9 +204,12 @@ def snapshot_absent(
         ret["changes"]["new"] = f"Snapshot {snapshot_name} will be destroyed."
         ret["comment"] = "These options are set to change."
         return ret
-
-    utils_vm.destroy_snapshot(snapshot.snapshot, remove_children)
-
-    ret["changes"]["new"] = f"Snapshot {snapshot_name} destroyed."
-    ret["comment"] = "destroyed"
-    return ret
+    try:
+        utils_vm.destroy_snapshot(snapshot.snapshot, remove_children)
+        ret["changes"]["new"] = f"Snapshot {snapshot_name} destroyed."
+        ret["comment"] = "destroyed"
+        return ret
+    except Exception as e:
+        ret["changes"]["result"] = False
+        ret["comment"] = str(e)
+        return ret
