@@ -835,7 +835,7 @@ def snapshot_recursive(snapshot_tree_root, snaps):
             "quiesced": ss.quiesced,
         }
         snaps.append(current)
-        if len(ss.childSnapshotList) > 0:
+        if ss.childSnapshotList:
             snaps = snapshot_recursive(ss.childSnapshotList, snaps)
     return snaps
 
@@ -857,14 +857,14 @@ def snapshot_recursive_search(snapshot_tree_root, snapshot_name, snapshot_id):
         if snapshot_id is None:
             if snapshot_name == ss.name:
                 return ss
-            elif len(ss.childSnapshotList) > 0:
+            elif ss.childSnapshotList:
                 snaps = snapshot_recursive_search(ss.childSnapshotList, snapshot_name, snapshot_id)
             else:
                 return None
         else:
             if snapshot_id and snapshot_id == ss.id and snapshot_name == ss.name:
                 return ss
-            elif len(ss.childSnapshotList) > 0:
+            elif ss.childSnapshotList:
                 snaps = snapshot_recursive_search(ss.childSnapshotList, snapshot_name, snapshot_id)
             else:
                 return None
@@ -890,7 +890,7 @@ def get_snapshots(vm_ref):
 def get_snapshot(vm_ref, snapshot_name, snapshot_id):
     """"""
     tree = vm_ref.snapshot
-    if hasattr(tree, "rootSnapshotList") and len(tree.rootSnapshotList) > 0:
+    if hasattr(tree, "rootSnapshotList") and tree.rootSnapshotList:
         snap = snapshot_recursive_search(tree.rootSnapshotList, snapshot_name, snapshot_id)
     else:
         snap = {"msg": "no snapshots"}
