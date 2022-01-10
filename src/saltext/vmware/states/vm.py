@@ -94,7 +94,7 @@ def snapshot_present(
     name,
     snapshot_name,
     description="",
-    memory=False,
+    include_memory=False,
     quiesce=False,
     datacenter_name=None,
     service_instance=None,
@@ -111,7 +111,7 @@ def snapshot_present(
     description
         Description for the snapshot.
 
-    memory
+    include_memory
         (boolean, optional) If TRUE, a dump of the internal state of the virtual machine (basically a memory dump) is included in the snapshot.
 
     quiesce
@@ -143,7 +143,7 @@ def snapshot_present(
         ret["comment"] = "These options are set to change."
         return ret
 
-    snapshot = utils_vm.create_snapshot(vm_ref, snapshot_name, description, memory, quiesce)
+    snapshot = utils_vm.create_snapshot(vm_ref, snapshot_name, description, include_memory, quiesce)
 
     if isinstance(snapshot, vim.vm.Snapshot):
         ret["changes"]["new"] = f"Snapshot {snapshot_name} created."
