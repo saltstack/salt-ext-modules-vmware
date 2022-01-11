@@ -737,36 +737,19 @@ def delete_datacenter(service_instance, datacenter_name):
     wait_for_task(task, datacenter_name, "DeleteDatacenterTask")
 
 
-def get_vm_datacenter(*, vm):
+def get_parent_of_type(mors, type):
     """
-    Return a datacenter from vm
-    """
-    datacenter = None
-    while True:
-        if isinstance(vm, vim.Datacenter):
-            datacenter = vm
-            break
-        try:
-            vm = vm.parent
-        except AttributeError:
-            break
-    return datacenter
+    Finds the first parent of a managed object that matches the type specified.
 
-
-def get_mors_type(obj, type):
+    `None` is returned if no object is found.
     """
-    Return a vim type from managed object reference
-    """
-    datacenter = None
     while True:
-        if isinstance(obj, type):
-            datacenter = obj
-            break
+        if isinstance(mors, type):
+            return mors
         try:
-            obj = obj.parent
+            mors = mors.parent
         except AttributeError:
-            break
-    return datacenter
+            return None
 
 
 def get_datastore(name, datacenter, service_instance):
