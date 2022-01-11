@@ -40,7 +40,6 @@ def get_root_folder(service_instance):
         The Service Instance Object for which to obtain the root folder.
 
     """
-    log.debug("start get_root_folder")
     try:
         log.trace("Retrieving root folder")
         return service_instance.RetrieveContent().rootFolder
@@ -64,7 +63,6 @@ def get_service_content(service_instance):
     service_instance
         The Service Instance from which to obtain service content.
     """
-    log.debug("start get_service_content")
     try:
         return service_instance.RetrieveServiceContent()
     except vim.fault.NoPermission as exc:
@@ -116,8 +114,6 @@ def get_content(
         Flag specifying whether the properties to be retrieved are local to the
         container. If that is the case, the traversal spec needs to be None.
     """
-    log.debug("start get_content")
-
     # Start at the rootFolder if container starting point not specified
     if not container_ref:
         container_ref = get_root_folder(service_instance)
@@ -241,8 +237,6 @@ def get_mors_with_properties(
         Flag specifying whether the properties to be retrieved are local to the
         container. If that is the case, the traversal spec needs to be None.
     """
-    log.debug("start get_mors_with_properties")
-
     # Get all the content
     content_args = [service_instance, object_type]
     content_kwargs = {
@@ -260,16 +254,12 @@ def get_mors_with_properties(
             raise
         content = get_content(*content_args, **content_kwargs)
 
-    log.debug("get_mors_with_properties, get object_list")
     object_list = []
     for obj in content:
         properties = {}
-        log.debug("get_mors_with_properties, get properites from object")
         for prop in obj.propSet:
             properties[prop.name] = prop.val
-        log.debug("get_mors_with_properties, update properites for object")
         properties["object"] = obj.obj
-        log.debug("get_mors_with_properties, append properites to object_list")
         object_list.append(properties)
     log.trace("Retrieved %s objects", len(object_list))
     return object_list

@@ -34,7 +34,6 @@ def _list_lic_keys(licenses):
     Note:
         skips evaluation licenses
     """
-    log.debug("started _list_lic_keys")
     lic_keys = []
     for lic in licenses:
         if lic.used is None:
@@ -56,7 +55,6 @@ def _find_lic_for_key(licenses, license_key):
     Note:
         skips evaluation licenses
     """
-    log.debug("started _find_lic_for_key")
     lic_keys = []
     for lic in licenses:
         if lic.used is None:
@@ -69,14 +67,13 @@ def _find_lic_for_key(licenses, license_key):
 def is_vcenter(service_instance):
     """
     Test if service_instance represents vCenter,
-    otherwise assume represents an ESXi server
 
     service_instance
         The Service Instance to check if it represents a vCenter
 
     Return:
         True  - vCenter
-        False - ESXi server
+        False - not a vCenter
         None - neither of the above
     """
     try:
@@ -97,10 +94,8 @@ def is_vcenter(service_instance):
 
     if apitype == "VirtualCenter":
         return True
-    elif apitype == "HostAgent":
-        return False
 
-    return None
+    return False
 
 
 def get_license_mgr(service_instance):
@@ -112,14 +107,11 @@ def get_license_mgr(service_instance):
 
     Note: returns LicenseManager
     """
-    lic_mgr = None
-
     if not is_vcenter(service_instance):
-        return lic_mgr
+        return None
 
     srv_content = get_service_content(service_instance)
-    lic_mgr = srv_content.licenseManager
-    return lic_mgr
+    return srv_content.licenseManager
 
 
 def get_license_assignment_mgr(service_instance):
@@ -131,14 +123,11 @@ def get_license_assignment_mgr(service_instance):
 
     Note: returns LicenseAssignmentManager
     """
-    lic_mgr = None
-
     if not is_vcenter(service_instance):
-        return lic_mgr
+        return None
 
     srv_content = get_service_content(service_instance)
-    lic_mgr = srv_content.licenseManager.licenseAssignmentManager
-    return lic_mgr
+    return srv_content.licenseManager
 
 
 def list_licenses(service_instance):
@@ -148,8 +137,6 @@ def list_licenses(service_instance):
     service_instance
         The Service Instance Object from which to obtain licenses.
     """
-    log.debug("start list of License Managers")
-
     ret = {}
     lic_mgr = get_license_mgr(service_instance)
     log.debug(f"License Manager listing of licenses '{lic_mgr.licenses}'")
@@ -168,9 +155,9 @@ def add_license(
 ):
     """
     Add license to the pool of available licenses associated with the License Manager
-    and assign it to the specified Cluster, ESXI Server or vCenter
+    and assign it to the specified Cluster, ESXi Server or vCenter
 
-    If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
+    If no datacenter, cluster or ESXi Server is specified, it is assumed the operation is to be applied to a vCenter
 
     service_instance:
         Service Instance containing a License Manager
@@ -185,7 +172,7 @@ def add_license(
         Name of the cluster to add license [default None]
 
     esxi_hostname
-        Hostname of the ESXI Server to add license [default None]
+        Hostname of the ESXi Server to add license [default None]
 
     Returns:
         True - if successful or license already present
@@ -311,9 +298,9 @@ def remove_license(
 ):
     """
     Remove license from the pool of available licenses associated with the License Manager
-    and unassign it from the specified Cluster, ESXI Server or vCenter
+    and unassign it from the specified Cluster, ESXi Server or vCenter
 
-    If no datacenter, cluster or ESXI Server is specified, it is assumed the operation is to be applied to a vCenter
+    If no datacenter, cluster or ESXi Server is specified, it is assumed the operation is to be applied to a vCenter
 
     service_instance:
         Service Instance containing a License Manager
@@ -328,7 +315,7 @@ def remove_license(
         Name of the cluster to add license [default None]
 
     esxi_hostname
-        Hostname of the ESXI Server to add license [default None]
+        Hostname of the ESXi Server to add license [default None]
 
     Returns:
         True - if successful, license removed

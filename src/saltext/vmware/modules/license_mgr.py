@@ -55,16 +55,12 @@ def add(license_key, **kwargs):
 
         salt '*' vmware_license_mgr.add license_key datacenter_name=dc1
     """
-    log.debug("start vmware ext license_mgr add license_key")
     ret = {}
-    op = {}
-    for key, value in kwargs.items():
-        op[key] = value
 
-    service_instance = op.pop("service_instance", None)
-    datacenter_name = op.pop("datacenter_name", None)
-    cluster_name = op.pop("cluster_name", None)
-    esxi_hostname = op.pop("esxi_hostname", None)
+    service_instance = kwargs.get("service_instance", None)
+    datacenter_name = kwargs.get("datacenter_name", None)
+    cluster_name = kwargs.get("cluster_name", None)
+    esxi_hostname = kwargs.get("esxi_hostname", None)
 
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -75,7 +71,7 @@ def add(license_key, **kwargs):
         return ret
 
     try:
-        if "test" in __opts__ and __opts__["test"]:
+        if __opts__.get("test", None):
             ret["licenses"] = license_key
             ret["message"] = "Test dry-run, not really connected to a vCenter testing"
             return ret
@@ -93,9 +89,7 @@ def add(license_key, **kwargs):
         salt.exceptions.CommandExecutionError,
     ) as exc:
         log.exception(exc)
-        ret[
-            "message"
-        ] = f"Failed to add a license key '{license_key}' due to Exception '{str(exc)}'"
+        ret["message"] = f"Failed to add a license key '{license_key}' due to Exception '{exc}'"
         ret["result"] = False
         return ret
 
@@ -119,11 +113,10 @@ def list_(service_instance=None):
 
         salt '*' vmware_license_mgr.list
     """
-    log.debug("start vmware ext license_mgr list")
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
-    if "test" in __opts__ and __opts__["test"]:
+    if __opts__.get("test", None):
         ret["licenses"] = "DGMTT-FAKED-TESTS-LICEN-SE012"
         ret["message"] = "Test dry-run, not really connected to a vCenter testing"
         return ret
@@ -157,16 +150,12 @@ def remove(license_key, **kwargs):
 
         salt '*' vmware_license_mgr.remove license_key
     """
-    log.debug("start vmware ext license_mgr remove license_key")
     ret = {}
-    op = {}
-    for key, value in kwargs.items():
-        op[key] = value
 
-    service_instance = op.pop("service_instance", None)
-    datacenter_name = op.pop("datacenter_name", None)
-    cluster_name = op.pop("cluster_name", None)
-    esxi_hostname = op.pop("esxi_hostname", None)
+    service_instance = kwargs.get("service_instance", None)
+    datacenter_name = kwargs.get("datacenter_name", None)
+    cluster_name = kwargs.get("cluster_name", None)
+    esxi_hostname = kwargs.get("esxi_hostname", None)
 
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -177,7 +166,7 @@ def remove(license_key, **kwargs):
         return ret
 
     try:
-        if "test" in __opts__ and __opts__["test"]:
+        if __opts__.get("test", None):
             ret["licenses"] = license_key
             ret["message"] = "Test dry-run, not really connected to a vCenter testing"
             return ret
@@ -192,9 +181,7 @@ def remove(license_key, **kwargs):
         salt.exceptions.CommandExecutionError,
     ) as exc:
         log.exception(exc)
-        ret[
-            "message"
-        ] = f"Failed to remove license key '{license_key}' due to Exception '{str(exc)}'"
+        ret["message"] = f"Failed to remove license key '{license_key}' due to Exception '{exc}'"
         ret["result"] = False
         return ret
 
