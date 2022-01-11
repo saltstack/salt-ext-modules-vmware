@@ -150,6 +150,7 @@ def snapshot_present(
         ret["comment"] = "created"
         return ret
     else:
+        ret["changes"]["result"] = False
         ret["comment"] = "failed to create"
         return ret
 
