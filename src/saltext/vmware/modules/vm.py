@@ -338,7 +338,7 @@ def boot_manager(
     order=["cdrom", "disk", "ethernet", "floppy"],
     delay=0,
     enter_bios_setup=False,
-    retry_delay=None,
+    retry_delay=0,
     efi_secure_boot_enabled=False,
     service_instance=None,
 ):
@@ -385,7 +385,130 @@ def boot_manager(
 
     if utils_vm.compare_boot_options(input_opts, vm.config.bootOptions):
         return {"status": "already configured this way"}
-
     ret = utils_vm.change_boot_options(vm, input_opts)
 
     return ret
+
+
+def create_snapshot(
+    vm_name,
+    snapshot_name,
+    description="",
+    include_memory=False,
+    quiesce=False,
+    datacenter_name=None,
+    service_instance=None,
+):
+    """
+    Create snapshot of given vm.
+
+    vm_name
+        The name of the virtual machine.
+
+    snapshot_name
+        The name for the snapshot being created. Not unique
+
+    description
+        Description for the snapshot.
+
+    include_memory
+        (boolean, optional) If TRUE, a dump of the internal state of the virtual machine (basically a memory dump) is included in the snapshot.
+
+    quiesce
+        (boolean, optional) If TRUE and the virtual machine is powered on when the snapshot is taken, VMware Tools is used to quiesce the file system in the virtual machine.
+
+    datacenter_name
+        (optional) The name of the datacenter containing the virtual machine.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    if datacenter_name:
+        dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
+        vm_ref = utils_common.get_mor_by_property(
+            service_instance, vim.VirtualMachine, vm_name, "name", dc_ref
+        )
+    else:
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+
+    snapshot = utils_vm.create_snapshot(vm_ref, snapshot_name, description, include_memory, quiesce)
+
+    if isinstance(snapshot, vim.vm.Snapshot):
+        return {"snapshot": "created"}
+    else:
+        return {"snapshot": "failed to create"}
+
+
+def destroy_snapshot(
+    vm_name,
+    snapshot_name,
+    snapshot_id=None,
+    remove_children=False,
+    datacenter_name=None,
+    service_instance=None,
+):
+    """
+    Destroy snapshot of given vm.
+
+    vm_name
+        The name of the virtual machine.
+
+    snapshot_name
+        The name for the snapshot being destroyed. Not unique
+
+    snapshot_id
+        (optional) ID of snapshot to be destroyed.
+
+    remove_children
+        (optional, Bool) Remove snapshots below snapshot being removed in tree.
+
+    datacenter_name
+        (optional) The name of the datacenter containing the virtual machine.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    if datacenter_name:
+        dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
+        vm_ref = utils_common.get_mor_by_property(
+            service_instance, vim.VirtualMachine, vm_name, "name", dc_ref
+        )
+    else:
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+
+    snap_ref = utils_vm.get_snapshot(vm_ref, snapshot_name, snapshot_id)
+    utils_vm.destroy_snapshot(snap_ref.snapshot, remove_children)
+    return {"snapshot": "destroyed"}
+
+
+def snapshot(vm_name, datacenter_name=None, service_instance=None):
+    """
+    Return info about a virtual machine snapshots
+
+    vm_name
+        (optional) The name of the virtual machine to get info on.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    if datacenter_name:
+        dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
+        vm_ref = utils_common.get_mor_by_property(
+            service_instance, vim.VirtualMachine, vm_name, "name", dc_ref
+        )
+    else:
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+
+    snapshots = utils_vm.get_snapshots(vm_ref)
+
+    return {"snapshots": snapshots}

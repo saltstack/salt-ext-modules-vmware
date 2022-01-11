@@ -778,7 +778,7 @@ def change_boot_options(vm, input_opts):
     Changes boot options on given vm.
 
     vm
-        Reference to virtual machine to change options on.
+        reference to virtual machine to change options on.
 
     input_opts
         (dict) Dictionary of virtual machine boot options.
@@ -789,3 +789,125 @@ def change_boot_options(vm, input_opts):
     utils_common.wait_for_task(task, vm.name, "configure boot options")
 
     return {"status": "changed"}
+
+
+def create_snapshot(vm_ref, snapshot_name, description, memory, quiesce):
+    """
+    Create virtual machine snapshot.
+
+    vm_ref
+        Reference to virtual machine.
+
+    snapshot_name
+        The name for the snapshot being created. Not unique
+
+    description
+        Description for the snapshot.
+
+    memory
+        (boolean) If TRUE, a dump of the internal state of the virtual machine (basically a memory dump) is included in the snapshot.
+
+    quiesce
+        (boolean) If TRUE and the virtual machine is powered on when the snapshot is taken, VMware Tools is used to quiesce the file system in the virtual machine.
+    """
+    task = vm_ref.CreateSnapshot_Task(snapshot_name, description, memory, quiesce)
+    ret = utils_common.wait_for_task(task, vm_ref.name, "create snapshot")
+    return ret
+
+
+def snapshot_recursive(snapshot_tree_root, snaps):
+    """
+    Recursively appends all snapshots in a snapshot tree.
+
+    snapshot_tree_root
+        Root node of snapshot tree.
+
+    snaps
+        List of snapshot info.
+    """
+    for ss in snapshot_tree_root:
+        current = {
+            "creation_time": str(ss.createTime),
+            "description": ss.description,
+            "id": ss.id,
+            "name": ss.name,
+            "state": ss.state,
+            "quiesced": ss.quiesced,
+        }
+        snaps.append(current)
+        if ss.childSnapshotList:
+            snaps = snapshot_recursive(ss.childSnapshotList, snaps)
+    return snaps
+
+
+def snapshot_recursive_search(snapshot_tree_root, snapshot_name, snapshot_id):
+    """
+    Recursively appends all snapshots in a snapshot tree.
+
+    snapshot_tree_root
+        Root node of snapshot tree.
+
+    snapshot_name
+        Name of snapshot to find.
+
+    snapshot_id
+        id of snapshot to find.
+    """
+    for ss in snapshot_tree_root:
+        if snapshot_id is None:
+            if snapshot_name == ss.name:
+                return ss
+            elif ss.childSnapshotList:
+                snaps = snapshot_recursive_search(ss.childSnapshotList, snapshot_name, snapshot_id)
+            else:
+                return None
+        else:
+            if snapshot_id and snapshot_id == ss.id and snapshot_name == ss.name:
+                return ss
+            elif ss.childSnapshotList:
+                snaps = snapshot_recursive_search(ss.childSnapshotList, snapshot_name, snapshot_id)
+            else:
+                return None
+    return snaps
+
+
+def get_snapshots(vm_ref):
+    """
+    Returns list of snapshot info for a given vm.
+
+    vm_ref
+        Reference to a virtual machine.
+    """
+    snaps = []
+    tree = vm_ref.snapshot
+    if hasattr(tree, "rootSnapshotList") and len(tree.rootSnapshotList) > 0:
+        snaps = snapshot_recursive(tree.rootSnapshotList, snaps)
+    else:
+        snaps = {"msg": "no snapshots"}
+    return snaps
+
+
+def get_snapshot(vm_ref, snapshot_name, snapshot_id):
+    """"""
+    tree = vm_ref.snapshot
+    if hasattr(tree, "rootSnapshotList") and tree.rootSnapshotList:
+        snap = snapshot_recursive_search(tree.rootSnapshotList, snapshot_name, snapshot_id)
+    else:
+        snap = {"msg": "no snapshots"}
+    return snap
+
+
+def destroy_snapshot(snapshot, remove_children):
+    """
+    Destroy a given snapshot.
+
+    snapshot
+        Reference to a vim.vm.Snapshot object.
+
+    remove_children
+        Remove subtree of snapshots.
+    """
+    vm_name = snapshot.vm.name
+    task = snapshot.RemoveSnapshot_Task(remove_children)
+    ret = utils_common.wait_for_task(task, vm_name, "remove snapshot")
+    return ret

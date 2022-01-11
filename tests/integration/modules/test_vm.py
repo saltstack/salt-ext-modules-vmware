@@ -120,9 +120,7 @@ def test_boot_manager(integration_test_config, patch_salt_globals_vm):
     Test boot options manager
     """
     if integration_test_config["virtual_machines"]:
-        res = virtual_machine.boot_manager(
-            integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
-        )
+        res = virtual_machine.boot_manager("test1", ["disk", "ethernet"])
         assert res["status"] == "changed"
     else:
         pytest.skip("test requires at least one virtual machine")
@@ -133,9 +131,44 @@ def test_boot_manager_same_settings(integration_test_config, patch_salt_globals_
     Test boot option duplicates
     """
     if integration_test_config["virtual_machines"]:
-        res = virtual_machine.boot_manager(
-            integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
-        )
+        res = virtual_machine.boot_manager("test1", ["disk", "ethernet"])
         assert res["status"] == "already configured this way"
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_create_snapshot(integration_test_config, patch_salt_globals_vm):
+    """
+    Test create snapshot.
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.create_snapshot(
+            integration_test_config["virtual_machines"][0], "test-ss"
+        )
+        assert res["snapshot"] == "created"
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_snapshot(integration_test_config, patch_salt_globals_vm):
+    """
+    Test snapshot.
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.snapshot(integration_test_config["virtual_machines"][0])
+        assert "creation_time" in res["snapshots"][0]
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_destroy_snapshot(integration_test_config, patch_salt_globals_vm):
+    """
+    Test destroy snapshot.
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.destroy_snapshot(
+            integration_test_config["virtual_machines"][0], "test-ss"
+        )
+        assert res["snapshot"] == "destroyed"
     else:
         pytest.skip("test requires at least one virtual machine")
