@@ -338,7 +338,7 @@ def boot_manager(
     order=["cdrom", "disk", "ethernet", "floppy"],
     delay=0,
     enter_bios_setup=False,
-    retry_delay=None,
+    retry_delay=0,
     efi_secure_boot_enabled=False,
     service_instance=None,
 ):
@@ -385,7 +385,6 @@ def boot_manager(
 
     if utils_vm.compare_boot_options(input_opts, vm.config.bootOptions):
         return {"status": "already configured this way"}
-
     ret = utils_vm.change_boot_options(vm, input_opts)
 
     return ret

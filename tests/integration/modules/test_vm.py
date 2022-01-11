@@ -121,7 +121,7 @@ def test_boot_manager(integration_test_config, patch_salt_globals_vm):
     """
     if integration_test_config["virtual_machines"]:
         res = virtual_machine.boot_manager(
-            integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
+            'test1', ["disk", "ethernet"]
         )
         assert res["status"] == "changed"
     else:
@@ -134,7 +134,7 @@ def test_boot_manager_same_settings(integration_test_config, patch_salt_globals_
     """
     if integration_test_config["virtual_machines"]:
         res = virtual_machine.boot_manager(
-            integration_test_config["virtual_machines"][0], ["disk", "ethernet"]
+            'test1', ["disk", "ethernet"]
         )
         assert res["status"] == "already configured this way"
     else:
