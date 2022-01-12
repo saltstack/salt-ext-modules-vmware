@@ -32,7 +32,7 @@ def maintenance_mode(name, maintenance_mode, datacenter_name=None, service_insta
 
     name
         The name of the datastore.
-    
+
     maintenance_mode
         (Bool) True to put datastore in maintenance mode, False to exit maintenance mode.
 
@@ -54,12 +54,12 @@ def maintenance_mode(name, maintenance_mode, datacenter_name=None, service_insta
         if status == "inMaintenance":
             ret["comment"] = "Already in maintenance mode."
             return ret
-        
+
         if __opts__["test"]:
             ret["changes"] = {"new": f"datastore {name} will enter maintenance mode."}
             ret["comment"] = "These options are set to change."
             return ret
-        
+
         mode = utils_common.datastore_enter_maintenance_mode(ds)
         if mode:
             ret["changes"] = {"new": f"datastore {name} is in maintenance mode."}
@@ -72,12 +72,12 @@ def maintenance_mode(name, maintenance_mode, datacenter_name=None, service_insta
         if status == "normal":
             ret["comment"] = "Already exited maintenance mode."
             return ret
-        
+
         if __opts__["test"]:
             ret["changes"] = {"new": f"datastore {name} will exit maintenance mode."}
             ret["comment"] = "These options are set to change."
             return ret
-        
+
         mode = utils_common.datastore_exit_maintenance_mode(ds)
         if mode:
             ret["changes"] = {"new": f"datastore {name} exited maintenance mode."}
