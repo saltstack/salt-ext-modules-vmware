@@ -5,6 +5,7 @@ import logging
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.esxi as utils_esxi
+import saltext.vmware.utils.vmware as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -1088,6 +1089,520 @@ def remove_user(
         vmodl.fault.InvalidArgument,
         salt.exceptions.VMwareApiError,
         vim.fault.UserNotFound,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def _get_net_stack(network_tcpip_stack):
+    ret = None
+    if network_tcpip_stack == "default":
+        ret = "defaultTcpipStack"
+    elif network_tcpip_stack == "provisioning":
+        ret = "vSphereProvisioning"
+    elif network_tcpip_stack == "vmotion":
+        ret = "vmotion"
+    elif network_tcpip_stack == "vxlan":
+        ret = "vxlan"
+    elif network_tcpip_stack == "defaultTcpipStack":
+        ret = "default"
+    elif network_tcpip_stack == "vSphereProvisioning":
+        ret = "provisioning"
+
+    return ret
+
+
+def create_vmkernel_adapter(
+    port_group_name,
+    dvswitch_name=None,
+    vswitch_name=None,
+    enable_fault_tolerance=None,
+    enable_management_traffic=None,
+    enable_provisioning=None,
+    enable_replication=None,
+    enable_replication_nfc=None,
+    enable_vmotion=None,
+    enable_vsan=None,
+    mtu=1500,
+    network_default_gateway=None,
+    network_ip_address=None,
+    network_subnet_mask=None,
+    network_tcp_ip_stack="default",
+    network_type="static",
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Create VMKernel Adapter on matching ESXi hosts.
+
+    port_group_name
+        The name of the port group for the VMKernel interface. (required).
+
+    dvswitch_name
+        The name of the vSphere Distributed Switch (vDS) where to add the VMKernel interface.
+        One of dvswitch_name or vswitch_name is required.
+
+    vswitch_name
+        The name of the vSwitch where to add the VMKernel interface.
+        One of dvswitch_name or vswitch_name is required.
+
+    enable_fault_tolerance
+        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_management_traffic
+        Enable Management traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_provisioning
+        Enable Provisioning traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_replication
+        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_replication_nfc
+        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_vmotion
+        Enable vMotion traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_vsan
+        Enable VSAN traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    mtu
+        The MTU for the VMKernel interface.
+
+    network_default_gateway
+        Default gateway (Override default gateway for this adapter).
+
+    network_type
+        Type of IP assignment. Valid values: "static", "dhcp".
+
+    network_ip_address
+        Static IP address. Required if type = 'static'.
+
+    network_subnet_mask
+        Static netmask required. Required if type = 'static'.
+
+    network_tcpip_stack
+        The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.create_vmkernel_adapter port_group_name=portgroup1 dvswitch_name=dvs1
+    """
+    log.debug("Running vmware_esxi.create_vmkernel_adapter dvswitch_name=dvs1")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            adapter_name = None
+            vmk_device = _save_vmkernel_adapter(
+                h,
+                service_instance,
+                "create",
+                port_group_name,
+                dvswitch_name,
+                vswitch_name,
+                adapter_name,
+                enable_fault_tolerance,
+                enable_management_traffic,
+                enable_provisioning,
+                enable_replication,
+                enable_replication_nfc,
+                enable_vmotion,
+                enable_vsan,
+                mtu,
+                network_default_gateway,
+                network_ip_address,
+                network_subnet_mask,
+                network_tcp_ip_stack,
+                network_type,
+            )
+            ret[h.name] = vmk_device
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def _save_vmkernel_adapter(
+    h,
+    service_instance,
+    action,
+    port_group_name,
+    dvswitch_name,
+    vswitch_name,
+    adapter_name,
+    enable_fault_tolerance,
+    enable_management_traffic,
+    enable_provisioning,
+    enable_replication,
+    enable_replication_nfc,
+    enable_vmotion,
+    enable_vsan,
+    mtu,
+    network_default_gateway,
+    network_ip_address,
+    network_subnet_mask,
+    network_tcp_ip_stack,
+    network_type,
+):
+    vnic_config = vim.host.VirtualNic.Specification()
+    ip_spec = vim.host.IpConfig()
+    if network_type == "dhcp":
+        ip_spec.dhcp = True
+    else:
+        ip_spec.dhcp = False
+        ip_spec.ipAddress = network_ip_address
+        ip_spec.subnetMask = network_subnet_mask
+        if network_default_gateway:
+            vnic_config.ipRouteSpec = vim.host.VirtualNic.IpRouteSpec()
+            vnic_config.ipRouteSpec.ipRouteConfig = vim.host.IpRouteConfig()
+            vnic_config.ipRouteSpec.ipRouteConfig.defaultGateway = network_default_gateway
+    vnic_config.ip = ip_spec
+    vnic_config.mtu = mtu
+    vnic_config.netStackInstanceKey = _get_net_stack(network_tcp_ip_stack)
+    port_group = None
+    if dvswitch_name:
+        vnic_config.distributedVirtualPort = vim.dvs.PortConnection()
+        dvs = utils_vmware._get_dvs(service_instance, dvswitch_name)
+        port_group = utils_vmware._get_dvs_portgroup(dvs=dvs, portgroup_name=port_group_name)
+        vnic_config.distributedVirtualPort.switchUuid = dvs.uuid
+        vnic_config.distributedVirtualPort.portgroupKey = port_group.key
+
+    vnic = vmk_device = None
+    if action == "update":
+        for v in h.config.network.vnic:
+            if v.device == adapter_name:
+                vnic = v
+                vmk_device = vnic.device
+        h.configManager.networkSystem.UpdateVirtualNic(vmk_device, vnic_config)
+    else:
+        vmk_device = h.configManager.networkSystem.AddVirtualNic(
+            portgroup="" if dvswitch_name else port_group_name, nic=vnic_config
+        )
+
+    for enable, service in [
+        (enable_management_traffic, "management"),
+        (enable_fault_tolerance, "faultToleranceLogging"),
+        (enable_provisioning, "vSphereProvisioning"),
+        (enable_replication, "vSphereReplication"),
+        (enable_replication_nfc, "vSphereReplicationNFC"),
+        (enable_vmotion, "vmotion"),
+    ]:
+        if enable:
+            h.configManager.virtualNicManager.SelectVnicForNicType(service, vmk_device)
+        elif enable is False:
+            h.configManager.virtualNicManager.DeselectVnicForNicType(service, vmk_device)
+
+    vsan_config = vim.vsan.host.ConfigInfo()
+    vsan_config.networkInfo = h.configManager.vsanSystem.config.networkInfo
+    current_vsan_vnics = [
+        portConfig.device for portConfig in h.configManager.vsanSystem.config.networkInfo.port
+    ]
+    if enable_vsan:
+        if vmk_device not in current_vsan_vnics:
+            vsan_port_config = vim.vsan.host.ConfigInfo.NetworkInfo.PortConfig()
+            vsan_port_config.device = vmk_device
+            if vsan_config.networkInfo is None:
+                vsan_config.networkInfo = vim.vsan.host.ConfigInfo.NetworkInfo()
+                vsan_config.networkInfo.port = [vsan_port_config]
+            else:
+                vsan_config.networkInfo.port.append(vsan_port_config)
+    elif enable_vsan is False and vmk_device in current_vsan_vnics:
+        vsan_config.networkInfo.port = list(
+            filter(lambda portConfig: portConfig.device != vmk_device, vsan_config.networkInfo.port)
+        )
+    task = h.configManager.vsanSystem.UpdateVsan_Task(vsan_config)
+    utils_common.wait_for_task(task, h.name, "UpdateVsan_Task")
+    return vmk_device
+
+
+def get_vmkernel_adapters(
+    adapter_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Update VMKernel Adapter on matching ESXi hosts.
+
+    adapter_name
+        Filter by this vmkernel adapter name.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_vmkernel_adapter port_group_name=portgroup1
+    """
+    log.debug("Running vmware_esxi.get_vmkernel_adapter")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            vmk_devices = []
+            for v in h.config.network.vnic:
+                if adapter_name and v.device != adapter_name:
+                    continue
+                vmk_devices.append(v.device)
+            ret[h.name] = vmk_devices
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def update_vmkernel_adapter(
+    adapter_name,
+    port_group_name,
+    dvswitch_name=None,
+    vswitch_name=None,
+    enable_fault_tolerance=None,
+    enable_management_traffic=None,
+    enable_provisioning=None,
+    enable_replication=None,
+    enable_replication_nfc=None,
+    enable_vmotion=None,
+    enable_vsan=None,
+    mtu=1500,
+    network_default_gateway=None,
+    network_ip_address=None,
+    network_subnet_mask=None,
+    network_tcp_ip_stack="default",
+    network_type="static",
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Update VMKernel Adapter on matching ESXi hosts.
+
+    adapter_name
+        The name of the VMKernel interface to update. (required).
+
+    port_group_name
+        The name of the port group for the VMKernel interface. (required).
+
+    dvswitch_name
+        The name of the vSphere Distributed Switch (vDS) where to update the VMKernel interface.
+
+    vswitch_name
+        The name of the vSwitch where to update the VMKernel interface.
+
+    enable_fault_tolerance
+        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_management_traffic
+        Enable Management traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_provisioning
+        Enable Provisioning traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_replication
+        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_replication_nfc
+        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_vmotion
+        Enable vMotion traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_vsan
+        Enable VSAN traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    mtu
+        The MTU for the VMKernel interface.
+
+    network_default_gateway
+        Default gateway (Override default gateway for this adapter).
+
+    network_type
+        Type of IP assignment. Valid values: "static", "dhcp".
+
+    network_ip_address
+        Static IP address. Required if type = 'static'.
+
+    network_subnet_mask
+        Static netmask required. Required if type = 'static'.
+
+    network_tcpip_stack
+        The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_vmkernel_adapter dvswitch_name=dvs1 mtu=2000
+    """
+    log.debug("Running vmware_esxi.update_vmkernel_adapter")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            vmk_device = _save_vmkernel_adapter(
+                h,
+                service_instance,
+                "update",
+                port_group_name,
+                dvswitch_name,
+                vswitch_name,
+                adapter_name,
+                enable_fault_tolerance,
+                enable_management_traffic,
+                enable_provisioning,
+                enable_replication,
+                enable_replication_nfc,
+                enable_vmotion,
+                enable_vsan,
+                mtu,
+                network_default_gateway,
+                network_ip_address,
+                network_subnet_mask,
+                network_tcp_ip_stack,
+                network_type,
+            )
+            ret[h.name] = vmk_device
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def delete_vmkernel_adapter(
+    adapter_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Delete VMKernel Adapter on matching ESXi hosts.
+
+    adapter_name
+        The name of the VMKernel Adapter to delete (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.delete_vmkernel_adapter name=vmk1
+    """
+    log.debug("Running vmware_esxi.delete_vmkernel_adapter")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            try:
+                h.configManager.networkSystem.RemoveVirtualNic(adapter_name)
+                ret[h.name] = True
+            except vim.fault.NotFound:
+                ret[h.name] = False
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
 

@@ -1,14 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
+import functools
 import logging
 
 import salt
+import saltext.vmware.utils.esxi as utils_esxi
 from saltext.vmware.utils.connect import get_service_instance
-
 
 log = logging.getLogger(__name__)
 
 try:
     import pyVmomi
+    from pyVmomi import vmodl, vim, VmomiSupport
 
     HAS_PYVMOMI = True
 except ImportError:
@@ -143,6 +145,291 @@ def role_absent(
         ret["comment"] = "Role {} deleted.".format(name)
         ret["result"] = True
     return ret
+
+
+def vmkernel_adapter_present(
+    name,
+    port_group_name,
+    dvswitch_name=None,
+    vswitch_name=None,
+    enable_fault_tolerance=None,
+    enable_management_traffic=None,
+    enable_provisioning=None,
+    enable_replication=None,
+    enable_replication_nfc=None,
+    enable_vmotion=None,
+    enable_vsan=None,
+    mtu=1500,
+    network_default_gateway=None,
+    network_ip_address=None,
+    network_subnet_mask=None,
+    network_tcp_ip_stack="default",
+    network_type="static",
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Ensure VMKernel Adapter exists on matching ESXi hosts.
+
+    name
+        The name of the VMKernel interface to update. (required).
+
+    port_group_name
+        The name of the port group for the VMKernel interface. (required).
+
+    dvswitch_name
+        The name of the vSphere Distributed Switch (vDS) where to update the VMKernel interface.
+
+    vswitch_name
+        The name of the vSwitch where to update the VMKernel interface.
+
+    enable_fault_tolerance
+        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_management_traffic
+        Enable Management traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_provisioning
+        Enable Provisioning traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_replication
+        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_replication_nfc
+        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_vmotion
+        Enable vMotion traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    enable_vsan
+        Enable VSAN traffic on the VMKernel adapter. Valid values: "True", "False".
+
+    mtu
+        The MTU for the VMKernel interface.
+
+    network_default_gateway
+        Default gateway (Override default gateway for this adapter).
+
+    network_type
+        Type of IP assignment. Valid values: "static", "dhcp".
+
+    network_ip_address
+        Static IP address. Required if type = 'static'.
+
+    network_subnet_mask
+        Static netmask required. Required if type = 'static'.
+
+    network_tcpip_stack
+        The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_vmkernel_adapter dvswitch_name=dvs1 mtu=2000
+    """
+    log.debug("Running vmware_esxi.update_vmkernel_adapter")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        adapters = __salt__["vmware_esxi.get_vmkernel_adapters"](
+            adapter_name=name,
+            datacenter_name=datacenter_name,
+            cluster_name=cluster_name,
+            host_name=host_name,
+            service_instance=service_instance,
+        )
+        add_on_hosts = []
+        update_on_hosts = []
+        for h in hosts:
+            if adapters[h.name]:
+                update_on_hosts.append(h.name)
+            else:
+                add_on_hosts.append(h.name)
+
+        if __opts__["test"]:
+            ret[
+                "comment"
+            ] = "vmkernel adapter {} will be created on {} host(s) and updated on {} host(s).".format(
+                name, len(add_on_hosts), len(update_on_hosts)
+            )
+            ret["result"] = None
+        elif not add_on_hosts and not update_on_hosts:
+            ret[
+                "comment"
+            ] = "vmkernel adapter {} not created/updated on any host. No changes made.".format(name)
+        else:
+            hosts_in_error = []
+            sample_exception = None
+            for action, hosts in [("add", add_on_hosts), ("update", update_on_hosts)]:
+                for host in hosts:
+                    try:
+                        func = None
+                        if action == "add":
+                            func = functools.partial(
+                                __salt__["vmware_esxi.create_vmkernel_adapter"]
+                            )
+                        else:
+                            func = functools.partial(
+                                __salt__["vmware_esxi.update_vmkernel_adapter"], adapter_name=name
+                            )
+                        func(
+                            port_group_name=port_group_name,
+                            dvswitch_name=dvswitch_name,
+                            vswitch_name=vswitch_name,
+                            enable_fault_tolerance=enable_fault_tolerance,
+                            enable_management_traffic=enable_management_traffic,
+                            enable_provisioning=enable_provisioning,
+                            enable_replication=enable_replication,
+                            enable_replication_nfc=enable_replication_nfc,
+                            enable_vmotion=enable_vmotion,
+                            enable_vsan=enable_vsan,
+                            mtu=mtu,
+                            network_default_gateway=network_default_gateway,
+                            network_ip_address=network_ip_address,
+                            network_subnet_mask=network_subnet_mask,
+                            network_tcp_ip_stack=network_tcp_ip_stack,
+                            network_type=network_type,
+                            datacenter_name=datacenter_name,
+                            cluster_name=cluster_name,
+                            host_name=host,
+                            service_instance=service_instance,
+                        )
+                    except salt.exceptions.SaltException as exc:
+                        hosts_in_error.append(host)
+                        sample_exception = str(exc)
+            ret["comment"] = "vmkernel adapter {} created on {}, updated on {}.".format(
+                name,
+                ",".join(set(add_on_hosts) - set(hosts_in_error)) or "-",
+                ",".join(set(update_on_hosts) - set(hosts_in_error)) or "-",
+            )
+            ret["result"] = True
+            if hosts_in_error:
+                ret["comment"] += "erred on {}. Sample exception - {}".format(
+                    ",".join(hosts_in_error), sample_exception
+                )
+                ret["result"] = False
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+        vim.fault.AlreadyExists,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def vmkernel_adapter_absent(
+    name, datacenter_name=None, cluster_name=None, host_name=None, service_instance=None
+):
+    """
+    Ensure VMKernel Adapter exists on matching ESXi hosts.
+
+    name
+        The name of the VMKernel interface to update. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_vmkernel_adapter dvswitch_name=dvs1 mtu=2000
+    """
+    log.debug("Running vmware_esxi.vmkernel_adapter_absent")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        adapters = __salt__["vmware_esxi.get_vmkernel_adapters"](
+            adapter_name=name,
+            datacenter_name=datacenter_name,
+            cluster_name=cluster_name,
+            host_name=host_name,
+            service_instance=service_instance,
+        )
+        delete_on_hosts = [h.name for h in hosts if adapters[h.name]]
+        if __opts__["test"]:
+            ret["comment"] = "vmkernel adapter {} will be deleted on {} host(s).".format(
+                name, len(delete_on_hosts)
+            )
+            ret["result"] = None
+        elif not delete_on_hosts:
+            ret["comment"] = "vmkernel adapter {} absent on all hosts. No changes made.".format(
+                name
+            )
+        else:
+            hosts_in_error = []
+            sample_exception = None
+            for host in delete_on_hosts:
+                try:
+                    __salt__["vmware_esxi.delete_vmkernel_adapter"](
+                        adapter_name=name,
+                        datacenter_name=datacenter_name,
+                        cluster_name=cluster_name,
+                        host_name=host,
+                        service_instance=service_instance,
+                    )
+                except salt.exceptions.SaltException as exc:
+                    hosts_in_error.append(host)
+                    sample_exception = str(exc)
+            ret["comment"] = "vmkernel adapter {} deleted on {}.".format(
+                name, ",".join(set(delete_on_hosts) - set(hosts_in_error))
+            )
+            ret["result"] = True
+            if hosts_in_error:
+                ret["comment"] += "erred on {}. Sample exception - {}".format(
+                    ",".join(hosts_in_error), sample_exception
+                )
+                ret["result"] = False
+        return ret
+    except (
+        vim.fault.InvalidState,
+        vim.fault.NotFound,
+        vim.fault.HostConfigFault,
+        vmodl.fault.InvalidArgument,
+        salt.exceptions.VMwareApiError,
+    ) as exc:
+        raise salt.exceptions.SaltException(str(exc))
 
 
 def user_present(
