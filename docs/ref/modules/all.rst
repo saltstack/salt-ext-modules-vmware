@@ -12,6 +12,7 @@ Execution Modules
     saltext.vmware.modules.cluster_drs
     saltext.vmware.modules.cluster_ha
     saltext.vmware.modules.datacenter
+    saltext.vmware.modules.datastore
     saltext.vmware.modules.dvswitch
     saltext.vmware.modules.esxi
     saltext.vmware.modules.folder

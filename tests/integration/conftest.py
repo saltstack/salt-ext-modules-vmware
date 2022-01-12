@@ -13,11 +13,13 @@ import saltext.vmware.modules.cluster as cluster_mod
 import saltext.vmware.modules.cluster_drs as cluster_drs_mod
 import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
+import saltext.vmware.modules.datastore as datastore
 import saltext.vmware.modules.esxi as esxi_mod
 import saltext.vmware.modules.folder as folder
 import saltext.vmware.modules.tag as tagging
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
+import saltext.vmware.states.datastore as datastore_state
 import saltext.vmware.states.esxi as esxi_st
 import saltext.vmware.states.folder as folder_state
 import saltext.vmware.states.tag as tagging_state
@@ -172,6 +174,48 @@ def patch_salt_globals_folder_state(vmware_conf):
         },
     )
     setattr(folder_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_datastore(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(datastore, "__opts__", {})
+    setattr(datastore, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_datastore_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        datastore_state,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(datastore_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_datastore_state_test(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        datastore_state,
+        "__opts__",
+        {
+            "test": True,
+        },
+    )
+    setattr(datastore_state, "__pillar__", vmware_conf)
 
 
 @pytest.fixture

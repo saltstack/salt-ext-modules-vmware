@@ -9,6 +9,7 @@ State Modules
     :toctree:
 
     saltext.vmware.states.datacenter
+    saltext.vmware.states.datastore
     saltext.vmware.states.esxi
     saltext.vmware.states.folder
     saltext.vmware.states.nsxt_compute_manager

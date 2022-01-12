@@ -1,0 +1,90 @@
+# SPDX-License-Identifier: Apache-2.0
+import logging
+
+import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as connect
+import saltext.vmware.utils.vm as utils_vm
+from saltext.vmware.modules.tag import update
+
+log = logging.getLogger(__name__)
+
+try:
+    from pyVmomi import vim
+
+    HAS_PYVMOMI = True
+except ImportError:
+    HAS_PYVMOMI = False
+
+
+__virtualname__ = "vmware_datastore"
+__proxyenabled__ = ["vmware_datastore"]
+
+
+def __virtual__():
+    if not HAS_PYVMOMI:
+        return False, "Unable to import pyVmomi module."
+    return __virtualname__
+
+
+def maintenance_mode(name, enter_maintenance_mode, datacenter_name=None, service_instance=None):
+    """
+    Manage boot option for a virtual machine
+
+    name
+        The name of the datastore.
+
+    enter_maintenance_mode
+        (Bool) True to put datastore in maintenance mode, False to exit maintenance mode.
+
+    datacenter_name
+        The name of the datacenter containing the datastore.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+    dc_ref = None
+    if datacenter_name:
+        dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
+    ds = utils_common.get_datastore(name, dc_ref, service_instance)
+    status = ds.summary.maintenanceMode
+    if enter_maintenance_mode:
+        if status == "inMaintenance":
+            ret["comment"] = "Already in maintenance mode."
+            return ret
+
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["changes"] = {"new": f"datastore {name} will enter maintenance mode."}
+            ret["comment"] = "These options are set to change."
+            return ret
+
+        mode = utils_common.datastore_enter_maintenance_mode(ds)
+        if mode:
+            ret["changes"] = {"new": f"datastore {name} is in maintenance mode."}
+            ret["comment"] = "These options changed."
+            return ret
+        ret["comment"] = f"Failed to put datastore {name} in maintenance mode."
+        ret["result"] = False
+        return ret
+    else:
+        if status == "normal":
+            ret["comment"] = "Already exited maintenance mode."
+            return ret
+
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["changes"] = {"new": f"datastore {name} will exit maintenance mode."}
+            ret["comment"] = "These options are set to change."
+            return ret
+
+        mode = utils_common.datastore_exit_maintenance_mode(ds)
+        if mode:
+            ret["changes"] = {"new": f"datastore {name} exited maintenance mode."}
+            ret["comment"] = "These options changed."
+            return ret
+        ret["comment"] = f"datastore {name} failed to exit maintenance mode."
+        ret["result"] = False
+        return ret
