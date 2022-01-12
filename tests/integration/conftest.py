@@ -203,6 +203,22 @@ def patch_salt_globals_datastore_state(vmware_conf):
 
 
 @pytest.fixture
+def patch_salt_globals_datastore_state_test(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        datastore_state,
+        "__opts__",
+        {
+            "test": True,
+        },
+    )
+    setattr(datastore_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
 def patch_salt_globals_folder_state_test(vmware_conf):
     """
     Patch __opts__ and __pillar__

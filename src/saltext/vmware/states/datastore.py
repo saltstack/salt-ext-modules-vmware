@@ -26,14 +26,14 @@ def __virtual__():
     return __virtualname__
 
 
-def maintenance_mode(name, maintenance_mode, datacenter_name=None, service_instance=None):
+def maintenance_mode(name, enter_maintenance_mode, datacenter_name=None, service_instance=None):
     """
     Manage boot option for a virtual machine
 
     name
         The name of the datastore.
 
-    maintenance_mode
+    enter_maintenance_mode
         (Bool) True to put datastore in maintenance mode, False to exit maintenance mode.
 
     datacenter_name
@@ -50,12 +50,13 @@ def maintenance_mode(name, maintenance_mode, datacenter_name=None, service_insta
         dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     ds = utils_common.get_datastore(name, dc_ref, service_instance)
     status = ds.summary.maintenanceMode
-    if maintenance_mode:
+    if enter_maintenance_mode:
         if status == "inMaintenance":
             ret["comment"] = "Already in maintenance mode."
             return ret
 
         if __opts__["test"]:
+            ret["result"] = None
             ret["changes"] = {"new": f"datastore {name} will enter maintenance mode."}
             ret["comment"] = "These options are set to change."
             return ret
@@ -74,6 +75,7 @@ def maintenance_mode(name, maintenance_mode, datacenter_name=None, service_insta
             return ret
 
         if __opts__["test"]:
+            ret["result"] = None
             ret["changes"] = {"new": f"datastore {name} will exit maintenance mode."}
             ret["comment"] = "These options are set to change."
             return ret
