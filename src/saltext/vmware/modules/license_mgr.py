@@ -89,14 +89,12 @@ def add(license_key, **kwargs):
         salt.exceptions.CommandExecutionError,
     ) as exc:
         log.exception(exc)
-        ret["message"] = f"Failed to add a license key '{license_key}' due to Exception '{exc}'"
+        ret["message"] = f"Failed to add a license key due to Exception '{exc}'"
         ret["result"] = False
         return ret
 
     if not result:
-        ret[
-            "message"
-        ] = f"Failed specified license key '{license_key}' was not added to License Manager"
+        ret["message"] = f"Failed specified license key was not added to License Manager"
         ret["result"] = False
 
     return ret
@@ -115,11 +113,6 @@ def list_(service_instance=None):
     """
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-
-    if __opts__.get("test", None):
-        ret["licenses"] = "DGMTT-FAKED-TESTS-LICEN-SE012"
-        ret["message"] = "Test dry-run, not really connected to a vCenter testing"
-        return ret
 
     return utils_license_mgr.list_licenses(service_instance)
 
@@ -181,14 +174,12 @@ def remove(license_key, **kwargs):
         salt.exceptions.CommandExecutionError,
     ) as exc:
         log.exception(exc)
-        ret["message"] = f"Failed to remove license key '{license_key}' due to Exception '{exc}'"
+        ret["message"] = f"Failed to remove license key due to Exception '{exc}'"
         ret["result"] = False
         return ret
 
     if not result:
-        ret[
-            "message"
-        ] = f"Failed specified license key '{license_key}' was not found in License Manager"
+        ret["message"] = f"Failed specified license key was not found in License Manager"
         ret["result"] = False
 
     return ret

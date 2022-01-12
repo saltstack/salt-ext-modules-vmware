@@ -27,7 +27,7 @@ def test_present(patch_salt_globals, license_key, vmware_license_mgr_inst):
 
     assert (
         ret["message"]
-        == f"Failed specified license key '{license_key}' was not added to License Manager"
+        == "Failed to add a license key due to Exception 'License is not valid for this product'"
     )
     assert ret["result"] == False
 
@@ -43,10 +43,7 @@ def test_absent(patch_salt_globals, license_key, vmware_license_mgr_inst):
     # hence using fake which should generate error
     ret = license_mgr_st.absent(license_key, **kwargs)
 
-    assert (
-        ret["message"]
-        == f"Failed specified license key '{license_key}' was not found in License Manager"
-    )
+    assert ret["message"] == "Failed specified license key was not found in License Manager"
     assert ret["result"] == False
 
 
@@ -64,7 +61,7 @@ def test_present_dry_run(patch_salt_globals, license_key, vmware_license_mgr_ins
 
     assert (
         ret["message"]
-        == f"Failed specified license key '{license_key}' was not added to License Manager"
+        == "Failed to add a license key due to Exception 'License is not valid for this product'"
     )
     assert ret["result"] == False
 
@@ -80,8 +77,5 @@ def test_absent_dry_run(patch_salt_globals, license_key, vmware_license_mgr_inst
     # hence using fake which should generate error
     ret = license_mgr_st.absent(license_key, **kwargs)
 
-    assert (
-        ret["message"]
-        == f"Failed specified license key '{license_key}' was not found in License Manager"
-    )
+    assert ret["message"] == "Failed specified license key was not found in License Manager"
     assert ret["result"] == False

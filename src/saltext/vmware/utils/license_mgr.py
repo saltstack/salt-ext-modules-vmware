@@ -64,6 +64,73 @@ def _find_lic_for_key(licenses, license_key):
     return None
 
 
+def _get_entity_id(service_instance, datacenter_name, cluster_name, esxi_hostname):
+    """
+    Get entity_id for datacenter, cluster, ESXi Server or vCenter
+
+    If no datacenter, cluster or ESXi Server is specified, it is assumed the operation is to be applied to a vCenter
+
+    service_instance:
+        Service Instance
+
+    datacenter_name
+        Datacenter name to use for the operation
+
+    cluster_name
+        Name of the cluster to use for the operation
+
+    esxi_hostname
+        Hostname of the ESXi Server use for the operation
+    """
+
+    # need to extract entity this license is intended for
+    # from choices:
+    #   1 vCenter - _entity_id = service_instance.content.about.instanceUuid
+    #   2 ESXi - _entity_id = esxi host _moId
+    #   3 cluster - _entity_id = cluster _moId
+
+    _entity_id = None  # TBD miracle happens here and have value
+    datacenter_ref = None
+    if not any(datacenter_name or cluster_name or esxi_hostname):
+        # default to applying to vCenter
+        srv_content = get_service_content(service_instance)
+        _entity_id = srv_content.about.instanceUuid
+    else:
+        if datacenter_name:
+            # need to get named datacenter's reference
+            datacenter_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+            log.debug(
+                f"retrieved datacenter ref '{datacenter_ref }' for datacenter '{datacenter_name}'"
+            )
+
+        if cluster_name:
+            # need to get named cluster's reference
+            cluster_ref = utils_cluster.get_cluster(dc_ref=datacenter_ref, cluster=cluster_name)
+            _entity_id = cluster_ref._moId
+            log.debug(
+                f"retrieved entityId '{_entity_id}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
+            )
+
+        if esxi_hostname:
+            # need to get named esxi server
+            esxi_hosts = utils_esxi.get_hosts(service_instance, datacenter_name, esxi_hostname)
+
+            # returns hosts list of dicts
+            if not esxi_hosts:
+                log.debug(f"Failed to find esxi hostname '{esxi_hostname}'")
+                return False
+
+            if len(esxi_hosts) > 1:
+                log.error(
+                    f"Failed, found multiple instances of esxi hostname '{esxi_hostname}', hosts returned '{esxi_hosts}'"
+                )
+                return False
+
+            _entity_id = esxi_hosts[0]._moId
+
+    return _entity_id
+
+
 def is_vcenter(service_instance):
     """
     Test if service_instance represents vCenter,
@@ -74,7 +141,6 @@ def is_vcenter(service_instance):
     Return:
         True  - vCenter
         False - not a vCenter
-        None - neither of the above
     """
     try:
         srv_content = get_service_content(service_instance)
@@ -101,6 +167,8 @@ def is_vcenter(service_instance):
 def get_license_mgr(service_instance):
     """
     Return a license manager from specified Service Instance
+    if the Service Instance is connected to a vCenter,
+    otherwise return None.
 
     service_instance
         vCenter service connection instance
@@ -182,9 +250,7 @@ def add_license(
         return False
 
     lic_keys = _list_lic_keys(lic_mgr.licenses)
-    log.debug(
-        f"attempting to add license key '{license_key}' to list of existing license keys '{lic_keys}'"
-    )
+    log.debug(f"attempting to add license key to list of existing license keys '{lic_keys}'")
 
     try:
         if not license_key in lic_keys:
@@ -199,72 +265,21 @@ def add_license(
             license_add_failure_msg = ""
             for prop_dict in props_list:
                 if "lc_error" in prop_dict:
-                    log.error(f"Failed AddLicense for license key '{license_key}'")
+                    log.error(f"Failed AddLicense for license key")
                     license_add_failure = True
                 if "diagnostic" in prop_dict:
                     license_add_failure_msg = prop_dict["diagnostic"]
             if license_add_failure:
-                log.error(
-                    f"Failed to add license key '{license_key}', reason '{license_add_failure_msg}'"
-                )
+                log.error(f"Failed to add license key, reason '{license_add_failure_msg}'")
                 raise salt.exceptions.CommandExecutionError(license_add_failure_msg)
 
         # get license just added for specified license key
         addedLic = _find_lic_for_key(lic_mgr.licenses, license_key)
         if not addedLic:
-            log.error(f"Unable to find license for recently added license_key '{license_key}'")
+            log.error(f"Unable to find license for recently added license_key")
             return False
 
-        # need to extract entity this license is intended for so that it can be assigned.
-        # choices are:
-        #   1 vCenter - entity_id = service_instance.content.about.instanceUuid
-        #   2 ESXi - entity_id = esxi host _moId, need to check it is for an 'esx' license.editionKey
-        #   3 cluster - entity_id = cluster _moId
-
-        entity_id = None  # TBD miracle happens here and have value
-        datacenter_ref = None
-        if datacenter_name or cluster_name or esxi_hostname:
-            if datacenter_name:
-                # need to get named datacenter's reference
-                datacenter_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
-                log.debug(
-                    f"retrieved datacenter ref '{datacenter_ref }' for datacenter '{datacenter_name}'"
-                )
-
-            if cluster_name:
-                # need to get named cluster's reference
-                cluster_ref = utils_cluster.get_cluster(dc_ref=datacenter_ref, cluster=cluster_name)
-                entity_id = cluster_ref._moId
-                log.debug(
-                    f"retrieved entityId '{entity_id}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
-                )
-
-            if esxi_hostname:
-                # need to get named esxi server
-                esxi_hosts = utils_esxi.get_hosts(service_instance, datacenter_name, esxi_hostname)
-
-                # returns hosts list of dicts
-                if not esxi_hosts:
-                    log.debug(f"Failed to find esxi hostname '{esxi_hostname}'")
-                    return False
-
-                if len(esxi_hosts) > 1:
-                    log.error(
-                        f"Failed, found multiple instances of esxi hostname '{esxi_hostname}', hosts returned '{esxi_hosts}'"
-                    )
-                    return False
-
-                entity_id = esxi_hosts[0]._moId
-                if "esx" not in addedLic.editionKey:
-                    log.error(
-                        f"Error, License '{license_key}' does not contain a suitable Edition key '{license.editionKey}' for an ESXi Server"
-                    )
-                    return False
-        else:
-            # default to applying to vCenter
-            srv_content = get_service_content(service_instance)
-            entity_id = srv_content.about.instanceUuid
-
+        entity_id = _get_entity_id(service_instance, datacenter_name, cluster_name, esxi_hostname)
         lic_assign_mgr = get_license_assignment_mgr(service_instance)
         if entity_id:
             assigned_lic = lic_assign_mgr.QueryAssignedLicenses(entityId=entity_id)
@@ -272,6 +287,7 @@ def add_license(
             log.debug(
                 f"assigning license, entity identifier '{entity_id}' has assigned license '{assigned_lic}'"
             )
+            # pyvnomi seen doing strange things, hence checking length returned
             if not assigned_lic or (
                 len(assigned_lic) != 0 and assigned_lic[0].assignedLicense.licenseKey != license_key
             ):
@@ -322,18 +338,14 @@ def remove_license(
     """
     lic_mgr = get_license_mgr(service_instance)
     if not lic_mgr:
-        log.debug(
-            f"attempting to remove license '{license_key}' but unable to find license manager"
-        )
+        log.debug(f"attempting to remove license but unable to find license manager")
         return False
 
     lic_keys = _list_lic_keys(lic_mgr.licenses)
-    log.debug(
-        f"attempting to remove license '{license_key}' from list of existing license keys '{lic_keys}'"
-    )
+    log.debug(f"attempting to remove license from list of existing license keys '{lic_keys}'")
     if license_key not in lic_keys:
         log.debug(
-            f"cannot remove license '{license_key}' since not found in list of existing license keys '{lic_keys}'"
+            f"cannot remove license key since not found in list of existing license keys '{lic_keys}'"
         )
         return False
 
@@ -345,51 +357,7 @@ def remove_license(
     # Note: an entity can only have one license assigned
 
     try:
-        # need to extract entity this license is intended to be removed from
-        # choices are:
-        #   1 vCenter - entity_id = service_instance.content.about.instanceUuid
-        #   2 ESXi - entity_id = esxi host _moId
-        #   3 cluster - entity_id = cluster _moId
-
-        entity_id = None  # TBD miracle happens here and have value
-        datacenter_ref = None
-        if datacenter_name or cluster_name or esxi_hostname:
-            if datacenter_name:
-                # need to get named datacenter's reference
-                datacenter_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
-                log.debug(
-                    f"retrieved datacenter ref '{datacenter_ref }' for datacenter '{datacenter_name}'"
-                )
-
-            if cluster_name:
-                # need to get named cluster's reference
-                cluster_ref = utils_cluster.get_cluster(dc_ref=datacenter_ref, cluster=cluster_name)
-                entity_id = cluster_ref._moId
-                log.debug(
-                    f"retrieved entityId '{entity_id}' from cluster ref '{cluster_ref }' for cluster '{cluster_name}' and datacenter '{datacenter_name}'"
-                )
-
-            if esxi_hostname:
-                # need to get named esxi server
-                esxi_hosts = utils_esxi.get_hosts(service_instance, datacenter_name, esxi_hostname)
-
-                # returns hosts list of dicts
-                if not esxi_hosts:
-                    log.debug(f"Failed to find esxi hostname '{esxi_hostname}'")
-                    return False
-
-                if len(esxi_hosts) > 1:
-                    log.error(
-                        f"Failed, found multiple instances of esxi hostname '{esxi_hostname}', hosts returned '{esxi_hosts}'"
-                    )
-                    return False
-
-                entity_id = esxi_hosts[0]._moId
-        else:
-            # default to applying to vCenter
-            srv_content = get_service_content(service_instance)
-            entity_id = srv_content.about.instanceUuid
-
+        entity_id = _get_entity_id(service_instance, datacenter_name, cluster_name, esxi_hostname)
         lic_assign_mgr = get_license_assignment_mgr(service_instance)
         if entity_id:
             assigned_lic = lic_assign_mgr.QueryAssignedLicenses(entityId=entity_id)
@@ -398,24 +366,20 @@ def remove_license(
                 f"assigning license, entity identifier '{entity_id}' has assigned license '{assigned_lic}'"
             )
             if assigned_lic and assigned_lic[0].assignedLicense.licenseKey == license_key:
-                log.debug(
-                    f"Unassigning license key '{license_key}' from entity identifer '{entity_id}'"
-                )
+                log.debug(f"Unassigning license key from entity identifer '{entity_id}'")
                 lic_assign_mgr.RemoveAssignedLicense(entityId=entity_id)
 
             else:
                 log.debug(
-                    f"no assigned license found, or the assigned license key for entity identifier '{entity_id}' did not match license key '{license_key}'"
+                    f"no assigned license found, or the assigned license key for entity identifier '{entity_id}' did not match specified license key"
                 )
                 return False
 
-            log.debug(
-                f"Removing license key '{license_key}' from License Managers pool of licenses"
-            )
+            log.debug(f"Removing license key from License Managers pool of licenses")
             lic_mgr.RemoveLicense(licenseKey=license_key)
         else:
             log.debug(
-                f"Unable to find entity for specified inputs when attempting to remove license key '{license_key}'"
+                f"Unable to find entity for specified inputs when attempting to remove license key"
             )
             return False
 

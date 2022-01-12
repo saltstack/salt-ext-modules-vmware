@@ -31,7 +31,7 @@ def test_add(patch_salt_globals, license_key, vmware_license_mgr_inst):
 
     assert (
         ret["message"]
-        == f"Failed to add a license key '{license_key}' due to Exception 'License is not valid for this product'"
+        == "Failed to add a license key due to Exception 'License is not valid for this product'"
     )
     assert ret["result"] == False
 
@@ -60,8 +60,5 @@ def test_remove(patch_salt_globals, license_key, vmware_license_mgr_inst):
     # hence using fake which should generate error
     ret = license_mgr_mod.remove(license_key, **kwargs)
 
-    assert (
-        ret["message"]
-        == f"Failed specified license key '{license_key}' was not found in License Manager"
-    )
+    assert ret["message"] == "Failed specified license key was not found in License Manager"
     assert ret["result"] == False
