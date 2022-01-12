@@ -18,6 +18,7 @@ import saltext.vmware.modules.esxi as esxi_mod
 import saltext.vmware.modules.folder as folder
 import saltext.vmware.modules.tag as tagging
 import saltext.vmware.modules.vm as virtual_machine
+import saltext.vmware.states.datastore as datastore_state
 import saltext.vmware.states.datacenter as datacenter_st
 import saltext.vmware.states.esxi as esxi_st
 import saltext.vmware.states.folder as folder_state
@@ -185,20 +186,20 @@ def patch_salt_globals_datastore(vmware_conf):
     setattr(datastore, "__pillar__", vmware_conf)
 
 
-# @pytest.fixture
-# def patch_salt_globals_datastore_state(vmware_conf):
-#     """
-#     Patch __opts__ and __pillar__
-#     """
+@pytest.fixture
+def patch_salt_globals_datastore_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
 
-#     setattr(
-#         datastore_state,
-#         "__opts__",
-#         {
-#             "test": False,
-#         },
-#     )
-#     setattr(datastore_state, "__pillar__", vmware_conf)
+    setattr(
+        datastore_state,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(datastore_state, "__pillar__", vmware_conf)
 
 
 @pytest.fixture
