@@ -751,17 +751,17 @@ def get_datastore(name, datacenter, service_instance):
 
     name
         Name of datastore.
-    
+
     datacenter
         Reference to datacenter.
-    
+
     service_instance
         The Service Instance from which to obtain managed object references.
     """
     if datacenter is None:
         ds = get_mor_by_property(service_instance, vim.Datastore, name)
     else:
-        ds = get_mor_by_property(service_instance, vim.Datastore, name, 'name', datacenter)
+        ds = get_mor_by_property(service_instance, vim.Datastore, name, "name", datacenter)
     return ds
 
 
@@ -773,7 +773,7 @@ def datastore_enter_maintenance_mode(datastore_ref):
         Reference to datastore.
     """
     ret = datastore_ref.DatastoreEnterMaintenanceMode()
-    if ret.task.info.state == 'success':
+    if ret.task.info.state == "success":
         return True
     else:
         return False
@@ -788,6 +788,6 @@ def datastore_exit_maintenance_mode(datastore_ref):
     """
     task = datastore_ref.DatastoreExitMaintenanceMode_Task()
     wait_for_task(task, datastore_ref.name, "Take datastore out of maintenance mode")
-    if datastore_ref.summary.maintenanceMode == 'normal':
+    if datastore_ref.summary.maintenanceMode == "normal":
         return True
     return False

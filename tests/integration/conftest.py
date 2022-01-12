@@ -13,9 +13,9 @@ import saltext.vmware.modules.cluster as cluster_mod
 import saltext.vmware.modules.cluster_drs as cluster_drs_mod
 import saltext.vmware.modules.cluster_ha as cluster_ha_mod
 import saltext.vmware.modules.datacenter as datacenter_mod
+import saltext.vmware.modules.datastore as datastore
 import saltext.vmware.modules.esxi as esxi_mod
 import saltext.vmware.modules.folder as folder
-import saltext.vmware.modules.datastore as datastore
 import saltext.vmware.modules.tag as tagging
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st

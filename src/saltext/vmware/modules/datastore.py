@@ -31,7 +31,7 @@ def maintenance_mode(datastore_name, dc_name=None, service_instance=None):
 
     datastore_name
         Name of datastore.
-    
+
     dc_name
         Name of datacenter where folder will be created.
 
@@ -56,7 +56,7 @@ def exit_maintenance_mode(datastore_name, dc_name=None, service_instance=None):
 
     datastore_name
         Name of datastore.
-    
+
     dc_name
         Name of datacenter where folder will be created.
 
