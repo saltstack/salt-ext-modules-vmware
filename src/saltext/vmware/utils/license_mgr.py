@@ -287,7 +287,7 @@ def add_license(
             log.debug(
                 f"assigning license, entity identifier '{entity_id}' has assigned license '{assigned_lic}'"
             )
-            # pyvnomi seen doing strange things, hence checking length returned
+            # pyvmomi seen doing strange things, hence checking length returned
             if not assigned_lic or (
                 len(assigned_lic) != 0 and assigned_lic[0].assignedLicense.licenseKey != license_key
             ):
