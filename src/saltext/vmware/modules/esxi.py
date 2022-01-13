@@ -1303,6 +1303,7 @@ def _save_vmkernel_adapter(
             if v.device == adapter_name:
                 vnic = v
                 vmk_device = vnic.device
+                break
         h.configManager.networkSystem.UpdateVirtualNic(vmk_device, vnic_config)
     else:
         vmk_device = h.configManager.networkSystem.AddVirtualNic(
@@ -1513,7 +1514,7 @@ def update_vmkernel_adapter(
 
     try:
         for h in hosts:
-            vmk_device = _save_vmkernel_adapter(
+            ret[h.name] = _save_vmkernel_adapter(
                 h,
                 service_instance,
                 "update",
@@ -1535,7 +1536,6 @@ def update_vmkernel_adapter(
                 network_tcp_ip_stack,
                 network_type,
             )
-            ret[h.name] = vmk_device
         return ret
     except (
         vim.fault.InvalidState,
@@ -1544,6 +1544,7 @@ def update_vmkernel_adapter(
         vmodl.fault.InvalidArgument,
         salt.exceptions.VMwareApiError,
         vim.fault.AlreadyExists,
+        TypeError,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
 

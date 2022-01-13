@@ -263,7 +263,7 @@ def vmkernel_adapter_present(
         add_on_hosts = []
         update_on_hosts = []
         for h in hosts:
-            if adapters[h.name]:
+            if name and adapters[h.name] and name in adapters[h.name]:
                 update_on_hosts.append(h.name)
             else:
                 add_on_hosts.append(h.name)
@@ -279,6 +279,7 @@ def vmkernel_adapter_present(
             ret[
                 "comment"
             ] = "vmkernel adapter {} not created/updated on any host. No changes made.".format(name)
+            ret["result"] = True
         else:
             hosts_in_error = []
             sample_exception = None
@@ -294,7 +295,7 @@ def vmkernel_adapter_present(
                             func = functools.partial(
                                 __salt__["vmware_esxi.update_vmkernel_adapter"], adapter_name=name
                             )
-                        func(
+                        ret_save = func(
                             port_group_name=port_group_name,
                             dvswitch_name=dvswitch_name,
                             vswitch_name=vswitch_name,
@@ -316,6 +317,7 @@ def vmkernel_adapter_present(
                             host_name=host,
                             service_instance=service_instance,
                         )
+                        ret["changes"].update(ret_save)
                     except salt.exceptions.SaltException as exc:
                         hosts_in_error.append(host)
                         sample_exception = str(exc)
@@ -402,13 +404,14 @@ def vmkernel_adapter_absent(
             sample_exception = None
             for host in delete_on_hosts:
                 try:
-                    __salt__["vmware_esxi.delete_vmkernel_adapter"](
+                    ret_delete = __salt__["vmware_esxi.delete_vmkernel_adapter"](
                         adapter_name=name,
                         datacenter_name=datacenter_name,
                         cluster_name=cluster_name,
                         host_name=host,
                         service_instance=service_instance,
                     )
+                    ret["changes"].update(ret_delete)
                 except salt.exceptions.SaltException as exc:
                     hosts_in_error.append(host)
                     sample_exception = str(exc)
