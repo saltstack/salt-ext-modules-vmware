@@ -16,12 +16,14 @@ import saltext.vmware.modules.datacenter as datacenter_mod
 import saltext.vmware.modules.datastore as datastore
 import saltext.vmware.modules.esxi as esxi_mod
 import saltext.vmware.modules.folder as folder
+import saltext.vmware.modules.license_mgr as license_mgr_mod
 import saltext.vmware.modules.tag as tagging
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.states.datacenter as datacenter_st
 import saltext.vmware.states.datastore as datastore_state
 import saltext.vmware.states.esxi as esxi_st
 import saltext.vmware.states.folder as folder_state
+import saltext.vmware.states.license_mgr as license_mgr_st
 import saltext.vmware.states.tag as tagging_state
 import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
@@ -91,6 +93,10 @@ def patch_salt_globals():
     setattr(cluster_drs_mod, "__pillar__", {})
     setattr(esxi_mod, "__pillar__", {})
     setattr(esxi_st, "__pillar__", {})
+    setattr(license_mgr_st, "__opts__", {})
+    setattr(license_mgr_st, "__pillar__", {})
+    setattr(license_mgr_mod, "__opts__", {})
+    setattr(license_mgr_mod, "__pillar__", {})
     setattr(
         datacenter_st,
         "__salt__",
@@ -135,6 +141,24 @@ def patch_salt_globals():
             "vmware_esxi.update_role": esxi_mod.update_role,
             "vmware_esxi.remove_role": esxi_mod.remove_role,
             "vmware_esxi.get_role": esxi_mod.get_role,
+        },
+    )
+    setattr(
+        license_mgr_st,
+        "__salt__",
+        {
+            "vmware_license_mgr.list": license_mgr_mod.list_,
+            "vmware_license_mgr.add": license_mgr_mod.add,
+            "vmware_license_mgr.remove": license_mgr_mod.remove,
+        },
+    )
+    setattr(
+        license_mgr_mod,
+        "__salt__",
+        {
+            "vmware_license_mgr.list": license_mgr_mod.list_,
+            "vmware_license_mgr.add": license_mgr_mod.add,
+            "vmware_license_mgr.remove": license_mgr_mod.remove,
         },
     )
 
@@ -368,3 +392,26 @@ def vmware_conf(integration_test_config):
 @pytest.fixture()
 def vm_ops():
     return {"test": False}
+
+
+@pytest.fixture(scope="function")
+def vmware_license_mgr_inst(patch_salt_globals, service_instance):
+    """
+    Return a vmware_license_mgr during start of a test and tear it down once the test ends
+
+    vmware_license_mgr is essentially a service_instance to a vCenter
+    """
+    if not service_instance:
+        lic_mgr = get_service_instance(opts=__opts__, pillar=__pillar__)
+    else:
+        lic_mgr = service_instance
+    yield lic_mgr
+    ## datacenter_mod.delete(name=dc_name, service_instance=service_instance)
+
+
+@pytest.fixture(scope="function")
+def license_key(patch_salt_globals, service_instance):
+    """
+    Return a vmware license key faked for now
+    """
+    return "DGMTT-FAKED-TESTS-LICEN-SE012"
