@@ -153,10 +153,10 @@ def is_vcenter(service_instance):
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     except AttributeError as exc:
         log.exception(exc)
-        raise salt.exceptions.CommandExecutionError(exc.msg)
+        raise salt.exceptions.CommandExecutionError(exc)
     except TypeError as exc:
         log.exception(exc)
-        raise salt.exceptions.CommandExecutionError(exc.msg)
+        raise salt.exceptions.CommandExecutionError(exc)
 
     if apitype == "VirtualCenter":
         return True
@@ -185,6 +185,8 @@ def get_license_mgr(service_instance):
 def get_license_assignment_mgr(service_instance):
     """
     Return a license assignment manager from specified Service Instance
+    if the Service Instance is connected to a vCenter,
+    otherwise return None
 
     service_instance
         vCenter service connection instance
@@ -195,7 +197,7 @@ def get_license_assignment_mgr(service_instance):
         return None
 
     srv_content = get_service_content(service_instance)
-    return srv_content.licenseManager
+    return srv_content.licenseManager.licenseAssignmentManager
 
 
 def list_licenses(service_instance):
@@ -287,7 +289,7 @@ def add_license(
             log.debug(
                 f"assigning license, entity identifier '{entity_id}' has assigned license '{assigned_lic}'"
             )
-            # pyvmomi seen doing strange things, hence checking length returned
+            # pyVmomi seen doing strange things, hence checking length returned
             if not assigned_lic or (
                 len(assigned_lic) != 0 and assigned_lic[0].assignedLicense.licenseKey != license_key
             ):
@@ -301,10 +303,10 @@ def add_license(
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     except AttributeError as exc:
         log.exception(exc)
-        raise salt.exceptions.CommandExecutionError(exc.msg)
+        raise salt.exceptions.CommandExecutionError(exc)
     except TypeError as exc:
         log.exception(exc)
-        raise salt.exceptions.CommandExecutionError(exc.msg)
+        raise salt.exceptions.CommandExecutionError(exc)
 
     return True
 
@@ -373,7 +375,6 @@ def remove_license(
                 log.debug(
                     f"no assigned license found, or the assigned license key for entity identifier '{entity_id}' did not match specified license key"
                 )
-                return False
 
             log.debug(f"Removing license key from License Managers pool of licenses")
             lic_mgr.RemoveLicense(licenseKey=license_key)
@@ -391,9 +392,9 @@ def remove_license(
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     except AttributeError as exc:
         log.exception(exc)
-        raise salt.exceptions.CommandExecutionError(exc.msg)
+        raise salt.exceptions.CommandExecutionError(exc)
     except TypeError as exc:
         log.exception(exc)
-        raise salt.exceptions.CommandExecutionError(exc.msg)
+        raise salt.exceptions.CommandExecutionError(exc)
 
     return True
