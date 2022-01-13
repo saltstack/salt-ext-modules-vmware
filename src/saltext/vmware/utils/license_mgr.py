@@ -91,7 +91,7 @@ def _get_entity_id(service_instance, datacenter_name, cluster_name, esxi_hostnam
 
     _entity_id = None  # TBD miracle happens here and have value
     datacenter_ref = None
-    if not any(datacenter_name or cluster_name or esxi_hostname):
+    if not any((datacenter_name, cluster_name, esxi_hostname)):
         # default to applying to vCenter
         srv_content = get_service_content(service_instance)
         _entity_id = srv_content.about.instanceUuid
