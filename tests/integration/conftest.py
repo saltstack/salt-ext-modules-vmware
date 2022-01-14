@@ -141,6 +141,10 @@ def patch_salt_globals():
             "vmware_esxi.update_role": esxi_mod.update_role,
             "vmware_esxi.remove_role": esxi_mod.remove_role,
             "vmware_esxi.get_role": esxi_mod.get_role,
+            "vmware_esxi.create_vmkernel_adapter": esxi_mod.create_vmkernel_adapter,
+            "vmware_esxi.delete_vmkernel_adapter": esxi_mod.delete_vmkernel_adapter,
+            "vmware_esxi.update_vmkernel_adapter": esxi_mod.update_vmkernel_adapter,
+            "vmware_esxi.get_vmkernel_adapters": esxi_mod.get_vmkernel_adapters,
         },
     )
     setattr(

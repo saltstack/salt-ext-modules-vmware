@@ -604,3 +604,57 @@ def test_add_update_remove_role(service_instance):
         role_name=role_name,
     )
     assert ret
+
+
+def test_add_update_remove_vmkernel_adapter(service_instance):
+    """
+    Test add/update/remove a vmkernel adapter
+    """
+    adapters = esxi.create_vmkernel_adapter(
+        service_instance=service_instance,
+        port_group_name="VMNetwork-PortGroup",
+        dvswitch_name="dvSwitch",
+        mtu=2000,
+        enable_fault_tolerance=True,
+        network_type="dhcp",
+    )
+    assert adapters
+    for host in adapters:
+        assert adapters[host]
+
+    for host in adapters:
+        ret = esxi.update_vmkernel_adapter(
+            adapter_name=adapters[host],
+            datacenter_name="Datacenter",
+            service_instance=service_instance,
+            port_group_name="VMNetwork-PortGroup",
+            dvswitch_name="dvSwitch",
+            mtu=2000,
+            enable_fault_tolerance=True,
+            network_type="dhcp",
+            host_name=host,
+        )
+        assert ret
+        for host in ret:
+            assert ret[host]
+
+        ret = esxi.delete_vmkernel_adapter(
+            service_instance=service_instance, adapter_name=adapters[host], host_name=host
+        )
+        assert ret
+        for host in ret:
+            assert ret[host]
+
+    with pytest.raises(salt.exceptions.SaltException) as exc:
+        ret = esxi.update_vmkernel_adapter(
+            service_instance=service_instance,
+            adapter_name="nonexistent",
+            port_group_name="VMNetwork-PortGroup",
+        )
+
+    ret = esxi.delete_vmkernel_adapter(
+        service_instance=service_instance, adapter_name="nonexistent"
+    )
+    assert ret
+    for host in ret:
+        assert not ret[host]

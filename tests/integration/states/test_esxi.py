@@ -226,3 +226,54 @@ def test_role_present_absent_dry_run(vmware_datacenter, service_instance, dry_ru
     assert ret["result"] is None
     assert not ret["changes"]
     assert "Role {} is not present.".format(random_role) in ret["comment"]
+
+
+def test_vmkernel_adapter_present(vmware_datacenter, service_instance):
+    """
+    Test add/update/remove a vmkernel adapter
+    """
+    ret = esxi.vmkernel_adapter_present(
+        name=None,
+        service_instance=service_instance,
+        port_group_name="VMNetwork-PortGroup",
+        dvswitch_name="dvSwitch",
+        mtu=2000,
+        enable_fault_tolerance=True,
+        network_type="dhcp",
+    )
+    assert ret["changes"]
+    assert ret["result"]
+    for host in ret["changes"]:
+        assert ret["changes"][host]
+
+    for host in ret["changes"]:
+        update_ret = esxi.vmkernel_adapter_present(
+            name=ret["changes"][host],
+            datacenter_name="Datacenter",
+            service_instance=service_instance,
+            port_group_name="VMNetwork-PortGroup",
+            dvswitch_name="dvSwitch",
+            mtu=2100,
+            enable_fault_tolerance=True,
+            network_type="dhcp",
+            host_name=host,
+        )
+        assert update_ret
+        assert update_ret["result"]
+        for host in update_ret["changes"]:
+            assert update_ret["changes"][host]
+
+        delete_ret = esxi.vmkernel_adapter_absent(
+            name=ret["changes"][host], service_instance=service_instance, host_name=host
+        )
+        assert delete_ret
+        assert delete_ret["result"]
+        for host in delete_ret:
+            assert delete_ret[host]
+
+    delete_ret = esxi.vmkernel_adapter_absent(
+        name="nonexistent",
+        service_instance=service_instance,
+    )
+    assert not delete_ret["result"]
+    assert not delete_ret["changes"]
