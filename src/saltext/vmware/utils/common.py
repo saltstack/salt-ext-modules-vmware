@@ -328,7 +328,6 @@ def list_objects(service_instance, vim_object, properties=None):
     items = []
     item_list = get_mors_with_properties(service_instance, vim_object, properties)
     for item in item_list:
-        log.debug(f"appending item '{name!r}' to list of objects to return")
         items.append(item["name"])
     return items
 

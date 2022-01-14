@@ -21,6 +21,17 @@ except ImportError:
 
 __virtualname__ = "vmware_esxi"
 
+DEFAULT_EXCEPTIONS = (
+    vim.fault.InvalidState,
+    vim.fault.NotFound,
+    vim.fault.HostConfigFault,
+    vmodl.fault.InvalidArgument,
+    salt.exceptions.VMwareApiError,
+    vim.fault.AlreadyExists,
+    vim.fault.UserNotFound,
+    TypeError,
+)
+
 
 def __virtual__():
     if not HAS_PYVMOMI:
@@ -203,13 +214,7 @@ def manage_service(
                     startup_policy = "off"
                 host_service.UpdateServicePolicy(id=service_name, policy=startup_policy)
         ret = True
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -289,13 +294,7 @@ def list_services(
                     "state": "running" if service.running else "stopped",
                     "startup_policy": service.policy,
                 }
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -361,13 +360,7 @@ def get_acceptance_level(
             if acceptance_level and host_acceptance_level != acceptance_level:
                 continue
             ret[h.name] = host_acceptance_level
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -431,13 +424,7 @@ def set_acceptance_level(
                 continue
             host_config_manager.UpdateHostImageAcceptanceLevel(newAcceptanceLevel=acceptance_level)
             ret[h.name] = acceptance_level
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -492,13 +479,7 @@ def get_advanced_config(
             for opt in config_manager.QueryOptions(config_name):
                 ret[h.name][opt.key] = opt.value
 
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -581,13 +562,7 @@ def set_advanced_configs(
                 advanced_configs.append(vim.option.OptionValue(key=opt, value=val))
                 ret[h.name][opt] = config_dict[opt]
             config_manager.UpdateOptions(changedValue=advanced_configs)
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -715,13 +690,7 @@ def get_firewall_config(
                     }
                 )
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -773,13 +742,7 @@ def get_dns_config(
             ret[h.name]["host_name"] = dns_config.hostName
             ret[h.name]["domain_name"] = dns_config.domainName
             ret[h.name]["ip"] = list(dns_config.address)
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -836,13 +799,7 @@ def get_ntp_config(
                     else None,
                 }
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -887,14 +844,7 @@ def list_hosts(
         for h in hosts:
             ret.append(h.name)
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -956,14 +906,7 @@ def add_user(
             h.configManager.accountManager.CreateUser(account_spec)
             ret[h.name] = True
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1025,14 +968,7 @@ def update_user(
             h.configManager.accountManager.UpdateUser(account_spec)
             ret[h.name] = True
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.UserNotFound,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1082,33 +1018,19 @@ def remove_user(
             h.configManager.accountManager.RemoveUser(user_name)
             ret[h.name] = True
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.UserNotFound,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
 def _get_net_stack(network_tcpip_stack):
-    ret = None
-    if network_tcpip_stack == "default":
-        ret = "defaultTcpipStack"
-    elif network_tcpip_stack == "provisioning":
-        ret = "vSphereProvisioning"
-    elif network_tcpip_stack == "vmotion":
-        ret = "vmotion"
-    elif network_tcpip_stack == "vxlan":
-        ret = "vxlan"
-    elif network_tcpip_stack == "defaultTcpipStack":
-        ret = "default"
-    elif network_tcpip_stack == "vSphereProvisioning":
-        ret = "provisioning"
-
-    return ret
+    return {
+        "default": "defaultTcpipStack",
+        "provisioning": "vSphereProvisioning",
+        "vmotion": "vmotion",
+        "vxlan": "vxlan",
+        "defaulttcpipstack": "default",
+        "vsphereprovisioning": "provisioning",
+    }.get(network_tcpip_stack.lower())
 
 
 def create_vmkernel_adapter(
@@ -1148,25 +1070,25 @@ def create_vmkernel_adapter(
         One of dvswitch_name or vswitch_name is required.
 
     enable_fault_tolerance
-        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_management_traffic
-        Enable Management traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Management traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_provisioning
-        Enable Provisioning traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Provisioning traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_replication
-        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_replication_nfc
-        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_vmotion
-        Enable vMotion traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vMotion traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_vsan
-        Enable VSAN traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable VSAN traffic on the VMKernel adapter. Valid values: True, False.
 
     mtu
         The MTU for the VMKernel interface.
@@ -1202,7 +1124,7 @@ def create_vmkernel_adapter(
 
         salt '*' vmware_esxi.create_vmkernel_adapter port_group_name=portgroup1 dvswitch_name=dvs1
     """
-    log.debug("Running vmware_esxi.create_vmkernel_adapter dvswitch_name=dvs1")
+    log.debug("Running vmware_esxi.create_vmkernel_adapter")
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -1216,44 +1138,36 @@ def create_vmkernel_adapter(
 
     try:
         for h in hosts:
-            adapter_name = None
             vmk_device = _save_vmkernel_adapter(
-                h,
-                service_instance,
-                "create",
-                port_group_name,
-                dvswitch_name,
-                vswitch_name,
-                adapter_name,
-                enable_fault_tolerance,
-                enable_management_traffic,
-                enable_provisioning,
-                enable_replication,
-                enable_replication_nfc,
-                enable_vmotion,
-                enable_vsan,
-                mtu,
-                network_default_gateway,
-                network_ip_address,
-                network_subnet_mask,
-                network_tcp_ip_stack,
-                network_type,
+                host=h,
+                service_instance=service_instance,
+                action="create",
+                port_group_name=port_group_name,
+                dvswitch_name=dvswitch_name,
+                vswitch_name=vswitch_name,
+                adapter_name=None,
+                enable_fault_tolerance=enable_fault_tolerance,
+                enable_management_traffic=enable_management_traffic,
+                enable_provisioning=enable_provisioning,
+                enable_replication=enable_replication,
+                enable_replication_nfc=enable_replication_nfc,
+                enable_vmotion=enable_vmotion,
+                enable_vsan=enable_vsan,
+                mtu=mtu,
+                network_default_gateway=network_default_gateway,
+                network_ip_address=network_ip_address,
+                network_subnet_mask=network_subnet_mask,
+                network_tcp_ip_stack=network_tcp_ip_stack,
+                network_type=network_type,
             )
             ret[h.name] = vmk_device
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
 def _save_vmkernel_adapter(
-    h,
+    host,
     service_instance,
     action,
     port_group_name,
@@ -1299,14 +1213,14 @@ def _save_vmkernel_adapter(
 
     vnic = vmk_device = None
     if action == "update":
-        for v in h.config.network.vnic:
+        for v in host.config.network.vnic:
             if v.device == adapter_name:
                 vnic = v
                 vmk_device = vnic.device
                 break
-        h.configManager.networkSystem.UpdateVirtualNic(vmk_device, vnic_config)
+        host.configManager.networkSystem.UpdateVirtualNic(vmk_device, vnic_config)
     else:
-        vmk_device = h.configManager.networkSystem.AddVirtualNic(
+        vmk_device = host.configManager.networkSystem.AddVirtualNic(
             portgroup="" if dvswitch_name else port_group_name, nic=vnic_config
         )
 
@@ -1319,14 +1233,14 @@ def _save_vmkernel_adapter(
         (enable_vmotion, "vmotion"),
     ]:
         if enable:
-            h.configManager.virtualNicManager.SelectVnicForNicType(service, vmk_device)
+            host.configManager.virtualNicManager.SelectVnicForNicType(service, vmk_device)
         elif enable is False:
-            h.configManager.virtualNicManager.DeselectVnicForNicType(service, vmk_device)
+            host.configManager.virtualNicManager.DeselectVnicForNicType(service, vmk_device)
 
     vsan_config = vim.vsan.host.ConfigInfo()
-    vsan_config.networkInfo = h.configManager.vsanSystem.config.networkInfo
+    vsan_config.networkInfo = host.configManager.vsanSystem.config.networkInfo
     current_vsan_vnics = [
-        portConfig.device for portConfig in h.configManager.vsanSystem.config.networkInfo.port
+        portConfig.device for portConfig in host.configManager.vsanSystem.config.networkInfo.port
     ]
     if enable_vsan:
         if vmk_device not in current_vsan_vnics:
@@ -1341,8 +1255,8 @@ def _save_vmkernel_adapter(
         vsan_config.networkInfo.port = list(
             filter(lambda portConfig: portConfig.device != vmk_device, vsan_config.networkInfo.port)
         )
-    task = h.configManager.vsanSystem.UpdateVsan_Task(vsan_config)
-    utils_common.wait_for_task(task, h.name, "UpdateVsan_Task")
+    task = host.configManager.vsanSystem.UpdateVsan_Task(vsan_config)
+    utils_common.wait_for_task(task, host.name, "UpdateVsan_Task")
     return vmk_device
 
 
@@ -1396,14 +1310,7 @@ def get_vmkernel_adapters(
                 vmk_devices.append(v.device)
             ret[h.name] = vmk_devices
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1446,25 +1353,25 @@ def update_vmkernel_adapter(
         The name of the vSwitch where to update the VMKernel interface.
 
     enable_fault_tolerance
-        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_management_traffic
-        Enable Management traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Management traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_provisioning
-        Enable Provisioning traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Provisioning traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_replication
-        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_replication_nfc
-        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_vmotion
-        Enable vMotion traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vMotion traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_vsan
-        Enable VSAN traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable VSAN traffic on the VMKernel adapter. Valid values: True, False.
 
     mtu
         The MTU for the VMKernel interface.
@@ -1515,37 +1422,29 @@ def update_vmkernel_adapter(
     try:
         for h in hosts:
             ret[h.name] = _save_vmkernel_adapter(
-                h,
-                service_instance,
-                "update",
-                port_group_name,
-                dvswitch_name,
-                vswitch_name,
-                adapter_name,
-                enable_fault_tolerance,
-                enable_management_traffic,
-                enable_provisioning,
-                enable_replication,
-                enable_replication_nfc,
-                enable_vmotion,
-                enable_vsan,
-                mtu,
-                network_default_gateway,
-                network_ip_address,
-                network_subnet_mask,
-                network_tcp_ip_stack,
-                network_type,
+                host=h,
+                service_instance=service_instance,
+                action="update",
+                port_group_name=port_group_name,
+                dvswitch_name=dvswitch_name,
+                vswitch_name=vswitch_name,
+                adapter_name=adapter_name,
+                enable_fault_tolerance=enable_fault_tolerance,
+                enable_management_traffic=enable_management_traffic,
+                enable_provisioning=enable_provisioning,
+                enable_replication=enable_replication,
+                enable_replication_nfc=enable_replication_nfc,
+                enable_vmotion=enable_vmotion,
+                enable_vsan=enable_vsan,
+                mtu=mtu,
+                network_default_gateway=network_default_gateway,
+                network_ip_address=network_ip_address,
+                network_subnet_mask=network_subnet_mask,
+                network_tcp_ip_stack=network_tcp_ip_stack,
+                network_type=network_type,
             )
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-        TypeError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1598,13 +1497,7 @@ def delete_vmkernel_adapter(
             except vim.fault.NotFound:
                 ret[h.name] = False
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1671,14 +1564,7 @@ def get_user(
                     }
                 }
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1722,14 +1608,7 @@ def add_role(
             name=role_name, privIds=privilege_ids
         )
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1775,14 +1654,7 @@ def update_role(
             roleId=role["role_id"], newName=role_name, privIds=privilege_ids
         )
         return True
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1826,14 +1698,7 @@ def remove_role(
             roleId=role["role_id"], failIfUsed=force
         )
         return True
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1875,14 +1740,7 @@ def get_role(
                 ret["role_name"] = role.name
                 ret["privilege_ids"] = list(role.privilege)
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -2076,13 +1934,7 @@ def list_pkgs(
                     "creation_date": pkg.creationDate,
                 }
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -2205,11 +2057,5 @@ def get(
                 )
 
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))

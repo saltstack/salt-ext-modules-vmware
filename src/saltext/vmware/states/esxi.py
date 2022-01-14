@@ -94,7 +94,7 @@ def role_present(
         ret[
             "comment"
         ] = "Role {} will be updated. {} privileges will be added. {} privileges will be removed.".format(
-            name, ",".join(new_privs) or "No", ",".join(del_privs) or "No"
+            name, ",".join(sorted(new_privs)) or "No", ",".join(sorted(del_privs)) or "No"
         )
         ret["result"] = None
     else:
@@ -186,25 +186,25 @@ def vmkernel_adapter_present(
         The name of the vSwitch where to update the VMKernel interface.
 
     enable_fault_tolerance
-        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_management_traffic
-        Enable Management traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Management traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_provisioning
-        Enable Provisioning traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable Provisioning traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_replication
-        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_replication_nfc
-        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_vmotion
-        Enable vMotion traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable vMotion traffic on the VMKernel adapter. Valid values: True, False.
 
     enable_vsan
-        Enable VSAN traffic on the VMKernel adapter. Valid values: "True", "False".
+        Enable VSAN traffic on the VMKernel adapter. Valid values: True, False.
 
     mtu
         The MTU for the VMKernel interface.
@@ -236,11 +236,15 @@ def vmkernel_adapter_present(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
-    .. code-block:: bash
+    .. code-block:: yaml
 
-        salt '*' vmware_esxi.update_vmkernel_adapter dvswitch_name=dvs1 mtu=2000
+    Save Adapter:
+      vmware_esxi.vmkernel_adapter_present:
+        - name: vmk1
+        - port_group_name: portgroup1
+        - dvsswitch_name: vswitch1
     """
-    log.debug("Running vmware_esxi.update_vmkernel_adapter")
+    log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -252,96 +256,84 @@ def vmkernel_adapter_present(
         get_all_hosts=host_name is None,
     )
 
-    try:
-        adapters = __salt__["vmware_esxi.get_vmkernel_adapters"](
-            adapter_name=name,
-            datacenter_name=datacenter_name,
-            cluster_name=cluster_name,
-            host_name=host_name,
-            service_instance=service_instance,
-        )
-        add_on_hosts = []
-        update_on_hosts = []
-        for h in hosts:
-            if name and adapters[h.name] and name in adapters[h.name]:
-                update_on_hosts.append(h.name)
-            else:
-                add_on_hosts.append(h.name)
-
-        if __opts__["test"]:
-            ret[
-                "comment"
-            ] = "vmkernel adapter {} will be created on {} host(s) and updated on {} host(s).".format(
-                name, len(add_on_hosts), len(update_on_hosts)
-            )
-            ret["result"] = None
-        elif not add_on_hosts and not update_on_hosts:
-            ret[
-                "comment"
-            ] = "vmkernel adapter {} not created/updated on any host. No changes made.".format(name)
-            ret["result"] = True
+    adapters = __salt__["vmware_esxi.get_vmkernel_adapters"](
+        adapter_name=name,
+        datacenter_name=datacenter_name,
+        cluster_name=cluster_name,
+        host_name=host_name,
+        service_instance=service_instance,
+    )
+    add_on_hosts = []
+    update_on_hosts = []
+    for h in hosts:
+        if name and adapters[h.name] and name in adapters[h.name]:
+            update_on_hosts.append(h.name)
         else:
-            hosts_in_error = []
-            sample_exception = None
-            for action, hosts in [("add", add_on_hosts), ("update", update_on_hosts)]:
-                for host in hosts:
-                    try:
-                        func = None
-                        if action == "add":
-                            func = functools.partial(
-                                __salt__["vmware_esxi.create_vmkernel_adapter"]
-                            )
-                        else:
-                            func = functools.partial(
-                                __salt__["vmware_esxi.update_vmkernel_adapter"], adapter_name=name
-                            )
-                        ret_save = func(
-                            port_group_name=port_group_name,
-                            dvswitch_name=dvswitch_name,
-                            vswitch_name=vswitch_name,
-                            enable_fault_tolerance=enable_fault_tolerance,
-                            enable_management_traffic=enable_management_traffic,
-                            enable_provisioning=enable_provisioning,
-                            enable_replication=enable_replication,
-                            enable_replication_nfc=enable_replication_nfc,
-                            enable_vmotion=enable_vmotion,
-                            enable_vsan=enable_vsan,
-                            mtu=mtu,
-                            network_default_gateway=network_default_gateway,
-                            network_ip_address=network_ip_address,
-                            network_subnet_mask=network_subnet_mask,
-                            network_tcp_ip_stack=network_tcp_ip_stack,
-                            network_type=network_type,
-                            datacenter_name=datacenter_name,
-                            cluster_name=cluster_name,
-                            host_name=host,
-                            service_instance=service_instance,
+            add_on_hosts.append(h.name)
+
+    if __opts__["test"]:
+        ret[
+            "comment"
+        ] = "vmkernel adapter {!r} will be created on {} host(s) and updated on {} host(s).".format(
+            name, len(add_on_hosts), len(update_on_hosts)
+        )
+        ret["result"] = None
+    elif not add_on_hosts and not update_on_hosts:
+        ret[
+            "comment"
+        ] = "vmkernel adapter {!r} not created/updated on any host. No changes made.".format(name)
+        ret["result"] = True
+    else:
+        hosts_in_error = []
+        sample_exception = None
+        for action, hosts in [("add", add_on_hosts), ("update", update_on_hosts)]:
+            for host in hosts:
+                try:
+                    func = None
+                    if action == "add":
+                        func = functools.partial(__salt__["vmware_esxi.create_vmkernel_adapter"])
+                    else:
+                        func = functools.partial(
+                            __salt__["vmware_esxi.update_vmkernel_adapter"], adapter_name=name
                         )
-                        ret["changes"].update(ret_save)
-                    except salt.exceptions.SaltException as exc:
-                        hosts_in_error.append(host)
-                        sample_exception = str(exc)
-            ret["comment"] = "vmkernel adapter {} created on {}, updated on {}.".format(
-                name,
-                ",".join(set(add_on_hosts) - set(hosts_in_error)) or "-",
-                ",".join(set(update_on_hosts) - set(hosts_in_error)) or "-",
+                    ret_save = func(
+                        port_group_name=port_group_name,
+                        dvswitch_name=dvswitch_name,
+                        vswitch_name=vswitch_name,
+                        enable_fault_tolerance=enable_fault_tolerance,
+                        enable_management_traffic=enable_management_traffic,
+                        enable_provisioning=enable_provisioning,
+                        enable_replication=enable_replication,
+                        enable_replication_nfc=enable_replication_nfc,
+                        enable_vmotion=enable_vmotion,
+                        enable_vsan=enable_vsan,
+                        mtu=mtu,
+                        network_default_gateway=network_default_gateway,
+                        network_ip_address=network_ip_address,
+                        network_subnet_mask=network_subnet_mask,
+                        network_tcp_ip_stack=network_tcp_ip_stack,
+                        network_type=network_type,
+                        datacenter_name=datacenter_name,
+                        cluster_name=cluster_name,
+                        host_name=host,
+                        service_instance=service_instance,
+                    )
+                    ret["changes"].update(ret_save)
+                except salt.exceptions.SaltException as exc:
+                    hosts_in_error.append(host)
+                    sample_exception = str(exc)
+        ret["comment"] = "vmkernel adapter {!r} created on {}, updated on {}.".format(
+            name,
+            ",".join(sorted(set(add_on_hosts) - set(hosts_in_error))) or "-",
+            ",".join(sorted(set(update_on_hosts) - set(hosts_in_error))) or "-",
+        )
+        ret["result"] = True
+        if hosts_in_error:
+            ret["comment"] += "erred on {}. Sample exception - {}".format(
+                ",".join(sorted(hosts_in_error)), sample_exception
             )
-            ret["result"] = True
-            if hosts_in_error:
-                ret["comment"] += "erred on {}. Sample exception - {}".format(
-                    ",".join(hosts_in_error), sample_exception
-                )
-                ret["result"] = False
-        return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-        vim.fault.AlreadyExists,
-    ) as exc:
-        raise salt.exceptions.SaltException(str(exc))
+            ret["result"] = False
+    return ret
 
 
 def vmkernel_adapter_absent(
@@ -365,9 +357,11 @@ def vmkernel_adapter_absent(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
-    .. code-block:: bash
+    .. code-block:: yaml
 
-        salt '*' vmware_esxi.update_vmkernel_adapter dvswitch_name=dvs1 mtu=2000
+    Delete Adapter:
+      vmware_esxi.vmkernel_adapter_absent:
+        - name: vmk1
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
@@ -381,58 +375,47 @@ def vmkernel_adapter_absent(
         get_all_hosts=host_name is None,
     )
 
-    try:
-        adapters = __salt__["vmware_esxi.get_vmkernel_adapters"](
-            adapter_name=name,
-            datacenter_name=datacenter_name,
-            cluster_name=cluster_name,
-            host_name=host_name,
-            service_instance=service_instance,
+    adapters = __salt__["vmware_esxi.get_vmkernel_adapters"](
+        adapter_name=name,
+        datacenter_name=datacenter_name,
+        cluster_name=cluster_name,
+        host_name=host_name,
+        service_instance=service_instance,
+    )
+    delete_on_hosts = [h.name for h in hosts if adapters[h.name]]
+    if __opts__["test"]:
+        ret["comment"] = "vmkernel adapter {!r} will be deleted on {} host(s).".format(
+            name, len(delete_on_hosts)
         )
-        delete_on_hosts = [h.name for h in hosts if adapters[h.name]]
-        if __opts__["test"]:
-            ret["comment"] = "vmkernel adapter {} will be deleted on {} host(s).".format(
-                name, len(delete_on_hosts)
-            )
-            ret["result"] = None
-        elif not delete_on_hosts:
-            ret["comment"] = "vmkernel adapter {} absent on all hosts. No changes made.".format(
-                name
-            )
-        else:
-            hosts_in_error = []
-            sample_exception = None
-            for host in delete_on_hosts:
-                try:
-                    ret_delete = __salt__["vmware_esxi.delete_vmkernel_adapter"](
-                        adapter_name=name,
-                        datacenter_name=datacenter_name,
-                        cluster_name=cluster_name,
-                        host_name=host,
-                        service_instance=service_instance,
-                    )
-                    ret["changes"].update(ret_delete)
-                except salt.exceptions.SaltException as exc:
-                    hosts_in_error.append(host)
-                    sample_exception = str(exc)
-            ret["comment"] = "vmkernel adapter {} deleted on {}.".format(
-                name, ",".join(set(delete_on_hosts) - set(hosts_in_error))
-            )
-            ret["result"] = True
-            if hosts_in_error:
-                ret["comment"] += "erred on {}. Sample exception - {}".format(
-                    ",".join(hosts_in_error), sample_exception
+        ret["result"] = None
+    elif not delete_on_hosts:
+        ret["comment"] = "vmkernel adapter {!r} absent on all hosts. No changes made.".format(name)
+    else:
+        hosts_in_error = []
+        sample_exception = None
+        for host in delete_on_hosts:
+            try:
+                ret_delete = __salt__["vmware_esxi.delete_vmkernel_adapter"](
+                    adapter_name=name,
+                    datacenter_name=datacenter_name,
+                    cluster_name=cluster_name,
+                    host_name=host,
+                    service_instance=service_instance,
                 )
-                ret["result"] = False
-        return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
-        raise salt.exceptions.SaltException(str(exc))
+                ret["changes"].update(ret_delete)
+            except salt.exceptions.SaltException as exc:
+                hosts_in_error.append(host)
+                sample_exception = str(exc)
+        ret["comment"] = "vmkernel adapter {!r} deleted on {}.".format(
+            name, ",".join(sorted(set(delete_on_hosts) - set(hosts_in_error)))
+        )
+        ret["result"] = True
+        if hosts_in_error:
+            ret["comment"] += "erred on {}. Sample exception - {}".format(
+                ",".join(sorted(hosts_in_error)), sample_exception
+            )
+            ret["result"] = False
+    return ret
 
 
 def user_present(
@@ -534,7 +517,7 @@ def user_present(
                 ret[
                     "comment"
                 ] = "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, create, update, len(failed_hosts), ",".join(failed_hosts), exc
+                    name, create, update, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
                 )
                 ret["changes"] = diff
                 ret["result"] = False
@@ -562,7 +545,7 @@ def user_present(
                 ret[
                     "comment"
                 ] = "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, create, update, len(failed_hosts), ",".join(failed_hosts), exc
+                    name, create, update, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
                 )
                 ret["changes"] = diff
                 ret["result"] = False
@@ -656,7 +639,7 @@ def user_absent(
                 ret[
                     "comment"
                 ] = "User {} removed on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, delete, len(failed_hosts), ",".join(failed_hosts), exc
+                    name, delete, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
                 )
                 ret["changes"] = diff
                 ret["result"] = False
