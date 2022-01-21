@@ -92,3 +92,40 @@ def test_tag_delete(patch_salt_globals_tag):
                 break
     else:
         pytest.skip("test requires at least one tag")
+
+
+def test_cat_create(patch_salt_globals_tag):
+    """
+    Test create category functionality
+    """
+    res = tagging.create_category("test cat", ['string'], 'SINGLE', "test category")
+    assert "urn:vmomi:InventoryServiceCategory:" in res["category"]
+
+
+def test_cat_update(patch_salt_globals_tag):
+    """
+    Test update category functionality
+    """
+    cats = tagging.list_category()
+    if len(cats["categories"]) > 0:
+        for cat in cats["categories"]:
+            res = tagging.get_category(cat)
+            if res["category"]["name"] == "test cat":
+                update_res = tagging.update_category(res["category"]["id"], res["category"]["name"], res["category"]["associable_types"], res["category"]["cardinality"], "new description")
+                assert "updated" in update_res["category"]
+    else:
+        pytest.skip("test requires at least one category")
+
+def test_cat_delete(patch_salt_globals_tag):
+    """
+    Test update category functionality
+    """
+    cats = tagging.list_category()
+    if len(cats["categories"]) > 0:
+        for cat in cats["categories"]:
+            res = tagging.get_category(cat)
+            if res["category"]["name"] == "test cat":
+                delete_res = tagging.delete_category(res["category"]["id"])
+                assert "deleted" in delete_res["category"]
+    else:
+        pytest.skip("test requires at least one category")
