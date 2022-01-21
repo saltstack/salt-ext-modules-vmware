@@ -161,7 +161,12 @@ def create_category(category_name, associable_types, cardinality, description=""
         (optional) The description of the category.
     """
     data = {
-        "create_spec": {"associable_types": associable_types, "cardinality": cardinality, "description": description, "name": category_name}
+        "create_spec": {
+            "associable_types": associable_types,
+            "cardinality": cardinality,
+            "description": description,
+            "name": category_name,
+        }
     }
     response = connect.request(
         "/rest/com/vmware/cis/tagging/category", "POST", body=data, opts=__opts__, pillar=__pillar__
@@ -170,7 +175,9 @@ def create_category(category_name, associable_types, cardinality, description=""
     return {"category": response["value"]}
 
 
-def update_category(category_id, category_name=None, associable_types=None, cardinality=None, description=""):
+def update_category(
+    category_id, category_name=None, associable_types=None, cardinality=None, description=""
+):
     """
     Update a new category.
 

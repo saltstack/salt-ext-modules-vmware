@@ -184,7 +184,11 @@ def present_category(name, associable_types, cardinality, description=""):
             found = cat_ref["value"]
             break
     if found:
-        if associable_types == found["associable_types"] and cardinality == found["cardinality"] and description == found["description"]:
+        if (
+            associable_types == found["associable_types"]
+            and cardinality == found["cardinality"]
+            and description == found["description"]
+        ):
             ret["comment"] = "category exists"
             return ret
         else:
@@ -227,10 +231,19 @@ def present_category(name, associable_types, cardinality, description=""):
             ret["comment"] = f"{name} category will be created"
             return ret
         data = {
-        "create_spec": {"associable_types": associable_types, "cardinality": cardinality, "description": description, "name": name}
+            "create_spec": {
+                "associable_types": associable_types,
+                "cardinality": cardinality,
+                "description": description,
+                "name": name,
+            }
         }
         create = connect.request(
-            "/rest/com/vmware/cis/tagging/category", "POST", body=data, opts=__opts__, pillar=__pillar__
+            "/rest/com/vmware/cis/tagging/category",
+            "POST",
+            body=data,
+            opts=__opts__,
+            pillar=__pillar__,
         )
         response = create["response"].json()
         ret["changes"]["category_id"] = response["value"]

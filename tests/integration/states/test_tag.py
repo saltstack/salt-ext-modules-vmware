@@ -41,12 +41,7 @@ def test_manage_create_cat_test(patch_salt_globals_tag_state_test):
     """
     test category manage create test = true
     """
-    res = tagging_state.present_category(
-            "state test cat",
-            ['string'],
-            'SINGLE', 
-            "test category"
-        )
+    res = tagging_state.present_category("state test cat", ["string"], "SINGLE", "test category")
     assert "state test cat category will be created" in res["comment"]
 
 
@@ -54,12 +49,7 @@ def test_manage_create_cat(patch_salt_globals_tag_state):
     """
     test category manage create
     """
-    res = tagging_state.present_category(
-            "state test cat",
-            ['string'],
-            'SINGLE', 
-            "test category"
-        )
+    res = tagging_state.present_category("state test cat", ["string"], "SINGLE", "test category")
     assert "created" in res["comment"]
 
 
@@ -68,12 +58,7 @@ def test_manage_update_cat_test(patch_salt_globals_tag_state_test):
     test tag manage update test = true
     """
 
-    res = tagging_state.present_category(
-            "state test cat",
-            ['string'],
-            'SINGLE', 
-            "new description"
-        )
+    res = tagging_state.present_category("state test cat", ["string"], "SINGLE", "new description")
     assert "state test cat category will be updated" in res["comment"]
 
 
@@ -82,12 +67,7 @@ def test_manage_update_cat(patch_salt_globals_tag_state):
     test tag manage update
     """
 
-    res = tagging_state.present_category(
-            "state test cat",
-            ['string'],
-            'SINGLE', 
-            "new description"
-        )
+    res = tagging_state.present_category("state test cat", ["string"], "SINGLE", "new description")
     assert "updated" in res["comment"]
 
 
