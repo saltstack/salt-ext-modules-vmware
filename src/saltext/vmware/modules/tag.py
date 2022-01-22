@@ -142,3 +142,93 @@ def get_category(category_id):
     response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
     response = response["response"].json()
     return {"category": response["value"]}
+
+
+def create_category(category_name, associable_types, cardinality, description=""):
+    """
+    Create a new category.
+
+    category_name
+        The display name of the category.
+
+    associable_types
+        (list) Object types to which this category’s tags can be attached.
+
+    cardinality
+        The CategoryModel.Cardinality enumerated type defines the number of tags in a category that can be assigned to an object. SINGLE, MULTIPLE
+
+    description
+        (optional) The description of the category.
+    """
+    data = {
+        "create_spec": {
+            "associable_types": associable_types,
+            "cardinality": cardinality,
+            "description": description,
+            "name": category_name,
+        }
+    }
+    response = connect.request(
+        "/rest/com/vmware/cis/tagging/category", "POST", body=data, opts=__opts__, pillar=__pillar__
+    )
+    response = response["response"].json()
+    return {"category": response["value"]}
+
+
+def update_category(
+    category_id, category_name=None, associable_types=None, cardinality=None, description=""
+):
+    """
+    Update a new category.
+
+    category_id
+        The identifier of the category to be updated. The parameter must be an identifier for the resource type: com.vmware.cis.tagging.Category.
+
+    category_name
+        The display name of the category.
+
+    associable_types
+        (list) Object types to which this categorys tags can be attached.
+
+    cardinality
+        The CategoryModel.Cardinality enumerated type defines the number of tags in a category that can be assigned to an object. SINGLE, MULTIPLE
+
+    description
+        (optional) The description of the category.
+    """
+    spec = {"update_spec": {}}
+    if category_name:
+        spec["update_spec"]["name"] = category_name
+    if associable_types:
+        spec["update_spec"]["associable_types"] = associable_types
+    if cardinality:
+        spec["update_spec"]["cardinality"] = cardinality
+    if description:
+        spec["update_spec"]["description"] = description
+    url = f"/rest/com/vmware/cis/tagging/category/id:{category_id}"
+    response = connect.request(url, "PATCH", body=spec, opts=__opts__, pillar=__pillar__)
+    if response["response"].status_code == 200:
+        return {"category": "updated"}
+    return {
+        "category": "failed to update",
+        "status_code": response["response"].status_code,
+        "reason": response["response"].reason,
+    }
+
+
+def delete_category(category_id):
+    """
+    Delete given category.
+
+    category_id
+        The identifier of category to be deleted. The parameter must be an identifier for the resource type: com.vmware.cis.tagging.Category.
+    """
+    url = f"/rest/com/vmware/cis/tagging/category/id:{category_id}"
+    response = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
+    if response["response"].status_code == 200:
+        return {"category": "deleted"}
+    return {
+        "category": "failed to update",
+        "status_code": response.status_code,
+        "reason": response.reason,
+    }
