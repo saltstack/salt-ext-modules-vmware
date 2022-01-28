@@ -710,11 +710,11 @@ def backup_config(
     Backup configuration for matching EXSI hosts.
 
     push_file_to_master
-        Push the downloaded configuration file to the salt master.
+        Push the downloaded configuration file to the salt master. (optional)
         Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.cp.html#salt.modules.cp.push
 
     http_opts
-        Extra HTTP options to be passed to download from the URL.
+        Extra HTTP options to be passed to download from the URL. (optional)
         Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.http.html#salt.modules.http.query
 
     datacenter_name
@@ -749,16 +749,15 @@ def backup_config(
     try:
         for h in hosts:
             try:
-                url = h.configManager.firmwareSystem.BackupFirmwareConfiguration().replace(
-                    "*", h.name
-                )
+                url = h.configManager.firmwareSystem.BackupFirmwareConfiguration()
+                url = url.replace("*", h.name)
                 file_name = os.path.join(__opts__["cachedir"], url.rsplit("/", 1)[1])
                 data = __salt__["http.query"](url, decode_body=False, **http_opts)
                 with open(file_name, "wb") as fp:
                     fp.write(data["body"])
                 if push_file_to_master:
                     __salt__["cp.push"](file_name)
-                ret.setdefault(h.name, {"filename": file_name})
+                ret.setdefault(h.name, {"file_name": file_name})
                 ret[h.name]["url"] = url
             except salt.exceptions.CommandExecutionError as exc:
                 log.error("Unable to backup configuration for host - %s. Error - %s", h.name, exc)
@@ -789,7 +788,7 @@ def restore_config(
         Specify the saltenv when the source file needs to be retireved from the master. (optional)
 
     http_opts
-        Extra HTTP options to be passed to download from the URL.
+        Extra HTTP options to be passed to download from the URL. (optional).
         Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.http.html#salt.modules.http.query
 
     datacenter_name
