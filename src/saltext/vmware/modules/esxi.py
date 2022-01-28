@@ -2075,6 +2075,7 @@ def in_maintenance_mode(host, service_instance=None):
 
         salt '*' vmware_esxi.in_maintenance_mode '10.288.6.117'
     """
+    x = None
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
@@ -2087,12 +2088,14 @@ def in_maintenance_mode(host, service_instance=None):
     return {"maintenanceMode": mode}
 
 
-def maintenance_mode(host,
-                     timeout=0,
-                     evacuate_powered_off_vms=False,
-                     maintenance_spec=None,
-                     catch_task_error=True,
-                     service_instance=None):
+def maintenance_mode(
+    host,
+    timeout=0,
+    evacuate_powered_off_vms=False,
+    maintenance_spec=None,
+    catch_task_error=True,
+    service_instance=None,
+):
     """
     Put host into maintenance mode.
 
@@ -2131,9 +2134,9 @@ def maintenance_mode(host,
         mode["changes"] = False
         return mode
     try:
-        task = host_ref.EnterMaintenanceMode_Task(timeout,
-                                                  evacuate_powered_off_vms,
-                                                  maintenance_spec)
+        task = host_ref.EnterMaintenanceMode_Task(
+            timeout, evacuate_powered_off_vms, maintenance_spec
+        )
         utils_common.wait_for_task(task, host_ref.name, "maintenanceMode")
     except salt.exceptions.SaltException as exc:
         if not catch_task_error:
@@ -2143,10 +2146,7 @@ def maintenance_mode(host,
     return mode
 
 
-def exit_maintenance_mode(host,
-                          timeout=0,
-                          catch_task_error=True,
-                          service_instance=None):
+def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instance=None):
     """
     Put host out of maintenance mode.
 
