@@ -837,7 +837,7 @@ def restore_config(
                 esxi_host=h.name, opts=__opts__, pillar=__pillar__
             )
             resp = __salt__["http.query"](
-                url, data=data, method="PUT", username="root", password=password, **http_opts
+                url, data=data, method="PUT", username=username, password=password, **http_opts
             )
             if "error" in resp:
                 ret[h.name] = resp["error"]
