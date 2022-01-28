@@ -2,6 +2,7 @@
     :codeauthor: VMware
 """
 import logging
+import os
 import uuid
 from unittest.mock import MagicMock
 
@@ -89,7 +90,7 @@ def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master):
     ret = esxi.backup_config(push_file_to_master=push_file_to_master)
     assert ret
     for host in hosts:
-        assert ret[host.name]["file_name"] == "./vmware.tgz"
+        assert ret[host.name]["file_name"] == os.path.join(".", "vmware.tgz")
         assert ret[host.name]["url"] == "http://vmware.tgz"
     assert push_file_to_master == (saltext.vmware.modules.esxi.__salt__["cp.push"].call_count > 0)
 
