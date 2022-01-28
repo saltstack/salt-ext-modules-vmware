@@ -738,5 +738,4 @@ def maintenance_mode(
         ret[
             "comment"
         ] = f"Failed to put host {str(name)} in {'Maintenance' if enter_maintenance_mode else 'Normal'} mode."
-    x = None
     return ret

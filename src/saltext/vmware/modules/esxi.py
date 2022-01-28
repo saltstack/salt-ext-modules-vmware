@@ -2075,7 +2075,6 @@ def in_maintenance_mode(host, service_instance=None):
 
         salt '*' vmware_esxi.in_maintenance_mode '10.288.6.117'
     """
-    x = None
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:

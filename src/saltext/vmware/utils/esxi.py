@@ -333,5 +333,4 @@ def add_host(
 
 
 def get_host(host, service_instance):
-    x = None
     return utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
