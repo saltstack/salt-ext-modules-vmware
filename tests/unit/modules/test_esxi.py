@@ -73,7 +73,7 @@ def test_esxi_power_state(monkeypatch, hosts, state, fn, fn_calls, expected):
     ],
 )
 def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master):
-    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": "/tmp"})
+    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": "."})
     setattr(saltext.vmware.modules.esxi, "__pillar__", MagicMock())
     setattr(
         saltext.vmware.modules.esxi,
@@ -89,7 +89,7 @@ def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master):
     ret = esxi.backup_config(push_file_to_master=push_file_to_master)
     assert ret
     for host in hosts:
-        assert ret[host.name]["file_name"] == "/tmp/vmware.tgz"
+        assert ret[host.name]["file_name"] == "./vmware.tgz"
         assert ret[host.name]["url"] == "http://vmware.tgz"
     assert push_file_to_master == (saltext.vmware.modules.esxi.__salt__["cp.push"].call_count > 0)
 
@@ -97,22 +97,22 @@ def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master):
 @pytest.mark.parametrize(
     ["hosts", "source_file"],
     [
-        [[get_host(), get_host()], "/tmp/vmware.tgz"],
+        [[get_host(), get_host()], "vmware.tgz"],
         [[get_host(), get_host()], "http://vmware.tgz"],
         [[get_host(), get_host()], "salt://vmware.tgz"],
     ],
 )
 def test_esxi_restore_config(monkeypatch, hosts, source_file):
-    with open("/tmp/vmware.tgz", "wb") as fp:
+    with open("vmware.tgz", "wb") as fp:
         fp.write(b"1")
-    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": "/tmp"})
+    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": "."})
     setattr(saltext.vmware.modules.esxi, "__pillar__", MagicMock())
     setattr(
         saltext.vmware.modules.esxi,
         "__salt__",
         {
             "http.query": MagicMock(return_value={"body": b"1"}),
-            "cp.cache_file": MagicMock(return_value="/tmp/vmware.tgz"),
+            "cp.cache_file": MagicMock(return_value="vmware.tgz"),
         },
     )
     monkeypatch.setattr(saltext.vmware.modules.esxi, "get_service_instance", MagicMock())
@@ -131,14 +131,14 @@ def test_esxi_restore_config(monkeypatch, hosts, source_file):
     ],
 )
 def test_esxi_reset_config(monkeypatch, hosts):
-    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": "/tmp"})
+    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": "."})
     setattr(saltext.vmware.modules.esxi, "__pillar__", MagicMock())
     setattr(
         saltext.vmware.modules.esxi,
         "__salt__",
         {
             "http.query": MagicMock(return_value={"body": b"1"}),
-            "cp.cache_file": MagicMock(return_value="/tmp/vmware.tgz"),
+            "cp.cache_file": MagicMock(return_value="vmware.tgz"),
         },
     )
     monkeypatch.setattr(saltext.vmware.modules.esxi, "get_service_instance", MagicMock())
