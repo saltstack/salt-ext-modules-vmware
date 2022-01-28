@@ -214,3 +214,50 @@ def snapshot_absent(
         ret["changes"]["result"] = False
         ret["comment"] = str(e)
         return ret
+
+
+def relocate(name, new_host_name, datastore_name, service_instance=None):
+    """
+    Relocates a virtual machine to the location specified.
+
+    name
+        The name of the virtual machine to relocate.
+
+    new_host_name
+        The name of the host you want to move the virtual machine to.
+
+    datastore_name
+        The name of the datastore you want to move the virtual machine to.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+    vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
+    datastore_match = False
+    for ds in vm_ref.datastore:
+        if ds.name == datastore_name:
+            datastore_match = True
+    if datastore_match and vm_ref.runtime.host.name == new_host_name:
+        ret["comment"] = f"{name} virtual machine is already on host {new_host_name}"
+        return ret
+    resources = utils_common.deployment_resources(new_host_name, service_instance)
+    datastore_ref = utils_common.get_datastore(
+        datastore_name, resources["datacenter"], service_instance
+    )
+    if __opts__["test"]:
+        ret["changes"]["new"] = f"{name} virtual machine will be moved to host {new_host_name}"
+        ret["comment"] = "These options are set to change."
+        return ret
+    relo = utils_vm.relocate(
+        vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"]
+    )
+    if relo == "success":
+        ret["changes"]["new"] = f"{name} virtual machine was moved to host {new_host_name}"
+        ret["comment"] = "moved"
+        return ret
+    ret["changes"]["result"] = False
+    ret["comment"] = "failed to move"
+    return ret

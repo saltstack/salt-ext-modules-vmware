@@ -872,3 +872,28 @@ def list_license_mgrs(service_instance):
     """
     log.debug("start list of License Managers")
     return list_objects(service_instance, vim.LicenseAssignmentManager)
+
+
+def deployment_resources(host_name, service_instance):
+    """
+    Returns the dict representation of deployment resources from given host name.
+
+    host_name
+        The name of the esxi host to obtain esxi reference.
+
+    """
+    destination_host_ref = get_mor_by_property(
+        service_instance,
+        vim.HostSystem,
+        host_name,
+    )
+    datacenter_ref = get_parent_type(destination_host_ref, vim.Datacenter)
+    cluster_ref = get_parent_type(destination_host_ref, vim.ClusterComputeResource)
+    resource_pool = cluster_ref.resourcePool
+
+    return {
+        "destination_host": destination_host_ref,
+        "datacenter": datacenter_ref,
+        "cluster": cluster_ref,
+        "resource_pool": resource_pool,
+    }

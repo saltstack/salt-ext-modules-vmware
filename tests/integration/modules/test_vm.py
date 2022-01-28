@@ -4,8 +4,16 @@ import os
 import tarfile
 
 import pytest
-import salt.exceptions
+import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.modules.vm as virtual_machine
+import saltext.vmware.utils.common as utils_common
+
+try:
+    from pyVmomi import vim
+
+    HAS_PYVMOMI = True
+except ImportError:
+    HAS_PYVMOMI = False
 
 
 @pytest.mark.parametrize(
@@ -172,3 +180,25 @@ def test_destroy_snapshot(integration_test_config, patch_salt_globals_vm):
         assert res["snapshot"] == "destroyed"
     else:
         pytest.skip("test requires at least one virtual machine")
+
+
+def test_relocate(patch_salt_globals_vm, service_instance):
+    """
+    Test relocate virtual machine.
+    """
+    hosts = esxi.list_hosts(service_instance=service_instance)
+    if len(hosts) >= 2:
+        temp = virtual_machine.list_templates()
+        if temp:
+            virtual_machine.deploy_template(
+                vm_name="test_move_vm",
+                template_name=temp[0],
+                host_name=hosts[0],
+            )
+            host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, hosts[1])
+            res = virtual_machine.relocate("test_move_vm", host.name, host.datastore[0].name)
+            assert res["virtual_machine"] == "moved"
+        else:
+            pytest.skip("test requires at least one template")
+    else:
+        pytest.skip("test requires at least two hosts")
