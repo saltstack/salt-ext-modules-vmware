@@ -911,3 +911,25 @@ def destroy_snapshot(snapshot, remove_children):
     task = snapshot.RemoveSnapshot_Task(remove_children)
     ret = utils_common.wait_for_task(task, vm_name, "remove snapshot")
     return ret
+
+
+def relocate(vm, host, datastore, pool):
+    """
+    Relocates a virtual machine to the location specified.
+
+    vm
+        Reference to virtual machine.
+    
+    host
+        Reference to new host.
+    
+    datastore
+        Reference to datastore
+    
+    Pool
+        Reference to resource pool.
+    """
+    relocate_spec = vim.vm.RelocateSpec(host=host, datastore=datastore, pool=pool)
+    task = vm.RelocateVM_Task(relocate_spec)
+    utils_common.wait_for_task(task, vm.name, "move vm")
+    return task.info.state

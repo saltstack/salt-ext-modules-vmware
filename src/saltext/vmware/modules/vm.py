@@ -69,31 +69,6 @@ def path(vm_name, service_instance=None):
     return utils_common.get_path(vm_ref, service_instance)
 
 
-def _deployment_resources(host_name, service_instance):
-    """
-    Returns the dict representation of deployment resources from given host name.
-
-    host_name
-        The name of the esxi host to obtain esxi reference.
-
-    """
-    destination_host_ref = utils_common.get_mor_by_property(
-        service_instance,
-        vim.HostSystem,
-        host_name,
-    )
-    datacenter_ref = utils_common.get_parent_type(destination_host_ref, vim.Datacenter)
-    cluster_ref = utils_common.get_parent_type(destination_host_ref, vim.ClusterComputeResource)
-    resource_pool = cluster_ref.resourcePool
-
-    return {
-        "destination_host": destination_host_ref,
-        "datacenter": datacenter_ref,
-        "cluster": cluster_ref,
-        "resource_pool": resource_pool,
-    }
-
-
 def _deploy_ovf(name, host_name, ovf, service_instance=None):
     """
     Helper fuctions that takes in a OVF file to create a virtual machine.
@@ -123,7 +98,7 @@ def _deploy_ovf(name, host_name, ovf, service_instance=None):
     manager = content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
 
-    resources = _deployment_resources(host_name, service_instance)
+    resources = utils_common.deployment_resources(host_name, service_instance)
 
     import_spec = manager.CreateImportSpec(
         ovf, resources["resource_pool"], resources["destination_host"].datastore[0], spec_params
@@ -212,7 +187,7 @@ def deploy_template(vm_name, template_name, host_name, service_instance=None):
         raise salt.exceptions.CommandExecutionError("Template does not exist.")
 
     template = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, template_name)
-    resources = _deployment_resources(host_name, service_instance)
+    resources = utils_common.deployment_resources(host_name, service_instance)
 
     relospec = vim.vm.RelocateSpec()
     relospec.pool = resources["resource_pool"]
@@ -512,3 +487,30 @@ def snapshot(vm_name, datacenter_name=None, service_instance=None):
     snapshots = utils_vm.get_snapshots(vm_ref)
 
     return {"snapshots": snapshots}
+
+
+def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
+    """
+    Relocates a virtual machine to the location specified.
+
+    vm_name
+        The name of the virtual machine to relocate.
+    
+    new_host_name
+        The name of the host you want to move the virtual machine to.
+    
+    datastore_name
+        The name of the datastore you want to move the virtual machine to.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+    resources = utils_common.deployment_resources(new_host_name, service_instance)
+    datastore_ref = utils_common.get_datastore(datastore_name, resources["datacenter"], service_instance)
+    ret = utils_vm.relocate(vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"])
+    if ret == "success":
+        return {"virtual_machine": "moved"}
+    return {"virtual_machine": "failed to move"}

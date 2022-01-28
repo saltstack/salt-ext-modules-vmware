@@ -2,6 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 import saltext.vmware.states.vm as virtual_machine
+import saltext.vmware.modules.vm as vmm
+import saltext.vmware.modules.esxi as esxi
+import saltext.vmware.utils.common as utils_common
+
+try:
+    from pyVmomi import vim
+
+    HAS_PYVMOMI = True
+except ImportError:
+    HAS_PYVMOMI = False
 
 
 def test_set_boot_manager_dry(integration_test_config, patch_salt_globals_vm_state_test):
@@ -69,3 +79,43 @@ def test_snapshot_absent(integration_test_config, patch_salt_globals_vm_state):
         assert ret["comment"] == "destroyed"
     else:
         pytest.skip("test requires at least one virtual machine")
+
+
+def test_relocate_with_test(patch_salt_globals_vm_state_test, service_instance):
+    """
+    test relocate virtual machine functionality with test equals true
+    """
+    hosts = esxi.list_hosts(service_instance=service_instance)
+    if len(hosts) >= 2:
+        temp = vmm.list_templates(service_instance=service_instance)
+        if temp:
+            vmm.deploy_template(
+                vm_name="test_move_vm_state",
+                template_name=temp[0],
+                host_name=hosts[0],
+                service_instance=service_instance
+            )
+            host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, hosts[1])
+            res = virtual_machine.relocate("test_move_vm_state", host.name, host.datastore[0].name)
+            assert res["comment"] == 'These options are set to change.'
+        else:
+            pytest.skip("test requires at least one template")
+    else:
+        pytest.skip("test requires at least two hosts")
+
+
+def test_relocate(patch_salt_globals_vm_state, service_instance):
+    """
+    test relocate virtual machine functionality
+    """
+    hosts = esxi.list_hosts(service_instance=service_instance)
+    if len(hosts) >= 2:
+        temp = vmm.list_templates(service_instance=service_instance)
+        if temp:
+            host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, hosts[1])
+            res = virtual_machine.relocate("test_move_vm_state", host.name, host.datastore[0].name)
+            assert res["comment"] == 'moved'
+        else:
+            pytest.skip("test requires at least one template")
+    else:
+        pytest.skip("test requires at least two hosts")
