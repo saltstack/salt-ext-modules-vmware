@@ -128,8 +128,6 @@ def test_esxi_restore_config(monkeypatch, hosts, source_file):
     ["hosts"],
     [
         [[get_host(), get_host()]],
-        [[get_host(), get_host()]],
-        [[get_host(), get_host()]],
     ],
 )
 def test_esxi_reset_config(monkeypatch, hosts):
