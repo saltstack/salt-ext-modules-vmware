@@ -2,20 +2,20 @@
 """
 salt-ext-modules-vmware release script
 
-The goal of this script is to simplify the release process, such that anyone
-with the proper permissions should be able to run this script to generate a
-release.
+This script automates the release process, such that anyone who has a correctly
+configured system may deploy saltext.vmware. A correctly configured virtual
+environment, gpg, and pypirc are required. Before running this script `python
+-m nox -e tests-3` should pass all tests.
 
-Release artifacts:
-- wheel
-- wheel.asc signature
+This build process will take place in a temporary directory. The output of this
+script is:
 
-When the wheel & sig file are tested & validated, then we want to tag the git revision and push it all to the places.
-
-Would it be so wrong to update the version and commit before building? Or I suppose correctly we should ask.
-
-"We're about to run tests for version X - would you like to continue?"
-
+- an updated changelog, committed to git
+- the signed release uploaded to test.pypi.org
+- the signed release uploaded to pypi.org
+- the released commit tagged and pushed to saltstack/salt-ext-modules-vmware
+- a /tmp/saltext.vmware-build-{version}.tar.gz file, containing the output of
+  the release process
 """
 import ast
 import configparser
@@ -28,7 +28,6 @@ import sys
 import tempfile
 
 DEBUG_FORCE = False
-DEBUG_FORCE = True
 
 log = logging.getLogger("extmod-release")
 REPO_ROOT = pathlib.Path(__file__).parent.parent
@@ -63,6 +62,14 @@ def msg_wrap(msg):
         raise
     else:
         print("OK")
+
+
+@contextlib.contextmanager
+def make_archive(path):
+    try:
+        yield
+    finally:
+        run_and_log_cmd("tar", "-czf", path, "-C", os.getcwd(), ".")
 
 
 ########################
@@ -115,7 +122,7 @@ def check_gpg():
     with msg_wrap("Checking gpg/gpg agent"):
         with open("fnord.txt", "w") as f:
             f.write("contents")
-        # TODO: need a better way to gpg sign releases
+        # We need a better way to gpg sign releases -- not just individuals
         ret = run_and_log_cmd("gpg", "--armor", "--detach-sign", "fnord.txt")
         if ret.returncode:
             exit("Unable to use gpg --detach-sign. Check your gpg-agent and try again.")
@@ -202,12 +209,11 @@ def test_package(*, tempdir, dist_dir):
         ).partition(": ")[-1]
 
     with msg_wrap(f"Running tests for version {version}"):
-        # run_and_log_cmd(str(test_python), '-m', 'nox', '-f', f'{REPO_ROOT}/noxfile.py', '-e', 'tests-3')
         ret = run_and_log_cmd(
             str(test_python),
             "-m",
             "pytest",
-            f"{REPO_ROOT}/tests/unit",  # TODO: not unit
+            f"{REPO_ROOT}/tests/",
         )
         if ret.returncode:
             exit("Test run failed")
@@ -232,14 +238,18 @@ def prepare_deployment(*, dist_dir, version):
 
 
 def commit_changlog_entries(*, version):
+    # 1.2.3rc1 will return False (non-normal) while 1.2.3 will be True
+    is_normal_release = version.replace(".", "").isnumeric()
     with msg_wrap("Generating changelog"):
         pwd = os.getcwd()
+        version_args = () if is_normal_release else ("--version", f"{version} (Unreleased)")
         try:
             os.chdir(REPO_ROOT)
             ret = run_and_log_cmd(
                 str(VENV_PYTHON.with_name("towncrier")),
                 "build",
                 "--draft",
+                *version_args,
             )
         finally:
             os.chdir(pwd)
@@ -252,15 +262,24 @@ def commit_changlog_entries(*, version):
             )
             if not keep_going:
                 exit("abort")
-        try:
-            os.chdir(REPO_ROOT)
+        # For unreleased versions we won't update the changelog
+        if is_normal_release:
+            try:
+                os.chdir(REPO_ROOT)
+                ret = run_and_log_cmd(
+                    str(VENV_PYTHON.with_name("towncrier")),
+                    "build",
+                )
+            finally:
+                os.chdir(pwd)
             ret = run_and_log_cmd(
-                str(VENV_PYTHON.with_name("towncrier")),
-                "build",
+                "git",
+                "-C",
+                str(REPO_ROOT),
+                "commit",
+                "-m",
+                f"Changelog for release {version}",
             )
-        finally:
-            os.chdir(pwd)
-        ret = run_and_log_cmd
 
 
 def twine_check_package(*, dist_dir, version):
@@ -275,8 +294,7 @@ def twine_check_package(*, dist_dir, version):
 
 
 def deploy_to_test_pypi(*, dist_dir, version):
-    return  # TODO REMOVEME
-    with msg_wrap("Deploying to test pypi"):
+    with msg_wrap("Deploying to TEST PyPI"):
         ret = run_and_log_cmd(
             str(VENV_PYTHON.with_name("twine")),
             "upload",
@@ -290,8 +308,7 @@ def deploy_to_test_pypi(*, dist_dir, version):
 
 
 def deploy_to_real_pypi(*, dist_dir, version):
-    return  # TODO REMOVEME
-    with msg_wrap("Deploying to REAL pypi"):
+    with msg_wrap("Deploying to REAL PyPI"):
         ret = run_and_log_cmd(
             str(VENV_PYTHON.with_name("twine")),
             "upload",
@@ -305,9 +322,10 @@ def deploy_to_real_pypi(*, dist_dir, version):
 
 
 def tag_deployment(*, version):
+    changelog_path = pathlib.Path(f"changelog-{version}.txt").resolve()
     with msg_wrap(f"Tagging version {version}"):
         ret = run_and_log_cmd(
-            "git", "-C", str(REPO_ROOT), "tag", "-F", f"changelog-{version}.txt", "-a", version
+            "git", "-C", str(REPO_ROOT), "tag", "-F", str(changelog_path), "-a", version
         )
         if ret.returncode:
             exit(1)
@@ -315,9 +333,13 @@ def tag_deployment(*, version):
 
 def push_tag_to_salt(*, version):
     with msg_wrap(f"Pushing tag {version} to salt repo"):
-        # TODO: salt not wayne
         ret = run_and_log_cmd(
-            "git", "push", "git+ssh://git@github.com/waynew/salt-ext-modules-vmware.git", version
+            "git",
+            "-C",
+            str(REPO_ROOT),
+            "push",
+            "git+ssh://git@github.com/saltstack/salt-ext-modules-vmware.git",
+            version,
         )
         if ret.returncode:
             exit("Pushing tag failed")
@@ -346,92 +368,54 @@ def do_it(non_interactive=False):  # Shia LeBeouf!
         # None of these make system changes. Can totally bail out without
         # screwing anything up here.
         version = check_mod_version()
-        print("Releasing version {version}")
-        print(f"Path to venv python: {VENV_PYTHON}")
-        check_python_env()
-        check_pypirc()
-        check_git_status()
-        check_gpg()
+        with make_archive(f"/tmp/saltext.vmware-build-{version}.tar.gz"):
+            print(f"Releasing version {version}")
+            print(f"Path to venv python: {VENV_PYTHON}")
+            check_python_env()
+            check_pypirc()
+            check_git_status()
+            check_gpg()
 
-        # Here's where we start to make changes!
-        keep_going = (
-            non_interactive
-            or input(f"Continue to build and test saltext.vmware version {version}? [y/N]: ")
-            .lower()
-            .strip()
-            in YES
-        )
-        if not keep_going:
-            exit("Abort")
+            print()
+            print("***ACTUAL DEPLOY AHEAD!***")
+            print()
+            print(
+                "If your system is correctly configured, choosing to continue will result in a real live deploy of saltext.vmware! Are you ready?"
+            )
+            print()
+            # Here's where we start to make changes!
+            keep_going = (
+                non_interactive
+                or input(f"Continue to build and test saltext.vmware version {version}? [y/N]: ")
+                .lower()
+                .strip()
+                in YES
+            )
+            if not keep_going:
+                exit("Abort")
 
-        ensure_venv_deps()
-        commit_changlog_entries(version=version)
-        build_package(dist_dir=dist_dir)
-        twine_check_package(dist_dir=dist_dir, version=version)
-        # test_package(tempdir=tempdir, dist_dir=dist_dir)
-        prepare_deployment(dist_dir=dist_dir, version=version)
-        deploy_to_test_pypi(dist_dir=dist_dir, version=version)
-        deploy_to_real_pypi(dist_dir=dist_dir, version=version)
-        tag_deployment(version=version)
-        push_tag_to_salt(version=version)
+            ensure_venv_deps()
+            commit_changlog_entries(version=version)
+            build_package(dist_dir=dist_dir)
+            twine_check_package(dist_dir=dist_dir, version=version)
+            test_package(tempdir=tempdir, dist_dir=dist_dir)
+            prepare_deployment(dist_dir=dist_dir, version=version)
+            really_deploy = input(
+                f'WARNING: This will really upload saltext.vmware version {version} to pypi. There is no going back from this point. \nEnter "deploy" without quotes to really deploy: '
+            )
+            if really_deploy != "deploy":
+                exit(f"Aborting version {version} deploy")
+            deploy_to_test_pypi(dist_dir=dist_dir, version=version)
+            deploy_to_real_pypi(dist_dir=dist_dir, version=version)
+            tag_deployment(version=version)
+            push_tag_to_salt(version=version)
 
-        input(f"enter to finish and cleanup - {tempdir} will be deleted")
+            input(
+                f"<enter> to finish and cleanup - {tempdir} will be archived at /tmp/saltext.vmware-build-{version}.tar.gz"
+            )
 
     os.chdir(pwd)
 
 
-def fake_it():
-    import time
-
-    keep_going = input("Building release version 22.01.06, continue? [y/N]: ")
-    with msg_wrap("Generating changelog/release for commit"):
-        time.sleep(0.5)
-
-    with msg_wrap("Creating dev dir"):
-        time.sleep(0.5)
-
-    with msg_wrap("Creating venv for tests"):
-        time.sleep(0.5)
-
-    with msg_wrap("Building package wheels"):
-        time.sleep(0.5)
-
-    with msg_wrap("Installing saltext.vmware"):
-        time.sleep(1)
-
-    with msg_wrap("Running full test suite via nox"):
-        time.sleep(1)
-
-    with msg_wrap("Running tests via pytest"):
-        time.sleep(5)
-
-    keep_going = input("Tests are passing. Continue to sign package, deploy to dev pypi? [y/N]: ")
-
-    with msg_wrap("Signing .whl"):
-        time.sleep(0.5)
-
-    with msg_wrap("Deploying build and signature to dev pypi"):
-        time.sleep(2)
-
-    print(
-        "Deploy to dev pypi successful. See https://test.pypi.org/project/saltext.vmware/ to confirm."
-    )
-
-    keep_going = input("Deploy to prod pypi? [y/N]: ")
-
-    with msg_wrap("Deploying build and signature to prod pypi"):
-        time.sleep(2)
-
-    with msg_wrap("Tagging release commit"):
-        time.sleep(0.5)
-
-    with msg_wrap("Pushing release tag to GitHub"):
-        time.sleep(2)
-
-    keep_artifacts = input("Release complete! Keep build artifacts around? [Y/n]: ")
-    print("All done, good job!")
-
-
 if __name__ == "__main__":
     do_it()
-    # fake_it()
