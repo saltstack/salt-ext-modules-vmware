@@ -23,6 +23,24 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
+def get_username_password(esxi_host, opts=None, pillar=None):
+    password = (
+        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
+        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
+        or os.environ.get("VMWARE_CONFIG_PASSWORD")
+        or opts.get("vmware_config", {}).get("password")
+        or pillar.get("vmware_config", {}).get("password")
+    )
+    user = (
+        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
+        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
+        or os.environ.get("VMWARE_CONFIG_USER")
+        or opts.get("vmware_config", {}).get("user")
+        or pillar.get("vmware_config", {}).get("user")
+    )
+    return user, password
+
+
 def get_service_instance(opts=None, pillar=None, esxi_host=None):
     """
     Connect to VMware service instance
@@ -70,20 +88,7 @@ def get_service_instance(opts=None, pillar=None, esxi_host=None):
         or opts.get("vmware_config", {}).get("host")
         or pillar.get("vmware_config", {}).get("host")
     )
-    password = (
-        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
-        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
-        or os.environ.get("VMWARE_CONFIG_PASSWORD")
-        or opts.get("vmware_config", {}).get("password")
-        or pillar.get("vmware_config", {}).get("password")
-    )
-    user = (
-        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
-        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
-        or os.environ.get("VMWARE_CONFIG_USER")
-        or opts.get("vmware_config", {}).get("user")
-        or pillar.get("vmware_config", {}).get("user")
-    )
+    user, password = get_username_password(esxi_host=host, opts=opts, pillar=pillar)
     config = {
         "host": host,
         "password": password,
