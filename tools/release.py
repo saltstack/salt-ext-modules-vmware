@@ -233,24 +233,33 @@ def prepare_deployment(*, dist_dir, version):
 
 def commit_changlog_entries(*, version):
     with msg_wrap("Generating changelog"):
-        ret = run_and_log_cmd(
-            str(VENV_PYTHON.with_name("towncrier")),
-            "build",
-            "--draft",
-        )
-        with open(f"changelog-{version}.txt", "w") as f:
+        pwd = os.getcwd()
+        try:
+            os.chdir(REPO_ROOT)
+            ret = run_and_log_cmd(
+                str(VENV_PYTHON.with_name("towncrier")),
+                "build",
+                "--draft",
+            )
+        finally:
+            os.chdir(pwd)
+        with open(f"changelog-{version}.txt", "wb") as f:
             f.write(ret.stdout)
-        if "No significant changes" in ret.stdout:
+        if b"No significant changes" in ret.stdout:
             keep_going = (
                 input("Towncrier detected no changes. Continue deployment? [y/N]: ").strip().lower()
                 in YES
             )
             if not keep_going:
                 exit("abort")
-        ret = run_and_log_cmd(
-            str(VENV_PYTHON.with_name("towncrier")),
-            "build",
-        )
+        try:
+            os.chdir(REPO_ROOT)
+            ret = run_and_log_cmd(
+                str(VENV_PYTHON.with_name("towncrier")),
+                "build",
+            )
+        finally:
+            os.chdir(pwd)
         ret = run_and_log_cmd
 
 
@@ -261,11 +270,11 @@ def twine_check_package(*, dist_dir, version):
             "check",
             str(dist_dir / f"saltext.vmware-{version}-py2.py3-none-any.whl"),
         )
-        if f"saltext.vmware-{version}-py2.py3-none-any.whl: PASSED" not in ret.stdout:
+        if f"saltext.vmware-{version}-py2.py3-none-any.whl: PASSED" not in ret.stdout.decode():
             exit("Twine check failed")
 
 
-def deploy_to_test_pypi(*, diist_dir, version):
+def deploy_to_test_pypi(*, dist_dir, version):
     return  # TODO REMOVEME
     with msg_wrap("Deploying to test pypi"):
         ret = run_and_log_cmd(
@@ -359,7 +368,7 @@ def do_it(non_interactive=False):  # Shia LeBeouf!
         commit_changlog_entries(version=version)
         build_package(dist_dir=dist_dir)
         twine_check_package(dist_dir=dist_dir, version=version)
-        test_package(tempdir=tempdir, dist_dir=dist_dir)
+        # test_package(tempdir=tempdir, dist_dir=dist_dir)
         prepare_deployment(dist_dir=dist_dir, version=version)
         deploy_to_test_pypi(dist_dir=dist_dir, version=version)
         deploy_to_real_pypi(dist_dir=dist_dir, version=version)
