@@ -2061,14 +2061,6 @@ def get(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def _get_host(host, service_instance=None):
-    if isinstance(host, vim.HostSystem):
-        return host
-    if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    return utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
-
-
 def in_maintenance_mode(host, service_instance=None):
     """
     Check if host is in maintenance mode.
@@ -2083,7 +2075,12 @@ def in_maintenance_mode(host, service_instance=None):
 
         salt '*' vmware_esxi.in_maintenance_mode '10.288.6.117'
     """
-    host_ref = _get_host(host, service_instance)
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
     mode = "normal"
     if host_ref.runtime.inMaintenanceMode:
         mode = "inMaintenance"
@@ -2123,7 +2120,12 @@ def maintenance_mode(host,
 
         salt '*' vmware_esxi.maintenance_mode '10.288.6.117'
     """
-    host_ref = _get_host(host, service_instance)
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_maintenance_mode(host_ref)
     if mode["maintenanceMode"] == "inMaintenance":
         mode["changes"] = False
@@ -2164,7 +2166,12 @@ def exit_maintenance_mode(host,
 
         salt '*' vmware_esxi.exit_maintenance_mode '10.288.6.117'
     """
-    host_ref = _get_host(host, service_instance)
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_maintenance_mode(host_ref)
     if mode["maintenanceMode"] == "normal":
         mode["changes"] = False
