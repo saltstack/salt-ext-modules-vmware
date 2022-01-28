@@ -919,13 +919,13 @@ def relocate(vm, host, datastore, pool):
 
     vm
         Reference to virtual machine.
-    
+
     host
         Reference to new host.
-    
+
     datastore
         Reference to datastore
-    
+
     Pool
         Reference to resource pool.
     """

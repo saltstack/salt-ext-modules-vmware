@@ -222,10 +222,10 @@ def relocate(name, new_host_name, datastore_name, service_instance=None):
 
     name
         The name of the virtual machine to relocate.
-    
+
     new_host_name
         The name of the host you want to move the virtual machine to.
-    
+
     datastore_name
         The name of the datastore you want to move the virtual machine to.
 
@@ -244,12 +244,16 @@ def relocate(name, new_host_name, datastore_name, service_instance=None):
         ret["comment"] = f"{name} virtual machine is already on host {new_host_name}"
         return ret
     resources = utils_common.deployment_resources(new_host_name, service_instance)
-    datastore_ref = utils_common.get_datastore(datastore_name, resources["datacenter"], service_instance)
+    datastore_ref = utils_common.get_datastore(
+        datastore_name, resources["datacenter"], service_instance
+    )
     if __opts__["test"]:
         ret["changes"]["new"] = f"{name} virtual machine will be moved to host {new_host_name}"
         ret["comment"] = "These options are set to change."
         return ret
-    relo = utils_vm.relocate(vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"])
+    relo = utils_vm.relocate(
+        vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"]
+    )
     if relo == "success":
         ret["changes"]["new"] = f"{name} virtual machine was moved to host {new_host_name}"
         ret["comment"] = "moved"

@@ -4,8 +4,8 @@ import os
 import tarfile
 
 import pytest
-import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.modules.esxi as esxi
+import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.utils.common as utils_common
 
 try:

@@ -495,10 +495,10 @@ def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
 
     vm_name
         The name of the virtual machine to relocate.
-    
+
     new_host_name
         The name of the host you want to move the virtual machine to.
-    
+
     datastore_name
         The name of the datastore you want to move the virtual machine to.
 
@@ -509,8 +509,12 @@ def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
     resources = utils_common.deployment_resources(new_host_name, service_instance)
-    datastore_ref = utils_common.get_datastore(datastore_name, resources["datacenter"], service_instance)
-    ret = utils_vm.relocate(vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"])
+    datastore_ref = utils_common.get_datastore(
+        datastore_name, resources["datacenter"], service_instance
+    )
+    ret = utils_vm.relocate(
+        vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"]
+    )
     if ret == "success":
         return {"virtual_machine": "moved"}
     return {"virtual_machine": "failed to move"}
