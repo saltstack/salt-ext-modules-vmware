@@ -45,7 +45,7 @@ anything in you should be good to go:
 
 Obviously you'll need Python installed as well, and be able to run ``git push``
 in your clone directory without `entering a
-password<https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_.
+password <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_.
 ``tar`` is also required.
 
 In order to cut a release, you must be a project maintainer on TestPyPI as well
@@ -155,7 +155,7 @@ https://test.pypi.org/project/saltext.vmware/ and
 https://pypi.org/project/saltext.vmware/ after the successful completion of
 which, the tag will be created and pushed to GitHub, suitable for `drafting a
 new
-release<https://github.com/saltstack/salt-ext-modules-vmware/releases/new>`_.
+release <https://github.com/saltstack/salt-ext-modules-vmware/releases/new>`_.
 
 The finally part of the release script will create
 ``/tmp/saltext.vmware-build-{version}.tar.gz`` that you can use to get the
