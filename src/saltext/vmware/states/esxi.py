@@ -655,7 +655,7 @@ def user_absent(
 
 def lockdown_mode(
     name,
-    enter_lockdown_mode=True,
+    enter_lockdown_mode,
     datacenter_name=None,
     cluster_name=None,
     get_all_hosts=False,
@@ -665,28 +665,28 @@ def lockdown_mode(
     Pust a hosts into or out of lockdown.
 
     name
-        IP of single host or list of host_names. If wanting to get a cluster just past an empty list.
+        IP of single host or list of host_names. If wanting to get a cluster just past an empty list (required).
 
     enter_lockdown_mode
         If True, put host into lockdown mode.
-        If False, put host out of lockdown mode.
+        If False, put host out of lockdown mode (required)
 
     datacenter_name
-        The datacenter name. Default is None.
+        The datacenter name. Default is None (optional).
 
     host_names
-        The host_names to be retrieved. Default is None.
+        The host_names to be retrieved. Default is None (optional).
 
     cluster_name
         The cluster name - used to restrict the hosts retrieved. Only used if
-        the datacenter is set.  This argument is optional.
+        the datacenter is set.  This argument is optional (optional).
 
     get_all_hosts
         Specifies whether to retrieve all hosts in the container.
-        Default value is False.
+        Default value is False (optional).
 
     service_instance
-        The Service Instance Object from which to obtain the hosts.
+        The Service Instance Object from which to obtain the hosts (optional).
 
     .. code-block:: bash
 
