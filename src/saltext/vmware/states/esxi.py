@@ -653,19 +653,50 @@ def user_absent(
     return ret
 
 
-def lockdown_mode(name=None,
-                  enter_lockdown_mode=True,
-                  datacenter_name=None,
-                  cluster_name=None,
-                  get_all_hosts=False,
-                  service_instance=None):
+def lockdown_mode(
+    name=None,
+    enter_lockdown_mode=True,
+    datacenter_name=None,
+    cluster_name=None,
+    get_all_hosts=False,
+    service_instance=None,
+):
+    """
+    Pust a hosts into or out of lockdown.
+
+    name
+        IP of single host or list of host_names. If wanting to get a cluster just past an empty list.
+
+    enter_lockdown_mode
+        If True, put host into lockdown mode.
+        If False, put host out of lockdown mode.
+
+    datacenter_name
+        The datacenter name. Default is None.
+
+    host_names
+        The host_names to be retrieved. Default is None.
+
+    cluster_name
+        The cluster name - used to restrict the hosts retrieved. Only used if
+        the datacenter is set.  This argument is optional.
+
+    get_all_hosts
+        Specifies whether to retrieve all hosts in the container.
+        Default value is False.
+
+    service_instance
+        The Service Instance Object from which to obtain the hosts.
+    """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     if not isinstance(name, str):
-        host_refs = utils_esxi.get_hosts(service_instance=service_instance,
-                                         datacenter_name=datacenter_name,
-                                         host_names=name,
-                                         cluster_name=cluster_name,
-                                         get_all_hosts=get_all_hosts)
+        host_refs = utils_esxi.get_hosts(
+            service_instance=service_instance,
+            datacenter_name=datacenter_name,
+            host_names=name,
+            cluster_name=cluster_name,
+            get_all_hosts=get_all_hosts,
+        )
     else:
         if isinstance(name, vim.HostSystem):
             host_refs = (name,)
@@ -680,12 +711,16 @@ def lockdown_mode(name=None,
             host=ref, service_instance=service_instance
         )
         if (host_state["lockdownMode"] == "inLockdown") == enter_lockdown_mode:
-            ret["comment"] += f"{ref.name} already in {'Lockdown' if enter_lockdown_mode else 'Normal'} mode.\n"
+            ret[
+                "comment"
+            ] += f"{ref.name} already in {'Lockdown' if enter_lockdown_mode else 'Normal'} mode.\n"
             continue
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["changes"].setdefault("new", []).append(f"{ref.name} will enter {'Lockdown' if enter_lockdown_mode else 'Normal'} mode.")
+            ret["changes"].setdefault("new", []).append(
+                f"{ref.name} will enter {'Lockdown' if enter_lockdown_mode else 'Normal'} mode."
+            )
             continue
 
         if enter_lockdown_mode:
@@ -702,7 +737,9 @@ def lockdown_mode(name=None,
         if ret["result"]:
             ret["result"] = ref_results
         if ref_results:
-            ret["changes"].setdefault("new", []).append(f"{ref.name} entered {'Lockdown' if enter_lockdown_mode else 'Normal'} mode.")
+            ret["changes"].setdefault("new", []).append(
+                f"{ref.name} entered {'Lockdown' if enter_lockdown_mode else 'Normal'} mode."
+            )
         else:
             ret[
                 "comment"
