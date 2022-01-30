@@ -654,7 +654,7 @@ def user_absent(
 
 
 def lockdown_mode(
-    name=None,
+    name,
     enter_lockdown_mode=True,
     datacenter_name=None,
     cluster_name=None,
