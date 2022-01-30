@@ -687,6 +687,15 @@ def lockdown_mode(
 
     service_instance
         The Service Instance Object from which to obtain the hosts.
+
+    .. code-block:: bash
+        salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
+
+    .. code-block:: yaml
+        Lockdown Mode:
+          vmware_esxi.lockdown_mode:
+            - host: '10.288.6.117'
+            - enter_lockdown_mode: true
     """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     if not isinstance(name, str):
