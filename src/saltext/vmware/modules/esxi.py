@@ -2298,6 +2298,7 @@ def in_lockdown_mode(host, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
     .. code-block:: bash
+
         salt '*' vmware_esxi.in_lockdown_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
@@ -2322,6 +2323,7 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
     .. code-block:: bash
+
         salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
@@ -2354,6 +2356,7 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
     .. code-block:: bash
+
         salt '*' vmware_esxi.exit_lockdown_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
