@@ -718,7 +718,7 @@ def maintenance_mode(
     if enter_maintenance_mode:
         host_state = __salt__["vmware_esxi.maintenance_mode"](
             host=name,
-            timeout=0,
+            timeout=timeout,
             evacuate_powered_off_vms=evacuate_powered_off_vms,
             maintenance_spec=maintenance_spec,
             catch_task_error=True,
@@ -726,7 +726,7 @@ def maintenance_mode(
         )
     else:
         host_state = __salt__["vmware_esxi.exit_maintenance_mode"](
-            host=name, timeout=0, catch_task_error=True, service_instance=service_instance
+            host=name, timeout=timeout, catch_task_error=True, service_instance=service_instance
         )
 
     ret["result"] = (host_state["maintenanceMode"] == "inMaintenance") == enter_maintenance_mode
