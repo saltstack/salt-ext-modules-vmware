@@ -279,23 +279,23 @@ def test_vmkernel_adapter_present(vmware_datacenter, service_instance):
     assert not delete_ret["changes"]
 
 
-def test_maintenance_mode(vmware_datacenter, service_instance):
-    hosts = list(esxi.get(service_instance=service_instance))
+def test_maintenance_mode(service_instance):
+    hosts = list(esxi_mod.get(service_instance=service_instance))
     assert hosts
     host = hosts[0]
-    ret = esxi.in_maintenance_mode(host, service_instance)
-    assert ret == dict(maintenanceMode="normal")
 
     for i in range(3):
-        ret = esxi.maintenance_mode(host, 120, service_instance)
-        assert ret == dict(maintenanceMode="inMaintenance", changes=not i)
-
-    ret = esxi.in_maintenance_mode(host, service_instance)
-    assert ret == dict(maintenanceMode="inMaintenance")
+        ret = esxi.maintenance_mode(host, True, 120, service_instance=service_instance)
+        assert ret["result"]
+        if not i:
+            assert ret["changes"]
+        else:
+            assert not ret["changes"]
 
     for i in range(3):
-        ret = esxi.exit_maintenance_mode(host, 120, service_instance)
-        assert ret == dict(maintenanceMode="normal", changes=not i)
-
-    ret = esxi.in_maintenance_mode(host, service_instance)
-    assert ret == dict(maintenanceMode="normal")
+        ret = esxi.maintenance_mode(host, False, 120, service_instance=service_instance)
+        assert ret["result"]
+        if not i:
+            assert ret["changes"]
+        else:
+            assert not ret["changes"]
