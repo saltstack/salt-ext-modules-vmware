@@ -651,3 +651,64 @@ def user_absent(
         ret["comment"] = "User {} doesn't exist on {} host(s).".format(name, no_user)
         ret["result"] = None
     return ret
+
+
+def lockdown_mode(name=None,
+                  enter_lockdown_mode=True,
+                  datacenter_name=None,
+                  cluster_name=None,
+                  get_all_hosts=False,
+                  service_instance=None):
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+    if not isinstance(name, str):
+        host_refs = utils_esxi.get_hosts(service_instance=service_instance,
+                                         datacenter_name=datacenter_name,
+                                         host_names=name,
+                                         cluster_name=cluster_name,
+                                         get_all_hosts=get_all_hosts)
+    else:
+        if isinstance(name, vim.HostSystem):
+            host_refs = (name,)
+        else:
+            if service_instance is None:
+                service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+            host_refs = (utils_esxi.get_host(name, service_instance),)
+
+    for ref in host_refs:
+        # check that host is not all ready in lock state.
+        host_state = __salt__["vmware_esxi.in_lockdown_mode"](
+            host=ref, service_instance=service_instance
+        )
+        if (host_state["lockdownMode"] == "inLockdown") == enter_lockdown_mode:
+            ret["comment"] += f"{ref.name} already in {'Lockdown' if enter_lockdown_mode else 'Normal'} mode.\n"
+            continue
+
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["changes"].setdefault("new", []).append(f"{ref.name} will enter {'Lockdown' if enter_lockdown_mode else 'Normal'} mode.")
+            continue
+
+        if enter_lockdown_mode:
+            host_state = __salt__["vmware_esxi.lockdown_mode"](
+                host=ref,
+                catch_task_error=True,
+                service_instance=service_instance,
+            )
+        else:
+            host_state = __salt__["vmware_esxi.exit_lockdown_mode"](
+                host=ref, catch_task_error=True, service_instance=service_instance
+            )
+        ref_results = (host_state["lockdownMode"] == "inLockdown") == enter_lockdown_mode
+        if ret["result"]:
+            ret["result"] = ref_results
+        if ref_results:
+            ret["changes"].setdefault("new", []).append(f"{ref.name} entered {'Lockdown' if enter_lockdown_mode else 'Normal'} mode.")
+        else:
+            ret[
+                "comment"
+            ] += f"Failed to put host {ref.name} in {'Lockdown' if enter_lockdown_mode else 'Normal'} mode.\n"
+    if ret["result"]:
+        ret["comment"] += f"Task was successfully!\n"
+    elif ret["result"] is None:
+        ret["comment"] += "These options are set to change."
+    return ret
