@@ -2065,7 +2065,7 @@ def in_maintenance_mode(host, service_instance=None):
     """
     Check if host is in maintenance mode.
 
-    Host
+    host
         Host IP or HostSystem/ManagedObjectReference (required).
 
     service_instance
