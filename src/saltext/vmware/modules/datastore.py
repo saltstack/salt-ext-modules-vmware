@@ -112,7 +112,7 @@ def _find_filtered_object(
                 host_names=[host_name],
             )
             return hosts[0] if hosts else None
-        elif cluster_name:
+        elif cluster_name and datacenter_name:
             datacenter = utils_common.get_datacenter(service_instance, datacenter_name)
             return utils_cluster.get_cluster(datacenter, cluster_name)
         elif datacenter_name:

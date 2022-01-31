@@ -1,11 +1,8 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-
 import pytest
-
 import salt.exceptions
 from pyVmomi import vim
-
 from saltext.vmware.modules import datastore
 
 
@@ -42,7 +39,7 @@ def test__find_filtered_object_datacenter(service_instance, integration_test_con
     obj = datastore._find_filtered_object(service_instance, datacenter_name=datacenter)
     assert isinstance(obj, vim.Datacenter)
 
-    obj = datastore._find_filtered_object(service_instance, datacenter_name="DNE"+datacenter)
+    obj = datastore._find_filtered_object(service_instance, datacenter_name="DNE" + datacenter)
     assert obj is None
 
 
@@ -50,19 +47,27 @@ def test__find_filtered_object_cluster(service_instance, integration_test_config
     datacenter = list(integration_test_config["datacenters"].keys())[0]
     cluster = list(integration_test_config["datacenters"][datacenter].keys())[0]
 
-    obj = datastore._find_filtered_object(service_instance, datacenter_name=datacenter, cluster_name=cluster)
+    obj = datastore._find_filtered_object(
+        service_instance, datacenter_name=datacenter, cluster_name=cluster
+    )
     assert isinstance(obj, vim.ClusterComputeResource)
 
-    obj = datastore._find_filtered_object(service_instance, datacenter_name=datacenter, cluster_name="DNE"+cluster)
+    obj = datastore._find_filtered_object(
+        service_instance, datacenter_name=datacenter, cluster_name="DNE" + cluster
+    )
     assert obj is None
 
-    obj = datastore._find_filtered_object(service_instance, datacenter_name="DNE"+datacenter, cluster_name=cluster)
+    obj = datastore._find_filtered_object(
+        service_instance, datacenter_name="DNE" + datacenter, cluster_name=cluster
+    )
     assert obj is None
 
-    obj = datastore._find_filtered_object(service_instance, datacenter_name="DNE"+datacenter, cluster_name="DNE"+cluster)
+    obj = datastore._find_filtered_object(
+        service_instance, datacenter_name="DNE" + datacenter, cluster_name="DNE" + cluster
+    )
     assert obj is None
 
-    with pytest.raises(salt.exceptions.SaltInvocationError):
+    with pytest.raises(salt.exceptions.ArgumentValueError):
         datastore._find_filtered_object(service_instance, cluster_name=cluster)
 
 
@@ -74,11 +79,15 @@ def test__find_filtered_object_host(service_instance, integration_test_config):
     obj1 = datastore._find_filtered_object(service_instance, host_name=host)
     assert isinstance(obj1, vim.HostSystem)
 
-    obj2 = datastore._find_filtered_object(service_instance, datacenter_name=datacenter, host_name=host)
+    obj2 = datastore._find_filtered_object(
+        service_instance, datacenter_name=datacenter, host_name=host
+    )
     assert isinstance(obj2, vim.HostSystem)
     assert obj1.name == obj2.name
 
-    obj2 = datastore._find_filtered_object(service_instance, datacenter_name=datacenter, cluster_name=cluster, host_name=host)
+    obj2 = datastore._find_filtered_object(
+        service_instance, datacenter_name=datacenter, cluster_name=cluster, host_name=host
+    )
     assert isinstance(obj2, vim.HostSystem)
     assert obj1.name == obj2.name
 
@@ -104,7 +113,9 @@ def test__get_datastores(service_instance, integration_test_config):
     one_datastore = datastore._get_datastores(service_instance, datastore_name=datastore_name)
     _validate_datastores(one_datastore, max_datastores=len(all_datastores))
 
-    host_datastores = datastore._get_datastores(service_instance, host_name=host, datastore_name=datastore_name)
+    host_datastores = datastore._get_datastores(
+        service_instance, host_name=host, datastore_name=datastore_name
+    )
     _validate_datastores(host_datastores, max_datastores=len(all_datastores))
 
 
@@ -119,12 +130,12 @@ def test_get(service_instance, integration_test_config):
     assert len(datastores) >= 1
 
     for ds in datastores:
-        assert isinstance(ds['accessible'], bool)
-        assert isinstance(ds['capacity'], int)
-        assert isinstance(ds['freeSpace'], int)
-        assert ds['maintenanceMode'] in ["normal", "entering_maintenance", "in_maintenance"]
-        assert isinstance(ds['multipleHostAccess'], bool)
-        assert isinstance(ds['name'], str) and len(ds['name']) >= 1
-        assert isinstance(ds['type'], str) and len(ds['type']) >= 1
-        assert isinstance(ds['url'], str) and ds['url'].startswith('ds:///')
-        assert isinstance(ds['uncommitted'], int)
+        assert isinstance(ds["accessible"], bool)
+        assert isinstance(ds["capacity"], int)
+        assert isinstance(ds["freeSpace"], int)
+        assert ds["maintenanceMode"] in ["normal", "entering_maintenance", "in_maintenance"]
+        assert isinstance(ds["multipleHostAccess"], bool)
+        assert isinstance(ds["name"], str) and len(ds["name"]) >= 1
+        assert isinstance(ds["type"], str) and len(ds["type"]) >= 1
+        assert isinstance(ds["url"], str) and ds["url"].startswith("ds:///")
+        assert isinstance(ds["uncommitted"], int)
