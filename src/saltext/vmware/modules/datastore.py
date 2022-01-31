@@ -3,6 +3,7 @@
 import logging
 
 import salt.exceptions
+import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
@@ -77,7 +78,9 @@ def exit_maintenance_mode(datastore_name, dc_name=None, service_instance=None):
     return {"maintenanceMode": "failed to exit maintenance mode"}
 
 
-def _find_filtered_object(service_instance, datacenter_name=None, cluster_name=None, host_name=None):
+def _find_filtered_object(
+    service_instance, datacenter_name=None, cluster_name=None, host_name=None
+):
     """
     finds zero or one matching objects: plug in almost any combination of datacenter, cluster, and/or host name
     *if cluster_name is passed, datacenter_name must also be passed
@@ -100,33 +103,31 @@ def _find_filtered_object(service_instance, datacenter_name=None, cluster_name=N
     host_name
         (Optional) Exact host name name to filter by.
     """
-    if host_name:
-        objects = utils_esxi.get_hosts(
-            service_instance,
-            datacenter_name=datacenter_name,
-            cluster_name=cluster_name,
-            host_names=[host_name],
-        )
-    elif cluster_name:
-        objects = utils_common.get_clusters(
-            service_instance,
-            datacenter_name=datacenter_name,
-            cluster_name=cluster_name,
-        )
-    elif datacenter_name:
-        objects = utils_common.get_datacenters(service_instance, datacenter_names=[datacenter_name])
-    else:
-        raise salt.exceptions.ArgumentValueError("_find_filtered_object requires at least one of datacenter_name, cluster_name and host_name")
-
-    # The parameters to this function should always result in 0 or 1 results,
-    #  and the parameters are validated so that even if *your* environment
-    #  only has 1 matching host/cluster/datacenter it will complain.
-    # This is so that configs won't work in dev and then break in production.
-    assert len(objects) <= 1, "Please file a bug report: https://github.com/saltstack/salt-ext-modules-vmware/"
-    return objects[0] if objects else None
+    try:
+        if host_name:
+            hosts = utils_esxi.get_hosts(
+                service_instance,
+                datacenter_name=datacenter_name,
+                cluster_name=cluster_name,
+                host_names=[host_name],
+            )
+            return hosts[0] if hosts else None
+        elif cluster_name:
+            datacenter = utils_common.get_datacenter(service_instance, datacenter_name)
+            return utils_cluster.get_cluster(datacenter, cluster_name)
+        elif datacenter_name:
+            return utils_common.get_datacenter(service_instance, datacenter_name=datacenter_name)
+        else:
+            raise salt.exceptions.ArgumentValueError(
+                "_find_filtered_object requires at least one of datacenter_name, host_name, or cluster_name with datacenter_name"
+            )
+    except salt.exceptions.VMwareObjectRetrievalError:
+        return None
 
 
-def _get_datastores(service_instance, datastore_name=None, datacenter_name=None, cluster_name=None, host_name=None):
+def _get_datastores(
+    service_instance, datastore_name=None, datacenter_name=None, cluster_name=None, host_name=None
+):
     """
     Gets datastores on the most specific of host_name, cluster_name, datacenter_name, or everywhere.
 
@@ -147,11 +148,17 @@ def _get_datastores(service_instance, datastore_name=None, datacenter_name=None,
         )
     else:
         # utils_vmware.get_datastores doesn't actually find all datastores when searching everything, this should work
-        datastores = utils_common.get_mors_with_properties(service_instance, vim.Datastore, property_list=["name"])
+        datastores = utils_common.get_mors_with_properties(
+            service_instance, vim.Datastore, property_list=["name"]
+        )
         if not datastore_name:
             return [datastore["object"] for datastore in datastores]
         else:
-            return [datastore["object"] for datastore in datastores if datastore["name"] == datastore_name]
+            return [
+                datastore["object"]
+                for datastore in datastores
+                if datastore["name"] == datastore_name
+            ]
 
 
 def get(
