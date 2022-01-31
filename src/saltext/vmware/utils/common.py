@@ -628,55 +628,6 @@ def get_path(node, service_instance, path=""):
     return get_path(node, service_instance, path)
 
 
-def get_clusters(service_instance, datacenter_name=None, cluster_name=None):
-    """
-    Returns clusters in a vCenter.
-
-    service_instance
-        The Service Instance Object from which to obtain cluster.
-
-    datacenter_name
-        (Optional) Datacenter name to filter by.
-
-    cluster_name
-        (Optional) Exact cluster name to filter by. Requires datacenter_name.
-    """
-    if cluster_name and not datacenter_name:
-        raise salt.exceptions.SaltInvocationError("datacenter_name is required when looking up by cluster_name")
-
-    clusters = []
-    for cluster in get_mors_with_properties(
-        service_instance, vim.ClusterComputeResource, property_list=["name"]
-    ):
-        if cluster_name and cluster_name != cluster["name"]:
-            continue
-        if datacenter_name and datacenter_name != get_parent_of_type(cluster["object"], vim.Datacenter).name:
-            continue
-        clusters.append(cluster["object"])
-    return clusters
-
-
-def get_cluster(service_instance, datacenter_name, cluster_name):
-    """
-    Returns a vim.ClusterComputeResource managed object.
-
-    service_instance
-        The Service Instance Object from which to obtain datacenter.
-
-    datacenter_name
-        The datacenter name
-
-    cluster_name
-        The cluster name
-    """
-    if not (cluster_name and datacenter_name):
-        raise salt.exceptions.SaltInvocationError("datacenter_name and cluster_name are both required parameters")
-    clusters = get_clusters(service_instance, datacenter_name, cluster_name)
-
-    assert len(clusters) <= 1, "Please file a bug report: https://github.com/saltstack/salt-ext-modules-vmware/"
-    return clusters[0] if clusters else None
-
-
 def get_datacenters(service_instance, datacenter_names=None, get_all_datacenters=False):
     """
     Returns all datacenters in a vCenter.
