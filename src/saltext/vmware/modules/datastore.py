@@ -28,15 +28,15 @@ def __virtual__():
     return __virtualname__
 
 
-def maintenance_mode(datastore_name, dc_name=None, service_instance=None):
+def maintenance_mode(datastore_name, datacenter_name=None, service_instance=None):
     """
     Put datastore in maintenance mode.
 
     datastore_name
         Name of datastore.
 
-    dc_name
-        Name of datacenter.
+    datacenter_name
+        (optional) Name of datacenter where datastore exists.
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
@@ -44,8 +44,8 @@ def maintenance_mode(datastore_name, dc_name=None, service_instance=None):
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     dc_ref = None
-    if dc_name:
-        dc_ref = utils_common.get_datacenter(service_instance, dc_name)
+    if datacenter_name:
+        dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     ds = utils_common.get_datastore(datastore_name, dc_ref, service_instance)
     ret = utils_common.datastore_enter_maintenance_mode(ds)
     if ret:
@@ -53,15 +53,15 @@ def maintenance_mode(datastore_name, dc_name=None, service_instance=None):
     return {"maintenanceMode": "failed to enter maintenance mode"}
 
 
-def exit_maintenance_mode(datastore_name, dc_name=None, service_instance=None):
+def exit_maintenance_mode(datastore_name, datacenter_name=None, service_instance=None):
     """
     Take datastore out of maintenance mode.
 
     datastore_name
         Name of datastore.
 
-    dc_name
-        Name of datacenter.
+    datacenter_name
+        (optional) Name of datacenter where datastore exists.
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
@@ -69,8 +69,8 @@ def exit_maintenance_mode(datastore_name, dc_name=None, service_instance=None):
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
     dc_ref = None
-    if dc_name:
-        dc_ref = utils_common.get_datacenter(service_instance, dc_name)
+    if datacenter_name:
+        dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     ds = utils_common.get_datastore(datastore_name, dc_ref, service_instance)
     ret = utils_common.datastore_exit_maintenance_mode(ds)
     if ret:

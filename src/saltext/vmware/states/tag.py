@@ -28,7 +28,7 @@ def __virtual__():
 
 def present(name, description=None, category_id=None):
     """
-    Create and update a tag instance.
+    Create or update a tag instance.
 
     name
         Name of tag.
@@ -150,4 +150,144 @@ def absent(name):
         return ret
     else:
         ret["comment"] = "Tag does not exist"
+        return ret
+
+
+def present_category(name, associable_types, cardinality, description=""):
+    """
+    Create or update a category.
+
+    name
+        The display name of the category.
+
+    associable_types
+        (list) Object types to which this category’s tags can be attached.
+
+    cardinality
+        The CategoryModel.Cardinality enumerated type defines the number of tags in a category that can be assigned to an object. SINGLE, MULTIPLE
+
+    description
+        (optional) The description of the category.
+    """
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+    res = connect.request(
+        "/rest/com/vmware/cis/tagging/category", "GET", opts=__opts__, pillar=__pillar__
+    )
+    response = res["response"].json()
+    token = res["token"]
+    found = None
+    for cat in response["value"]:
+        url = f"/rest/com/vmware/cis/tagging/category/id:{cat}"
+        cat_ref = connect.request(url, "GET", token=token, opts=__opts__, pillar=__pillar__)
+        cat_ref = cat_ref["response"].json()
+        if cat_ref["value"]["name"] == name:
+            found = cat_ref["value"]
+            break
+    if found:
+        if (
+            associable_types == found["associable_types"]
+            and cardinality == found["cardinality"]
+            and description == found["description"]
+        ):
+            ret["comment"] = "category exists"
+            return ret
+        else:
+            ret["changes"]["new"] = {}
+            ret["changes"]["old"] = {}
+            if associable_types != found["associable_types"]:
+                ret["changes"]["old"]["associable_types"] = found["associable_types"]
+                ret["changes"]["new"]["associable_types"] = associable_types
+            if cardinality != found["cardinality"]:
+                ret["changes"]["old"]["cardinality"] = found["cardinality"]
+                ret["changes"]["new"]["cardinality"] = cardinality
+            if description != found["description"]:
+                ret["changes"]["old"]["description"] = found["description"]
+                ret["changes"]["new"]["description"] = description
+            if __opts__["test"]:
+                ret["result"] = None
+                ret["comment"] = f"{name} category will be updated"
+                return ret
+            id = found["id"]
+            spec = {"update_spec": {}}
+            if associable_types:
+                spec["update_spec"]["associable_types"] = associable_types
+            if cardinality:
+                spec["update_spec"]["cardinality"] = cardinality
+            if description:
+                spec["update_spec"]["description"] = description
+            url = f"/rest/com/vmware/cis/tagging/category/id:{id}"
+            updated = connect.request(url, "PATCH", body=spec, opts=__opts__, pillar=__pillar__)
+            if updated["response"].status_code == 200:
+                ret["comment"] = "updated"
+                return ret
+            ret["status_code"] = updated["response"].status_code
+            ret["reason"] = updated["response"].reason
+            ret["comment"] = "failed to update"
+            ret["result"] = False
+            return ret
+    else:
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = f"{name} category will be created"
+            return ret
+        data = {
+            "create_spec": {
+                "associable_types": associable_types,
+                "cardinality": cardinality,
+                "description": description,
+                "name": name,
+            }
+        }
+        create = connect.request(
+            "/rest/com/vmware/cis/tagging/category",
+            "POST",
+            body=data,
+            opts=__opts__,
+            pillar=__pillar__,
+        )
+        response = create["response"].json()
+        ret["changes"]["category_id"] = response["value"]
+        ret["comment"] = "created"
+        return ret
+
+
+def absent_category(name):
+    """
+    Delete category.
+
+    name
+        Name of category.
+    """
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+    res = connect.request(
+        "/rest/com/vmware/cis/tagging/category", "GET", opts=__opts__, pillar=__pillar__
+    )
+    response = res["response"].json()
+    token = res["token"]
+    found = None
+    for cat in response["value"]:
+        url = f"/rest/com/vmware/cis/tagging/category/id:{cat}"
+        cat_ref = connect.request(url, "GET", token=token, opts=__opts__, pillar=__pillar__)
+        cat_ref = cat_ref["response"].json()
+        if cat_ref["value"]["name"] == name:
+            found = cat_ref["value"]
+            break
+    if found:
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = f"{name} category will be deleted"
+            return ret
+        id = found["id"]
+        url = f"/rest/com/vmware/cis/tagging/category/id:{id}"
+        delete = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
+        if delete["response"].status_code == 200:
+            ret["comment"] = "deleted"
+            return ret
+        ret["status_code"] = delete["response"].status_code
+        ret["reason"] = delete["response"].reason
+        ret["comment"] = "failed to delete"
+        ret["result"] = False
+        return ret
+    else:
+        ret["comment"] = "Category does not exist"
         return ret

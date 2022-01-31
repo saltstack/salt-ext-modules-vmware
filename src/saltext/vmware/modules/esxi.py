@@ -1,6 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
 import logging
+import os
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
@@ -8,6 +9,7 @@ import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_service_instance
+from saltext.vmware.utils.connect import get_username_password
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +31,8 @@ DEFAULT_EXCEPTIONS = (
     salt.exceptions.VMwareApiError,
     vim.fault.AlreadyExists,
     vim.fault.UserNotFound,
+    salt.exceptions.CommandExecutionError,
+    vmodl.fault.SystemError,
     TypeError,
 )
 
@@ -692,6 +696,231 @@ def get_firewall_config(
         return ret
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
+
+
+def backup_config(
+    push_file_to_master=False,
+    http_opts=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Backup configuration for matching EXSI hosts.
+
+    push_file_to_master
+        Push the downloaded configuration file to the salt master. (optional)
+        Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.cp.html#salt.modules.cp.push
+
+    http_opts
+        Extra HTTP options to be passed to download from the URL. (optional)
+        Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.http.html#salt.modules.http.query
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt * vmware_esxi.backup_config host_name=10.225.0.53 http_opts='{"verify_ssl": False}'
+    """
+    log.debug("Running vmware_esxi.backup_config")
+    ret = {}
+    http_opts = http_opts or {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            try:
+                url = h.configManager.firmwareSystem.BackupFirmwareConfiguration()
+                url = url.replace("*", h.name)
+                file_name = os.path.join(__opts__["cachedir"], url.rsplit("/", 1)[1])
+                data = __salt__["http.query"](url, decode_body=False, **http_opts)
+                with open(file_name, "wb") as fp:
+                    fp.write(data["body"])
+                if push_file_to_master:
+                    __salt__["cp.push"](file_name)
+                ret.setdefault(h.name, {"file_name": file_name})
+                ret[h.name]["url"] = url
+            except salt.exceptions.CommandExecutionError as exc:
+                log.error("Unable to backup configuration for host - %s. Error - %s", h.name, exc)
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def restore_config(
+    source_file,
+    saltenv=None,
+    http_opts=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Restore configuration for matching EXSI hosts.
+
+    source_file
+        Specify the source file from which the configuration is to be restored.
+        The file can be either on the master, locally on the minion or url.
+        E.g.: salt://vmware_config.tgz, /tmp/minion1/vmware_config.tgz or
+        10.225.0.53/downloads/5220da48-552e-5779-703e-5705367bd6d6/configBundle-ESXi-190313806785.eng.vmware.com.tgz
+
+    saltenv
+        Specify the saltenv when the source file needs to be retireved from the master. (optional)
+
+    http_opts
+        Extra HTTP options to be passed to download from the URL. (optional).
+        Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.http.html#salt.modules.http.query
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.backup_config datacenter_name=dc1 host_name=host1
+    """
+    log.debug("Running vmware_esxi.backup_config")
+    ret = {}
+    http_opts = http_opts or {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for h in hosts:
+        try:
+            data = None
+            url = h.configManager.firmwareSystem.QueryFirmwareConfigUploadURL().replace("*", h.name)
+            if source_file.startswith("salt://"):
+                cached = __salt__["cp.cache_file"](source_file, saltenv=saltenv)
+                with open(cached, "rb") as fp:
+                    data = fp.read()
+            elif source_file.startswith("http"):
+                data = __salt__["http.query"](url, decode_body=False, **http_opts)
+            else:
+                with open(source_file, "rb") as fp:
+                    data = fp.read()
+            username, password = get_username_password(
+                esxi_host=h.name, opts=__opts__, pillar=__pillar__
+            )
+            resp = __salt__["http.query"](
+                url, data=data, method="PUT", username=username, password=password, **http_opts
+            )
+            if "error" in resp:
+                ret[h.name] = resp["error"]
+                continue
+            if not h.runtime.inMaintenanceMode:
+                log.debug("Host - %s entering maintenance mode", h.name)
+                utils_common.wait_for_task(
+                    h.EnterMaintenanceMode_Task(timeout=60), h.name, "EnterMaintenanceMode"
+                )
+            h.configManager.firmwareSystem.RestoreFirmwareConfiguration(force=False)
+            ret[h.name] = True
+        except Exception as exc:
+            msg = "Unable to restore configuration for host - {}. Error - {}".format(h.name, exc)
+            log.error(msg)
+            ret[h.name] = msg
+            if h.runtime.inMaintenanceMode:
+                log.debug("Host - %s exiting maintenance mode", h.name)
+                utils_common.wait_for_task(
+                    h.ExitMaintenanceMode_Task(timeout=60), h.name, "ExitMaintenanceMode"
+                )
+
+    return ret
+
+
+def reset_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Reset configuration for matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.reset_config
+    """
+    log.debug("Running vmware_esxi.reset_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for h in hosts:
+        try:
+            if not h.runtime.inMaintenanceMode:
+                log.debug("Host - %s entering maintenance mode", h.name)
+                utils_common.wait_for_task(
+                    h.EnterMaintenanceMode_Task(timeout=60), h.name, "EnterMaintenanceMode"
+                )
+            h.configManager.firmwareSystem.ResetFirmwareToFactoryDefaults()
+            ret[h.name] = True
+        except vmodl.fault.HostCommunication as exc:
+            msg = "Unable to reach host - {}. Error - {}".format(h.name, str(exc))
+            ret[h.name] = msg
+            log.error(msg)
+        except Exception as exc:
+            msg = "Unable to reset configuration for host - {}. Error - {}".format(h.name, str(exc))
+            ret[h.name] = msg
+            log.error(msg)
+            log.debug("Host - %s exiting maintenance mode", h.name)
+            utils_common.wait_for_task(
+                h.ExitMaintenanceMode_Task(timeout=60), h.name, "ExitMaintenanceMode"
+            )
+    return ret
 
 
 def get_dns_config(

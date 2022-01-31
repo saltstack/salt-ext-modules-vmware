@@ -276,7 +276,29 @@ def patch_salt_globals_tag_state(vmware_conf):
     Patch __opts__ and __pillar__
     """
 
-    setattr(tagging_state, "__opts__", {})
+    setattr(
+        tagging_state,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(tagging_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_tag_state_test(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        tagging_state,
+        "__opts__",
+        {
+            "test": True,
+        },
+    )
     setattr(tagging_state, "__pillar__", vmware_conf)
 
 
