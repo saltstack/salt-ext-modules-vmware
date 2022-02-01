@@ -56,6 +56,10 @@ def salt_call_cli(minion):
 
 @pytest.fixture(scope="session")
 def integration_test_config():
+    # Most of the values in the vcenter config are pulled using the vcenter
+    # credentials *in* the vcenter config, and are populated via a manual call
+    # to tools/test_value_scraper.py.
+    # This is not ideal.
     default_path = Path(__file__).parent.parent.parent / "local" / "vcenter.conf"
     config_path = Path(os.environ.get("VCENTER_CONFIG", default_path))
 
