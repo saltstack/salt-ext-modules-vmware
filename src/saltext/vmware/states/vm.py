@@ -3,6 +3,7 @@ import logging
 
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
+import saltext.vmware.utils.datastore as utils_datastore
 import saltext.vmware.utils.vm as utils_vm
 
 log = logging.getLogger(__name__)
@@ -244,9 +245,11 @@ def relocate(name, new_host_name, datastore_name, service_instance=None):
         ret["comment"] = f"{name} virtual machine is already on host {new_host_name}"
         return ret
     resources = utils_common.deployment_resources(new_host_name, service_instance)
-    datastore_ref = utils_common.get_datastore(
-        datastore_name, resources["datacenter"], service_instance
+    assert isinstance(datastore_name, str)
+    datastores = utils_datastore.get_datastores(
+        service_instance, datastore_name=datastore_name, datacenter_name=resources["datacenter"]
     )
+    datastore_ref = datastores[0] if datastores else None
     if __opts__["test"]:
         ret["changes"]["new"] = f"{name} virtual machine will be moved to host {new_host_name}"
         ret["comment"] = "These options are set to change."

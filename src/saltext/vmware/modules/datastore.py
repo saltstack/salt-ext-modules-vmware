@@ -2,8 +2,7 @@
 # SPDX-License: Apache-2.0
 import logging
 
-import salt.exceptions
-import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.datastore as utils_datastore
 from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
@@ -40,11 +39,12 @@ def maintenance_mode(datastore_name, datacenter_name=None, service_instance=None
     """
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    dc_ref = None
-    if datacenter_name:
-        dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
-    ds = utils_common.get_datastore(datastore_name, dc_ref, service_instance)
-    ret = utils_common.datastore_enter_maintenance_mode(ds)
+    assert isinstance(datastore_name, str)
+    datastores = utils_datastore.get_datastores(
+        service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
+    )
+    ds = datastores[0] if datastores else None
+    ret = utils_datastore.enter_maintenance_mode(ds)
     if ret:
         return {"maintenanceMode": "inMaintenance"}
     return {"maintenanceMode": "failed to enter maintenance mode"}
@@ -65,11 +65,68 @@ def exit_maintenance_mode(datastore_name, datacenter_name=None, service_instance
     """
     if service_instance is None:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
-    dc_ref = None
-    if datacenter_name:
-        dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
-    ds = utils_common.get_datastore(datastore_name, dc_ref, service_instance)
-    ret = utils_common.datastore_exit_maintenance_mode(ds)
+    assert isinstance(datastore_name, str)
+    datastores = utils_datastore.get_datastores(
+        service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
+    )
+    ds = datastores[0] if datastores else None
+    ret = utils_datastore.exit_maintenance_mode(ds)
     if ret:
         return {"maintenanceMode": "normal"}
     return {"maintenanceMode": "failed to exit maintenance mode"}
+
+
+def get(
+    datastore_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Return info about datastores.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is not specified)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is not specified)
+
+    cluster_name
+        Filter by this cluster name (required when datacenter is not specified)
+
+    host_name
+        Filter by this ESXi hostname (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    """
+    log.debug(f"Running {__virtualname__}.get")
+    ret = []
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    datastores = utils_datastore.get_datastores(
+        service_instance,
+        datastore_name=datastore_name,
+        datacenter_name=datacenter_name,
+        cluster_name=cluster_name,
+        host_name=host_name,
+    )
+
+    for datastore in datastores:
+        summary = datastore.summary
+        info = {
+            "accessible": summary.accessible,
+            "capacity": summary.capacity,
+            "freeSpace": summary.freeSpace,
+            "maintenanceMode": summary.maintenanceMode,
+            "multipleHostAccess": summary.multipleHostAccess,
+            "name": summary.name,
+            "type": summary.type,
+            "url": summary.url,
+            "uncommitted": summary.uncommitted if summary.uncommitted else 0,
+        }
+        ret.append(info)
+
+    return ret

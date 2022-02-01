@@ -1,10 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
-import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
-import saltext.vmware.utils.vm as utils_vm
-from saltext.vmware.modules.tag import update
+import saltext.vmware.utils.datastore as utils_datastore
 
 log = logging.getLogger(__name__)
 
@@ -45,10 +43,11 @@ def maintenance_mode(name, enter_maintenance_mode, datacenter_name=None, service
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
-    dc_ref = None
-    if datacenter_name:
-        dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
-    ds = utils_common.get_datastore(name, dc_ref, service_instance)
+    assert isinstance(name, str)
+    datastores = utils_datastore.get_datastores(
+        service_instance, datastore_name=name, datacenter_name=datacenter_name
+    )
+    ds = datastores[0] if datastores else None
     status = ds.summary.maintenanceMode
     if enter_maintenance_mode:
         if status == "inMaintenance":
@@ -61,7 +60,7 @@ def maintenance_mode(name, enter_maintenance_mode, datacenter_name=None, service
             ret["comment"] = "These options are set to change."
             return ret
 
-        mode = utils_common.datastore_enter_maintenance_mode(ds)
+        mode = utils_datastore.enter_maintenance_mode(ds)
         if mode:
             ret["changes"] = {"new": f"datastore {name} is in maintenance mode."}
             ret["comment"] = "These options changed."
@@ -80,7 +79,7 @@ def maintenance_mode(name, enter_maintenance_mode, datacenter_name=None, service
             ret["comment"] = "These options are set to change."
             return ret
 
-        mode = utils_common.datastore_exit_maintenance_mode(ds)
+        mode = utils_datastore.exit_maintenance_mode(ds)
         if mode:
             ret["changes"] = {"new": f"datastore {name} exited maintenance mode."}
             ret["comment"] = "These options changed."
