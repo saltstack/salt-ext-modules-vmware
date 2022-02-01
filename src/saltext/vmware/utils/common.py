@@ -15,7 +15,6 @@ import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
 
-
 try:
     from pyVmomi import vim, vmodl
 
@@ -435,6 +434,8 @@ def get_resource_pools(
     if not resource_pool_names:
         resource_pool_names = []
     if datacenter_name:
+        import saltext.vmware.utils.datacenter as utils_datacenter
+
         container_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
     else:
         container_ref = get_root_folder(service_instance)
@@ -752,52 +753,52 @@ def get_parent_of_type(mors, type):
             return None
 
 
-def get_datastore(name, datacenter, service_instance):
+def find_filtered_object(service_instance, datacenter_name=None, cluster_name=None, host_name=None):
     """
-    Returns reference of datastore.
+    Finds zero or one matching objects: plug in almost any combination of datacenter, cluster, and/or host name.
 
-    name
-        Name of datastore.
+    If cluster_name is passed, datacenter_name must also be passed.
 
-    datacenter
-        Reference to datacenter.
+    At least one of the optional parameters must be set.
+
+    The most specific object will be returned (if you pass host_name and datacenter_name, the host will be returned).
 
     service_instance
-        The Service Instance from which to obtain managed object references.
+        The Service Instance Object from which to obtain cluster.
+
+    datacenter_name
+        (Optional) Datacenter name to filter by.
+
+    cluster_name
+        (Optional) Exact cluster name to filter by. If used, datacenter_name is required.
+
+    host_name
+        (Optional) Exact host name name to filter by.
     """
-    if datacenter is None:
-        ds = get_mor_by_property(service_instance, vim.Datastore, name)
-    else:
-        ds = get_mor_by_property(service_instance, vim.Datastore, name, "name", datacenter)
-    return ds
+    try:
+        if host_name:
+            import saltext.vmware.utils.esxi as utils_esxi
 
+            hosts = utils_esxi.get_hosts(
+                service_instance,
+                datacenter_name=datacenter_name,
+                cluster_name=cluster_name,
+                host_names=[host_name],
+            )
+            return hosts[0] if hosts else None
+        elif cluster_name and datacenter_name:
+            import saltext.vmware.utils.cluster as utils_cluster
 
-def datastore_enter_maintenance_mode(datastore_ref):
-    """
-    Put datastore in maintenance mode.
-
-    datastore_ref
-        Reference to datastore.
-    """
-    ret = datastore_ref.DatastoreEnterMaintenanceMode()
-    if ret.task.info.state == "success":
-        return True
-    else:
-        return False
-
-
-def datastore_exit_maintenance_mode(datastore_ref):
-    """
-    Take datastore out of maintenance mode.
-
-    datastore_ref
-        Reference to datastore.
-    """
-    task = datastore_ref.DatastoreExitMaintenanceMode_Task()
-    wait_for_task(task, datastore_ref.name, "Take datastore out of maintenance mode")
-    if datastore_ref.summary.maintenanceMode == "normal":
-        return True
-    return False
+            datacenter = get_datacenter(service_instance, datacenter_name)
+            return utils_cluster.get_cluster(datacenter, cluster_name)
+        elif datacenter_name:
+            return get_datacenter(service_instance, datacenter_name=datacenter_name)
+        else:
+            raise salt.exceptions.ArgumentValueError(
+                "find_filtered_object requires at least one of datacenter_name, host_name, or cluster_name with datacenter_name"
+            )
+    except salt.exceptions.VMwareObjectRetrievalError:
+        return None
 
 
 def get_license_mgrs(service_instance, license_mgr_names=None, get_all_license_mgrs=False):
