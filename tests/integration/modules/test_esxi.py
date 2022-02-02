@@ -658,3 +658,29 @@ def test_add_update_remove_vmkernel_adapter(service_instance):
     assert ret
     for host in ret:
         assert not ret[host]
+
+
+def test_lockdown_mode(service_instance):
+    hosts = list(esxi.get(service_instance=service_instance))
+    assert hosts
+    host = hosts[0]
+    ret = esxi.in_lockdown_mode(host, service_instance)
+    assert ret == dict(lockdownMode="normal")
+
+    try:
+        for i in range(3):
+            ret = esxi.lockdown_mode(host, service_instance=service_instance)
+            assert ret == dict(lockdownMode="inLockdown", changes=not i)
+    except Exception as e:
+        esxi.exit_lockdown_mode(host, service_instance=service_instance)
+        raise e
+
+    ret = esxi.in_lockdown_mode(host, service_instance)
+    assert ret == dict(lockdownMode="inLockdown")
+
+    for i in range(3):
+        ret = esxi.exit_lockdown_mode(host, service_instance=service_instance)
+        assert ret == dict(lockdownMode="normal", changes=not i)
+
+    ret = esxi.in_lockdown_mode(host, service_instance)
+    assert ret == dict(lockdownMode="normal")

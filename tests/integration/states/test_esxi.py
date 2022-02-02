@@ -277,3 +277,38 @@ def test_vmkernel_adapter_present(vmware_datacenter, service_instance):
     )
     assert not delete_ret["result"]
     assert not delete_ret["changes"]
+
+
+def test_lockdown_mode(service_instance):
+    hosts = list(esxi_mod.get(service_instance=service_instance))
+    assert hosts
+    host = hosts[0]
+    try:
+        for i in range(3):
+            ret = esxi.lockdown_mode(host, True, service_instance=service_instance)
+            assert ret["result"]
+            if not i:
+                assert ret["changes"]
+            else:
+                assert not ret["changes"]
+    except Exception as e:
+        esxi.lockdown_mode(host, False, service_instance=service_instance)
+        raise e
+
+    for i in range(3):
+        ret = esxi.lockdown_mode(host, False, service_instance=service_instance)
+        assert ret["result"]
+        if not i:
+            assert ret["changes"]
+        else:
+            assert not ret["changes"]
+
+
+def test_lockdown_mode_dry_run(service_instance, dry_run):
+    hosts = list(esxi_mod.get(service_instance=service_instance))
+    assert hosts
+    host = hosts[0]
+    ret = esxi.lockdown_mode(host, True, service_instance=service_instance)
+    assert ret["result"] is None
+    assert ret["changes"]
+    assert ret["comment"] == "These options are set to change."
