@@ -330,3 +330,7 @@ def add_host(
     task = cluster_ref.AddHost_Task(connect_spec, connect)
     host_ref = utils_common.wait_for_task(task, host, "add host task")
     return host_ref.summary.runtime.connectionState
+
+
+def get_host(host, service_instance):
+    return utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
