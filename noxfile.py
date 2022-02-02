@@ -95,7 +95,7 @@ def _install_requirements(
         if install_salt:
             session.install("--progress-bar=off", SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
-        if install_test_requirements:
+        if install_test_requirements and "tests" not in install_extras:
             install_extras.append("tests")
 
         if EXTRA_REQUIREMENTS_INSTALL:
