@@ -667,9 +667,13 @@ def test_maintenance_mode(service_instance):
     ret = esxi.in_maintenance_mode(host, service_instance)
     assert ret == dict(maintenanceMode="normal")
 
-    for i in range(3):
-        ret = esxi.maintenance_mode(host, 120, service_instance=service_instance)
-        assert ret == dict(maintenanceMode="inMaintenance", changes=not i)
+    try:
+        for i in range(3):
+            ret = esxi.maintenance_mode(host, 120, service_instance=service_instance)
+            assert ret == dict(maintenanceMode="inMaintenance", changes=not i)
+    except Exception as e:
+        esxi.exit_maintenance_mode(host, 120, service_instance=service_instance)
+        raise e
 
     ret = esxi.in_maintenance_mode(host, service_instance)
     assert ret == dict(maintenanceMode="inMaintenance")
