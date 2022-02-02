@@ -652,7 +652,7 @@ def user_absent(
         ret["result"] = None
     return ret
 
-  
+
 def maintenance_mode(
     name,
     enter_maintenance_mode,
@@ -665,7 +665,7 @@ def maintenance_mode(
     Put host into or out of maintenance mode.
     name
         Host IP or HostSystem/ManagedObjectReference (required).
-        
+
     enter_maintenance_mode
         If True, put host into maintenance mode.
         If False, put host out of maintenance mode.
@@ -738,7 +738,7 @@ def maintenance_mode(
             "comment"
         ] = f"Failed to put host {str(name)} in {'Maintenance' if enter_maintenance_mode else 'Normal'} mode."
     return ret
-  
+
 
 def lockdown_mode(
     name,

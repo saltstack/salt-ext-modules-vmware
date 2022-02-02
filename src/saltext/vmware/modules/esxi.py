@@ -2295,12 +2295,12 @@ def in_maintenance_mode(host, service_instance=None):
     Check if host is in maintenance mode.
     host
         Host IP or HostSystem/ManagedObjectReference (required).
-        
+
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
-        
+
     .. code-block:: bash
-    
+
         salt '*' vmware_esxi.in_maintenance_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
@@ -2327,26 +2327,26 @@ def maintenance_mode(
     Put host into maintenance mode.
     host
         Host IP or HostSystem/ManagedObjectReference (required).
-        
+
     timeout
         If value is greater than 0 then task will timeout if not completed with in window (optional).
-        
+
     evacuate_powered_off_vms
         Only supported by VirtualCenter (optional).
          If True, for DRS will fail unless all powered-off VMs have been manually registered.
          If False, task will successed with powered-off VMs.
-         
+
     maintenance_spec
         HostMaintenanceSpec (optional).
-        
+
     catch_task_error
         If False and task failed then a salt exception will be thrown (optional).
-        
+
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
-        
+
     .. code-block:: bash
-    
+
         salt '*' vmware_esxi.maintenance_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
@@ -2377,18 +2377,18 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
     Put host out of maintenance mode.
     host
         Host IP or HostSystem/ManagedObjectReference (required).
-        
+
     timeout
         If value is greater than 0 then task will timeout if not completed with in window (optional).
-        
+
     catch_task_error
         If False and task failed then a salt exception will be thrown (optional).
-        
+
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
-        
+
     .. code-block:: bash
-    
+
         salt '*' vmware_esxi.exit_maintenance_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
@@ -2417,12 +2417,12 @@ def in_lockdown_mode(host, service_instance=None):
     Check if host is in lockdown mode.
     host
         Host IP or HostSystem/ManagedObjectReference (required).
-        
+
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
-        
+
     .. code-block:: bash
-    
+
         salt '*' vmware_esxi.in_lockdown_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
@@ -2442,15 +2442,15 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
     Put host into lockdown mode.
     host
         Host IP or HostSystem/ManagedObjectReference (required).
-        
+
     catch_task_error
         If False and task failed then a salt exception will be thrown (optional).
-        
+
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
-        
+
     .. code-block:: bash
-    
+
         salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
@@ -2478,15 +2478,15 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
     Put host out of lockdown mode.
     host
         Host IP or HostSystem/ManagedObjectReference (required).
-        
+
     catch_task_error
         If False and task failed then a salt exception will be thrown (optional).
-        
+
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
-        
+
     .. code-block:: bash
-    
+
         salt '*' vmware_esxi.exit_lockdown_mode '10.288.6.117'
     """
     if isinstance(host, vim.HostSystem):
