@@ -665,24 +665,32 @@ def maintenance_mode(
     Put host into or out of maintenance mode.
     name
         Host IP or HostSystem/ManagedObjectReference (required).
+        
     enter_maintenance_mode
         If True, put host into maintenance mode.
         If False, put host out of maintenance mode.
+
     timeout
         If value is greater than 0 then task will timeout if not completed with in window (optional).
+
     evacuate_powered_off_vms
         Only supported by VirtualCenter (optional).
          If True, for DRS will fail unless all powered-off VMs have been manually registered.
          If False, task will successed with powered-off VMs.
          Only relevant if enter_maintenance_mode must be True.
+
     maintenance_spec
         HostMaintenanceSpec (optional).
          Only relevant if enter_maintenance_mode must be True.
+
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
+
     .. code-block:: bash
+
         salt '*' vmware_esxi.maintenance_mode '10.288.6.117'
     .. code-block:: yaml
+
         Maintenance Mode:
           vmware_esxi.maintenance_mode:
             - host: '10.288.6.117'
@@ -744,24 +752,33 @@ def lockdown_mode(
     Pust a hosts into or out of lockdown.
     name
         IP of single host or list of host_names. If wanting to get a cluster just past an empty list (required).
+
     enter_lockdown_mode
         If True, put host into lockdown mode.
         If False, put host out of lockdown mode (required)
+
     datacenter_name
         The datacenter name. Default is None (optional).
+
     host_names
         The host_names to be retrieved. Default is None (optional).
+
     cluster_name
         The cluster name - used to restrict the hosts retrieved. Only used if
         the datacenter is set.  This argument is optional (optional).
+
     get_all_hosts
         Specifies whether to retrieve all hosts in the container.
         Default value is False (optional).
+
     service_instance
         The Service Instance Object from which to obtain the hosts (optional).
+
     .. code-block:: bash
+
         salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
     .. code-block:: yaml
+
         Lockdown Mode:
           vmware_esxi.lockdown_mode:
             - host: '10.288.6.117'
