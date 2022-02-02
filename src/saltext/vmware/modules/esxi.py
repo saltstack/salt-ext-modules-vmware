@@ -2293,6 +2293,7 @@ def get(
 def in_maintenance_mode(host, service_instance=None):
     """
     Check if host is in maintenance mode.
+
     host
         Host IP or HostSystem/ManagedObjectReference (required).
 
@@ -2325,6 +2326,7 @@ def maintenance_mode(
 ):
     """
     Put host into maintenance mode.
+
     host
         Host IP or HostSystem/ManagedObjectReference (required).
 
@@ -2375,6 +2377,7 @@ def maintenance_mode(
 def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instance=None):
     """
     Put host out of maintenance mode.
+
     host
         Host IP or HostSystem/ManagedObjectReference (required).
 
@@ -2415,6 +2418,7 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
 def in_lockdown_mode(host, service_instance=None):
     """
     Check if host is in lockdown mode.
+
     host
         Host IP or HostSystem/ManagedObjectReference (required).
 
@@ -2440,6 +2444,7 @@ def in_lockdown_mode(host, service_instance=None):
 def lockdown_mode(host, catch_task_error=True, service_instance=None):
     """
     Put host into lockdown mode.
+
     host
         Host IP or HostSystem/ManagedObjectReference (required).
 
@@ -2476,6 +2481,7 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
 def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
     """
     Put host out of lockdown mode.
+
     host
         Host IP or HostSystem/ManagedObjectReference (required).
 

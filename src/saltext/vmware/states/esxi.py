@@ -663,6 +663,7 @@ def maintenance_mode(
 ):
     """
     Put host into or out of maintenance mode.
+
     name
         Host IP or HostSystem/ManagedObjectReference (required).
 
@@ -750,6 +751,7 @@ def lockdown_mode(
 ):
     """
     Pust a hosts into or out of lockdown.
+
     name
         IP of single host or list of host_names. If wanting to get a cluster just past an empty list (required).
 
