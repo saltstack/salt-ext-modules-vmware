@@ -5,6 +5,7 @@ import salt.exceptions
 import salt.utils.platform
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
+import saltext.vmware.utils.datastore as utils_datastore
 import saltext.vmware.utils.vm as utils_vm
 
 log = logging.getLogger(__name__)
@@ -509,9 +510,11 @@ def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
     resources = utils_common.deployment_resources(new_host_name, service_instance)
-    datastore_ref = utils_common.get_datastore(
-        datastore_name, resources["datacenter"], service_instance
+    assert isinstance(datastore_name, str)
+    datastores = utils_datastore.get_datastores(
+        service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
     )
+    datastore_ref = datastores[0] if datastores else None
     ret = utils_vm.relocate(
         vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"]
     )

@@ -15,6 +15,40 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
+def get_clusters(service_instance, datacenter_name=None, cluster_name=None):
+    """
+    Returns clusters in a vCenter.
+
+    service_instance
+        The Service Instance Object from which to obtain cluster.
+
+    datacenter_name
+        (Optional) Datacenter name to filter by.
+
+    cluster_name
+        (Optional) Exact cluster name to filter by. Requires datacenter_name.
+    """
+    if cluster_name and not datacenter_name:
+        raise salt.exceptions.ArgumentValueError(
+            "datacenter_name is required when looking up by cluster_name"
+        )
+
+    clusters = []
+    for cluster in utils_common.get_mors_with_properties(
+        service_instance, vim.ClusterComputeResource, property_list=["name"]
+    ):
+        if cluster_name and cluster_name != cluster["name"]:
+            continue
+        if (
+            datacenter_name
+            and datacenter_name
+            != utils_common.get_parent_of_type(cluster["object"], vim.Datacenter).name
+        ):
+            continue
+        clusters.append(cluster["object"])
+    return clusters
+
+
 def get_cluster(dc_ref, cluster):
     """
     Returns a cluster in a datacenter.
