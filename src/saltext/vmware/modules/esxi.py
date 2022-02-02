@@ -2413,3 +2413,103 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
     mode = in_maintenance_mode(host_ref, service_instance)
     mode["changes"] = mode["maintenanceMode"] == "normal"
     return mode
+
+
+def in_lockdown_mode(host, service_instance=None):
+    """
+    Check if host is in lockdown mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.in_lockdown_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = "normal"
+    if host_ref.config.adminDisabled:
+        mode = "inLockdown"
+    return {"lockdownMode": mode}
+
+
+def lockdown_mode(host, catch_task_error=True, service_instance=None):
+    """
+    Put host into lockdown mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    catch_task_error
+        If False and task failed then a salt exception will be thrown (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = in_lockdown_mode(host_ref)
+    if mode["lockdownMode"] == "inLockdown":
+        mode["changes"] = False
+        return mode
+    try:
+        host_ref.EnterLockdownMode()
+    except salt.exceptions.SaltException as exc:
+        if not catch_task_error:
+            raise exc
+    mode = in_lockdown_mode(host_ref, service_instance)
+    mode["changes"] = mode["lockdownMode"] == "inLockdown"
+    return mode
+
+
+def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
+    """
+    Put host out of lockdown mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    catch_task_error
+        If False and task failed then a salt exception will be thrown (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.exit_lockdown_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = in_lockdown_mode(host_ref)
+    if mode["lockdownMode"] == "normal":
+        mode["changes"] = False
+        return mode
+    try:
+        host_ref.ExitLockdownMode()
+    except salt.exceptions.SaltException as exc:
+        if not catch_task_error:
+            raise exc
+    mode = in_lockdown_mode(host_ref, service_instance)
+    mode["changes"] = mode["lockdownMode"] == "normal"
+    return mode
