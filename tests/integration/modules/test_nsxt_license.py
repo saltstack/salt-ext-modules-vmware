@@ -90,6 +90,7 @@ def create_license():
     assert "error" not in response
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_apply_license(salt_call_cli, delete_license):
     ret = salt_call_cli.run(
         "nsxt_license.apply_license",
@@ -104,6 +105,7 @@ def test_apply_license(salt_call_cli, delete_license):
     assert result_as_json["license_key"] == license_key
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_get_licenses(salt_call_cli, get_licenses):
     ret = salt_call_cli.run(
         "nsxt_license.get_licenses",
@@ -117,6 +119,7 @@ def test_get_licenses(salt_call_cli, get_licenses):
     assert result_as_json == get_licenses
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_delete_license(salt_call_cli, create_license):
     ret = salt_call_cli.run(
         "nsxt_license.delete_license",

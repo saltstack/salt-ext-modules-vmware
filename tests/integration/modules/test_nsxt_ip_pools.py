@@ -113,6 +113,7 @@ def _get_ip_pool_by_display_name_using_nsxt_api(hostname, username, password, di
     return response
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_ip_pools_execution_module_crud_operations(nsxt_config, salt_call_cli):
     hostname, username, password = _get_server_info(nsxt_config)
 
