@@ -29,6 +29,7 @@ What are you most interested in?
   vmc.rst
   utils.rst
   quickstart.rst
+  credentials.rst
   GitHub Repository <https://github.com/saltstack/salt-ext-modules-vmware>
 
 
