@@ -1,7 +1,6 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import uuid
-from unittest.mock import patch
 
 import saltext.vmware.modules.datacenter as datacenter
 
@@ -13,12 +12,12 @@ def test_get(vmware_datacenter, service_instance):
 
     # Get a non existent datacenter. Should return False
     dc1_name = str(uuid.uuid4())
-    dc1 = datacenter.get(cluster_name=dc1_name, service_instance=service_instance)
+    dc1 = datacenter.get(name=dc1_name, service_instance=service_instance)
     assert dc1[dc1_name] is False
     assert "reason" in dc1
 
     # Now get the created datacenter. Should return all properties of DC.
-    dc1 = datacenter.get(cluster_name=vmware_datacenter, service_instance=service_instance)
+    dc1 = datacenter.get(name=vmware_datacenter, service_instance=service_instance)
     assert dc1["name"] == vmware_datacenter
 
 

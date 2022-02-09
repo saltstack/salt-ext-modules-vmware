@@ -3,18 +3,13 @@
 import os
 import uuid
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 import salt.exceptions
 import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.esxi
-
-
-def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integration_test_config):
-    expected_lun_ids = integration_test_config["esxi_datastore_disk_names"]
-    actual_ids = esxi.get_lun_ids(service_instance=service_instance)
-    assert actual_ids == expected_lun_ids
 
 
 HOST_CAPABILITIES = [
@@ -119,6 +114,21 @@ HOST_CAPABILITIES = [
 ]
 
 
+@pytest.fixture
+def esxi_manage_test_instance(integration_test_config):
+    instance = integration_test_config.get("esxi_manage_test_instance")
+    if instance is None:
+        pytest.skip("test requires esxi manage test instance credentials")
+    else:
+        return instance
+
+
+def test_esxi_get_lun_ids_should_return_lun_NAA_ids(service_instance, integration_test_config):
+    expected_lun_ids = integration_test_config["esxi_datastore_disk_names"]
+    actual_ids = esxi.get_lun_ids(service_instance=service_instance)
+    assert actual_ids == expected_lun_ids
+
+
 def test_esxi_host_capability_params(service_instance, integration_test_config):
     """
     Test we are returning the same values from get_capabilities
@@ -158,17 +168,18 @@ def test_list_pkgs(service_instance):
                 ]
             )
 
+    # TODO: This should be a unit test, not an integration test -W. Werner, 2022-02-09
     host = MagicMock()
     host.configManager.imageConfigManager.FetchSoftwarePackages.side_effect = (
         salt.exceptions.VMwareApiError
     )
-    setattr(saltext.vmware.utils.esxi, "get_hosts", MagicMock(return_value=[host]))
-    with pytest.raises(salt.exceptions.SaltException) as exc:
-        ret = esxi.list_pkgs(
-            service_instance=service_instance,
-            datacenter_name="Datacenter",
-            cluster_name="Cluster",
-        )
+    with patch("saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=[host]):
+        with pytest.raises(salt.exceptions.SaltException) as exc:
+            ret = esxi.list_pkgs(
+                service_instance=service_instance,
+                datacenter_name="Datacenter",
+                cluster_name="Cluster",
+            )
 
 
 def test_manage_service(service_instance):
@@ -363,90 +374,72 @@ def test_get_firewall_config(service_instance):
     assert not ret
 
 
-def test_add(integration_test_config, service_instance):
+def test_add(esxi_manage_test_instance, service_instance):
     """
     Test esxi add
     """
-    if integration_test_config["esxi_manage_test_instance"]:
-        ret = esxi.add(
-            integration_test_config["esxi_manage_test_instance"]["name"],
-            integration_test_config["esxi_manage_test_instance"]["user"],
-            integration_test_config["esxi_manage_test_instance"]["password"],
-            integration_test_config["esxi_manage_test_instance"]["cluster"],
-            integration_test_config["esxi_manage_test_instance"]["datacenter"],
-            verify_host_cert=False,
-            service_instance=service_instance,
-        )
-        assert ret["state"] == "connected"
-    else:
-        pytest.skip("test requires esxi manage test instance credentials")
+    ret = esxi.add(
+        esxi_manage_test_instance["name"],
+        esxi_manage_test_instance["user"],
+        esxi_manage_test_instance["password"],
+        esxi_manage_test_instance["cluster"],
+        esxi_manage_test_instance["datacenter"],
+        verify_host_cert=False,
+        service_instance=service_instance,
+    )
+    assert ret["state"] == "connected"
 
 
-def test_manage_disconnect(integration_test_config, service_instance):
+def test_manage_disconnect(esxi_manage_test_instance, service_instance):
     """
     Test esxi manage disconnect task
     """
-    if integration_test_config["esxi_manage_test_instance"]:
-        ret = esxi.disconnect(
-            integration_test_config["esxi_manage_test_instance"]["name"],
-            service_instance=service_instance,
-        )
-        assert ret["state"] == "disconnected"
-    else:
-        pytest.skip("test requires esxi manage test instance credentials")
+    ret = esxi.disconnect(
+        esxi_manage_test_instance["name"],
+        service_instance=service_instance,
+    )
+    assert ret["state"] == "disconnected"
 
 
-def test_move(integration_test_config, service_instance):
+def test_move(esxi_manage_test_instance, service_instance):
     """
     Test esxi move
     """
-    if integration_test_config["esxi_manage_test_instance"]:
-        ret = esxi.move(
-            integration_test_config["esxi_manage_test_instance"]["name"],
-            integration_test_config["esxi_manage_test_instance"]["move"],
-            service_instance=service_instance,
-        )
-        assert (
-            ret["state"]
-            == f"moved {integration_test_config['esxi_manage_test_instance']['name']} from {integration_test_config['esxi_manage_test_instance']['cluster']} to {integration_test_config['esxi_manage_test_instance']['move']}"
-        )
-    else:
-        pytest.skip("test requires esxi manage test instance credentials")
+    ret = esxi.move(
+        esxi_manage_test_instance["name"],
+        esxi_manage_test_instance["move"],
+        service_instance=service_instance,
+    )
+    assert (
+        ret["state"]
+        == f"moved {esxi_manage_test_instance['name']} from {esxi_manage_test_instance['cluster']} to {esxi_manage_test_instance['move']}"
+    )
 
 
-def test_manage_connect(integration_test_config, service_instance):
+def test_manage_connect(esxi_manage_test_instance, service_instance):
     """
     Test esxi manage connect task
     """
-    if integration_test_config["esxi_manage_test_instance"]:
-        ret = esxi.connect(
-            integration_test_config["esxi_manage_test_instance"]["name"],
-            service_instance=service_instance,
-        )
-        assert ret["state"] == "connected"
-    else:
-        pytest.skip("test requires esxi manage test instance credentials")
+    ret = esxi.connect(
+        esxi_manage_test_instance["name"],
+        service_instance=service_instance,
+    )
+    assert ret["state"] == "connected"
 
 
-def test_manage_remove(integration_test_config, service_instance):
+def test_manage_remove(esxi_manage_test_instance, service_instance):
     """
     Test esxi manage remove task
     """
-    if integration_test_config["esxi_manage_test_instance"]:
-        esxi.disconnect(
-            integration_test_config["esxi_manage_test_instance"]["name"],
-            service_instance=service_instance,
-        )
-        ret = esxi.remove(
-            integration_test_config["esxi_manage_test_instance"]["name"],
-            service_instance=service_instance,
-        )
-        assert (
-            ret["state"]
-            == f"removed host {integration_test_config['esxi_manage_test_instance']['name']}"
-        )
-    else:
-        pytest.skip("test requires esxi manage test instance credentials")
+    esxi.disconnect(
+        esxi_manage_test_instance["name"],
+        service_instance=service_instance,
+    )
+    ret = esxi.remove(
+        esxi_manage_test_instance["name"],
+        service_instance=service_instance,
+    )
+    assert ret["state"] == f"removed host {esxi_manage_test_instance['name']}"
 
 
 def test_esxi_get(service_instance):

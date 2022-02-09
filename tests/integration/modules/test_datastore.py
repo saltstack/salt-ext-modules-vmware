@@ -4,23 +4,28 @@ import pytest
 from saltext.vmware.modules import datastore
 
 
-def test_maintenance_mode(integration_test_config, patch_salt_globals_datastore):
+@pytest.fixture
+def datastores(integration_test_config):
+    return integration_test_config.get("datastores", [])
+
+
+def test_maintenance_mode(datastores, patch_salt_globals_datastore):
     """
     Test datastore maintenance mode
     """
-    if integration_test_config["datastores"]:
-        res = datastore.maintenance_mode(integration_test_config["datastores"][0])
+    if datastores:
+        res = datastore.maintenance_mode(datastores[0])
         assert res["maintenanceMode"] == "inMaintenance"
     else:
         pytest.skip("test requires at least one datastore")
 
 
-def test_exit_maintenance_mode(integration_test_config, patch_salt_globals_datastore):
+def test_exit_maintenance_mode(datastores, patch_salt_globals_datastore):
     """
     Test datastore exit maintenance mode
     """
-    if integration_test_config["datastores"]:
-        res = datastore.exit_maintenance_mode(integration_test_config["datastores"][0])
+    if datastores:
+        res = datastore.exit_maintenance_mode(datastores[0])
         assert res["maintenanceMode"] == "normal"
     else:
         pytest.skip("test requires at least one datastore")

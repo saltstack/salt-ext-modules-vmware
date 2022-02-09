@@ -20,7 +20,6 @@ except ImportError:
 
 __virtualname__ = "vmware_cluster_drs"
 __proxyenabled__ = ["vmware_cluster_drs"]
-__func_alias__ = {"get_": "get"}
 
 
 def __virtual__():

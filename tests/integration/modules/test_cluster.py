@@ -1,7 +1,6 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import uuid
-from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.cluster as cluster

@@ -1,7 +1,8 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import uuid
-from unittest.mock import MagicMock
+from unittest.mock import create_autospec
+from unittest.mock import patch
 
 import pytest
 import salt
@@ -18,23 +19,44 @@ def dry_run():
 
 @pytest.fixture
 def user_add_error():
-    esxi.__salt__["vmware_esxi.add_user"] = MagicMock(
-        side_effect=salt.exceptions.SaltException("add error")
-    )
+    # TODO: patch tests should be unit, not integration -W. Werner, 2022-02-09
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.add_user": create_autospec(
+                esxi_mod.add_user, side_effect=salt.exceptions.SaltException("add error")
+            )
+        },
+    ):
+        yield
 
 
 @pytest.fixture
 def user_update_error():
-    esxi.__salt__["vmware_esxi.update_user"] = MagicMock(
-        side_effect=salt.exceptions.SaltException("update error")
-    )
+    # TODO: patch tests should be unit, not integration -W. Werner, 2022-02-09
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.update_user": create_autospec(
+                esxi_mod.update_user, side_effect=salt.exceptions.SaltException("update error")
+            )
+        },
+    ):
+        yield
 
 
 @pytest.fixture
 def user_remove_error():
-    esxi.__salt__["vmware_esxi.remove_user"] = MagicMock(
-        side_effect=salt.exceptions.SaltException("remove error")
-    )
+    # TODO: patch tests should be unit, not integration -W. Werner, 2022-02-09
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.remove_user": create_autospec(
+                esxi_mod.remove_user, side_effect=salt.exceptions.SaltException("remove error")
+            )
+        },
+    ):
+        yield
 
 
 def test_user_present_absent(patch_salt_globals):

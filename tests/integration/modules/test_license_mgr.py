@@ -3,7 +3,6 @@
 import logging
 import os
 import uuid
-from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.license_mgr as license_mgr_mod
