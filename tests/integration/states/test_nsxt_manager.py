@@ -57,6 +57,7 @@ def publish_fqdns(nsxt_config):
     _set_manager_config_to_nsxt(nsxt_config, current_manager_config)
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_manager(nsxt_config, salt_call_cli, publish_fqdns):
     """
     Tests NSX-T Manager State module to verify publish_fqdns_enabled/publish_fqdns_disabled
