@@ -4,7 +4,16 @@ import os
 import tarfile
 
 import pytest
+import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.modules.vm as virtual_machine
+import saltext.vmware.utils.common as utils_common
+
+try:
+    from pyVmomi import vim
+
+    HAS_PYVMOMI = True
+except ImportError:
+    HAS_PYVMOMI = False
 
 
 @pytest.mark.parametrize(
@@ -51,7 +60,7 @@ def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
     Test deploy virtual machine through an OVF
     """
     res = virtual_machine.deploy_ovf(
-        name="test1",
+        vm_name="test1",
         host_name=integration_test_config["esxi_host_name"],
         ovf_path="tests/test_files/centos-7-tools.ovf",
     )
@@ -66,7 +75,7 @@ def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
     tar.add("tests/test_files/centos-7-tools.ovf")
     tar.close()
     res = virtual_machine.deploy_ova(
-        name="test2",
+        vm_name="test2",
         host_name=integration_test_config["esxi_host_name"],
         ova_path="tests/test_files/sample.tar",
     )
@@ -80,7 +89,7 @@ def test_template_deploy(integration_test_config, patch_salt_globals_vm):
     """
     if integration_test_config["virtual_machines_templates"]:
         res = virtual_machine.deploy_template(
-            name="test_template_vm",
+            vm_name="test_template_vm",
             template_name=integration_test_config["virtual_machines_templates"][0],
             host_name=integration_test_config["esxi_host_name"],
         )
@@ -95,7 +104,7 @@ def test_path(integration_test_config, patch_salt_globals_vm):
     """
     if integration_test_config["virtual_machine_paths"].items:
         for k, v in integration_test_config["virtual_machine_paths"].items():
-            res = virtual_machine.path(name=k)
+            res = virtual_machine.path(vm_name=k)
             assert res == v
     else:
         pass
@@ -112,3 +121,84 @@ def test_powered_on(integration_test_config, patch_salt_globals_vm):
             assert res["comment"] == f"Virtual machine {state} action succeeded"
     else:
         pass
+
+
+def test_boot_manager(integration_test_config, patch_salt_globals_vm):
+    """
+    Test boot options manager
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.boot_manager("test1", ["disk", "ethernet"])
+        assert res["status"] == "changed"
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_boot_manager_same_settings(integration_test_config, patch_salt_globals_vm):
+    """
+    Test boot option duplicates
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.boot_manager("test1", ["disk", "ethernet"])
+        assert res["status"] == "already configured this way"
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_create_snapshot(integration_test_config, patch_salt_globals_vm):
+    """
+    Test create snapshot.
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.create_snapshot(
+            integration_test_config["virtual_machines"][0], "test-ss"
+        )
+        assert res["snapshot"] == "created"
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_snapshot(integration_test_config, patch_salt_globals_vm):
+    """
+    Test snapshot.
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.snapshot(integration_test_config["virtual_machines"][0])
+        assert "creation_time" in res["snapshots"][0]
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_destroy_snapshot(integration_test_config, patch_salt_globals_vm):
+    """
+    Test destroy snapshot.
+    """
+    if integration_test_config["virtual_machines"]:
+        res = virtual_machine.destroy_snapshot(
+            integration_test_config["virtual_machines"][0], "test-ss"
+        )
+        assert res["snapshot"] == "destroyed"
+    else:
+        pytest.skip("test requires at least one virtual machine")
+
+
+def test_relocate(patch_salt_globals_vm, service_instance):
+    """
+    Test relocate virtual machine.
+    """
+    hosts = esxi.list_hosts(service_instance=service_instance)
+    if len(hosts) >= 2:
+        temp = virtual_machine.list_templates()
+        if temp:
+            virtual_machine.deploy_template(
+                vm_name="test_move_vm",
+                template_name=temp[0],
+                host_name=hosts[0],
+            )
+            host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, hosts[1])
+            res = virtual_machine.relocate("test_move_vm", host.name, host.datastore[0].name)
+            assert res["virtual_machine"] == "moved"
+        else:
+            pytest.skip("test requires at least one template")
+    else:
+        pytest.skip("test requires at least two hosts")

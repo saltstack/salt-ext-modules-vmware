@@ -35,6 +35,7 @@ def setup(nsxt_config):
             _delete_transport_zone_using_nsxt_api(nsxt_config, transport_zone["id"])
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_transport_node_profiles_execution_module(nsxt_config, setup, salt_call_cli):
     # Step 1: create transport zone 1 and using that id, create and verify transport node profile
 

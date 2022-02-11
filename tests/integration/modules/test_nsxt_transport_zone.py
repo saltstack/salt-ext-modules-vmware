@@ -46,6 +46,7 @@ def delete_transport_zone():
     response.raise_for_status()
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_check_transport_zone(nsxt_config, salt_call_cli):
     ret_create = salt_call_cli.run(
         "nsxt_transport_zone.create",

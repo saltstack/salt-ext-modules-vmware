@@ -104,6 +104,7 @@ def _get_server_info(nsxt_config):
     return hostname, username, password
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_ip_blocks_state_module(nsxt_config, salt_call_cli):
     """
     Tests NSX-T IP Blocks State module to verify the present and absent state

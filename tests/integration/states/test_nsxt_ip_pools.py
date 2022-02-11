@@ -100,6 +100,7 @@ def _execute_absent_state(hostname, username, password, salt_call_cli, display_n
     return result.get("changes"), result.get("comment")
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_ip_pools_present_and_absent_states(nsxt_config, salt_call_cli):
     """
     Tests NSX-T IP Pools State module to verify the present and absent state

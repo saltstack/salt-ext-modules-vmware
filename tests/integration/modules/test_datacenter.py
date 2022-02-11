@@ -13,12 +13,12 @@ def test_get(vmware_datacenter, service_instance):
 
     # Get a non existent datacenter. Should return False
     dc1_name = str(uuid.uuid4())
-    dc1 = datacenter.get_(name=dc1_name, service_instance=service_instance)
+    dc1 = datacenter.get(cluster_name=dc1_name, service_instance=service_instance)
     assert dc1[dc1_name] is False
     assert "reason" in dc1
 
     # Now get the created datacenter. Should return all properties of DC.
-    dc1 = datacenter.get_(name=vmware_datacenter, service_instance=service_instance)
+    dc1 = datacenter.get(cluster_name=vmware_datacenter, service_instance=service_instance)
     assert dc1["name"] == vmware_datacenter
 
 
