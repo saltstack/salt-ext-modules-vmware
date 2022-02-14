@@ -107,3 +107,138 @@ def get(
         cert=cert,
         params=params,
     )
+
+
+def get_by_id(
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    public_ip_id,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Retrieves Public IPs from Given SDDC
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt vm_minion vmc_public_ip.get_by_id hostname=nsxt-manager.local public_ip_id ...
+
+    hostname
+        The host name of NSX-T manager
+
+    refresh_key
+        refresh_key to get access token
+
+    authorization_host
+        hostname to get access token
+
+    org_id
+        org_id of the SDDC
+
+    sddc_id
+        sddc_id from which public ip should be retrieved
+
+    public_ip_id
+        public ip id for which details should be retrieved
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+        The certificate can be retrieved from browser.
+    """
+    log.info("Retrieving Public IP %s for SDDC %s", public_ip_id, sddc_id)
+
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = (
+        "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
+        "cloud-service/api/v1/infra/public-ips/{public_ip_id}"
+    )
+    api_url = api_url.format(
+        base_url=api_url_base, org_id=org_id, sddc_id=sddc_id, public_ip_id=public_ip_id
+    )
+
+    return vmc_request.call_api(
+        method=vmc_constants.GET_REQUEST_METHOD,
+        url=api_url,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        description="vmc_public_ip.get_by_id",
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
+
+
+def delete(
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    public_ip_id,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Delete public ip from Given SDDC
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt vm_minion vmc_public_ip.delete hostname=nsxt-manager.local public_ip_id=public_ip_id ...
+
+    hostname
+        The host name of NSX-T manager
+
+    refresh_key
+        refresh_key to get access token
+
+    authorization_host
+        hostname to get access token
+
+    org_id
+        org_id of the SDDC
+
+    sddc_id
+        sddc_id from which public ip will be deleted
+
+    public_ip_id
+        Id of specific public IP to be deleted
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+        The certificate can be retrieved from browser.
+
+    """
+    log.info("Deleting Public IP %s for SDDC %s", public_ip_id, sddc_id)
+
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = (
+        "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
+        "cloud-service/api/v1/infra/public-ips/{public_ip_id}"
+    )
+    api_url = api_url.format(
+        base_url=api_url_base, org_id=org_id, sddc_id=sddc_id, public_ip_id=public_ip_id
+    )
+    return vmc_request.call_api(
+        method=vmc_constants.DELETE_REQUEST_METHOD,
+        url=api_url,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        description="vmc_public_ip.delete",
+        responsebody_applicable=False,
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
