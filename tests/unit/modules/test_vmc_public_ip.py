@@ -102,3 +102,75 @@ def test_assert_get_public_ip_should_correctly_filter_args(actual_args, expected
 
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["params"] == expected_params
+
+
+def test_get_public_ip_by_id_should_return_api_response(public_ip_data_by_id):
+    assert (
+        vmc_public_ip.get_by_id(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            public_ip_id="TEST_IP",
+            verify_ssl=False,
+        )
+        == public_ip_data_by_id
+    )
+
+
+def test_get_public_ip_by_id_called_with_url():
+    expected_url = (
+        "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/"
+        "cloud-service/api/v1/infra/public-ips/TEST_IP"
+    )
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        result = vmc_public_ip.get_by_id(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            public_ip_id="TEST_IP",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+def test_delete_public_ip_should_return_api_response(mock_vmc_request_call_api):
+    data = {"message": "Public IP deleted successfully"}
+    mock_vmc_request_call_api.return_value = data
+    assert (
+        vmc_public_ip.delete(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            public_ip_id="TEST_IP",
+            verify_ssl=False,
+        )
+        == data
+    )
+
+
+def test_delete_public_ip_called_with_url():
+    expected_url = (
+        "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/"
+        "cloud-service/api/v1/infra/public-ips/TEST_IP"
+    )
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        result = vmc_public_ip.delete(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            public_ip_id="TEST_IP",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.DELETE_REQUEST_METHOD
