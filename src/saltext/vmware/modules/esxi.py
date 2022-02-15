@@ -56,7 +56,8 @@ def get_lun_ids(service_instance=None):
     for host in hosts:
         for datastore in host.datastore:
             for extent in datastore.info.vmfs.extent:
-                ids.append(extent.diskName)
+                if extent.diskName not in ids:
+                    ids.append(extent.diskName)
     return ids
 
 
