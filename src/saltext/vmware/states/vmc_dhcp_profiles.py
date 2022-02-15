@@ -29,6 +29,7 @@ Example usage :
 import logging
 
 from saltext.vmware.utils import vmc_constants
+from saltext.vmware.utils import vmc_request
 from saltext.vmware.utils import vmc_state
 
 log = logging.getLogger(__name__)
@@ -139,22 +140,25 @@ def present(
 
     """
 
-    input_dict = {
-        "server_addresses": server_addresses,
-        "tags": tags,
-        "lease_time": lease_time,
-        "display_name": display_name,
-    }
-
-    if type == vmc_constants.RELAY and lease_time:
-        return vmc_state._create_state_response(
-            name=name, comment="lease_time is not applicable for DHCP Relay Profile", result=False
-        )
-
+    input_dict = {}
     if type == vmc_constants.RELAY:
-        input_dict.pop("lease_time")
+        if lease_time:
+            return vmc_state._create_state_response(
+                name=name,
+                comment="lease_time is not applicable for DHCP Relay Profile",
+                result=False,
+            )
+    else:
+        if lease_time != vmc_constants.VMC_NONE:
+            input_dict["lease_time"] = lease_time
 
-    input_dict = {k: v for k, v in input_dict.items() if v != vmc_constants.VMC_NONE}
+    input_dict.update(
+        vmc_request._filter_vmc_none(
+            server_addresses=server_addresses,
+            tags=tags,
+            display_name=display_name,
+        )
+    )
 
     dhcp_profile = __salt__["vmc_dhcp_profiles.get_by_id"](
         hostname=hostname,
@@ -190,10 +194,7 @@ def present(
             )
 
     if dhcp_profile:
-        updatable_keys = input_dict.keys()
-        is_update_required = vmc_state._check_for_updates(
-            dhcp_profile, input_dict, updatable_keys, ["tags"]
-        )
+        is_update_required = vmc_state._check_for_updates(dhcp_profile, input_dict, None, ["tags"])
 
         if is_update_required:
             updated_dhcp_profile = __salt__["vmc_dhcp_profiles.update"](
