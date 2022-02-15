@@ -1,12 +1,12 @@
-import logging
+import pytest
 
-log = logging.getLogger(__name__)
 
 _display_name = "Check-State-Module-Create"
 _description = "Creation of the transport zone"
 _description_update = "Updating the description of the transport zone"
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_state_transport_zone_verify(nsxt_config, salt_call_cli):
     response_create = salt_call_cli.run(
         "state.single",

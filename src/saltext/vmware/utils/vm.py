@@ -634,3 +634,302 @@ def get_mac_address(vm):
         if isinstance(device, vim.vm.device.VirtualEthernetCard):
             mac_address.append(device.macAddress)
     return mac_address
+
+
+def options_order_list(vm, order):
+    """
+    Converts a text order into internal representation for setting the boot order.
+
+    vm
+        Reference to virtual machine to check options on.
+
+    order
+        (List of strings) Boot order of devices. Acceptable strings: cdrom, disk, ethernet, floppy
+    """
+
+    boot_order_list = []
+    for device_name in order:
+        if device_name == "cdrom":
+            cdrom = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualCdrom)
+            ]
+            if cdrom:
+                boot_order_list.append(vim.vm.BootOptions.BootableCdromDevice())
+        elif device_name == "disk":
+            hdd = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualDisk)
+            ]
+            if hdd:
+                boot_order_list.append(vim.vm.BootOptions.BootableDiskDevice(deviceKey=hdd[0].key))
+        elif device_name == "ethernet":
+            ether = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualEthernetCard)
+            ]
+            if ether:
+                boot_order_list.append(
+                    vim.vm.BootOptions.BootableEthernetDevice(deviceKey=ether[0].key)
+                )
+        elif device_name == "floppy":
+            floppy = [
+                device
+                for device in vm.config.hardware.device
+                if isinstance(device, vim.vm.device.VirtualFloppy)
+            ]
+            if floppy:
+                boot_order_list.append(vim.vm.BootOptions.BootableFloppyDevice())
+        else:
+            raise salt.exceptions.VMwareRuntimeError("invalid order name")
+    return boot_order_list
+
+
+def compare_boot_order_list(new, current):
+    """
+    Compares current boot order list and input boot order list.
+
+    new
+        List of vim bootable device objects.
+
+    current
+        List of vim bootable device objects.
+    """
+    if len(new) == len(current):
+        for provided, existing in zip(new, current):
+            if provided.deviceKey != existing.deviceKey:
+                return False
+        return True
+    else:
+        return False
+
+
+def compare_boot_options(input_opts, current):
+    """
+    Compares current boot options and input options.
+
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
+
+    current
+        Pyvmomi virtual machine boot options object.
+    """
+
+    lists_same = compare_boot_order_list(input_opts["bootOrder"], current.bootOrder)
+    if (
+        lists_same
+        and current.bootDelay == input_opts["bootDelay"]
+        and current.enterBIOSSetup == input_opts["enterBIOSSetup"]
+        and current.bootRetryEnabled == input_opts["bootRetryEnabled"]
+        and current.bootRetryDelay == input_opts["bootRetryDelay"]
+        and current.efiSecureBootEnabled == input_opts["efiSecureBootEnabled"]
+    ):
+        return True
+    else:
+        return False
+
+
+def boot_options_dif(input_opts, current):
+    """
+    Returns the difference between two dictionaries of virtual machine boot options.
+
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
+
+    current
+        Pyvmomi virtual machine boot options object.
+    """
+    ret = {}
+    lists_same = compare_boot_order_list(input_opts["bootOrder"], current.bootOrder)
+    if not lists_same:
+        old = [i.deviceKey for i in current.bootOrder]
+        new = [i.deviceKey for i in input_opts["bootOrder"]]
+        ret["order"] = {"old": old, "new": new}
+    if not current.bootDelay == input_opts["bootDelay"]:
+        ret["delay"] = {"old": current.bootDelay, "new": input_opts["bootDelay"]}
+    if not current.enterBIOSSetup == input_opts["enterBIOSSetup"]:
+        ret["enter_bois_setup"] = {
+            "old": current.enterBIOSSetup,
+            "new": input_opts["enterBIOSSetup"],
+        }
+    if not current.bootRetryEnabled == input_opts["bootRetryEnabled"]:
+        ret["retry_enabled"] = {
+            "old": current.bootRetryEnabled,
+            "new": input_opts["bootRetryEnabled"],
+        }
+    if not current.bootRetryDelay == input_opts["bootRetryDelay"]:
+        ret["retry_delay"] = {
+            "old": current.bootRetryDelay,
+            "new": input_opts["bootRetryDelay"],
+        }
+    if not current.efiSecureBootEnabled == input_opts["efiSecureBootEnabled"]:
+        ret["efi_secure_boot_enabled"] = {
+            "old": current.efiSecureBootEnabled,
+            "new": input_opts["efiSecureBootEnabled"],
+        }
+    return ret
+
+
+def change_boot_options(vm, input_opts):
+    """
+    Changes boot options on given vm.
+
+    vm
+        reference to virtual machine to change options on.
+
+    input_opts
+        (dict) Dictionary of virtual machine boot options.
+    """
+    vm_conf = vim.vm.ConfigSpec()
+    vm_conf.bootOptions = vim.vm.BootOptions(**input_opts)
+    task = vm.ReconfigVM_Task(vm_conf)
+    utils_common.wait_for_task(task, vm.name, "configure boot options")
+
+    return {"status": "changed"}
+
+
+def create_snapshot(vm_ref, snapshot_name, description, memory, quiesce):
+    """
+    Create virtual machine snapshot.
+
+    vm_ref
+        Reference to virtual machine.
+
+    snapshot_name
+        The name for the snapshot being created. Not unique
+
+    description
+        Description for the snapshot.
+
+    memory
+        (boolean) If TRUE, a dump of the internal state of the virtual machine (basically a memory dump) is included in the snapshot.
+
+    quiesce
+        (boolean) If TRUE and the virtual machine is powered on when the snapshot is taken, VMware Tools is used to quiesce the file system in the virtual machine.
+    """
+    task = vm_ref.CreateSnapshot_Task(snapshot_name, description, memory, quiesce)
+    ret = utils_common.wait_for_task(task, vm_ref.name, "create snapshot")
+    return ret
+
+
+def snapshot_recursive(snapshot_tree_root, snaps):
+    """
+    Recursively appends all snapshots in a snapshot tree.
+
+    snapshot_tree_root
+        Root node of snapshot tree.
+
+    snaps
+        List of snapshot info.
+    """
+    for ss in snapshot_tree_root:
+        current = {
+            "creation_time": str(ss.createTime),
+            "description": ss.description,
+            "id": ss.id,
+            "name": ss.name,
+            "state": ss.state,
+            "quiesced": ss.quiesced,
+        }
+        snaps.append(current)
+        if ss.childSnapshotList:
+            snaps = snapshot_recursive(ss.childSnapshotList, snaps)
+    return snaps
+
+
+def snapshot_recursive_search(snapshot_tree_root, snapshot_name, snapshot_id):
+    """
+    Recursively appends all snapshots in a snapshot tree.
+
+    snapshot_tree_root
+        Root node of snapshot tree.
+
+    snapshot_name
+        Name of snapshot to find.
+
+    snapshot_id
+        id of snapshot to find.
+    """
+    for ss in snapshot_tree_root:
+        if snapshot_id is None:
+            if snapshot_name == ss.name:
+                return ss
+            elif ss.childSnapshotList:
+                snaps = snapshot_recursive_search(ss.childSnapshotList, snapshot_name, snapshot_id)
+            else:
+                return None
+        else:
+            if snapshot_id and snapshot_id == ss.id and snapshot_name == ss.name:
+                return ss
+            elif ss.childSnapshotList:
+                snaps = snapshot_recursive_search(ss.childSnapshotList, snapshot_name, snapshot_id)
+            else:
+                return None
+    return snaps
+
+
+def get_snapshots(vm_ref):
+    """
+    Returns list of snapshot info for a given vm.
+
+    vm_ref
+        Reference to a virtual machine.
+    """
+    snaps = []
+    tree = vm_ref.snapshot
+    if hasattr(tree, "rootSnapshotList") and len(tree.rootSnapshotList) > 0:
+        snaps = snapshot_recursive(tree.rootSnapshotList, snaps)
+    else:
+        snaps = {"msg": "no snapshots"}
+    return snaps
+
+
+def get_snapshot(vm_ref, snapshot_name, snapshot_id):
+    """"""
+    tree = vm_ref.snapshot
+    if hasattr(tree, "rootSnapshotList") and tree.rootSnapshotList:
+        snap = snapshot_recursive_search(tree.rootSnapshotList, snapshot_name, snapshot_id)
+    else:
+        snap = {"msg": "no snapshots"}
+    return snap
+
+
+def destroy_snapshot(snapshot, remove_children):
+    """
+    Destroy a given snapshot.
+
+    snapshot
+        Reference to a vim.vm.Snapshot object.
+
+    remove_children
+        Remove subtree of snapshots.
+    """
+    vm_name = snapshot.vm.name
+    task = snapshot.RemoveSnapshot_Task(remove_children)
+    ret = utils_common.wait_for_task(task, vm_name, "remove snapshot")
+    return ret
+
+
+def relocate(vm, host, datastore, pool):
+    """
+    Relocates a virtual machine to the location specified.
+
+    vm
+        Reference to virtual machine.
+
+    host
+        Reference to new host.
+
+    datastore
+        Reference to datastore
+
+    Pool
+        Reference to resource pool.
+    """
+    relocate_spec = vim.vm.RelocateSpec(host=host, datastore=datastore, pool=pool)
+    task = vm.RelocateVM_Task(relocate_spec)
+    utils_common.wait_for_task(task, vm.name, "move vm")
+    return task.info.state
