@@ -691,3 +691,39 @@ def test_present_when_lease_time_is_passed_for_relay_type_profile():
     assert result["changes"] == {}
     assert result["comment"] == "lease_time is not applicable for DHCP Relay Profile"
     assert not result["result"]
+
+
+def test_present_when_get_by_id_returns_not_found_error(mocked_ok_response):
+    error_response = {"error": "dhcp profile could not be found"}
+    mock_get_by_id_response = create_autospec(
+        vmc_dhcp_profiles_exec.get_by_id, return_value=error_response
+    )
+    mock_create_response = create_autospec(
+        vmc_dhcp_profiles_exec.create, return_value=mocked_ok_response
+    )
+
+    dhcp_profile_id = mocked_ok_response["id"]
+
+    with patch.dict(
+        vmc_dhcp_profiles.__salt__,
+        {
+            "vmc_dhcp_profiles.get_by_id": mock_get_by_id_response,
+            "vmc_dhcp_profiles.create": mock_create_response,
+        },
+    ):
+        result = vmc_dhcp_profiles.present(
+            name="test_present",
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            type="server",
+            dhcp_profile_id=dhcp_profile_id,
+        )
+
+    assert result is not None
+    assert result["changes"]["new"] == mocked_ok_response
+    assert result["changes"]["old"] is None
+    assert result["comment"] == "Created DHCP Profile {}".format(dhcp_profile_id)
+    assert result["result"]
