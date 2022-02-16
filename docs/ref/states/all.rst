@@ -27,4 +27,5 @@ State Modules
     saltext.vmware.states.nsxt_uplink_profiles
     saltext.vmware.states.tag
     saltext.vmware.states.vm
+    saltext.vmware.states.vmc_networks
     saltext.vmware.states.vmc_security_rules
