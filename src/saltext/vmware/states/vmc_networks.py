@@ -87,35 +87,40 @@ def present(
         Subnet configuration required for ROUTED or DISCONNECTED segment/network. It is an array of SegmentSubnet.
         Can contain maximum 1 subnet.
         SegmentSubnet can contain the below fields.
-            'gateway_address': (string)
-                Gateway IP address in CIDR format for both IPv4 and IPv6.
 
-            'dhcp_ranges': (optional)
-                DHCP address ranges are used for dynamic IP allocation. Supports address range and CIDR formats.
-                First valid host address from the first value is assigned to DHCP server IP address.
-                Existing values cannot be deleted or modified, but additional DHCP ranges can be added.
+        'gateway_address': (string)
+            Gateway IP address in CIDR format for both IPv4 and IPv6.
 
-                It is an array of IPElement (which can be a single IP address, IP address range or a Subnet.
-                Its type can be of IPv4 or IPv6).
+        'dhcp_ranges': (optional)
+            DHCP address ranges are used for dynamic IP allocation. Supports address range and CIDR formats.
+            First valid host address from the first value is assigned to DHCP server IP address.
+            Existing values cannot be deleted or modified, but additional DHCP ranges can be added.
 
-            'dhcp_config': (optional)
-                Additional DHCP configuration for current subnet. It is of type SegmentDhcpConfig which can contain
-                the below fields.
-                    'resource_type':
-                        can be either SegmentDhcpV4Config or SegmentDhcpV6Config.
-                    'lease_time':
-                        DHCP lease time in seconds. When specified, this property overwrites lease time
-                        configured DHCP server config. Minimum is 60, Maximum is 4294967295 and Default is 86400.
-                    'server_address':
-                        IP address of the DHCP server in CIDR format. The server_address is mandatory in case this
-                        segment has provided a dhcp_config_path and it represents a DHCP server config.
-                        If the resource_type is a SegmentDhcpV4Config, the address must be an IPv4 address.
-                        If the resource_type is a SegmentDhcpV6Config, the address must be an IPv6 address.
-                        This address must not overlap the ip-ranges of the subnet, or the gateway address of
-                        the subnet, or the DHCP static-binding addresses of this segment.
-                    'dns_servers':
-                        IP address of DNS servers for subnet. DNS server IP address must belong to the same address
-                        family as segment gateway_address property. Maximum items: 2
+            It is an array of IPElement (which can be a single IP address, IP address range or a Subnet.
+            Its type can be of IPv4 or IPv6).
+
+        'dhcp_config': (optional)
+            Additional DHCP configuration for current subnet. It is of type SegmentDhcpConfig which can contain
+            the below fields.
+
+            'resource_type':
+                can be either SegmentDhcpV4Config or SegmentDhcpV6Config.
+
+            'lease_time':
+                DHCP lease time in seconds. When specified, this property overwrites lease time
+                configured DHCP server config. Minimum is 60, Maximum is 4294967295 and Default is 86400.
+
+            'server_address':
+                IP address of the DHCP server in CIDR format. The server_address is mandatory in case this
+                segment has provided a dhcp_config_path and it represents a DHCP server config.
+                If the resource_type is a SegmentDhcpV4Config, the address must be an IPv4 address.
+                If the resource_type is a SegmentDhcpV6Config, the address must be an IPv6 address.
+                This address must not overlap the ip-ranges of the subnet, or the gateway address of
+                the subnet, or the DHCP static-binding addresses of this segment.
+
+            'dns_servers':
+                IP address of DNS servers for subnet. DNS server IP address must belong to the same address
+                family as segment gateway_address property. Maximum items: 2
 
         For ex:
 
@@ -156,17 +161,18 @@ def present(
     advanced_config
         (Optional) Advanced configuration for Segment.
         It is a json object which can contain the below fields.
-            'connectivity': (String) (optional)
-                configuration to manually connect (ON) or disconnect (OFF) a Tier1 segment from corresponding
-                Tier1 gateway. Only valid for Tier1 Segments. This property is ignored for L2 VPN extended segments
-                when subnets property is not specified.
-                Possible values: ON, OFF. If not specified, default will be "ON"
 
-                Note: To create a network/segment of type DISCONNECTED, or to disconnect a ROUTED Segment
-                specify the connectivity value as "OFF"
+        'connectivity': (String) (optional)
+            configuration to manually connect (ON) or disconnect (OFF) a Tier1 segment from corresponding Tier1 gateway.
+            Only valid for Tier1 Segments. This property is ignored for L2 VPN extended segments when subnets property
+            is not specified.
+            Possible values: ON, OFF. If not specified, default will be "ON"
 
-            'address_pool_paths': (array of string) (optional)
-                Policy path to IP address pools. Maximum items it can contain is 1.
+            Note: To create a network/segment of type DISCONNECTED, or to disconnect a ROUTED Segment specify the
+            connectivity value as "OFF"
+
+        'address_pool_paths': (array of string) (optional)
+            Policy path to IP address pools. Maximum items it can contain is 1.
 
         For ex:
 
@@ -179,11 +185,12 @@ def present(
     l2_extension
         Configuration for extending Segment through L2 VPN. This field is mandatory for EXTENDED segment/network.
         It is a json object which can contain the below fields.
-            'l2vpn_paths': (array of string)
-                Policy paths corresponding to the associated L2 VPN sessions
 
-            'tunnel_id': (int)
-                Tunnel ID. Minimum value is 1 and Maximum value is 4093
+        'l2vpn_paths': (array of string)
+            Policy paths corresponding to the associated L2 VPN sessions
+
+        'tunnel_id': (int)
+            Tunnel ID. Minimum value is 1 and Maximum value is 4093
 
         For ex:
 
