@@ -1,10 +1,25 @@
 """
     Unit tests for vmc_security_rules execution module
 """
+from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.vmc_security_rules as vmc_security_rules
+
+
+@pytest.fixture
+def pillar_data():
+    return {
+        "vmc_connection_details": {
+            "nsxt_host": "hostname",
+            "api_key": "refresh_key",
+            "console_host": "authorization_host",
+            "org_id": "org_id",
+            "sddc_id": "sddc_id",
+            "verify_ssl": False,
+        }
+    }
 
 
 @pytest.fixture
@@ -55,7 +70,10 @@ def security_rules_data(mock_vmc_request_call_api, security_rules_data_by_id):
     yield data
 
 
-def test_get_security_rules_should_return_api_response(security_rules_data):
+def test_get_security_rules_should_return_api_response(security_rules_data, pillar_data):
+    setattr(vmc_security_rules, "__opts__", MagicMock())
+    setattr(vmc_security_rules, "__pillar__", pillar_data)
+
     result = vmc_security_rules.get(
         hostname="hostname",
         refresh_key="refresh_key",
@@ -68,7 +86,10 @@ def test_get_security_rules_should_return_api_response(security_rules_data):
     assert result == security_rules_data
 
 
-def test_get_security_rules_called_with_url():
+def test_get_security_rules_called_with_url(pillar_data):
+    setattr(vmc_security_rules, "__opts__", MagicMock())
+    setattr(vmc_security_rules, "__pillar__", pillar_data)
+
     expected_url = (
         "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/policy/api/"
         "v1/infra/domains/domain_id/gateway-policies/default/rules"

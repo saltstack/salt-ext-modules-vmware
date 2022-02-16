@@ -17,6 +17,7 @@ import saltext.vmware.modules.folder as folder
 import saltext.vmware.modules.license_mgr as license_mgr_mod
 import saltext.vmware.modules.tag as tagging
 import saltext.vmware.modules.vm as virtual_machine
+import saltext.vmware.modules.vmc_security_rules as vmc_security_rule
 import saltext.vmware.states.datacenter as datacenter_st
 import saltext.vmware.states.datastore as datastore_state
 import saltext.vmware.states.esxi as esxi_st
@@ -389,6 +390,31 @@ def vmc_nsx_connect(vmc_config):
         vmc_nsx_config["verify_ssl"],
         vmc_nsx_config["cert"],
     )
+
+
+@pytest.fixture()
+def vmc_connect_pillar_data(vmc_config):
+    config = vmc_config["vmc_nsx_connect"]
+    return {
+        "vmc_connection_details": {
+            "nsxt_host": config["hostname"],
+            "api_key": config["refresh_key"],
+            "console_host": config["authorization_host"],
+            "org_id": config["org_id"],
+            "sddc_id": config["sddc_id"],
+            "verify_ssl": config["verify_ssl"],
+        }
+    }
+
+
+@pytest.fixture
+def patch_salt_globals_vmc_security_rule(vmc_connect_pillar_data):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(vmc_security_rule, "__opts__", {})
+    setattr(vmc_security_rule, "__pillar__", vmc_connect_pillar_data)
 
 
 NSXT_CONFIG_FILE_NAME = "nsxt_config.json"

@@ -113,7 +113,11 @@ def create_security_rule(get_security_rules, vmc_nsx_connect, security_rule_test
 
 
 def test_create_security_rule(
-    salt_call_cli, delete_security_rule, vmc_nsx_connect, security_rule_test_data
+    salt_call_cli,
+    delete_security_rule,
+    vmc_nsx_connect,
+    security_rule_test_data,
+    patch_salt_globals_vmc_security_rule,
 ):
     hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
     domain_id, rule_id = security_rule_test_data
@@ -136,7 +140,11 @@ def test_create_security_rule(
 
 
 def test_get_security_rules(
-    salt_call_cli, get_security_rules, vmc_nsx_connect, security_rule_test_data
+    salt_call_cli,
+    get_security_rules,
+    vmc_nsx_connect,
+    security_rule_test_data,
+    patch_salt_globals_vmc_security_rule,
 ):
     hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
     domain_id, rule_id = security_rule_test_data
@@ -158,7 +166,11 @@ def test_get_security_rules(
 
 
 def test_delete_security_rule(
-    salt_call_cli, create_security_rule, vmc_nsx_connect, security_rule_test_data
+    salt_call_cli,
+    create_security_rule,
+    vmc_nsx_connect,
+    security_rule_test_data,
+    patch_salt_globals_vmc_security_rule,
 ):
     hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
     domain_id, rule_id = security_rule_test_data
@@ -181,7 +193,11 @@ def test_delete_security_rule(
 
 
 def test_update_security_rule(
-    salt_call_cli, create_security_rule, vmc_nsx_connect, security_rule_test_data
+    salt_call_cli,
+    create_security_rule,
+    vmc_nsx_connect,
+    security_rule_test_data,
+    patch_salt_globals_vmc_security_rule,
 ):
     hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
     domain_id, rule_id = security_rule_test_data
