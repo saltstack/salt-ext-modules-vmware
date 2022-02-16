@@ -83,6 +83,7 @@ def call_api(
     cert=None,
     data=None,
     params=None,
+    vmc_connection_dict=None,
 ):
     """
     This function is used to make the http requests for the given operation on VMC and return its response
@@ -113,12 +114,17 @@ def call_api(
         Path to the SSL certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
     """
-    verify = verify_ssl
-    if verify_ssl:
-        if cert:
-            verify = cert
-        else:
-            return {vmc_constants.ERROR: vmc_constants.NO_CERTIFICATE_ERROR_MSG}
+    if vmc_connection_dict:
+        refresh_key = vmc_connection_dict["api_key"]
+        authorization_host = vmc_connection_dict["console_host"]
+        verify = vmc_connection_dict["verify_ssl"]
+    else:
+        verify = verify_ssl
+        if verify_ssl:
+            if cert:
+                verify = cert
+            else:
+                return {vmc_constants.ERROR: vmc_constants.NO_CERTIFICATE_ERROR_MSG}
 
     try:
         headers = get_headers(refresh_key, authorization_host)
@@ -201,3 +207,36 @@ def _filter_kwargs(allowed_kwargs, allow_none=[], default_dict=None, **kwargs):
         if field in allow_none and val != vmc_constants.VMC_NONE:
             result[field] = val
     return result
+
+
+def _vmc_connection_details(opts, pillar):
+    print(opts)
+
+    console_host = opts.get("vmc_connection_details", {}).get("console_host") or pillar.get(
+        "vmc_connection_details", {}
+    ).get("console_host")
+    nsxt_host = opts.get("vmc_connection_details", {}).get("nsxt_host") or pillar.get(
+        "vmc_connection_details", {}
+    ).get("nsxt_host")
+    org_id = opts.get("vmc_connection_details", {}).get("org_id") or pillar.get(
+        "vmc_connection_details", {}
+    ).get("org_id")
+    sddc_id = opts.get("vmc_connection_details", {}).get("sddc_id") or pillar.get(
+        "vmc_connection_details", {}
+    ).get("sddc_id")
+    api_key = opts.get("vmc_connection_details", {}).get("api_key") or pillar.get(
+        "vmc_connection_details", {}
+    ).get("api_key")
+    verify_ssl = opts.get("vmc_connection_details", {}).get("verify_ssl") or pillar.get(
+        "vmc_connection_details", {}
+    ).get("verify_ssl")
+
+    vmc_connection_dict = {}
+    vmc_connection_dict["console_host"] = console_host
+    vmc_connection_dict["nsxt_host"] = nsxt_host
+    vmc_connection_dict["api_key"] = api_key
+    vmc_connection_dict["org_id"] = org_id
+    vmc_connection_dict["sddc_id"] = sddc_id
+    vmc_connection_dict["verify_ssl"] = verify_ssl
+
+    return vmc_connection_dict

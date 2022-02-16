@@ -91,6 +91,14 @@ def get(
         (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
 
     """
+    vmc_connection_dict = vmc_request._vmc_connection_details(__opt__, __pillar__)
+    hostname = vmc_connection_dict["nsxt_host"]
+    refresh_key = vmc_connection_dict["api_key"]
+    authorization_host = vmc_connection_dict["console_host"]
+    sddc_id = vmc_connection_dict["sddc_id"]
+    org_id = vmc_connection_dict["org_id"]
+    verify_ssl = vmc_connection_dict["verif_ssl"]
+    cert = vmc_connection_dict["verif_ssl"]
 
     log.info("Retrieving %s Security rules for SDDC %s", domain_id, sddc_id)
     api_url_base = vmc_request.set_base_url(hostname)
