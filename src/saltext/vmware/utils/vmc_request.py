@@ -212,6 +212,7 @@ def _filter_kwargs(allowed_kwargs, allow_none=[], default_dict=None, **kwargs):
 def _vmc_connection_details(opts, pillar):
     print(opts)
     opts = opts or {}
+
     console_host = opts.get("vmc_connection_details", {}).get("console_host") or pillar.get(
         "vmc_connection_details", {}
     ).get("console_host")

@@ -393,8 +393,8 @@ def vmc_nsx_connect(vmc_config):
 
 
 @pytest.fixture()
-def vmc_connect_pillar_data(vmc_nsx_connect):
-    config = vmc_nsx_connect
+def vmc_connect_pillar_data(vmc_config):
+    config = vmc_config["vmc_nsx_connect"]
     return {
         "vmc_connection_details": {
             "nsxt_host": config["hostname"],

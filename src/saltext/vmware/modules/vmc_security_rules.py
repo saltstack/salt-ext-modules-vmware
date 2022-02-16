@@ -99,6 +99,7 @@ def get(
     sddc_id = vmc_connection_dict["sddc_id"]
     org_id = vmc_connection_dict["org_id"]
     # verify_ssl = vmc_connection_dict["verify_ssl"]
+
     verify_ssl = False
 
     cert = vmc_connection_dict["verify_ssl"]

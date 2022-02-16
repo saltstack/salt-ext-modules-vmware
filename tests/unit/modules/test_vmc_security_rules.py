@@ -70,7 +70,10 @@ def security_rules_data(mock_vmc_request_call_api, security_rules_data_by_id):
     yield data
 
 
-def test_get_security_rules_should_return_api_response(security_rules_data):
+def test_get_security_rules_should_return_api_response(security_rules_data, pillar_data):
+    setattr(vmc_security_rules, "__opts__", MagicMock())
+    setattr(vmc_security_rules, "__pillar__", pillar_data)
+
     result = vmc_security_rules.get(
         hostname="hostname",
         refresh_key="refresh_key",
