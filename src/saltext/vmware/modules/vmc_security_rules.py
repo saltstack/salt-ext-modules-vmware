@@ -91,14 +91,17 @@ def get(
         (Optional) Opaque cursor to be used for getting next page of records (supplied by current result page)
 
     """
-    vmc_connection_dict = vmc_request._vmc_connection_details(__opt__, __pillar__)
+    vmc_connection_dict = vmc_request._vmc_connection_details(None, __pillar__)
+    print(vmc_connection_dict)
     hostname = vmc_connection_dict["nsxt_host"]
     refresh_key = vmc_connection_dict["api_key"]
     authorization_host = vmc_connection_dict["console_host"]
     sddc_id = vmc_connection_dict["sddc_id"]
     org_id = vmc_connection_dict["org_id"]
-    verify_ssl = vmc_connection_dict["verif_ssl"]
-    cert = vmc_connection_dict["verif_ssl"]
+    # verify_ssl = vmc_connection_dict["verify_ssl"]
+    verify_ssl = False
+
+    cert = vmc_connection_dict["verify_ssl"]
 
     log.info("Retrieving %s Security rules for SDDC %s", domain_id, sddc_id)
     api_url_base = vmc_request.set_base_url(hostname)
@@ -179,7 +182,15 @@ def get_by_id(
         The certificate can be retrieved from browser.
 
     """
-
+    vmc_connection_dict = vmc_request._vmc_connection_details(None, __pillar__)
+    print(vmc_connection_dict)
+    hostname = vmc_connection_dict["nsxt_host"]
+    refresh_key = vmc_connection_dict["api_key"]
+    authorization_host = vmc_connection_dict["console_host"]
+    sddc_id = vmc_connection_dict["sddc_id"]
+    org_id = vmc_connection_dict["org_id"]
+    # verify_ssl = vmc_connection_dict["verify_ssl"]
+    verify_ssl = False
     log.info("Retrieving Security rule %s for SDDC %s", rule_id, sddc_id)
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = (
@@ -251,7 +262,15 @@ def delete(
         The certificate can be retrieved from browser.
 
     """
-
+    vmc_connection_dict = vmc_request._vmc_connection_details(None, __pillar__)
+    print(vmc_connection_dict)
+    hostname = vmc_connection_dict["nsxt_host"]
+    refresh_key = vmc_connection_dict["api_key"]
+    authorization_host = vmc_connection_dict["console_host"]
+    sddc_id = vmc_connection_dict["sddc_id"]
+    org_id = vmc_connection_dict["org_id"]
+    # verify_ssl = vmc_connection_dict["verify_ssl"]
+    verify_ssl = False
     log.info("Deleting Security rule %s for SDDC %s", rule_id, sddc_id)
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = (
@@ -436,7 +455,15 @@ def create(
             }
 
     """
-
+    vmc_connection_dict = vmc_request._vmc_connection_details(None, __pillar__)
+    print(vmc_connection_dict)
+    hostname = vmc_connection_dict["nsxt_host"]
+    refresh_key = vmc_connection_dict["api_key"]
+    authorization_host = vmc_connection_dict["console_host"]
+    sddc_id = vmc_connection_dict["sddc_id"]
+    org_id = vmc_connection_dict["org_id"]
+    # verify_ssl = vmc_connection_dict["verify_ssl"]
+    verify_ssl = False
     log.info("Creating Security rule %s for SDDC %s", rule_id, sddc_id)
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = (
@@ -645,7 +672,15 @@ def update(
             }
 
     """
-
+    vmc_connection_dict = vmc_request._vmc_connection_details(None, __pillar__)
+    print(vmc_connection_dict)
+    hostname = vmc_connection_dict["nsxt_host"]
+    refresh_key = vmc_connection_dict["api_key"]
+    authorization_host = vmc_connection_dict["console_host"]
+    sddc_id = vmc_connection_dict["sddc_id"]
+    org_id = vmc_connection_dict["org_id"]
+    # verify_ssl = vmc_connection_dict["verify_ssl"]
+    verify_ssl = False
     log.info("Updating Security rule %s for SDDC %s", rule_id, sddc_id)
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = (
