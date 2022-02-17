@@ -6,7 +6,7 @@ import logging
 from saltext.vmware.utils import vmc_constants
 from saltext.vmware.utils import vmc_request
 from saltext.vmware.utils import vmc_templates
-
+from saltext.vmware.utils import vmc_vcenter_request
 
 log = logging.getLogger(__name__)
 
@@ -553,3 +553,179 @@ def get_vcenter_detail(
     }
     result = {"description": "vmc_sddc.get_vcenter_detail", "vcenter_detail": vcenter_detail}
     return result
+
+
+def get_vms(
+    hostname,
+    username,
+    password,
+    clusters=None,
+    datacenters=None,
+    folders=None,
+    hosts=None,
+    names=None,
+    power_states=None,
+    resource_pools=None,
+    vms=None,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Retrieves the virtual machines from the SDDC vcenter
+
+    Please refer the `vCenter Get VM List documentation <https://developer.vmware.com/apis/vsphere-automation/latest/vcenter/api/vcenter/vm/get/>`_ to get insight of functionality and input parameters
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt <minion-key-id> vmc_sddc.get_vms hostname=vmc.vmware.com ...
+
+    hostname
+        The host name of vCenter console
+
+    username
+        username required to login to vCenter console
+
+    password
+        password required to login to vCenter console
+
+    clusters: Array Of String
+        (Optional) Clusters that must contain the virtual machine for the virtual machine to match the filter. If unset or empty, virtual machines in any cluster match the filter.
+        When clients pass a value of this structure as a parameter, the field must contain identifiers for the resource type: ClusterComputeResource.
+        When operations return a value of this structure as a result, the field will contain identifiers for the resource type: ClusterComputeResource.
+
+    datacenters: Array Of String
+        (Optional)datacenters that must contain the virtual machine for the virtual machine to match the filter.
+         If unset or empty, virtual machines in any datacenter match the filter.
+         When clients pass a value of this structure as a parameter, the field must contain identifiers for the resource type: Datacenter.
+         When operations return a value of this structure as a result, the field will contain identifiers for the resource type: Datacenter.
+
+    folders: Array Of String
+        (Optional) Folders that must contain the virtual machine for the virtual machine to match the filter.
+        If unset or empty, virtual machines in any folder match the filter.
+        When clients pass a value of this structure as a parameter, the field must contain identifiers for the resource type: Folder.
+        When operations return a value of this structure as a result, the field will contain identifiers for the resource type: Folder.
+
+    hosts: Array Of String
+        (Optional) Hosts that must contain the virtual machine for the virtual machine to match the filter.
+        If unset or empty, virtual machines on any host match the filter.
+        When clients pass a value of this structure as a parameter, the field must contain identifiers for the resource type: HostSystem.
+        When operations return a value of this structure as a result, the field will contain identifiers for the resource type: HostSystem.
+
+    names: Array Of String
+        (Optional) Names that virtual machines must have to match the filter (see VM.Info.name).
+        If unset or empty, virtual machines with any name match the filter.
+
+
+    power_states: Array Of VmPowerState
+        (Optional) Power states that a virtual machine must be in to match the filter
+        The Power.State enumerated type defines the valid power states for a virtual machine.
+        POWERED_OFF : The virtual machine is powered off.
+        POWERED_ON : The virtual machine is powered on.
+        SUSPENDED : The virtual machine is suspended.
+        If unset or empty, virtual machines in any power state match the filter.
+
+    resource_pools: Array Of String
+        (Optional) Resource pools that must contain the virtual machine for the virtual machine to match the filter.
+        If unset or empty, virtual machines in any resource pool match the filter.
+        When clients pass a value of this structure as a parameter, the field must contain identifiers for the resource type: ResourcePool.
+        When operations return a value of this structure as a result, the field will contain identifiers for the resource type: ResourcePool.
+
+    vms: Array Of String
+        (Optional) Identifiers of virtual machines that can match the filter.
+        If unset or empty, virtual machines with any identifier match the filter.
+        When clients pass a value of this structure as a parameter, the field must contain identifiers for the resource type: VirtualMachine.
+        When operations return a value of this structure as a result, the field will contain identifiers for the resource type: VirtualMachine.
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+        The certificate can be retrieved from browser.
+
+    """
+    log.info("Retrieving the  virtual machines from the SDDC vCenter")
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = "{base_url}api/vcenter/vm"
+    api_url = api_url.format(base_url=api_url_base)
+    allowed_dict = {
+        "clusters": clusters,
+        "datacenters": datacenters,
+        "folders": folders,
+        "hosts": hosts,
+        "names": names,
+        "power_states": power_states,
+        "resource_pools": resource_pools,
+        "vms": vms,
+    }
+    params = vmc_request._filter_kwargs(allowed_kwargs=allowed_dict.keys(), **allowed_dict)
+
+    headers = vmc_vcenter_request.get_headers(hostname, username, password)
+    return vmc_vcenter_request.call_api(
+        method=vmc_constants.GET_REQUEST_METHOD,
+        url=api_url,
+        headers=headers,
+        description="vmc_sddc.get_vms",
+        params=params,
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
+
+
+def get_vms_by_sddc_id(
+    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl=True, cert=None
+):
+    """
+    Retrieves the virtual machines for the given SDDC.
+
+    Please refer the `vCenter Get VM List documentation <https://developer.vmware.com/apis/vsphere-automation/latest/vcenter/api/vcenter/vm/get/>`_ to get insight of functionality and input parameters
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt minion-key-id vm_minion vmc_sddc.get_vms_by_sddc_id hostname=vmc.vmware.com sddc_id ...
+
+    hostname
+        The host name of VMC
+
+    refresh_key
+        API Token of the user which is used to get the Access Token required for VMC operations
+
+    authorization_host
+        Hostname of the Cloud Services Platform (CSP)
+
+    org_id
+        The Id of organization to which the SDDC belongs to
+
+    sddc_id
+        Id of the SDDC for which VMs are retrieved
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+        The certificate can be retrieved from browser.
+
+    """
+    log.info("Retrieving the virtual machines for the given SDDC %s", sddc_id)
+    vcenter_detail_result = get_vcenter_detail(
+        hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert
+    )
+    if "error" in vcenter_detail_result:
+        return vcenter_detail_result
+
+    vcenter_detail = vcenter_detail_result["vcenter_detail"]
+    vcenter_url = vcenter_detail["vcenter_url"]
+    username = vcenter_detail["username"]
+    password = vcenter_detail["password"]
+
+    api_url = "{base_url}api/vcenter/vm"
+    api_url = api_url.format(base_url=vcenter_url)
+    vcenter_hostname = vcenter_url[8 : len(vcenter_url) - 1]
+    return get_vms(hostname=vcenter_hostname, username=username, password=password)

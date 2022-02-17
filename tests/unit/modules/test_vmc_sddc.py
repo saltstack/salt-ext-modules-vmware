@@ -20,7 +20,7 @@ def sddc_data_by_id(mock_vmc_request_call_api):
         "version": 54,
         "id": "f46eda60-c67c-4613-a7fe-526b87948cb7",
         "resource_config": {
-            "vc_url": "https://vcenter.sddc-10-182-155-238.vmwarevmc.com/",
+            "vc_url": "https://vcenter.hostname.com/",
             "cloud_username": "cloudadmin@vmc.local",
             "cloud_password": "Z8OYrQhD-T3v-cw",
         },
@@ -54,7 +54,7 @@ def vcenter_data():
     vcenter_data = {
         "description": "vmc_sddc.get_vcenter_detail",
         "vcenter_detail": {
-            "vcenter_url": "https://vcenter.sddc-10-182-155-238.vmwarevmc.com/",
+            "vcenter_url": "https://vcenter.hostname.com/",
             "username": "cloudadmin@vmc.local",
             "password": "Z8OYrQhD-T3v-cw",
         },
@@ -332,3 +332,75 @@ def test_get_vcenter_detail_fail_with_error(mock_vmc_request_call_api):
         verify_ssl=False,
     )
     assert "error" in result
+
+
+def test_get_vms_by_sddc_id_should_return_api_response(
+    mock_vcenter_headers, sddc_data_by_id, vm_data
+):
+    result = vmc_sddc.get_vms_by_sddc_id(
+        hostname="hostname",
+        refresh_key="refresh_key",
+        authorization_host="authorization_host",
+        org_id="org_id",
+        sddc_id="sddc_id",
+        verify_ssl=False,
+    )
+    assert result == vm_data
+
+
+def test_get_vms_by_sddc_id_called_with_url(mock_vcenter_headers, sddc_data_by_id, vcenter_data):
+    expected_url = "https://vcenter.hostname.com/api/vcenter/vm"
+    with patch(
+        "saltext.vmware.utils.vmc_vcenter_request.call_api", autospec=True
+    ) as vmc_vcenter_request_call_api:
+        vmc_sddc.get_vms_by_sddc_id(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_vcenter_request_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+def test_get_vms_by_sddc_id_fail_with_error(mock_vmc_request_call_api):
+    expected_response = {"error": "Given SDDC does not exist"}
+    mock_vmc_request_call_api.return_value = expected_response
+    result = vmc_sddc.get_vms_by_sddc_id(
+        hostname="hostname",
+        refresh_key="refresh_key",
+        authorization_host="authorization_host",
+        org_id="org_id",
+        sddc_id="sddc_d",
+        verify_ssl=False,
+    )
+    assert "error" in result
+
+
+def test_get_vms_should_return_api_response(mock_vcenter_headers, vm_data):
+    result = vmc_sddc.get_vms(
+        hostname="hostname",
+        username="username",
+        password="password",
+        verify_ssl=False,
+    )
+    assert result == vm_data
+
+
+def test_get_vms_called_with_url(mock_vcenter_headers):
+    expected_url = "https://hostname/api/vcenter/vm"
+    with patch(
+        "saltext.vmware.utils.vmc_vcenter_request.call_api", autospec=True
+    ) as vmc_vcenter_request_call_api:
+        vmc_sddc.get_vms(
+            hostname="hostname",
+            username="username",
+            password="password",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_vcenter_request_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
