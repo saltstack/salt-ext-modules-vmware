@@ -647,7 +647,7 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
     "actual_args",
     [
         # all actual args are None
-        # ({}),
+        ({"display_name": "updated_network"}),
         # allow none have values
         ({"tags": [{"tag": "tag1", "scope": "scope1"}], "description": "network segment"}),
         # all args have values
