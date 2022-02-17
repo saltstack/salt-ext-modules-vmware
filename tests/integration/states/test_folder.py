@@ -87,3 +87,4 @@ def test_move_folder(patch_salt_globals_folder_state):
     assert ret["result"] == True
     assert ret["comment"] == "moved"
     assert ret["changes"]["new"] == "folder test_folder_state_new moved to top_folder"
+    folder.manage("top_folder", "destroy", "Datacenter", "vm")

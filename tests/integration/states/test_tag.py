@@ -9,6 +9,7 @@ def test_manage_create(patch_salt_globals_tag_state, patch_salt_globals_tag):
     """
     test tag manage create
     """
+    tagging_state.present_category("state test cat", ["string"], "SINGLE", "test category")
     cats = tagging.list_category()
     if len(cats["categories"]) > 0:
         res = tagging_state.present(
@@ -17,6 +18,8 @@ def test_manage_create(patch_salt_globals_tag_state, patch_salt_globals_tag):
             category_id=cats["categories"][0],
         )
         assert "created" in res["comment"]
+        res = tagging_state.absent("state tag")
+        res = tagging_state.absent_category("state test cat")
     else:
         pytest.skip("test requires at least one category")
 
@@ -25,16 +28,39 @@ def test_manage_update(patch_salt_globals_tag_state):
     """
     test tag manage update
     """
-    res = tagging_state.present("state tag", description="new discription")
-    assert "updated" in res["comment"]
+    tagging_state.present_category("state test cat", ["string"], "SINGLE", "test category")
+    cats = tagging.list_category()
+    if len(cats["categories"]) > 0:
+        res = tagging_state.present(
+            "state tag",
+            description="testing state tag create",
+            category_id=cats["categories"][0],
+        )
+        res = tagging_state.present("state tag", description="new discription")
+        assert "updated" in res["comment"]
+        res = tagging_state.absent("state tag")
+        res = tagging_state.absent_category("state test cat")
+    else:
+        pytest.skip("test requires at least one category")
 
 
 def test_manage_delete(patch_salt_globals_tag_state):
     """
     test tag manage delete
     """
-    res = tagging_state.absent("state tag")
-    assert "deleted" in res["comment"]
+    tagging_state.present_category("state test cat", ["string"], "SINGLE", "test category")
+    cats = tagging.list_category()
+    if len(cats["categories"]) > 0:
+        res = tagging_state.present(
+                "state tag",
+                description="testing state tag create",
+                category_id=cats["categories"][0],
+            )
+        res = tagging_state.absent("state tag")
+        assert "deleted" in res["comment"]
+        res = tagging_state.absent_category("state test cat")
+    else:
+        pytest.skip("test requires at least one category")
 
 
 def test_manage_create_cat_test(patch_salt_globals_tag_state_test):

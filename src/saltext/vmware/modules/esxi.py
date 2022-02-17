@@ -2358,7 +2358,7 @@ def maintenance_mode(
         if service_instance is None:
             service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
         host_ref = utils_esxi.get_host(host, service_instance)
-    mode = in_maintenance_mode(host_ref)
+    mode = in_maintenance_mode(host_ref, service_instance)
     if mode["maintenanceMode"] == "inMaintenance":
         mode["changes"] = False
         return mode
@@ -2401,7 +2401,7 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
         if service_instance is None:
             service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
         host_ref = utils_esxi.get_host(host, service_instance)
-    mode = in_maintenance_mode(host_ref)
+    mode = in_maintenance_mode(host_ref, service_instance)
     if mode["maintenanceMode"] == "normal":
         mode["changes"] = False
         return mode

@@ -81,7 +81,7 @@ def service_instance(integration_test_config):
 
 
 @pytest.fixture
-def patch_salt_globals():
+def patch_salt_globals(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
@@ -93,8 +93,9 @@ def patch_salt_globals():
     setattr(cluster_ha_mod, "__pillar__", {})
     setattr(cluster_drs_mod, "__opts__", {})
     setattr(cluster_drs_mod, "__pillar__", {})
-    setattr(esxi_mod, "__pillar__", {})
-    setattr(esxi_st, "__pillar__", {})
+    setattr(esxi_mod, "__pillar__", vmware_conf)
+    setattr(esxi_mod, "__opts__", {})
+    setattr(esxi_st, "__pillar__", vmware_conf)
     setattr(license_mgr_st, "__opts__", {})
     setattr(license_mgr_st, "__pillar__", {})
     setattr(license_mgr_mod, "__opts__", {})
@@ -142,6 +143,12 @@ def patch_salt_globals():
             "vmware_esxi.add_role": esxi_mod.add_role,
             "vmware_esxi.update_role": esxi_mod.update_role,
             "vmware_esxi.remove_role": esxi_mod.remove_role,
+            "vmware_esxi.in_maintenance_mode": esxi_mod.in_maintenance_mode,
+            "vmware_esxi.maintenance_mode": esxi_mod.maintenance_mode,
+            "vmware_esxi.exit_maintenance_mode": esxi_mod.exit_maintenance_mode,
+            "vmware_esxi.in_lockdown_mode": esxi_mod.in_lockdown_mode,
+            "vmware_esxi.lockdown_mode": esxi_mod.lockdown_mode,
+            "vmware_esxi.exit_lockdown_mode": esxi_mod.exit_lockdown_mode,
             "vmware_esxi.get_role": esxi_mod.get_role,
             "vmware_esxi.create_vmkernel_adapter": esxi_mod.create_vmkernel_adapter,
             "vmware_esxi.delete_vmkernel_adapter": esxi_mod.delete_vmkernel_adapter,
@@ -204,6 +211,22 @@ def patch_salt_globals_folder_state(vmware_conf):
         },
     )
     setattr(folder_state, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_datacenter(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        datacenter_mod,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(datacenter_mod, "__pillar__", vmware_conf)
 
 
 @pytest.fixture
