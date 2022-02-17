@@ -52,10 +52,10 @@ def test_manage_delete(patch_salt_globals_tag_state):
     cats = tagging.list_category()
     if len(cats["categories"]) > 0:
         res = tagging_state.present(
-                "state tag",
-                description="testing state tag create",
-                category_id=cats["categories"][0],
-            )
+            "state tag",
+            description="testing state tag create",
+            category_id=cats["categories"][0],
+        )
         res = tagging_state.absent("state tag")
         assert "deleted" in res["comment"]
         res = tagging_state.absent_category("state test cat")

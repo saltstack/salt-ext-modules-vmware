@@ -15,13 +15,15 @@ def test_maintenance_mode(service_instance, integration_test_config, patch_salt_
         host_name=host,
     )
     if datastores:
-        res = datastore.maintenance_mode(datastores[0]['name'])
+        res = datastore.maintenance_mode(datastores[0]["name"])
         assert res["maintenanceMode"] == "inMaintenance"
     else:
         pytest.skip("test requires at least one datastore")
 
 
-def test_exit_maintenance_mode(service_instance, integration_test_config, patch_salt_globals_datastore):
+def test_exit_maintenance_mode(
+    service_instance, integration_test_config, patch_salt_globals_datastore
+):
     """
     Test datastore exit maintenance mode
     """
@@ -33,7 +35,7 @@ def test_exit_maintenance_mode(service_instance, integration_test_config, patch_
     )
 
     if datastores:
-        res = datastore.exit_maintenance_mode(datastores[0]['name'])
+        res = datastore.exit_maintenance_mode(datastores[0]["name"])
         assert res["maintenanceMode"] == "normal"
     else:
         pytest.skip("test requires at least one datastore")
