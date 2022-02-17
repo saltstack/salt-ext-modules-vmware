@@ -470,7 +470,7 @@ def create(
                 "firewall_match": "MATCH_INTERNAL_ADDRESS"
             }
 
-    Please refer the `Nat Rule <https://developer.vmware.com/docs/nsx-vmc-policy/latest/data-structures/InlinePolicyNatRule/>`_ to get insight of input parameters.
+    Please refer the `Nat Rule <https://developer.vmware.com/docs/nsx-vmc-policy/latest/data-structures/InlinePolicyNatRule1/>`_ to get insight of input parameters.
 
     """
     log.info("Creating nat rule %s for SDDC %s ", nat_rule, sddc_id)
@@ -710,7 +710,7 @@ def update(
                 "firewall_match": "MATCH_INTERNAL_ADDRESS"
             }
 
-    Please refer the `Nat Rule <https://developer.vmware.com/docs/nsx-vmc-policy/latest/data-structures/InlinePolicyNatRule/>`_ to get insight of input parameters
+    Please refer the `Nat Rule <https://developer.vmware.com/docs/nsx-vmc-policy/latest/data-structures/InlinePolicyNatRule1/>`_ to get insight of input parameters
 
     """
     log.info("Updating Nat rule %s for SDDC %s ", nat_rule, sddc_id)
