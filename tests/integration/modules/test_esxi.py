@@ -355,7 +355,7 @@ def test_add(integration_test_config, service_instance):
     """
     Test esxi add
     """
-    if "esxi_manage_test_instance" in integration_test_config.keys():
+    if "esxi_manage_test_instance" in integration_test_config:
         ret = esxi.add(
             integration_test_config["esxi_manage_test_instance"]["name"],
             integration_test_config["esxi_manage_test_instance"]["user"],
@@ -374,7 +374,7 @@ def test_manage_disconnect(integration_test_config, service_instance):
     """
     Test esxi manage disconnect task
     """
-    if "esxi_manage_test_instance" in integration_test_config.keys():
+    if "esxi_manage_test_instance" in integration_test_config:
         ret = esxi.disconnect(
             integration_test_config["esxi_manage_test_instance"]["name"],
             service_instance=service_instance,
@@ -388,7 +388,7 @@ def test_move(integration_test_config, service_instance):
     """
     Test esxi move
     """
-    if "esxi_manage_test_instance" in integration_test_config.keys():
+    if "esxi_manage_test_instance" in integration_test_config:
         ret = esxi.move(
             integration_test_config["esxi_manage_test_instance"]["name"],
             integration_test_config["esxi_manage_test_instance"]["move"],
@@ -406,7 +406,7 @@ def test_manage_connect(integration_test_config, service_instance):
     """
     Test esxi manage connect task
     """
-    if "esxi_manage_test_instance" in integration_test_config.keys():
+    if "esxi_manage_test_instance" in integration_test_config:
         ret = esxi.connect(
             integration_test_config["esxi_manage_test_instance"]["name"],
             service_instance=service_instance,
@@ -420,7 +420,7 @@ def test_manage_remove(integration_test_config, service_instance):
     """
     Test esxi manage remove task
     """
-    if "esxi_manage_test_instance" in integration_test_config.keys():
+    if "esxi_manage_test_instance" in integration_test_config:
         esxi.disconnect(
             integration_test_config["esxi_manage_test_instance"]["name"],
             service_instance=service_instance,

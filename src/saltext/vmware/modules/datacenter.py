@@ -19,7 +19,7 @@ except ImportError:
 
 __virtualname__ = "vmware_datacenter"
 __proxyenabled__ = ["vmware_datacenter"]
-__func_alias__ = {"list_": "list", "get_": "get"}
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -63,7 +63,7 @@ def create(name, service_instance=None):
     return {name: True}
 
 
-def get_(name, service_instance=None):
+def get(name, service_instance=None):
     """
     Get the properties of a datacenter.
 

@@ -8,7 +8,7 @@ def test_maintenance_mode(service_instance, integration_test_config, patch_salt_
     """
     Test datastore maintenance mode
     """
-    host = integration_test_config["esxi_host_name"]
+    host = integration_test_config.get("esxi_host_name")
 
     datastores = datastore.get(
         service_instance=service_instance,
@@ -27,7 +27,7 @@ def test_exit_maintenance_mode(
     """
     Test datastore exit maintenance mode
     """
-    host = integration_test_config["esxi_host_name"]
+    host = integration_test_config.get("esxi_host_name")
 
     datastores = datastore.get(
         service_instance=service_instance,

@@ -52,13 +52,12 @@ def get_lun_ids(service_instance=None):
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
 
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
-    ids = []
+    ids = set()
     for host in hosts:
         for datastore in host.datastore:
             for extent in datastore.info.vmfs.extent:
-                if extent.diskName not in ids:
-                    ids.append(extent.diskName)
-    return ids
+                ids.add(extent.diskName)
+    return list(ids)
 
 
 def _get_capability_attribs(host):
