@@ -187,6 +187,28 @@ def vmware_datacenter(patch_salt_globals, service_instance):
     datacenter_mod.delete(name=dc_name, service_instance=service_instance)
 
 
+@pytest.fixture(scope="function")
+def vmware_category(patch_salt_globals):
+    """
+    Return a vmware_category for tagging and attributes
+    """
+    cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
+    yield cat_ref["category"]
+    tagging.delete_category(cat_ref["category"])
+
+
+@pytest.fixture(scope="function")
+def vmware_tag(patch_salt_globals):
+    """
+    Return a vmware_category for tagging and attributes
+    """
+    cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
+    tag_ref = tagging.create("test-tag", cat_ref["category"], description="test tag")
+    yield tag_ref["tag"]
+    tagging.delete(tag_ref["tag"])
+    tagging.delete_category(cat_ref["category"])
+
+
 @pytest.fixture
 def patch_salt_globals_folder(vmware_conf):
     """

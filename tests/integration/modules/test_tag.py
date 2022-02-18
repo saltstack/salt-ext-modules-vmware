@@ -4,30 +4,24 @@ import pytest
 import saltext.vmware.modules.tag as tagging
 
 
-def test_category_list(patch_salt_globals_tag):
+def test_category_list(patch_salt_globals_tag, vmware_category):
     """
     Test category list functionality
     """
     cats = tagging.list_category()
-    if len(cats["categories"]) > 0:
-        assert "urn:vmomi:InventoryServiceCategory" in cats["categories"][0]
-    else:
-        pytest.skip("test requires at least one category")
+    assert "urn:vmomi:InventoryServiceCategory" in cats["categories"][0]
 
 
-def test_category_get(patch_salt_globals_tag):
+def test_category_get(patch_salt_globals_tag, vmware_category):
     """
     Test category get functionality
     """
-    cats = tagging.list_category()
-    if len(cats["categories"]) > 0:
-        cat = tagging.get_category(cats["categories"][0])
-        assert "urn:vmomi:InventoryServiceCategory" in cat["category"]["id"]
-    else:
-        pytest.skip("test requires at least one category")
+
+    cat = tagging.get_category(vmware_category)
+    assert "urn:vmomi:InventoryServiceCategory" in cat["category"]["id"]
 
 
-def test_tag_list(patch_salt_globals_tag):
+def test_tag_list(patch_salt_globals_tag, vmware_tag):
     """
     Test list tags functionality
     """
@@ -38,60 +32,38 @@ def test_tag_list(patch_salt_globals_tag):
         pytest.skip("test requires at least one tag")
 
 
-def test_tag_create(patch_salt_globals_tag):
+def test_tag_create(patch_salt_globals_tag, vmware_category):
     """
     Test create tag functionality
     """
-    cats = tagging.list_category()
-    if len(cats["categories"]) > 0:
-        res = tagging.create("test tag", cats["categories"][0], description="testy test tester")
-        assert "urn:vmomi:InventoryServiceTag:" in res["tag"]
-    else:
-        pytest.skip("test requires at least one category")
+    res = tagging.create("test tag", vmware_category, description="testy test tester")
+    assert "urn:vmomi:InventoryServiceTag:" in res["tag"]
+    tagging.delete(res["tag"])
 
 
-def test_tag_get(patch_salt_globals_tag):
+def test_tag_get(patch_salt_globals_tag, vmware_tag):
     """
     Test get tag functionality
     """
-    tags = tagging.list_()
-    if len(tags["tags"]) > 0:
-        res = tagging.get(tags["tags"][0])
-        assert "urn:vmomi:InventoryServiceTag:" in res["tag"]["id"]
-    else:
-        pytest.skip("test requires at least one tag")
+    res = tagging.get(vmware_tag)
+    assert "urn:vmomi:InventoryServiceTag:" in res["tag"]["id"]
 
 
-def test_tag_update(patch_salt_globals_tag):
+def test_tag_update(patch_salt_globals_tag, vmware_tag):
     """
     Test update tag functionality
     """
-    tags = tagging.list_()
-    if len(tags["tags"]) > 0:
-        for tag in tags["tags"]:
-            res = tagging.get(tag)
-            if res["tag"]["name"] == "test tag":
-                update_res = tagging.update(res["tag"]["id"], description="new discription")
-                assert "updated" in update_res["tag"]
-                break
-    else:
-        pytest.skip("test requires at least one tag")
+    update_res = tagging.update(vmware_tag, description="new discription")
+    assert "updated" in update_res["tag"]
 
 
-def test_tag_delete(patch_salt_globals_tag):
+def test_tag_delete(patch_salt_globals_tag, vmware_category):
     """
     Test delete tag functionality
     """
-    tags = tagging.list_()
-    if len(tags["tags"]) > 0:
-        for tag in tags["tags"]:
-            res = tagging.get(tag)
-            if res["tag"]["name"] == "test tag":
-                update_res = tagging.delete(res["tag"]["id"])
-                assert "deleted" in update_res["tag"]
-                break
-    else:
-        pytest.skip("test requires at least one tag")
+    res = tagging.create("test-tag", vmware_category, description="test tag")
+    update_res = tagging.delete(res["tag"])
+    assert "deleted" in update_res["tag"]
 
 
 def test_cat_create(patch_salt_globals_tag):
@@ -100,39 +72,29 @@ def test_cat_create(patch_salt_globals_tag):
     """
     res = tagging.create_category("test cat", ["string"], "SINGLE", "test category")
     assert "urn:vmomi:InventoryServiceCategory:" in res["category"]
+    tagging.delete_category(res["category"])
 
 
-def test_cat_update(patch_salt_globals_tag):
+def test_cat_update(patch_salt_globals_tag, vmware_category):
     """
     Test update category functionality
     """
-    cats = tagging.list_category()
-    if len(cats["categories"]) > 0:
-        for cat in cats["categories"]:
-            res = tagging.get_category(cat)
-            if res["category"]["name"] == "test cat":
-                update_res = tagging.update_category(
-                    res["category"]["id"],
-                    res["category"]["name"],
-                    res["category"]["associable_types"],
-                    res["category"]["cardinality"],
-                    "new description",
-                )
-                assert "updated" in update_res["category"]
-    else:
-        pytest.skip("test requires at least one category")
+
+    res = tagging.get_category(vmware_category)
+    update_res = tagging.update_category(
+        res["category"]["id"],
+        res["category"]["name"],
+        res["category"]["associable_types"],
+        res["category"]["cardinality"],
+        "new description",
+    )
+    assert "updated" in update_res["category"]
 
 
 def test_cat_delete(patch_salt_globals_tag):
     """
     Test update category functionality
     """
-    cats = tagging.list_category()
-    if len(cats["categories"]) > 0:
-        for cat in cats["categories"]:
-            res = tagging.get_category(cat)
-            if res["category"]["name"] == "test cat":
-                delete_res = tagging.delete_category(res["category"]["id"])
-                assert "deleted" in delete_res["category"]
-    else:
-        pytest.skip("test requires at least one category")
+    res = tagging.create_category("test cat", ["string"], "SINGLE", "test category")
+    delete_res = tagging.delete_category(res["category"])
+    assert "deleted" in delete_res["category"]
