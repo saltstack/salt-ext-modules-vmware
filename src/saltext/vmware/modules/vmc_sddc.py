@@ -728,4 +728,10 @@ def get_vms_by_sddc_id(
     api_url = "{base_url}api/vcenter/vm"
     api_url = api_url.format(base_url=vcenter_url)
     vcenter_hostname = vcenter_url[8 : len(vcenter_url) - 1]
-    return get_vms(hostname=vcenter_hostname, username=username, password=password)
+    return get_vms(
+        hostname=vcenter_hostname,
+        username=username,
+        password=password,
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
