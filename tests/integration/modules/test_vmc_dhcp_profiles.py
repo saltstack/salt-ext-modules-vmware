@@ -143,13 +143,13 @@ def test_get_dhcp_profiles_smoke_test(salt_call_cli, get_dhcp_profiles, common_d
     assert result_as_json == get_dhcp_profiles
 
 
-def test_delete_dhcp_profile_smoke_test(salt_call_cli, create_dhcp_profile, common_data):
-    ret = salt_call_cli.run("vmc_dhcp_profiles.delete", **common_data)
-    result_as_json = ret.json
-    assert result_as_json["result"] == "success"
-
-
 def test_update_dhcp_profile_smoke_test(salt_call_cli, common_data, create_dhcp_profile):
     ret = salt_call_cli.run("vmc_dhcp_profiles.update", **common_data, display_name="fnord")
     result = ret.json
     assert result["result"] == "success"
+
+
+def test_delete_dhcp_profile_smoke_test(salt_call_cli, create_dhcp_profile, common_data):
+    ret = salt_call_cli.run("vmc_dhcp_profiles.delete", **common_data)
+    result_as_json = ret.json
+    assert result_as_json["result"] == "success"

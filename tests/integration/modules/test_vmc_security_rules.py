@@ -157,14 +157,14 @@ def test_get_security_rules(
     assert result_as_json == get_security_rules
 
 
-def test_delete_security_rule(
+def test_update_security_rule(
     salt_call_cli, create_security_rule, vmc_nsx_connect, security_rule_test_data
 ):
     hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
     domain_id, rule_id = security_rule_test_data
 
     ret = salt_call_cli.run(
-        "vmc_security_rules.delete",
+        "vmc_security_rules.update",
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -180,14 +180,14 @@ def test_delete_security_rule(
     assert result_as_json["result"] == "success"
 
 
-def test_update_security_rule(
+def test_delete_security_rule(
     salt_call_cli, create_security_rule, vmc_nsx_connect, security_rule_test_data
 ):
     hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
     domain_id, rule_id = security_rule_test_data
 
     ret = salt_call_cli.run(
-        "vmc_security_rules.update",
+        "vmc_security_rules.delete",
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,

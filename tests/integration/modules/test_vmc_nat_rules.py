@@ -151,13 +151,13 @@ def test_get_nat_rules_smoke_test(salt_call_cli, get_nat_rules, common_data):
     assert result_as_json == get_nat_rules
 
 
-def test_delete_nat_rule_smoke_test(salt_call_cli, create_nat_rule, common_data):
-    ret = salt_call_cli.run("vmc_nat_rules.delete", **common_data)
-    result_as_json = ret.json
-    assert result_as_json["result"] == "success"
-
-
 def test_update_nat_rule_smoke_test(salt_call_cli, common_data, create_nat_rule):
     ret = salt_call_cli.run("vmc_nat_rules.update", **common_data, display_name="updated_nat_rule")
     result = ret.json
     assert result["result"] == "success"
+
+
+def test_delete_nat_rule_smoke_test(salt_call_cli, create_nat_rule, common_data):
+    ret = salt_call_cli.run("vmc_nat_rules.delete", **common_data)
+    result_as_json = ret.json
+    assert result_as_json["result"] == "success"
