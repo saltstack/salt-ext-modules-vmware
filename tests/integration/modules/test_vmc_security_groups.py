@@ -129,15 +129,15 @@ def test_get_security_groups_smoke_test(salt_call_cli, get_security_groups, comm
     assert result_as_json == get_security_groups
 
 
-def test_delete_security_group_smoke_test(salt_call_cli, create_security_group, common_data):
-    ret = salt_call_cli.run("vmc_security_groups.delete", **common_data)
-    result_as_json = ret.json
-    assert result_as_json["result"] == "success"
-
-
 def test_update_security_group_smoke_test(salt_call_cli, common_data, create_security_group):
     ret = salt_call_cli.run(
         "vmc_security_groups.update", **common_data, display_name="updated_security_group"
     )
     result = ret.json
     assert result["result"] == "success"
+
+
+def test_delete_security_group_smoke_test(salt_call_cli, create_security_group, common_data):
+    ret = salt_call_cli.run("vmc_security_groups.delete", **common_data)
+    result_as_json = ret.json
+    assert result_as_json["result"] == "success"
