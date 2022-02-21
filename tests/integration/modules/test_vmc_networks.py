@@ -100,7 +100,7 @@ def create_network(get_networks, network_url, common_data, request_headers, subn
 
     data = {"display_name": "web-tier", "subnets": subnets}
     session = requests.Session()
-    response = session.patch(
+    response = session.put(
         url=network_url,
         json=data,
         verify=common_data["cert"] if common_data["verify_ssl"] else False,

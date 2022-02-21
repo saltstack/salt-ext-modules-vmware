@@ -121,7 +121,7 @@ def create_nat_rule(get_nat_rules, nat_rule_url, request_headers, common_data):
         "id": common_data["nat_rule"],
     }
     session = requests.Session()
-    response = session.patch(
+    response = session.put(
         url=nat_rule_url,
         json=data,
         verify=common_data["cert"] if common_data["verify_ssl"] else False,

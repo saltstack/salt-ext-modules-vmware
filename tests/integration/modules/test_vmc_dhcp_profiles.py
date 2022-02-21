@@ -112,7 +112,7 @@ def create_dhcp_profile(
 
     data = {"display_name": "dhcp-test", "server_addresses": server_addresses}
     session = requests.Session()
-    response = session.patch(
+    response = session.put(
         url=profile_url,
         json=data,
         verify=common_data["cert"] if common_data["verify_ssl"] else False,
