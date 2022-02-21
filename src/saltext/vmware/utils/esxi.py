@@ -220,9 +220,9 @@ def move_host(host, cluster_name, service_instance):
     cluster_ref = utils_common.get_mor_by_property(
         service_instance, vim.ClusterComputeResource, cluster_name
     )
-    host_dc = utils_common.get_mors_type(host_ref, vim.Datacenter)
-    host_cluster = utils_common.get_mors_type(host_ref, vim.ClusterComputeResource)
-    cluster_dc = utils_common.get_mors_type(cluster_ref, vim.Datacenter)
+    host_dc = utils_common.get_parent_of_type(host_ref, vim.Datacenter)
+    host_cluster = utils_common.get_parent_of_type(host_ref, vim.ClusterComputeResource)
+    cluster_dc = utils_common.get_parent_of_type(cluster_ref, vim.Datacenter)
     if host_dc != cluster_dc:
         raise salt.exceptions.VMwareApiError("Cluster has to be in the same datacenter")
     task = cluster_ref.MoveInto_Task([host_ref])
@@ -330,3 +330,7 @@ def add_host(
     task = cluster_ref.AddHost_Task(connect_spec, connect)
     host_ref = utils_common.wait_for_task(task, host, "add host task")
     return host_ref.summary.runtime.connectionState
+
+
+def get_host(host, service_instance):
+    return utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)

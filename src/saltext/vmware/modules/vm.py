@@ -5,6 +5,7 @@ import salt.exceptions
 import salt.utils.platform
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
+import saltext.vmware.utils.datastore as utils_datastore
 import saltext.vmware.utils.vm as utils_vm
 
 log = logging.getLogger(__name__)
@@ -69,31 +70,6 @@ def path(vm_name, service_instance=None):
     return utils_common.get_path(vm_ref, service_instance)
 
 
-def _deployment_resources(host_name, service_instance):
-    """
-    Returns the dict representation of deployment resources from given host name.
-
-    host_name
-        The name of the esxi host to obtain esxi reference.
-
-    """
-    destination_host_ref = utils_common.get_mor_by_property(
-        service_instance,
-        vim.HostSystem,
-        host_name,
-    )
-    datacenter_ref = utils_common.get_parent_type(destination_host_ref, vim.Datacenter)
-    cluster_ref = utils_common.get_parent_type(destination_host_ref, vim.ClusterComputeResource)
-    resource_pool = cluster_ref.resourcePool
-
-    return {
-        "destination_host": destination_host_ref,
-        "datacenter": datacenter_ref,
-        "cluster": cluster_ref,
-        "resource_pool": resource_pool,
-    }
-
-
 def _deploy_ovf(name, host_name, ovf, service_instance=None):
     """
     Helper fuctions that takes in a OVF file to create a virtual machine.
@@ -123,7 +99,7 @@ def _deploy_ovf(name, host_name, ovf, service_instance=None):
     manager = content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams(entityName=name)
 
-    resources = _deployment_resources(host_name, service_instance)
+    resources = utils_common.deployment_resources(host_name, service_instance)
 
     import_spec = manager.CreateImportSpec(
         ovf, resources["resource_pool"], resources["destination_host"].datastore[0], spec_params
@@ -212,7 +188,7 @@ def deploy_template(vm_name, template_name, host_name, service_instance=None):
         raise salt.exceptions.CommandExecutionError("Template does not exist.")
 
     template = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, template_name)
-    resources = _deployment_resources(host_name, service_instance)
+    resources = utils_common.deployment_resources(host_name, service_instance)
 
     relospec = vim.vm.RelocateSpec()
     relospec.pool = resources["resource_pool"]
@@ -338,7 +314,7 @@ def boot_manager(
     order=["cdrom", "disk", "ethernet", "floppy"],
     delay=0,
     enter_bios_setup=False,
-    retry_delay=None,
+    retry_delay=0,
     efi_secure_boot_enabled=False,
     service_instance=None,
 ):
@@ -385,7 +361,163 @@ def boot_manager(
 
     if utils_vm.compare_boot_options(input_opts, vm.config.bootOptions):
         return {"status": "already configured this way"}
-
     ret = utils_vm.change_boot_options(vm, input_opts)
 
     return ret
+
+
+def create_snapshot(
+    vm_name,
+    snapshot_name,
+    description="",
+    include_memory=False,
+    quiesce=False,
+    datacenter_name=None,
+    service_instance=None,
+):
+    """
+    Create snapshot of given vm.
+
+    vm_name
+        The name of the virtual machine.
+
+    snapshot_name
+        The name for the snapshot being created. Not unique
+
+    description
+        Description for the snapshot.
+
+    include_memory
+        (boolean, optional) If TRUE, a dump of the internal state of the virtual machine (basically a memory dump) is included in the snapshot.
+
+    quiesce
+        (boolean, optional) If TRUE and the virtual machine is powered on when the snapshot is taken, VMware Tools is used to quiesce the file system in the virtual machine.
+
+    datacenter_name
+        (optional) The name of the datacenter containing the virtual machine.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    if datacenter_name:
+        dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
+        vm_ref = utils_common.get_mor_by_property(
+            service_instance, vim.VirtualMachine, vm_name, "name", dc_ref
+        )
+    else:
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+
+    snapshot = utils_vm.create_snapshot(vm_ref, snapshot_name, description, include_memory, quiesce)
+
+    if isinstance(snapshot, vim.vm.Snapshot):
+        return {"snapshot": "created"}
+    else:
+        return {"snapshot": "failed to create"}
+
+
+def destroy_snapshot(
+    vm_name,
+    snapshot_name,
+    snapshot_id=None,
+    remove_children=False,
+    datacenter_name=None,
+    service_instance=None,
+):
+    """
+    Destroy snapshot of given vm.
+
+    vm_name
+        The name of the virtual machine.
+
+    snapshot_name
+        The name for the snapshot being destroyed. Not unique
+
+    snapshot_id
+        (optional) ID of snapshot to be destroyed.
+
+    remove_children
+        (optional, Bool) Remove snapshots below snapshot being removed in tree.
+
+    datacenter_name
+        (optional) The name of the datacenter containing the virtual machine.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    if datacenter_name:
+        dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
+        vm_ref = utils_common.get_mor_by_property(
+            service_instance, vim.VirtualMachine, vm_name, "name", dc_ref
+        )
+    else:
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+
+    snap_ref = utils_vm.get_snapshot(vm_ref, snapshot_name, snapshot_id)
+    utils_vm.destroy_snapshot(snap_ref.snapshot, remove_children)
+    return {"snapshot": "destroyed"}
+
+
+def snapshot(vm_name, datacenter_name=None, service_instance=None):
+    """
+    Return info about a virtual machine snapshots
+
+    vm_name
+        (optional) The name of the virtual machine to get info on.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    if datacenter_name:
+        dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
+        vm_ref = utils_common.get_mor_by_property(
+            service_instance, vim.VirtualMachine, vm_name, "name", dc_ref
+        )
+    else:
+        vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+
+    snapshots = utils_vm.get_snapshots(vm_ref)
+
+    return {"snapshots": snapshots}
+
+
+def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
+    """
+    Relocates a virtual machine to the location specified.
+
+    vm_name
+        The name of the virtual machine to relocate.
+
+    new_host_name
+        The name of the host you want to move the virtual machine to.
+
+    datastore_name
+        The name of the datastore you want to move the virtual machine to.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+    vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+    resources = utils_common.deployment_resources(new_host_name, service_instance)
+    assert isinstance(datastore_name, str)
+    datastores = utils_datastore.get_datastores(
+        service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
+    )
+    datastore_ref = datastores[0] if datastores else None
+    ret = utils_vm.relocate(
+        vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"]
+    )
+    if ret == "success":
+        return {"virtual_machine": "moved"}
+    return {"virtual_machine": "failed to move"}

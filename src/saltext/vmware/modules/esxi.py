@@ -1,12 +1,15 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
 import logging
+import os
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.esxi as utils_esxi
+import saltext.vmware.utils.vmware as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_service_instance
+from saltext.vmware.utils.connect import get_username_password
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +22,19 @@ except ImportError:
 
 
 __virtualname__ = "vmware_esxi"
+
+DEFAULT_EXCEPTIONS = (
+    vim.fault.InvalidState,
+    vim.fault.NotFound,
+    vim.fault.HostConfigFault,
+    vmodl.fault.InvalidArgument,
+    salt.exceptions.VMwareApiError,
+    vim.fault.AlreadyExists,
+    vim.fault.UserNotFound,
+    salt.exceptions.CommandExecutionError,
+    vmodl.fault.SystemError,
+    TypeError,
+)
 
 
 def __virtual__():
@@ -202,13 +218,7 @@ def manage_service(
                     startup_policy = "off"
                 host_service.UpdateServicePolicy(id=service_name, policy=startup_policy)
         ret = True
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -288,13 +298,7 @@ def list_services(
                     "state": "running" if service.running else "stopped",
                     "startup_policy": service.policy,
                 }
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -360,13 +364,7 @@ def get_acceptance_level(
             if acceptance_level and host_acceptance_level != acceptance_level:
                 continue
             ret[h.name] = host_acceptance_level
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -430,13 +428,7 @@ def set_acceptance_level(
                 continue
             host_config_manager.UpdateHostImageAcceptanceLevel(newAcceptanceLevel=acceptance_level)
             ret[h.name] = acceptance_level
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -491,13 +483,7 @@ def get_advanced_config(
             for opt in config_manager.QueryOptions(config_name):
                 ret[h.name][opt.key] = opt.value
 
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -580,13 +566,7 @@ def set_advanced_configs(
                 advanced_configs.append(vim.option.OptionValue(key=opt, value=val))
                 ret[h.name][opt] = config_dict[opt]
             config_manager.UpdateOptions(changedValue=advanced_configs)
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
 
@@ -714,14 +694,233 @@ def get_firewall_config(
                     }
                 )
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
+
+
+def backup_config(
+    push_file_to_master=False,
+    http_opts=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Backup configuration for matching EXSI hosts.
+
+    push_file_to_master
+        Push the downloaded configuration file to the salt master. (optional)
+        Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.cp.html#salt.modules.cp.push
+
+    http_opts
+        Extra HTTP options to be passed to download from the URL. (optional)
+        Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.http.html#salt.modules.http.query
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt * vmware_esxi.backup_config host_name=10.225.0.53 http_opts='{"verify_ssl": False}'
+    """
+    log.debug("Running vmware_esxi.backup_config")
+    ret = {}
+    http_opts = http_opts or {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            try:
+                url = h.configManager.firmwareSystem.BackupFirmwareConfiguration()
+                url = url.replace("*", h.name)
+                file_name = os.path.join(__opts__["cachedir"], url.rsplit("/", 1)[1])
+                data = __salt__["http.query"](url, decode_body=False, **http_opts)
+                with open(file_name, "wb") as fp:
+                    fp.write(data["body"])
+                if push_file_to_master:
+                    __salt__["cp.push"](file_name)
+                ret.setdefault(h.name, {"file_name": file_name})
+                ret[h.name]["url"] = url
+            except salt.exceptions.CommandExecutionError as exc:
+                log.error("Unable to backup configuration for host - %s. Error - %s", h.name, exc)
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def restore_config(
+    source_file,
+    saltenv=None,
+    http_opts=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Restore configuration for matching EXSI hosts.
+
+    source_file
+        Specify the source file from which the configuration is to be restored.
+        The file can be either on the master, locally on the minion or url.
+        E.g.: salt://vmware_config.tgz, /tmp/minion1/vmware_config.tgz or
+        10.225.0.53/downloads/5220da48-552e-5779-703e-5705367bd6d6/configBundle-ESXi-190313806785.eng.vmware.com.tgz
+
+    saltenv
+        Specify the saltenv when the source file needs to be retireved from the master. (optional)
+
+    http_opts
+        Extra HTTP options to be passed to download from the URL. (optional).
+        Refer: https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.http.html#salt.modules.http.query
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.backup_config datacenter_name=dc1 host_name=host1
+    """
+    log.debug("Running vmware_esxi.backup_config")
+    ret = {}
+    http_opts = http_opts or {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for h in hosts:
+        try:
+            data = None
+            url = h.configManager.firmwareSystem.QueryFirmwareConfigUploadURL().replace("*", h.name)
+            if source_file.startswith("salt://"):
+                cached = __salt__["cp.cache_file"](source_file, saltenv=saltenv)
+                with open(cached, "rb") as fp:
+                    data = fp.read()
+            elif source_file.startswith("http"):
+                data = __salt__["http.query"](url, decode_body=False, **http_opts)
+            else:
+                with open(source_file, "rb") as fp:
+                    data = fp.read()
+            username, password = get_username_password(
+                esxi_host=h.name, opts=__opts__, pillar=__pillar__
+            )
+            resp = __salt__["http.query"](
+                url, data=data, method="PUT", username=username, password=password, **http_opts
+            )
+            if "error" in resp:
+                ret[h.name] = resp["error"]
+                continue
+            if not h.runtime.inMaintenanceMode:
+                log.debug("Host - %s entering maintenance mode", h.name)
+                utils_common.wait_for_task(
+                    h.EnterMaintenanceMode_Task(timeout=60), h.name, "EnterMaintenanceMode"
+                )
+            h.configManager.firmwareSystem.RestoreFirmwareConfiguration(force=False)
+            ret[h.name] = True
+        except Exception as exc:
+            msg = "Unable to restore configuration for host - {}. Error - {}".format(h.name, exc)
+            log.error(msg)
+            ret[h.name] = msg
+            if h.runtime.inMaintenanceMode:
+                log.debug("Host - %s exiting maintenance mode", h.name)
+                utils_common.wait_for_task(
+                    h.ExitMaintenanceMode_Task(timeout=60), h.name, "ExitMaintenanceMode"
+                )
+
+    return ret
+
+
+def reset_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Reset configuration for matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.reset_config
+    """
+    log.debug("Running vmware_esxi.reset_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for h in hosts:
+        try:
+            if not h.runtime.inMaintenanceMode:
+                log.debug("Host - %s entering maintenance mode", h.name)
+                utils_common.wait_for_task(
+                    h.EnterMaintenanceMode_Task(timeout=60), h.name, "EnterMaintenanceMode"
+                )
+            h.configManager.firmwareSystem.ResetFirmwareToFactoryDefaults()
+            ret[h.name] = True
+        except vmodl.fault.HostCommunication as exc:
+            msg = "Unable to reach host - {}. Error - {}".format(h.name, str(exc))
+            ret[h.name] = msg
+            log.error(msg)
+        except Exception as exc:
+            msg = "Unable to reset configuration for host - {}. Error - {}".format(h.name, str(exc))
+            ret[h.name] = msg
+            log.error(msg)
+            log.debug("Host - %s exiting maintenance mode", h.name)
+            utils_common.wait_for_task(
+                h.ExitMaintenanceMode_Task(timeout=60), h.name, "ExitMaintenanceMode"
+            )
+    return ret
 
 
 def get_dns_config(
@@ -772,15 +971,1006 @@ def get_dns_config(
             ret[h.name]["host_name"] = dns_config.hostName
             ret[h.name]["domain_name"] = dns_config.domainName
             ret[h.name]["ip"] = list(dns_config.address)
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret
+
+
+def get_ntp_config(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get NTP configuration on matching EXSI hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_ntp_config
+    """
+    log.debug("Running vmware_esxi.get_ntp_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            ntp_config = h.configManager.dateTimeSystem
+            if ntp_config:
+                ret[h.name] = {
+                    "time_zone": ntp_config.dateTimeInfo.timeZone.key,
+                    "time_zone_name": ntp_config.dateTimeInfo.timeZone.name,
+                    "time_zone_description": ntp_config.dateTimeInfo.timeZone.description,
+                    "time_zone_gmt_offset": ntp_config.dateTimeInfo.timeZone.gmtOffset,
+                    "ntp_servers": list(ntp_config.dateTimeInfo.ntpConfig.server),
+                    "ntp_config_file": list(ntp_config.dateTimeInfo.ntpConfig.configFile)
+                    if ntp_config.dateTimeInfo.ntpConfig.configFile
+                    else None,
+                }
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def list_hosts(
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    List ESXi hosts.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_hosts
+    """
+    log.debug("Running vmware_esxi.list_hosts")
+    ret = []
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            ret.append(h.name)
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def add_user(
+    user_name,
+    password,
+    description=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Add local user on matching ESXi hosts.
+
+    user_name
+        User to create on matching ESXi hosts. (required).
+
+    password
+        Password for the new user. (required).
+
+    description
+        Description for the new user. (optional).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.add_user user_name=foo password=bar@123 descripton="new user"
+    """
+    log.debug("Running vmware_esxi.add_user")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            account_spec = vim.host.LocalAccountManager.AccountSpecification()
+            account_spec.id = user_name
+            account_spec.password = password
+            account_spec.description = description
+            h.configManager.accountManager.CreateUser(account_spec)
+            ret[h.name] = True
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def update_user(
+    user_name,
+    password,
+    description=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Update local user on matching ESXi hosts.
+
+    user_name
+        Existing user to update on matching ESXi hosts. (required).
+
+    password
+        New Password for the existing user. (required).
+
+    description
+        New description for the existing user. (optional).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_user user_name=foo password=bar@123 descripton="existing user"
+    """
+    log.debug("Running vmware_esxi.update_user")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            account_spec = vim.host.LocalAccountManager.AccountSpecification()
+            account_spec.id = user_name
+            account_spec.password = password
+            account_spec.description = description
+            h.configManager.accountManager.UpdateUser(account_spec)
+            ret[h.name] = True
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def remove_user(
+    user_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Remove local user on matching ESXi hosts.
+
+    user_name
+        User to delete on matching ESXi hosts. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.remove_user user_name=foo
+    """
+    log.debug("Running vmware_esxi.remove_user")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            h.configManager.accountManager.RemoveUser(user_name)
+            ret[h.name] = True
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def _get_net_stack(network_tcpip_stack):
+    return {
+        "default": "defaultTcpipStack",
+        "provisioning": "vSphereProvisioning",
+        "vmotion": "vmotion",
+        "vxlan": "vxlan",
+        "defaulttcpipstack": "default",
+        "vsphereprovisioning": "provisioning",
+    }.get(network_tcpip_stack.lower())
+
+
+def create_vmkernel_adapter(
+    port_group_name,
+    dvswitch_name=None,
+    vswitch_name=None,
+    enable_fault_tolerance=None,
+    enable_management_traffic=None,
+    enable_provisioning=None,
+    enable_replication=None,
+    enable_replication_nfc=None,
+    enable_vmotion=None,
+    enable_vsan=None,
+    mtu=1500,
+    network_default_gateway=None,
+    network_ip_address=None,
+    network_subnet_mask=None,
+    network_tcp_ip_stack="default",
+    network_type="static",
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Create VMKernel Adapter on matching ESXi hosts.
+
+    port_group_name
+        The name of the port group for the VMKernel interface. (required).
+
+    dvswitch_name
+        The name of the vSphere Distributed Switch (vDS) where to add the VMKernel interface.
+        One of dvswitch_name or vswitch_name is required.
+
+    vswitch_name
+        The name of the vSwitch where to add the VMKernel interface.
+        One of dvswitch_name or vswitch_name is required.
+
+    enable_fault_tolerance
+        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_management_traffic
+        Enable Management traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_provisioning
+        Enable Provisioning traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_replication
+        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_replication_nfc
+        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_vmotion
+        Enable vMotion traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_vsan
+        Enable VSAN traffic on the VMKernel adapter. Valid values: True, False.
+
+    mtu
+        The MTU for the VMKernel interface.
+
+    network_default_gateway
+        Default gateway (Override default gateway for this adapter).
+
+    network_type
+        Type of IP assignment. Valid values: "static", "dhcp".
+
+    network_ip_address
+        Static IP address. Required if type = 'static'.
+
+    network_subnet_mask
+        Static netmask required. Required if type = 'static'.
+
+    network_tcpip_stack
+        The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.create_vmkernel_adapter port_group_name=portgroup1 dvswitch_name=dvs1
+    """
+    log.debug("Running vmware_esxi.create_vmkernel_adapter")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            vmk_device = _save_vmkernel_adapter(
+                host=h,
+                service_instance=service_instance,
+                action="create",
+                port_group_name=port_group_name,
+                dvswitch_name=dvswitch_name,
+                vswitch_name=vswitch_name,
+                adapter_name=None,
+                enable_fault_tolerance=enable_fault_tolerance,
+                enable_management_traffic=enable_management_traffic,
+                enable_provisioning=enable_provisioning,
+                enable_replication=enable_replication,
+                enable_replication_nfc=enable_replication_nfc,
+                enable_vmotion=enable_vmotion,
+                enable_vsan=enable_vsan,
+                mtu=mtu,
+                network_default_gateway=network_default_gateway,
+                network_ip_address=network_ip_address,
+                network_subnet_mask=network_subnet_mask,
+                network_tcp_ip_stack=network_tcp_ip_stack,
+                network_type=network_type,
+            )
+            ret[h.name] = vmk_device
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def _save_vmkernel_adapter(
+    host,
+    service_instance,
+    action,
+    port_group_name,
+    dvswitch_name,
+    vswitch_name,
+    adapter_name,
+    enable_fault_tolerance,
+    enable_management_traffic,
+    enable_provisioning,
+    enable_replication,
+    enable_replication_nfc,
+    enable_vmotion,
+    enable_vsan,
+    mtu,
+    network_default_gateway,
+    network_ip_address,
+    network_subnet_mask,
+    network_tcp_ip_stack,
+    network_type,
+):
+    vnic_config = vim.host.VirtualNic.Specification()
+    ip_spec = vim.host.IpConfig()
+    if network_type == "dhcp":
+        ip_spec.dhcp = True
+    else:
+        ip_spec.dhcp = False
+        ip_spec.ipAddress = network_ip_address
+        ip_spec.subnetMask = network_subnet_mask
+        if network_default_gateway:
+            vnic_config.ipRouteSpec = vim.host.VirtualNic.IpRouteSpec()
+            vnic_config.ipRouteSpec.ipRouteConfig = vim.host.IpRouteConfig()
+            vnic_config.ipRouteSpec.ipRouteConfig.defaultGateway = network_default_gateway
+    vnic_config.ip = ip_spec
+    vnic_config.mtu = mtu
+    vnic_config.netStackInstanceKey = _get_net_stack(network_tcp_ip_stack)
+    port_group = None
+    if dvswitch_name:
+        vnic_config.distributedVirtualPort = vim.dvs.PortConnection()
+        dvs = utils_vmware._get_dvs(service_instance, dvswitch_name)
+        port_group = utils_vmware._get_dvs_portgroup(dvs=dvs, portgroup_name=port_group_name)
+        vnic_config.distributedVirtualPort.switchUuid = dvs.uuid
+        vnic_config.distributedVirtualPort.portgroupKey = port_group.key
+
+    vnic = vmk_device = None
+    if action == "update":
+        for v in host.config.network.vnic:
+            if v.device == adapter_name:
+                vnic = v
+                vmk_device = vnic.device
+                break
+        host.configManager.networkSystem.UpdateVirtualNic(vmk_device, vnic_config)
+    else:
+        vmk_device = host.configManager.networkSystem.AddVirtualNic(
+            portgroup="" if dvswitch_name else port_group_name, nic=vnic_config
+        )
+
+    for enable, service in [
+        (enable_management_traffic, "management"),
+        (enable_fault_tolerance, "faultToleranceLogging"),
+        (enable_provisioning, "vSphereProvisioning"),
+        (enable_replication, "vSphereReplication"),
+        (enable_replication_nfc, "vSphereReplicationNFC"),
+        (enable_vmotion, "vmotion"),
+    ]:
+        if enable:
+            host.configManager.virtualNicManager.SelectVnicForNicType(service, vmk_device)
+        elif enable is False:
+            host.configManager.virtualNicManager.DeselectVnicForNicType(service, vmk_device)
+
+    vsan_config = vim.vsan.host.ConfigInfo()
+    vsan_config.networkInfo = host.configManager.vsanSystem.config.networkInfo
+    current_vsan_vnics = [
+        portConfig.device for portConfig in host.configManager.vsanSystem.config.networkInfo.port
+    ]
+    if enable_vsan:
+        if vmk_device not in current_vsan_vnics:
+            vsan_port_config = vim.vsan.host.ConfigInfo.NetworkInfo.PortConfig()
+            vsan_port_config.device = vmk_device
+            if vsan_config.networkInfo is None:
+                vsan_config.networkInfo = vim.vsan.host.ConfigInfo.NetworkInfo()
+                vsan_config.networkInfo.port = [vsan_port_config]
+            else:
+                vsan_config.networkInfo.port.append(vsan_port_config)
+    elif enable_vsan is False and vmk_device in current_vsan_vnics:
+        vsan_config.networkInfo.port = list(
+            filter(lambda portConfig: portConfig.device != vmk_device, vsan_config.networkInfo.port)
+        )
+    task = host.configManager.vsanSystem.UpdateVsan_Task(vsan_config)
+    utils_common.wait_for_task(task, host.name, "UpdateVsan_Task")
+    return vmk_device
+
+
+def get_vmkernel_adapters(
+    adapter_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Update VMKernel Adapter on matching ESXi hosts.
+
+    adapter_name
+        Filter by this vmkernel adapter name.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_vmkernel_adapter port_group_name=portgroup1
+    """
+    log.debug("Running vmware_esxi.get_vmkernel_adapter")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            vmk_devices = []
+            for v in h.config.network.vnic:
+                if adapter_name and v.device != adapter_name:
+                    continue
+                vmk_devices.append(v.device)
+            ret[h.name] = vmk_devices
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def update_vmkernel_adapter(
+    adapter_name,
+    port_group_name,
+    dvswitch_name=None,
+    vswitch_name=None,
+    enable_fault_tolerance=None,
+    enable_management_traffic=None,
+    enable_provisioning=None,
+    enable_replication=None,
+    enable_replication_nfc=None,
+    enable_vmotion=None,
+    enable_vsan=None,
+    mtu=1500,
+    network_default_gateway=None,
+    network_ip_address=None,
+    network_subnet_mask=None,
+    network_tcp_ip_stack="default",
+    network_type="static",
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Update VMKernel Adapter on matching ESXi hosts.
+
+    adapter_name
+        The name of the VMKernel interface to update. (required).
+
+    port_group_name
+        The name of the port group for the VMKernel interface. (required).
+
+    dvswitch_name
+        The name of the vSphere Distributed Switch (vDS) where to update the VMKernel interface.
+
+    vswitch_name
+        The name of the vSwitch where to update the VMKernel interface.
+
+    enable_fault_tolerance
+        Enable Fault Tolerance traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_management_traffic
+        Enable Management traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_provisioning
+        Enable Provisioning traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_replication
+        Enable vSphere Replication traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_replication_nfc
+        Enable vSphere Replication NFC traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_vmotion
+        Enable vMotion traffic on the VMKernel adapter. Valid values: True, False.
+
+    enable_vsan
+        Enable VSAN traffic on the VMKernel adapter. Valid values: True, False.
+
+    mtu
+        The MTU for the VMKernel interface.
+
+    network_default_gateway
+        Default gateway (Override default gateway for this adapter).
+
+    network_type
+        Type of IP assignment. Valid values: "static", "dhcp".
+
+    network_ip_address
+        Static IP address. Required if type = 'static'.
+
+    network_subnet_mask
+        Static netmask required. Required if type = 'static'.
+
+    network_tcpip_stack
+        The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_vmkernel_adapter dvswitch_name=dvs1 mtu=2000
+    """
+    log.debug("Running vmware_esxi.update_vmkernel_adapter")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            ret[h.name] = _save_vmkernel_adapter(
+                host=h,
+                service_instance=service_instance,
+                action="update",
+                port_group_name=port_group_name,
+                dvswitch_name=dvswitch_name,
+                vswitch_name=vswitch_name,
+                adapter_name=adapter_name,
+                enable_fault_tolerance=enable_fault_tolerance,
+                enable_management_traffic=enable_management_traffic,
+                enable_provisioning=enable_provisioning,
+                enable_replication=enable_replication,
+                enable_replication_nfc=enable_replication_nfc,
+                enable_vmotion=enable_vmotion,
+                enable_vsan=enable_vsan,
+                mtu=mtu,
+                network_default_gateway=network_default_gateway,
+                network_ip_address=network_ip_address,
+                network_subnet_mask=network_subnet_mask,
+                network_tcp_ip_stack=network_tcp_ip_stack,
+                network_type=network_type,
+            )
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def delete_vmkernel_adapter(
+    adapter_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Delete VMKernel Adapter on matching ESXi hosts.
+
+    adapter_name
+        The name of the VMKernel Adapter to delete (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.delete_vmkernel_adapter name=vmk1
+    """
+    log.debug("Running vmware_esxi.delete_vmkernel_adapter")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            try:
+                h.configManager.networkSystem.RemoveVirtualNic(adapter_name)
+                ret[h.name] = True
+            except vim.fault.NotFound:
+                ret[h.name] = False
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def get_user(
+    user_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get local user on matching ESXi hosts.
+
+    user_name
+        Filter by this user name (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_user user_name=foo
+    """
+    log.debug("Running vmware_esxi.get_user")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            users = h.configManager.userDirectory.RetrieveUserGroups(
+                searchStr=user_name,
+                belongsToGroup=None,
+                belongsToUser=None,
+                domain=None,
+                exactMatch=True,
+                findUsers=True,
+                findGroups=True,
+            )
+            for user in users:
+                ret[h.name] = {
+                    # user.principal is the user name
+                    user.principal: {
+                        "description": user.fullName,
+                        "group": user.group,
+                        "user_id": user.id,
+                        "shell_access": user.shellAccess,
+                    }
+                }
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def add_role(
+    role_name,
+    privilege_ids,
+    esxi_host_name=None,
+    service_instance=None,
+):
+    """
+    Add local role to service instance, which may be an ESXi host or vCenter instance.
+
+    role_name
+        Role to create on service instance. (required).
+
+    privilege_ids
+        List of privileges for the role. (required).
+        Refer: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.security.doc/GUID-ED56F3C4-77D0-49E3-88B6-B99B8B437B62.html
+        Example: ['Folder.Create', 'Folder.Delete'].
+
+    esxi_host_name
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.add_role role_name=foo privileges=['Folder.Create']
+    """
+    log.debug("Running vmware_esxi.add_role")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_host=esxi_host_name,
+        )
+    try:
+        ret["role_id"] = service_instance.content.authorizationManager.AddAuthorizationRole(
+            name=role_name, privIds=privilege_ids
+        )
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def update_role(
+    role_name,
+    privilege_ids,
+    esxi_host_name=None,
+    service_instance=None,
+):
+    """
+    Update local role on service instance, which may be an ESXi host or vCenter instance.
+
+    role_name
+        Role to update on service instance. (required).
+
+    privilege_ids
+        List of privileges for the role. (required).
+        Refer: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.vsphere.security.doc/GUID-ED56F3C4-77D0-49E3-88B6-B99B8B437B62.html
+        Example: ['Folder.Create', 'Folder.Delete'].
+
+    esxi_host_name
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.update_role role_name=foo privileges=['Folder.Create']
+    """
+    log.debug("Running vmware_esxi.update_role")
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_host=esxi_host_name,
+        )
+    try:
+        role = get_role(role_name=role_name, service_instance=service_instance)
+        if not role:
+            raise salt.exceptions.SaltException("Role {} not found".format(role_name))
+        service_instance.content.authorizationManager.UpdateAuthorizationRole(
+            roleId=role["role_id"], newName=role_name, privIds=privilege_ids
+        )
+        return True
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def remove_role(
+    role_name,
+    force=False,
+    esxi_host_name=None,
+    service_instance=None,
+):
+    """
+    Remove local role on service instance, which may be an ESXi host or vCenter instance.
+
+    role_name
+        Role to update on service instance. (required).
+
+    force
+        Forcefully remove a role even when in use. Default False. (optional).
+
+    esxi_host_name
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.remove_role role_name=foo
+    """
+    log.debug("Running vmware_esxi.update_role")
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_host=esxi_host_name,
+        )
+    try:
+        role = get_role(role_name=role_name, service_instance=service_instance)
+        if not role:
+            raise salt.exceptions.SaltException("Role {} not found".format(role_name))
+        service_instance.content.authorizationManager.RemoveAuthorizationRole(
+            roleId=role["role_id"], failIfUsed=force
+        )
+        return True
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def get_role(
+    role_name,
+    esxi_host_name=None,
+    service_instance=None,
+):
+    """
+    Get local role on service instance, which may be an ESXi host or vCenter instance.
+
+    role_name
+        Retrieve this role on service instance. (required).
+
+    esxi_host_name
+        Connect to this ESXi host using your pillar's service_instance credentials. (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_role role_name=foo
+    """
+    log.debug("Running vmware_esxi.get_role")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(
+            opts=__opts__,
+            pillar=__pillar__,
+            esxi_user=esxi_user_name,
+            esxi_host=esxi_host_name,
+            esxi_password=esxi_user_password,
+        )
+    try:
+        for role in service_instance.content.authorizationManager.roleList:
+            if role.name == role_name:
+                ret["role_id"] = role.roleId
+                ret["role_name"] = role.name
+                ret["privilege_ids"] = list(role.privilege)
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
 
 
 def connect(host, service_instance=None):
@@ -973,13 +2163,7 @@ def list_pkgs(
                     "creation_date": pkg.creationDate,
                 }
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
 
 
@@ -1102,11 +2286,230 @@ def get(
                 )
 
         return ret
-    except (
-        vim.fault.InvalidState,
-        vim.fault.NotFound,
-        vim.fault.HostConfigFault,
-        vmodl.fault.InvalidArgument,
-        salt.exceptions.VMwareApiError,
-    ) as exc:
+    except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
+
+
+def in_maintenance_mode(host, service_instance=None):
+    """
+    Check if host is in maintenance mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.in_maintenance_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = "normal"
+    if host_ref.runtime.inMaintenanceMode:
+        mode = "inMaintenance"
+    return {"maintenanceMode": mode}
+
+
+def maintenance_mode(
+    host,
+    timeout=0,
+    evacuate_powered_off_vms=False,
+    maintenance_spec=None,
+    catch_task_error=True,
+    service_instance=None,
+):
+    """
+    Put host into maintenance mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    timeout
+        If value is greater than 0 then task will timeout if not completed with in window (optional).
+
+    evacuate_powered_off_vms
+        Only supported by VirtualCenter (optional).
+         If True, for DRS will fail unless all powered-off VMs have been manually registered.
+         If False, task will successed with powered-off VMs.
+
+    maintenance_spec
+        HostMaintenanceSpec (optional).
+
+    catch_task_error
+        If False and task failed then a salt exception will be thrown (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.maintenance_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = in_maintenance_mode(host_ref)
+    if mode["maintenanceMode"] == "inMaintenance":
+        mode["changes"] = False
+        return mode
+    try:
+        task = host_ref.EnterMaintenanceMode_Task(
+            timeout, evacuate_powered_off_vms, maintenance_spec
+        )
+        utils_common.wait_for_task(task, host_ref.name, "maintenanceMode")
+    except salt.exceptions.SaltException as exc:
+        if not catch_task_error:
+            raise exc
+    mode = in_maintenance_mode(host_ref, service_instance)
+    mode["changes"] = mode["maintenanceMode"] == "inMaintenance"
+    return mode
+
+
+def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instance=None):
+    """
+    Put host out of maintenance mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    timeout
+        If value is greater than 0 then task will timeout if not completed with in window (optional).
+
+    catch_task_error
+        If False and task failed then a salt exception will be thrown (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.exit_maintenance_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = in_maintenance_mode(host_ref)
+    if mode["maintenanceMode"] == "normal":
+        mode["changes"] = False
+        return mode
+    try:
+        task = host_ref.ExitMaintenanceMode_Task(timeout)
+        utils_common.wait_for_task(task, host_ref.name, "maintenanceMode")
+    except salt.exceptions.SaltException as exc:
+        if not catch_task_error:
+            raise exc
+    mode = in_maintenance_mode(host_ref, service_instance)
+    mode["changes"] = mode["maintenanceMode"] == "normal"
+    return mode
+
+
+def in_lockdown_mode(host, service_instance=None):
+    """
+    Check if host is in lockdown mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.in_lockdown_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = "normal"
+    if host_ref.config.adminDisabled:
+        mode = "inLockdown"
+    return {"lockdownMode": mode}
+
+
+def lockdown_mode(host, catch_task_error=True, service_instance=None):
+    """
+    Put host into lockdown mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    catch_task_error
+        If False and task failed then a salt exception will be thrown (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = in_lockdown_mode(host_ref)
+    if mode["lockdownMode"] == "inLockdown":
+        mode["changes"] = False
+        return mode
+    try:
+        host_ref.EnterLockdownMode()
+    except salt.exceptions.SaltException as exc:
+        if not catch_task_error:
+            raise exc
+    mode = in_lockdown_mode(host_ref, service_instance)
+    mode["changes"] = mode["lockdownMode"] == "inLockdown"
+    return mode
+
+
+def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
+    """
+    Put host out of lockdown mode.
+
+    host
+        Host IP or HostSystem/ManagedObjectReference (required).
+
+    catch_task_error
+        If False and task failed then a salt exception will be thrown (optional).
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.exit_lockdown_mode '10.288.6.117'
+    """
+    if isinstance(host, vim.HostSystem):
+        host_ref = host
+    else:
+        if service_instance is None:
+            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        host_ref = utils_esxi.get_host(host, service_instance)
+    mode = in_lockdown_mode(host_ref)
+    if mode["lockdownMode"] == "normal":
+        mode["changes"] = False
+        return mode
+    try:
+        host_ref.ExitLockdownMode()
+    except salt.exceptions.SaltException as exc:
+        if not catch_task_error:
+            raise exc
+    mode = in_lockdown_mode(host_ref, service_instance)
+    mode["changes"] = mode["lockdownMode"] == "normal"
+    return mode

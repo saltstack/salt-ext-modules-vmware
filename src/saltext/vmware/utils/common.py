@@ -1,3 +1,4 @@
+# Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 """
 Common functions used across modules
@@ -13,7 +14,6 @@ import salt.modules.cmdmod
 import salt.utils.path
 import salt.utils.platform
 import salt.utils.stringutils
-
 
 try:
     from pyVmomi import vim, vmodl
@@ -37,6 +37,7 @@ def get_root_folder(service_instance):
 
     service_instance
         The Service Instance Object for which to obtain the root folder.
+
     """
     try:
         log.trace("Retrieving root folder")
@@ -45,6 +46,28 @@ def get_root_folder(service_instance):
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
             "Not enough permissions. Required privilege: " "{}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+
+
+def get_service_content(service_instance):
+    """
+    Returns the service content for a Service Instance.
+
+    service_instance
+        The Service Instance from which to obtain service content.
+    """
+    try:
+        return service_instance.RetrieveServiceContent()
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            f"Not enough permissions. Required privilege: '{exc.privilegeId}'"
         )
     except vim.fault.VimFault as exc:
         log.exception(exc)
@@ -210,7 +233,7 @@ def get_mors_with_properties(
         ``Traverse All`` spec
 
     local_properties
-        Flag specigying whether the properties to be retrieved are local to the
+        Flag specifying whether the properties to be retrieved are local to the
         container. If that is the case, the traversal spec needs to be None.
     """
     # Get all the content
@@ -411,6 +434,8 @@ def get_resource_pools(
     if not resource_pool_names:
         resource_pool_names = []
     if datacenter_name:
+        import saltext.vmware.utils.datacenter as utils_datacenter
+
         container_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
     else:
         container_ref = get_root_folder(service_instance)
@@ -713,33 +738,146 @@ def delete_datacenter(service_instance, datacenter_name):
     wait_for_task(task, datacenter_name, "DeleteDatacenterTask")
 
 
-def get_vm_datacenter(*, vm):
+def get_parent_of_type(mors, type):
     """
-    Return a datacenter from vm
+    Finds the first parent of a managed object that matches the type specified.
+
+    `None` is returned if no object is found.
     """
-    datacenter = None
     while True:
-        if isinstance(vm, vim.Datacenter):
-            datacenter = vm
-            break
+        if isinstance(mors, type):
+            return mors
         try:
-            vm = vm.parent
+            mors = mors.parent
         except AttributeError:
-            break
-    return datacenter
+            return None
 
 
-def get_mors_type(obj, type):
+def find_filtered_object(service_instance, datacenter_name=None, cluster_name=None, host_name=None):
     """
-    Return a vim type from managed object reference
+    Finds zero or one matching objects: plug in almost any combination of datacenter, cluster, and/or host name.
+
+    If cluster_name is passed, datacenter_name must also be passed.
+
+    At least one of the optional parameters must be set.
+
+    The most specific object will be returned (if you pass host_name and datacenter_name, the host will be returned).
+
+    service_instance
+        The Service Instance Object from which to obtain cluster.
+
+    datacenter_name
+        (Optional) Datacenter name to filter by.
+
+    cluster_name
+        (Optional) Exact cluster name to filter by. If used, datacenter_name is required.
+
+    host_name
+        (Optional) Exact host name name to filter by.
     """
-    datacenter = None
-    while True:
-        if isinstance(obj, type):
-            datacenter = obj
-            break
-        try:
-            obj = obj.parent
-        except AttributeError:
-            break
-    return datacenter
+    try:
+        if host_name:
+            import saltext.vmware.utils.esxi as utils_esxi
+
+            hosts = utils_esxi.get_hosts(
+                service_instance,
+                datacenter_name=datacenter_name,
+                cluster_name=cluster_name,
+                host_names=[host_name],
+            )
+            return hosts[0] if hosts else None
+        elif cluster_name and datacenter_name:
+            import saltext.vmware.utils.cluster as utils_cluster
+
+            datacenter = get_datacenter(service_instance, datacenter_name)
+            return utils_cluster.get_cluster(datacenter, cluster_name)
+        elif datacenter_name:
+            return get_datacenter(service_instance, datacenter_name=datacenter_name)
+        else:
+            raise salt.exceptions.ArgumentValueError(
+                "find_filtered_object requires at least one of datacenter_name, host_name, or cluster_name with datacenter_name"
+            )
+    except salt.exceptions.VMwareObjectRetrievalError:
+        return None
+
+
+def get_license_mgrs(service_instance, license_mgr_names=None, get_all_license_mgrs=False):
+    """
+    Returns all license managers in a vCenter.
+
+    service_instance
+        The Service Instance Object from which to obtain cluster.
+
+    license_mgr_names
+        List of license manager names to filter by. Default value is None.
+
+    get_all_license_mgrs
+        Flag specifying whether to retrieve all license managers.
+        Default value is None.
+    """
+    log.debug("started get all License Managers")
+    items = [
+        i["object"]
+        for i in get_mors_with_properties(
+            service_instance, vim.LicenseAssignmentManager, property_list=["name"]
+        )
+        if get_all_license_mgrs or (license_mgr_names and i["name"] in license_mgr_names)
+    ]
+    log.debug("exited get all License Managers")
+    return items
+
+
+def get_license_mgr(service_instance, license_mgr_name):
+    """
+    Returns a vim.LicenseAssignmentManager managed object.
+
+    service_instance
+        The Service Instance Object from which to obtain license manager.
+
+    license_mgr_name
+        The license manager name
+    """
+    log.debug(f"started get License Manager '{license_mgr_name}'")
+    items = get_license_mgrs(service_instance, license_mgr_names=[license_mgr_name])
+    if not items:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            f"license manager '{license_mgr_name}' was not found"
+        )
+    log.debug(f"exit License Manager '{license_mgr_name}'")
+    return items[0]
+
+
+def list_license_mgrs(service_instance):
+    """
+    Returns a list of license managers associated with a given service instance.
+
+    service_instance
+        The Service Instance Object from which to obtain license managers.
+    """
+    log.debug("start list of License Managers")
+    return list_objects(service_instance, vim.LicenseAssignmentManager)
+
+
+def deployment_resources(host_name, service_instance):
+    """
+    Returns the dict representation of deployment resources from given host name.
+
+    host_name
+        The name of the esxi host to obtain esxi reference.
+
+    """
+    destination_host_ref = get_mor_by_property(
+        service_instance,
+        vim.HostSystem,
+        host_name,
+    )
+    datacenter_ref = get_parent_type(destination_host_ref, vim.Datacenter)
+    cluster_ref = get_parent_type(destination_host_ref, vim.ClusterComputeResource)
+    resource_pool = cluster_ref.resourcePool
+
+    return {
+        "destination_host": destination_host_ref,
+        "datacenter": datacenter_ref,
+        "cluster": cluster_ref,
+        "resource_pool": resource_pool,
+    }

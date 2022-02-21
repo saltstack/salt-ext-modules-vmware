@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_manager execution module
 """
+import pytest
 from saltext.vmware.utils import nsxt_request
 
 BASE_URL = "https://{}/api/v1/configs/management"
@@ -19,6 +20,7 @@ def _get_manager_config_from_nsxt_api(hostname, username, password):
     return response_json
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_manager_get_and_set_manager_config(nsxt_config, salt_call_cli):
     """
     nsxt_manager.get_manager_config

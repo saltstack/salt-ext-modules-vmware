@@ -10,7 +10,8 @@ If you think you've found a security vulnerability, see [Salt's security guide][
 ## User Documentation
 
 This README is more for contributing to the project. If you just want to get
-started, check out the [User Documentation][docs].
+started, check out the [User Documentation][docs]. Note: See the [Managing VMC SDDC with Salt][vmc-docs] section
+for more information about how to configure `properties required for VMC operations`
 
 
 ## Contributing
@@ -66,6 +67,10 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     # 3. Create a test config file:
     python tools/test_value_scraper.py -c local/vcenter.conf
 
+    # 4. Create a test config file for VMC:
+    python tools/test_value_scraper_vmc.py --help
+    This command will return the required information.
+
 
 For code contributions, as part of VMware we require [a signed CLA][cla-faq].
 If you've already signed the VMware CLA, you're probably good to go.
@@ -104,3 +109,4 @@ that's where you'll find the rest of the documentation.
 [comments]: https://conventionalcomments.org/
 [cla-faq]: https://cla.vmware.com/faq
 [docs]: https://docs.saltproject.io/salt/extensions/salt-ext-modules-vmware/en/latest/index.html
+[vmc-docs]: https://docs.saltproject.io/salt/extensions/salt-ext-modules-vmware/en/latest/vmc.html

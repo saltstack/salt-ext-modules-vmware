@@ -1,6 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import os
+import uuid
 from unittest.mock import MagicMock
 
 import pytest
@@ -483,3 +484,229 @@ def test_esxi_get(service_instance):
         host_name="no_host",
     )
     assert not ret
+
+
+def test_get_ntp_config(service_instance):
+    """
+    Test get ntp configuration on ESXi host
+    """
+    ret = esxi.get_ntp_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    assert ret
+    expected = {
+        "ntp_config_file",
+        "time_zone",
+        "time_zone_description",
+        "time_zone_name",
+        "ntp_servers",
+        "time_zone_gmt_offset",
+    }
+    for host in ret:
+        assert not expected - set(ret[host])
+
+    ret = esxi.get_ntp_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        host_name="no_host",
+    )
+    assert not ret
+
+
+def test_add_update_remove_user(service_instance):
+    """
+    Test add/update/remove a local ESXi user
+    """
+    user_name = "A{}".format(uuid.uuid4())
+    ret = esxi.add_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        user_name=user_name,
+        password="Secret@123",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+
+    ret = esxi.update_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        user_name=user_name,
+        password="Secret@123",
+        description="admin",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+
+    with pytest.raises(salt.exceptions.SaltException) as exc:
+        ret = esxi.update_user(
+            service_instance=service_instance,
+            datacenter_name="Datacenter",
+            cluster_name="Cluster",
+            user_name="nobody",
+            password="Secret@123",
+            description="admin",
+        )
+
+    ret = esxi.remove_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        user_name=user_name,
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+
+    ret = esxi.add_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        host_name="no_host",
+        user_name=user_name,
+        password="",
+    )
+    assert not ret
+
+
+def test_add_update_remove_role(service_instance):
+    """
+    Test add/update/remove a local ESXi role
+    """
+    role_name = "A{}".format(uuid.uuid4())
+    ret = esxi.add_role(
+        service_instance=service_instance,
+        role_name=role_name,
+        privilege_ids=["Folder.Create"],
+    )
+    assert ret["role_id"]
+
+    ret = esxi.update_role(
+        service_instance=service_instance,
+        role_name=role_name,
+        privilege_ids=["Folder.Create", "Folder.Delete"],
+    )
+    assert ret
+
+    with pytest.raises(salt.exceptions.SaltException) as exc:
+        ret = esxi.update_role(
+            service_instance=service_instance, role_name="nobody", privilege_ids=["Folder.Create"]
+        )
+
+    ret = esxi.remove_role(
+        service_instance=service_instance,
+        role_name=role_name,
+    )
+    assert ret
+
+
+def test_add_update_remove_vmkernel_adapter(service_instance):
+    """
+    Test add/update/remove a vmkernel adapter
+    """
+    adapters = esxi.create_vmkernel_adapter(
+        service_instance=service_instance,
+        port_group_name="VMNetwork-PortGroup",
+        dvswitch_name="dvSwitch",
+        mtu=2000,
+        enable_fault_tolerance=True,
+        network_type="dhcp",
+    )
+    assert adapters
+    for host in adapters:
+        assert adapters[host]
+
+    for host in adapters:
+        ret = esxi.update_vmkernel_adapter(
+            adapter_name=adapters[host],
+            datacenter_name="Datacenter",
+            service_instance=service_instance,
+            port_group_name="VMNetwork-PortGroup",
+            dvswitch_name="dvSwitch",
+            mtu=2000,
+            enable_fault_tolerance=True,
+            network_type="dhcp",
+            host_name=host,
+        )
+        assert ret
+        for host in ret:
+            assert ret[host]
+
+        ret = esxi.delete_vmkernel_adapter(
+            service_instance=service_instance, adapter_name=adapters[host], host_name=host
+        )
+        assert ret
+        for host in ret:
+            assert ret[host]
+
+    with pytest.raises(salt.exceptions.SaltException) as exc:
+        ret = esxi.update_vmkernel_adapter(
+            service_instance=service_instance,
+            adapter_name="nonexistent",
+            port_group_name="VMNetwork-PortGroup",
+        )
+
+    ret = esxi.delete_vmkernel_adapter(
+        service_instance=service_instance, adapter_name="nonexistent"
+    )
+    assert ret
+    for host in ret:
+        assert not ret[host]
+
+
+def test_maintenance_mode(service_instance):
+    hosts = list(esxi.get(service_instance=service_instance))
+    assert hosts
+    host = hosts[0]
+    ret = esxi.in_maintenance_mode(host, service_instance)
+    assert ret == dict(maintenanceMode="normal")
+
+    try:
+        for i in range(3):
+            ret = esxi.maintenance_mode(host, 120, service_instance=service_instance)
+            assert ret == dict(maintenanceMode="inMaintenance", changes=not i)
+    except Exception as e:
+        esxi.exit_maintenance_mode(host, 120, service_instance=service_instance)
+        raise e
+
+    ret = esxi.in_maintenance_mode(host, service_instance)
+    assert ret == dict(maintenanceMode="inMaintenance")
+
+    for i in range(3):
+        ret = esxi.exit_maintenance_mode(host, 120, service_instance=service_instance)
+        assert ret == dict(maintenanceMode="normal", changes=not i)
+
+    ret = esxi.in_maintenance_mode(host, service_instance)
+    assert ret == dict(maintenanceMode="normal")
+
+
+def test_lockdown_mode(service_instance):
+    hosts = list(esxi.get(service_instance=service_instance))
+    assert hosts
+    host = hosts[0]
+    ret = esxi.in_lockdown_mode(host, service_instance)
+    assert ret == dict(lockdownMode="normal")
+
+    try:
+        for i in range(3):
+            ret = esxi.lockdown_mode(host, service_instance=service_instance)
+            assert ret == dict(lockdownMode="inLockdown", changes=not i)
+    except Exception as e:
+        esxi.exit_lockdown_mode(host, service_instance=service_instance)
+        raise e
+
+    ret = esxi.in_lockdown_mode(host, service_instance)
+    assert ret == dict(lockdownMode="inLockdown")
+
+    for i in range(3):
+        ret = esxi.exit_lockdown_mode(host, service_instance=service_instance)
+        assert ret == dict(lockdownMode="normal", changes=not i)
+
+    ret = esxi.in_lockdown_mode(host, service_instance)
+    assert ret == dict(lockdownMode="normal")

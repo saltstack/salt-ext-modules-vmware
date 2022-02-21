@@ -77,8 +77,7 @@ import salt.utils.stringutils
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
-import saltext.vmware.utils.esxi as utils_esxi
-import saltext.vmware.utils.vm as utils_vm
+import saltext.vmware.utils.datastore as utils_datastore
 
 # pylint: disable=no-name-in-module
 try:
@@ -1568,7 +1567,7 @@ def get_datastore_files(service_instance, directory, datastores, container_objec
     """
 
     files = []
-    datastore_objects = get_datastores(
+    datastore_objects = utils_datastore.get_datastores_by_ref(
         service_instance, container_object, datastore_names=datastores
     )
     for datobj in datastore_objects:
@@ -1599,157 +1598,6 @@ def get_datastore_files(service_instance, directory, datastores, container_objec
     return files
 
 
-def get_datastores(
-    service_instance,
-    reference,
-    datastore_names=None,
-    backing_disk_ids=None,
-    get_all_datastores=False,
-):
-    """
-    Returns a list of vim.Datastore objects representing the datastores visible
-    from a VMware object, filtered by their names, or the backing disk
-    cannonical name or scsi_addresses
-
-    service_instance
-        The Service Instance Object from which to obtain datastores.
-
-    reference
-        The VMware object from which the datastores are visible.
-
-    datastore_names
-        The list of datastore names to be retrieved. Default value is None.
-
-    backing_disk_ids
-        The list of canonical names of the disks backing the datastores
-        to be retrieved. Only supported if reference is a vim.HostSystem.
-        Default value is None
-
-    get_all_datastores
-        Specifies whether to retrieve all disks in the host.
-        Default value is False.
-    """
-    obj_name = utils_common.get_managed_object_name(reference)
-    if get_all_datastores:
-        log.trace("Retrieving all datastores visible to '%s'", obj_name)
-    else:
-        log.trace(
-            "Retrieving datastores visible to '%s': names = (%s); " "backing disk ids = (%s)",
-            obj_name,
-            datastore_names,
-            backing_disk_ids,
-        )
-        if backing_disk_ids and not isinstance(reference, vim.HostSystem):
-
-            raise salt.exceptions.ArgumentValueError(
-                "Unsupported reference type '{}' when backing disk filter "
-                "is set".format(reference.__class__.__name__)
-            )
-    if (not get_all_datastores) and backing_disk_ids:
-        # At this point we know the reference is a vim.HostSystem
-        log.trace("Filtering datastores with backing disk ids: %s", backing_disk_ids)
-        storage_system = get_storage_system(service_instance, reference, obj_name)
-        props = utils_common.get_properties_of_managed_object(
-            storage_system, ["fileSystemVolumeInfo.mountInfo"]
-        )
-        mount_infos = props.get("fileSystemVolumeInfo.mountInfo", [])
-        disk_datastores = []
-        # Non vmfs volumes aren't backed by a disk
-        for vol in [i.volume for i in mount_infos if isinstance(i.volume, vim.HostVmfsVolume)]:
-
-            if not [e for e in vol.extent if e.diskName in backing_disk_ids]:
-                # Skip volume if it doesn't contain an extent with a
-                # canonical name of interest
-                continue
-            log.trace(
-                "Found datastore '%s' for disk id(s) '%s'",
-                vol.name,
-                [e.diskName for e in vol.extent],
-            )
-            disk_datastores.append(vol.name)
-        log.trace("Datastore found for disk filter: %s", disk_datastores)
-        if datastore_names:
-            datastore_names.extend(disk_datastores)
-        else:
-            datastore_names = disk_datastores
-
-    if (not get_all_datastores) and (not datastore_names):
-        log.trace(
-            "No datastore to be filtered after retrieving the datastores "
-            "backed by the disk id(s) '%s'",
-            backing_disk_ids,
-        )
-        return []
-
-    log.trace("datastore_names = %s", datastore_names)
-
-    # Use the default traversal spec
-    if isinstance(reference, vim.HostSystem):
-        # Create a different traversal spec for hosts because it looks like the
-        # default doesn't retrieve the datastores
-        traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-            name="host_datastore_traversal",
-            path="datastore",
-            skip=False,
-            type=vim.HostSystem,
-        )
-    elif isinstance(reference, vim.ClusterComputeResource):
-        # Traversal spec for clusters
-        traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-            name="cluster_datastore_traversal",
-            path="datastore",
-            skip=False,
-            type=vim.ClusterComputeResource,
-        )
-    elif isinstance(reference, vim.Datacenter):
-        # Traversal spec for datacenter
-        traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-            name="datacenter_datastore_traversal",
-            path="datastore",
-            skip=False,
-            type=vim.Datacenter,
-        )
-    elif isinstance(reference, vim.StoragePod):
-        # Traversal spec for datastore clusters
-        traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-            name="datastore_cluster_traversal",
-            path="childEntity",
-            skip=False,
-            type=vim.StoragePod,
-        )
-    elif (
-        isinstance(reference, vim.Folder)
-        and utils_common.get_managed_object_name(reference) == "Datacenters"
-    ):
-        # Traversal of root folder (doesn't support multiple levels of Folders)
-        traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-            path="childEntity",
-            selectSet=[
-                vmodl.query.PropertyCollector.TraversalSpec(
-                    path="datastore", skip=False, type=vim.Datacenter
-                )
-            ],
-            skip=False,
-            type=vim.Folder,
-        )
-    else:
-        raise salt.exceptions.ArgumentValueError(
-            "Unsupported reference type '{}'" "".format(reference.__class__.__name__)
-        )
-
-    items = utils_common.get_mors_with_properties(
-        service_instance,
-        object_type=vim.Datastore,
-        property_list=["name"],
-        container_ref=reference,
-        traversal_spec=traversal_spec,
-    )
-    log.trace("Retrieved %s datastores", len(items))
-    items = [i for i in items if get_all_datastores or i["name"] in datastore_names]
-    log.trace("Filtered datastores: %s", [i["name"] for i in items])
-    return [i["object"] for i in items]
-
-
 def rename_datastore(datastore_ref, new_datastore_name):
     """
     Renames a datastore
@@ -1775,32 +1623,6 @@ def rename_datastore(datastore_ref, new_datastore_name):
     except vmodl.RuntimeFault as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
-
-
-def get_storage_system(service_instance, host_ref, hostname=None):
-    """
-    Returns a host's storage system
-    """
-
-    if not hostname:
-        hostname = utils_common.get_managed_object_name(host_ref)
-
-    traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
-        path="configManager.storageSystem", type=vim.HostSystem, skip=False
-    )
-    objs = utils_common.get_mors_with_properties(
-        service_instance,
-        vim.HostStorageSystem,
-        property_list=["systemFile"],
-        container_ref=host_ref,
-        traversal_spec=traversal_spec,
-    )
-    if not objs:
-        raise salt.exceptions.VMwareObjectRetrievalError(
-            "Host's '{}' storage system was not retrieved" "".format(hostname)
-        )
-    log.trace("[%s] Retrieved storage system", hostname)
-    return objs[0]["object"]
 
 
 def _get_partition_info(storage_system, device_path):
@@ -1922,7 +1744,7 @@ def create_vmfs_datastore(
     )
     if not storage_system:
         si = utils_common.get_service_instance_from_managed_object(host_ref, name=hostname)
-        storage_system = get_storage_system(si, host_ref, hostname)
+        storage_system = utils_datastore.get_storage_system(si, host_ref, hostname)
 
     target_disk = disk_ref
     partition_info = _get_partition_info(storage_system, target_disk.devicePath)
@@ -2050,7 +1872,7 @@ def _get_scsi_address_to_lun_key_map(
     if not hostname:
         hostname = utils_common.get_managed_object_name(host_ref)
     if not storage_system:
-        storage_system = get_storage_system(service_instance, host_ref, hostname)
+        storage_system = utils_datastore.get_storage_system(service_instance, host_ref, hostname)
     try:
         device_info = storage_system.storageDeviceInfo
     except vim.fault.NoPermission as exc:
@@ -2104,7 +1926,7 @@ def get_all_luns(host_ref, storage_system=None, hostname=None):
         hostname = utils_common.get_managed_object_name(host_ref)
     if not storage_system:
         si = utils_common.get_service_instance_from_managed_object(host_ref, name=hostname)
-        storage_system = get_storage_system(si, host_ref, hostname)
+        storage_system = utils_datastore.get_storage_system(si, host_ref, hostname)
         if not storage_system:
             raise salt.exceptions.VMwareObjectRetrievalError(
                 "Host's '{}' storage system was not retrieved" "".format(hostname)
@@ -2158,7 +1980,7 @@ def get_scsi_address_to_lun_map(host_ref, storage_system=None, hostname=None):
         hostname = utils_common.get_managed_object_name(host_ref)
     si = utils_common.get_service_instance_from_managed_object(host_ref, name=hostname)
     if not storage_system:
-        storage_system = get_storage_system(si, host_ref, hostname)
+        storage_system = utils_datastore.get_storage_system(si, host_ref, hostname)
     lun_ids_to_scsi_addr_map = _get_scsi_address_to_lun_key_map(
         si, host_ref, storage_system, hostname
     )
@@ -2203,7 +2025,7 @@ def get_disks(host_ref, disk_ids=None, scsi_addresses=None, get_all_disks=False)
         if not (disk_ids or scsi_addresses):
             return []
     si = utils_common.get_service_instance_from_managed_object(host_ref, name=hostname)
-    storage_system = get_storage_system(si, host_ref, hostname)
+    storage_system = utils_datastore.get_storage_system(si, host_ref, hostname)
     disk_keys = []
     if scsi_addresses:
         # convert the scsi addresses to disk keys
@@ -2254,7 +2076,7 @@ def get_disk_partition_info(host_ref, disk_id, storage_system=None):
     hostname = utils_common.get_managed_object_name(host_ref)
     service_instance = utils_common.get_service_instance_from_managed_object(host_ref)
     if not storage_system:
-        storage_system = get_storage_system(service_instance, host_ref, hostname)
+        storage_system = utils_datastore.get_storage_system(service_instance, host_ref, hostname)
 
     props = utils_common.get_properties_of_managed_object(
         storage_system, ["storageDeviceInfo.scsiLun"]
@@ -2314,7 +2136,7 @@ def erase_disk_partitions(service_instance, host_ref, disk_id, hostname=None, st
     if not hostname:
         hostname = utils_common.get_managed_object_name(host_ref)
     if not storage_system:
-        storage_system = get_storage_system(service_instance, host_ref, hostname)
+        storage_system = utils_datastore.get_storage_system(service_instance, host_ref, hostname)
 
     traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
         path="configManager.storageSystem", type=vim.HostSystem, skip=False

@@ -227,6 +227,28 @@ def test_update_nat_rule_when_api_should_return_api_response(mock_vmc_request_ca
     )
 
 
+def test_update_nat_rule_when_api_returns_no_nat_rule_with_given_id(
+    mock_vmc_request_call_api,
+):
+    expected_response = {"error": "Given Nat rule does not exist"}
+    mock_vmc_request_call_api.return_value = expected_response
+    assert (
+        vmc_nat_rules.update(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            tier1="tier1",
+            nat="nat",
+            nat_rule="nat_rule",
+            display_name="display_name",
+            verify_ssl=False,
+        )
+        == expected_response
+    )
+
+
 def test_update_nat_rule_called_with_url():
     expected_url = (
         "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/policy/api/"

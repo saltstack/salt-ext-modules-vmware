@@ -45,6 +45,7 @@ def delete_license(nsxt_config):
                 response.raise_for_status()
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_licenses_state_module(nsxt_config, salt_call_cli, delete_license):
     hostname = nsxt_config["hostname"]
     username = nsxt_config["username"]

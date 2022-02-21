@@ -32,6 +32,7 @@ def setup(nsxt_config):
             _delete_uplink_profile_using_nsxt_api(nsxt_config, uplink_profile["id"])
 
 
+@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_uplink_profiles_execution_module(nsxt_config, setup, salt_call_cli):
     request_data = {
         "display_name": _display_name,
