@@ -100,7 +100,7 @@ def create_network(get_networks, network_url, common_data, request_headers, subn
 
     data = {"display_name": "web-tier", "subnets": subnets}
     session = requests.Session()
-    response = session.patch(
+    response = session.put(
         url=network_url,
         json=data,
         verify=common_data["cert"] if common_data["verify_ssl"] else False,
@@ -129,13 +129,13 @@ def test_get_networks_smoke_test(salt_call_cli, get_networks, common_data):
     assert result_as_json == get_networks
 
 
-def test_delete_network_smoke_test(salt_call_cli, create_network, common_data):
-    ret = salt_call_cli.run("vmc_networks.delete", **common_data)
-    result_as_json = ret.json
-    assert result_as_json["result"] == "success"
-
-
 def test_update_network_smoke_test(salt_call_cli, create_network, common_data):
     ret = salt_call_cli.run("vmc_networks.update", **common_data, display_name="network1")
     result = ret.json
     assert result["result"] == "success"
+
+
+def test_delete_network_smoke_test(salt_call_cli, create_network, common_data):
+    ret = salt_call_cli.run("vmc_networks.delete", **common_data)
+    result_as_json = ret.json
+    assert result_as_json["result"] == "success"
