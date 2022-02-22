@@ -27,27 +27,33 @@ def request_headers(common_data):
 
 
 @pytest.fixture
+def vmc_vcenter_monitoring_spec():
+    monitoring_spec = {
+        "start_time": "2022-02-20T22:13:05.651Z",
+        "end_time": "2022-02-21T22:13:05.651Z",
+        "interval": "HOURS2",
+        "function": "COUNT",
+        "monitored_items_ids": "cpu.util,mem.util".split(","),
+    }
+    return monitoring_spec
+
+
+@pytest.fixture
 def query_params(vmc_vcenter_monitoring_spec):
-    start_time, end_time, interval, function, monitored_items_ids = vmc_vcenter_monitoring_spec
     query_params = {
-        "start_time": start_time,
-        "end_time": end_time,
-        "function": function,
-        "interval": interval,
-        "names": monitored_items_ids,
+        "start_time": vmc_vcenter_monitoring_spec["start_time"],
+        "end_time": vmc_vcenter_monitoring_spec["end_time"],
+        "function": vmc_vcenter_monitoring_spec["function"],
+        "interval": vmc_vcenter_monitoring_spec["interval"],
+        "names": vmc_vcenter_monitoring_spec["monitored_items_ids"],
     }
     yield query_params
 
 
 @pytest.fixture
 def query_monitoring_params(common_data, vmc_vcenter_monitoring_spec):
-    start_time, end_time, interval, function, monitored_items_ids = vmc_vcenter_monitoring_spec
     query_monitoring_params = common_data.copy()
-    query_monitoring_params["start_time"] = start_time
-    query_monitoring_params["end_time"] = end_time
-    query_monitoring_params["function"] = function
-    query_monitoring_params["interval"] = interval
-    query_monitoring_params["monitored_items_ids"] = monitored_items_ids
+    query_monitoring_params.update(vmc_vcenter_monitoring_spec)
     yield query_monitoring_params
 
 

@@ -415,19 +415,6 @@ def vmc_vcenter_admin_connect(vmc_config):
     )
 
 
-@pytest.fixture(scope="session")
-def vmc_vcenter_monitoring_spec(vmc_config):
-    vmc_vcenter_monitoring_config = vmc_config["vmc_vcenter_monitoring_spec"]
-
-    return (
-        vmc_vcenter_monitoring_config["start_time"],
-        vmc_vcenter_monitoring_config["end_time"],
-        vmc_vcenter_monitoring_config["interval"],
-        vmc_vcenter_monitoring_config["function"],
-        vmc_vcenter_monitoring_config["monitored_items_ids"].split(","),
-    )
-
-
 NSXT_CONFIG_FILE_NAME = "nsxt_config.json"
 
 
