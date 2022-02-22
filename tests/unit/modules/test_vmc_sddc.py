@@ -404,3 +404,60 @@ def test_get_vms_called_with_url(mock_vcenter_headers):
     call_kwargs = vmc_vcenter_request_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_payload",
+    [
+        # allow args have None - NA
+        (
+            {},
+            {},
+        ),
+        # all actual args have few param values
+        (
+            {"clusters": "MyClusters"},
+            {"clusters": "MyClusters"},
+        ),
+        # all actual args have all possible params
+        (
+            {
+                "clusters": "MyClusters",
+                "datacenters": "MyDatacenters",
+                "folders": "MyFolders",
+                "hosts": "MyHosts",
+                "names": "MyNames",
+                "power_states": "POWERED_OFF",
+                "resource_pools": "MyResourcePools",
+                "vms": "myVMs",
+            },
+            {
+                "clusters": "MyClusters",
+                "datacenters": "MyDatacenters",
+                "folders": "MyFolders",
+                "hosts": "MyHosts",
+                "names": "MyNames",
+                "power_states": "POWERED_OFF",
+                "resource_pools": "MyResourcePools",
+                "vms": "myVMs",
+            },
+        ),
+    ],
+)
+def test_assert_get_vms_should_correctly_filter_args(
+    actual_args, expected_payload, mock_vcenter_headers
+):
+    common_actual_args = {
+        "hostname": "hostname",
+        "username": "username",
+        "password": "password",
+        "verify_ssl": False,
+    }
+    with patch(
+        "saltext.vmware.utils.vmc_vcenter_request.call_api", autospec=True
+    ) as vcenter_call_api:
+        actual_args.update(common_actual_args)
+        vmc_sddc.get_vms(**actual_args)
+
+    call_kwargs = vcenter_call_api.mock_calls[0][-1]
+    assert call_kwargs["params"] == expected_payload
