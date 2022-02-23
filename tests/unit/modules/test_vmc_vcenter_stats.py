@@ -92,8 +92,8 @@ def test_query_monitored_items_should_return_api_response(mock_request_post_api,
             start_time="start_time",
             end_time="end_time",
             interval="interval",
-            function="function",
-            monitored_items_ids="monitored_items_ids",
+            aggregate_function="aggregate_function",
+            monitored_items="monitored_items",
             verify_ssl=False,
         )
         == cpu_util_data
@@ -110,8 +110,8 @@ def test_query_monitored_items_with_url(mock_request_post_api):
             start_time="start_time",
             end_time="end_time",
             interval="interval",
-            function="function",
-            monitored_items_ids="monitored_items_ids",
+            aggregate_function="aggregate_function",
+            monitored_items="monitored_items",
             verify_ssl=False,
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
