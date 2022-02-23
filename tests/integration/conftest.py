@@ -405,14 +405,7 @@ def vmc_vcenter_connect(vmc_config):
 
 @pytest.fixture(scope="session")
 def vmc_vcenter_admin_connect(vmc_config):
-    vmc_vcenter_admin_config = vmc_config["vmc_vcenter_admin_connect"]
-    return (
-        vmc_vcenter_admin_config["hostname"],
-        vmc_vcenter_admin_config["username"],
-        vmc_vcenter_admin_config["password"],
-        vmc_vcenter_admin_config["verify_ssl"],
-        vmc_vcenter_admin_config["cert"],
-    )
+    return vmc_config["vmc_vcenter_admin_connect"]
 
 
 NSXT_CONFIG_FILE_NAME = "nsxt_config.json"

@@ -70,13 +70,14 @@ def query_monitored_items(
     start_time,
     end_time,
     interval,
-    function,
-    monitored_items_ids,
+    aggregate_function,
+    monitored_items,
     verify_ssl=True,
     cert=None,
 ):
     """
-    Retrieves monitoring data for the given monitored items.
+    Retrieves aggregate monitoring data for the given ``monitored_items`` across the time range.
+    Data will be grouped using the ``aggregate_function`` for each ``interval`` in the time range.
 
     CLI Example:
 
@@ -94,19 +95,19 @@ def query_monitored_items(
        admin password required to login to vCenter console
 
     start_time
-        Start time in UTC. Ex: 2021-05-06T22:13:05.651Z
+        Start time in UTC (inclusive). Ex: 2021-05-06T22:13:05.651Z
 
     end_time
-        End time in UTC. Ex: 2021-05-10T22:13:05.651Z
+        End time in UTC (inclusive). Ex: 2021-05-10T22:13:05.651Z
 
     interval
          interval between the values in hours and mins, for which aggregation will apply.
          Possible values: MINUTES30, HOURS2, MINUTES5, DAY1, HOURS6
 
-    function
+    aggregate_function
         aggregation function. Possible values: COUNT, MAX, AVG, MIN
 
-    monitored_items_ids
+    monitored_items
         List of monitored item IDs. Ex: [cpu.util, mem.util]
 
     verify_ssl
@@ -118,7 +119,7 @@ def query_monitored_items(
         The certificate can be retrieved from browser.
 
     """
-    msg = "Retrieving the vCenter monitoring data for {}".format(monitored_items_ids)
+    msg = "Retrieving the vCenter monitoring data for {}".format(monitored_items)
     log.info(msg)
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = "{base_url}api/appliance/monitoring/query"
@@ -128,9 +129,9 @@ def query_monitored_items(
     params = {
         "start_time": start_time,
         "end_time": end_time,
-        "function": function,
+        "function": aggregate_function,
         "interval": interval,
-        "names": monitored_items_ids,
+        "names": monitored_items,
     }
 
     return vmc_vcenter_request.call_api(
