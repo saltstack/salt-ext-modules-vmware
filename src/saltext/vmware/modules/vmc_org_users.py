@@ -89,7 +89,7 @@ def get(
             "pageLimit",
         ],
         expandProfile=expand_profile,
-        includeGroupIdsInRolesOptional=include_group_ids_in_roles,
+        includeGroupIdsInRoles=include_group_ids_in_roles,
         serviceDefinitionId=service_definition_id,
         pageStart=page_start,
         pageLimit=page_limit,

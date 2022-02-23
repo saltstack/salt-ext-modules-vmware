@@ -122,3 +122,56 @@ def test_get_org_users_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_params",
+    [
+        # all actual args are None
+        (
+            {},
+            {},
+        ),
+        # all actual args have few param values
+        (
+            {
+                "expand_profile": "00012",
+                "page_limit": 30,
+            },
+            {
+                "expandProfile": "00012",
+                "pageLimit": 30,
+            },
+        ),
+        # all actual args have all possible params
+        (
+            {
+                "expand_profile": "00012",
+                "include_group_ids_in_roles": "group_id",
+                "page_limit": 30,
+                "page_start": 1,
+                "service_definition_id": "service_definition_id",
+            },
+            {
+                "expandProfile": "00012",
+                "includeGroupIdsInRoles": "group_id",
+                "pageLimit": 30,
+                "pageStart": 1,
+                "serviceDefinitionId": "service_definition_id",
+            },
+        ),
+    ],
+)
+def test_assert_get_org_users_should_correctly_filter_args(actual_args, expected_params):
+    common_actual_args = {
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "org_id": "org_id",
+        "verify_ssl": False,
+    }
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        actual_args.update(common_actual_args)
+        vmc_org_users.get(**actual_args)
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["params"] == expected_params
