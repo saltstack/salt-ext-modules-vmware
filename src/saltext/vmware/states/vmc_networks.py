@@ -40,7 +40,6 @@ def present(
     authorization_host,
     org_id,
     sddc_id,
-    network_id,
     verify_ssl=True,
     cert=None,
     subnets=vmc_constants.VMC_NONE,
@@ -56,6 +55,10 @@ def present(
     """
     Ensure a given network/segment exists for given SDDC
 
+    name
+        Indicates the Network/segment id, any unique string identifying the network/segment.
+        Also same as the display_name by default.
+
     hostname
         The host name of NSX-T manager
 
@@ -70,10 +73,6 @@ def present(
 
     sddc_id
         The Id of SDDC for which the network/segment should be added
-
-    network_id
-        Network/segment id, any static unique string identifying the network/segment.
-        Also same as the display_name by default.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -230,6 +229,7 @@ def present(
               dhcp_config_path: "/infra/dhcp-server-configs/default"
 
     """
+    network_id = name
 
     input_dict = {
         "subnets": subnets,
@@ -376,12 +376,14 @@ def absent(
     authorization_host,
     org_id,
     sddc_id,
-    network_id,
     verify_ssl=True,
     cert=None,
 ):
     """
     Ensure a given network/segment does not exist on given SDDC
+
+    name
+        Indicates the Network/segment id, any unique string identifying the network/segment.
 
     hostname
         The host name of NSX-T manager
@@ -398,9 +400,6 @@ def absent(
     sddc_id
         The Id of SDDC from which the network/segment should be deleted
 
-    network_id
-        Network/segment id, any static unique string identifying the network/segment.
-
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
@@ -409,6 +408,7 @@ def absent(
         (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
     """
+    network_id = name
     log.info("Checking if Network with Id %s is present", network_id)
     network = __salt__["vmc_networks.get_by_id"](
         hostname=hostname,

@@ -104,13 +104,12 @@ def test_present_state_when_error_from_get_by_id(mocked_error_response):
 
     with patch.dict(vmc_networks.__salt__, {"vmc_networks.get_by_id": mock_get_by_id}):
         result = vmc_networks.present(
-            name="test_present",
+            name="network_id",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id="network_id",
         )
 
     assert result is not None
@@ -134,13 +133,12 @@ def test_present_state_when_error_from_create(mocked_error_response):
         },
     ):
         result = vmc_networks.present(
-            name="test_present",
+            name="network-id",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id="network-id",
         )
 
     assert result is not None
@@ -164,13 +162,12 @@ def test_present_state_when_error_from_update(mocked_error_response, mocked_ok_r
         },
     ):
         result = vmc_networks.present(
-            name="test_present",
+            name=mocked_ok_response["id"],
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=mocked_ok_response["id"],
             display_name="network-1",
         )
 
@@ -201,13 +198,12 @@ def test_present_state_during_update_to_add_a_new_field(mocked_ok_response):
         },
     ):
         result = vmc_networks.present(
-            name="test_present",
+            name=mocked_ok_response["id"],
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=mocked_ok_response["id"],
             display_name="network-1",
         )
 
@@ -234,13 +230,12 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
         },
     ):
         result = vmc_networks.present(
-            name="test_present",
+            name=network_id,
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=network_id,
         )
 
     assert result is not None
@@ -271,13 +266,12 @@ def test_present_to_update_when_module_returns_success_response(mocked_ok_respon
         },
     ):
         result = vmc_networks.present(
-            name="test_present",
+            name=network_id,
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=network_id,
             display_name="network-1",
         )
 
@@ -311,13 +305,12 @@ def test_present_to_update_when_get_by_id_after_update_returns_error(
         },
     ):
         result = vmc_networks.present(
-            name="test_present",
+            name=network_id,
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=network_id,
             display_name="network-1",
         )
 
@@ -342,13 +335,12 @@ def test_present_to_update_when_user_input_and_existing_network_has_identical_fi
         {"vmc_networks.get_by_id": mock_get_by_id_response},
     ):
         result = vmc_networks.present(
-            name="test_present",
+            name=mocked_ok_response["id"],
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=mocked_ok_response["id"],
         )
 
     assert result is not None
@@ -368,13 +360,12 @@ def test_present_state_for_create_when_opts_test_is_true():
     ):
         with patch.dict(vmc_networks.__opts__, {"test": True}):
             result = vmc_networks.present(
-                name="test_present",
+                name=network_id,
                 hostname="hostname",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
                 sddc_id="sddc_id",
-                network_id=network_id,
             )
 
     assert result is not None
@@ -396,13 +387,12 @@ def test_present_state_for_update_when_opts_test_is_true(mocked_ok_response):
     ):
         with patch.dict(vmc_networks.__opts__, {"test": True}):
             result = vmc_networks.present(
-                name="test_present",
+                name=network_id,
                 hostname="hostname",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
                 sddc_id="sddc_id",
-                network_id=network_id,
             )
 
     assert result is not None
@@ -429,13 +419,12 @@ def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_r
         },
     ):
         result = vmc_networks.absent(
-            name="test_absent",
+            name=network_id,
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=network_id,
         )
 
     assert result is not None
@@ -454,13 +443,12 @@ def test_absent_state_when_object_to_delete_does_not_exists():
         {"vmc_networks.get_by_id": mock_get_by_id_response},
     ):
         result = vmc_networks.absent(
-            name="test_absent",
+            name=network_id,
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=network_id,
         )
 
     assert result is not None
@@ -482,13 +470,12 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
     ):
         with patch.dict(vmc_networks.__opts__, {"test": True}):
             result = vmc_networks.absent(
-                name="test_absent",
+                name=network_id,
                 hostname="hostname",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
                 sddc_id="sddc_id",
-                network_id=network_id,
             )
 
     assert result is not None
@@ -508,13 +495,12 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
     ):
         with patch.dict(vmc_networks.__opts__, {"test": True}):
             result = vmc_networks.absent(
-                name="test_absent",
+                name=network_id,
                 hostname="hostname",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
                 sddc_id="sddc_id",
-                network_id=network_id,
             )
 
     assert result is not None
@@ -539,13 +525,12 @@ def test_absent_with_error_from_delete(mocked_ok_response, mocked_error_response
         },
     ):
         result = vmc_networks.absent(
-            name="test_absent",
+            name=mocked_ok_response["id"],
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=mocked_ok_response["id"],
         )
 
     assert result is not None
@@ -564,13 +549,12 @@ def test_absent_state_when_error_from_get_by_id(mocked_error_response):
 
     with patch.dict(vmc_networks.__salt__, {"vmc_networks.get_by_id": mock_get_by_id}):
         result = vmc_networks.absent(
-            name="test_absent",
+            name="network-id",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id="network-id",
         )
 
     assert result is not None
@@ -614,7 +598,6 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
         "authorization_host": "authorization_host",
         "org_id": "org_id",
         "sddc_id": "sddc_id",
-        "network_id": mocked_ok_response["id"],
         "verify_ssl": False,
     }
 
@@ -629,7 +612,7 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
             "vmc_networks.create": mock_create,
         },
     ):
-        result = vmc_networks.present(name="network update", **actual_args)
+        result = vmc_networks.present(name=mocked_ok_response["id"], **actual_args)
 
     call_kwargs = mock_create.mock_calls[0][-1]
 
@@ -679,7 +662,6 @@ def test_present_state_during_update_should_correctly_pass_args(mocked_ok_respon
         "authorization_host": "authorization_host",
         "org_id": "org_id",
         "sddc_id": "sddc_id",
-        "network_id": mocked_ok_response["id"],
         "verify_ssl": False,
     }
 
@@ -694,7 +676,7 @@ def test_present_state_during_update_should_correctly_pass_args(mocked_ok_respon
             "vmc_networks.update": mock_update,
         },
     ):
-        result = vmc_networks.present(name="network update", **actual_args)
+        result = vmc_networks.present(name=mocked_ok_response["id"], **actual_args)
 
     call_kwargs = mock_update.mock_calls[0][-1]
 
@@ -727,13 +709,12 @@ def test_present_when_get_by_id_returns_not_found_error(mocked_ok_response):
         },
     ):
         result = vmc_networks.present(
-            name="test_present",
+            name=network_id,
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            network_id=network_id,
         )
 
     assert result is not None
