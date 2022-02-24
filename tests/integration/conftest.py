@@ -96,6 +96,7 @@ def patch_salt_globals(vmware_conf):
     setattr(esxi_mod, "__pillar__", vmware_conf)
     setattr(esxi_mod, "__opts__", {})
     setattr(esxi_st, "__pillar__", vmware_conf)
+    setattr(folder, "__pillar__", vmware_conf)
     setattr(license_mgr_st, "__opts__", {})
     setattr(license_mgr_st, "__pillar__", {})
     setattr(license_mgr_mod, "__opts__", {})
@@ -187,26 +188,63 @@ def vmware_datacenter(patch_salt_globals, service_instance):
     datacenter_mod.delete(name=dc_name, service_instance=service_instance)
 
 
-@pytest.fixture(scope="function")
-def vmware_category(patch_salt_globals):
+@pytest.fixture
+def vmware_category():
     """
     Return a vmware_category for tagging and attributes
     """
-    cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
-    yield cat_ref["category"]
-    tagging.delete_category(cat_ref["category"])
+    try:
+        cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
+        yield cat_ref["category"]
+    finally:
+        tagging.delete_category(cat_ref["category"])
 
 
-@pytest.fixture(scope="function")
-def vmware_tag(patch_salt_globals):
+@pytest.fixture
+def vmware_tag():
     """
-    Return a vmware_category for tagging and attributes
+    Return a vmware_tag for tagging and attributes
     """
-    cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
-    tag_ref = tagging.create("test-tag", cat_ref["category"], description="test tag")
-    yield tag_ref["tag"]
-    tagging.delete(tag_ref["tag"])
-    tagging.delete_category(cat_ref["category"])
+    try:
+        cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
+        tag_ref = tagging.create("test-tag", cat_ref["category"], description="test tag")
+        yield tag_ref["tag"]
+    finally:
+        tagging.delete(tag_ref["tag"])
+        tagging.delete_category(cat_ref["category"])
+
+
+@pytest.fixture
+def vmware_tag_name_c():
+    """
+    Return a vmware_tag for tagging and attributes
+    """
+    try:
+        cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
+        yield ['test-tag', cat_ref["category"]]
+    finally:
+        tags = tagging.list_()
+        for tag in tags["tags"]:
+            res = tagging.get(tag)
+            if res["tag"]["name"] == 'test-tag':
+                tagging.delete(res["tag"]["id"])
+        tagging.delete_category(cat_ref["category"])
+
+
+@pytest.fixture
+def vmware_cat_name_c():
+    """
+    Return a vmware_tag for tagging and attributes
+    """
+    yield 'test-cat'
+    try:
+        cats = tagging.list_category()
+        for cat in cats['categories']:
+            res = tagging.get_category(cat)
+            if res["category"]["name"] == 'test-cat':
+                tagging.delete_category(res["category"]["id"])
+    except Exception:
+        pass
 
 
 @pytest.fixture

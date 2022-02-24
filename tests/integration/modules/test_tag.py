@@ -26,20 +26,15 @@ def test_tag_list(patch_salt_globals_tag, vmware_tag):
     Test list tags functionality
     """
     tags = tagging.list_()
-    if len(tags["tags"]) > 0:
-        assert "urn:vmomi:InventoryServiceTag:" in tags["tags"][0]
-    else:
-        pytest.skip("test requires at least one tag")
+    assert "urn:vmomi:InventoryServiceTag:" in tags["tags"][0]
 
 
-def test_tag_create(patch_salt_globals_tag, vmware_category):
+def test_tag_create(patch_salt_globals_tag, vmware_tag_name_c):
     """
     Test create tag functionality
     """
-    res = tagging.create("test tag", vmware_category, description="testy test tester")
+    res = tagging.create(vmware_tag_name_c[0], vmware_tag_name_c[1], description="testy test tester")
     assert "urn:vmomi:InventoryServiceTag:" in res["tag"]
-    tagging.delete(res["tag"])
-
 
 def test_tag_get(patch_salt_globals_tag, vmware_tag):
     """
@@ -66,13 +61,12 @@ def test_tag_delete(patch_salt_globals_tag, vmware_category):
     assert "deleted" in update_res["tag"]
 
 
-def test_cat_create(patch_salt_globals_tag):
+def test_cat_create(patch_salt_globals_tag, vmware_cat_name_c):
     """
     Test create category functionality
     """
-    res = tagging.create_category("test cat", ["string"], "SINGLE", "test category")
+    res = tagging.create_category(vmware_cat_name_c, ["string"], "SINGLE", "test category")
     assert "urn:vmomi:InventoryServiceCategory:" in res["category"]
-    tagging.delete_category(res["category"])
 
 
 def test_cat_update(patch_salt_globals_tag, vmware_category):

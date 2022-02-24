@@ -5,15 +5,15 @@ import saltext.vmware.modules.tag as tagging
 import saltext.vmware.states.tag as tagging_state
 
 
-def test_manage_create(patch_salt_globals_tag_state, patch_salt_globals_tag, vmware_category):
+def test_manage_create(patch_salt_globals_tag_state, patch_salt_globals_tag, vmware_tag_name_c):
     """
     test tag manage create
     """
 
     res = tagging_state.present(
-        "state tag",
+        vmware_tag_name_c[0],
         description="testing state tag create",
-        category_id=vmware_category,
+        category_id=vmware_tag_name_c[1],
     )
     assert "created" in res["comment"]
 
@@ -48,13 +48,12 @@ def test_manage_create_cat_test(patch_salt_globals_tag_state_test):
     assert "state test cat category will be created" in res["comment"]
 
 
-def test_manage_create_cat(patch_salt_globals_tag_state):
+def test_manage_create_cat(patch_salt_globals_tag_state, vmware_cat_name_c):
     """
     test category manage create
     """
-    res = tagging_state.present_category("state test cat", ["string"], "SINGLE", "test category")
+    res = tagging_state.present_category(vmware_cat_name_c, ["string"], "SINGLE", "test category")
     assert "created" in res["comment"]
-    res = tagging_state.absent_category("state test cat")
 
 
 def test_manage_update_cat_test(patch_salt_globals_tag_state_test, vmware_category):
