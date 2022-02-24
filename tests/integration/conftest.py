@@ -221,12 +221,12 @@ def vmware_tag_name_c():
     """
     try:
         cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
-        yield ['test-tag', cat_ref["category"]]
+        yield ["test-tag", cat_ref["category"]]
     finally:
         tags = tagging.list_()
         for tag in tags["tags"]:
             res = tagging.get(tag)
-            if res["tag"]["name"] == 'test-tag':
+            if res["tag"]["name"] == "test-tag":
                 tagging.delete(res["tag"]["id"])
         tagging.delete_category(cat_ref["category"])
 
@@ -236,12 +236,12 @@ def vmware_cat_name_c():
     """
     Return a vmware_tag for tagging and attributes
     """
-    yield 'test-cat'
+    yield "test-cat"
     try:
         cats = tagging.list_category()
-        for cat in cats['categories']:
+        for cat in cats["categories"]:
             res = tagging.get_category(cat)
-            if res["category"]["name"] == 'test-cat':
+            if res["category"]["name"] == "test-cat":
                 tagging.delete_category(res["category"]["id"])
     except Exception:
         pass

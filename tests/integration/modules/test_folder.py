@@ -1,13 +1,12 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
-
 import pytest
 import saltext.vmware.modules.folder as folder
 
 
 @pytest.fixture
 def test_folder_name():
-    yield 'test_folder'
+    yield "test_folder"
     try:
         folder.destroy("test_folder", "Datacenter", "vm")
     except Exception:
@@ -18,7 +17,7 @@ def test_folder_name():
 def rename_test_folder_names():
     try:
         folder.create("test_folder", "Datacenter", "vm")
-        yield ['test_folder', "new_test_folder"]
+        yield ["test_folder", "new_test_folder"]
     finally:
         folder.destroy("new_test_folder", "Datacenter", "vm")
 
@@ -28,7 +27,7 @@ def move_test_folder_names():
     try:
         folder.create("test_folder_top", "Datacenter", "vm")
         folder.create("test_folder", "Datacenter", "vm")
-        yield ['test_folder_top', "test_folder"]
+        yield ["test_folder_top", "test_folder"]
     finally:
         folder.destroy("test_folder_top", "Datacenter", "vm")
 
@@ -45,7 +44,9 @@ def test_rename(patch_salt_globals_folder, rename_test_folder_names):
     """
     Test folder rename
     """
-    ret = folder.rename(rename_test_folder_names[0], rename_test_folder_names[1], "Datacenter", "vm")
+    ret = folder.rename(
+        rename_test_folder_names[0], rename_test_folder_names[1], "Datacenter", "vm"
+    )
     assert ret["status"] == "renamed"
 
 

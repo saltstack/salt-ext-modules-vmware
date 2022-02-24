@@ -6,7 +6,7 @@ import saltext.vmware.states.folder as folder
 
 @pytest.fixture
 def test_folder_name():
-    yield 'test_folder'
+    yield "test_folder"
     try:
         folder.manage("test_folder", "destroy", "Datacenter", "vm")
     except Exception:
@@ -17,7 +17,7 @@ def test_folder_name():
 def test_folder_name_c():
     try:
         folder.manage("test_folder", "create", "Datacenter", "vm")
-        yield 'test_folder'
+        yield "test_folder"
     finally:
         folder.manage("test_folder", "destroy", "Datacenter", "vm")
 
@@ -26,7 +26,7 @@ def test_folder_name_c():
 def test_folder_name_rename():
     try:
         folder.manage("test_folder", "create", "Datacenter", "vm")
-        yield ['test_folder', "test_folder_new"]
+        yield ["test_folder", "test_folder_new"]
     finally:
         folder.manage("test_folder_new", "destroy", "Datacenter", "vm")
 
@@ -36,7 +36,7 @@ def test_folder_name_move():
     try:
         folder.manage("test_folder", "create", "Datacenter", "vm")
         folder.manage("test_folder_top", "create", "Datacenter", "vm")
-        yield ['test_folder', "test_folder_top"]
+        yield ["test_folder", "test_folder_top"]
     finally:
         folder.manage("test_folder", "destroy", "Datacenter", "vm")
         folder.manage("test_folder_top", "destroy", "Datacenter", "vm")
@@ -90,10 +90,7 @@ def test_rename_folder_test(patch_salt_globals_folder_state_test, test_folder_na
     ret = folder.rename(test_folder_name_c, "test_folder_state_new", "Datacenter", "vm")
     assert ret["result"] == True
     assert ret["comment"] == "These options are set to change."
-    assert (
-        ret["changes"]["new"]
-        == "folder test_folder will be renamed test_folder_state_new"
-    )
+    assert ret["changes"]["new"] == "folder test_folder will be renamed test_folder_state_new"
 
 
 def test_rename_folder(patch_salt_globals_folder_state, test_folder_name_rename):
