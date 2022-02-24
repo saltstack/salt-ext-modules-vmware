@@ -5,6 +5,7 @@ import os
 import uuid
 from collections import namedtuple
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.cluster as cluster_mod
@@ -178,14 +179,14 @@ def patch_salt_globals(vmware_conf):
 
 
 @pytest.fixture(scope="function")
-def vmware_datacenter(patch_salt_globals, service_instance):
+def vmware_datacenter(patch_salt_globals_datacenter):
     """
     Return a vmware_datacenter during start of a test and tear it down once the test ends
     """
     dc_name = str(uuid.uuid4())
-    dc = datacenter_mod.create(name=dc_name, service_instance=service_instance)
+    dc = datacenter_mod.create(name=dc_name)
     yield dc_name
-    datacenter_mod.delete(name=dc_name, service_instance=service_instance)
+    datacenter_mod.delete(name=dc_name)
 
 
 @pytest.fixture
@@ -274,19 +275,14 @@ def patch_salt_globals_folder_state(vmware_conf):
 
 
 @pytest.fixture
-def patch_salt_globals_datacenter(vmware_conf):
+def patch_salt_globals_datacenter(vmware_conf, patch_salt_globals):
     """
     Patch __opts__ and __pillar__
     """
-
-    setattr(
-        datacenter_mod,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(datacenter_mod, "__pillar__", vmware_conf)
+    with patch.dict(datacenter_mod.__opts__, {"test": False}), patch.dict(
+        datacenter_mod.__pillar__, vmware_conf
+    ):
+        yield
 
 
 @pytest.fixture
