@@ -1,14 +1,11 @@
 """
-    Integration Tests for vmc_networks execution module
+    Integration Tests for vmc_security_groups execution module
 """
+import json
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request
-
-
-@pytest.fixture
-def subnets():
-    return [{"gateway_address": "30.1.1.1/16"}]
 
 
 @pytest.fixture
@@ -17,30 +14,32 @@ def request_headers(common_data):
 
 
 @pytest.fixture
-def network_url(common_data):
+def security_group_url(common_data):
     url = (
         "https://{hostname}/vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
-        "policy/api/v1/infra/tier-1s/cgw/segments/{network_id}"
+        "policy/api/v1/infra/domains/{domain_id}/groups/{security_group_id}"
     )
     api_url = url.format(
         hostname=common_data["hostname"],
         org_id=common_data["org_id"],
         sddc_id=common_data["sddc_id"],
-        network_id=common_data["network_id"],
+        domain_id=common_data["domain_id"],
+        security_group_id=common_data["security_group_id"],
     )
     return api_url
 
 
 @pytest.fixture
-def network_list_url(common_data):
+def security_groups_list_url(common_data):
     url = (
         "https://{hostname}/vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
-        "policy/api/v1/infra/tier-1s/cgw/segments"
+        "policy/api/v1/infra/domains/{domain_id}/groups"
     )
     api_url = url.format(
         hostname=common_data["hostname"],
         org_id=common_data["org_id"],
         sddc_id=common_data["sddc_id"],
+        domain_id=common_data["domain_id"],
     )
     return api_url
 
@@ -54,7 +53,8 @@ def common_data(vmc_nsx_connect):
         "authorization_host": authorization_host,
         "org_id": org_id,
         "sddc_id": sddc_id,
-        "network_id": "web-tier",
+        "domain_id": "cgw",
+        "security_group_id": "Integration_SG_1",
         "verify_ssl": verify_ssl,
         "cert": cert,
     }
@@ -62,10 +62,10 @@ def common_data(vmc_nsx_connect):
 
 
 @pytest.fixture
-def get_networks(common_data, network_list_url, request_headers):
+def get_security_groups(common_data, security_groups_list_url, request_headers):
     session = requests.Session()
     response = session.get(
-        url=network_list_url,
+        url=security_groups_list_url,
         verify=common_data["cert"] if common_data["verify_ssl"] else False,
         headers=request_headers,
     )
@@ -74,17 +74,18 @@ def get_networks(common_data, network_list_url, request_headers):
 
 
 @pytest.fixture
-def delete_network(get_networks, network_url, common_data, request_headers):
+def delete_security_group(get_security_groups, security_group_url, request_headers, common_data):
     """
     Sets up test requirements:
-    Queries vmc api for networks
-    Deletes network if exists
+    Queries vmc api for security groups
+    Deletes security group if exists
     """
-    for result in get_networks.get("results", []):
-        if result["id"] == common_data["network_id"]:
+
+    for result in get_security_groups.get("results", []):
+        if result["id"] == common_data["security_group_id"]:
             session = requests.Session()
             response = session.delete(
-                url=network_url,
+                url=security_group_url,
                 verify=common_data["cert"] if common_data["verify_ssl"] else False,
                 headers=request_headers,
             )
@@ -93,15 +94,15 @@ def delete_network(get_networks, network_url, common_data, request_headers):
 
 
 @pytest.fixture
-def create_network(get_networks, network_url, common_data, request_headers, subnets):
-    for result in get_networks.get("results", []):
-        if result["id"] == common_data["network_id"]:
+def create_security_group(get_security_groups, security_group_url, request_headers, common_data):
+    for result in get_security_groups.get("results", []):
+        if result["id"] == common_data["security_group_id"]:
             return
 
-    data = {"display_name": "web-tier", "subnets": subnets}
+    data = {"display_name": "Integration_SG_1", "expression": [], "tags": [], "description": ""}
     session = requests.Session()
-    response = session.put(
-        url=network_url,
+    response = session.patch(
+        url=security_group_url,
         json=data,
         verify=common_data["cert"] if common_data["verify_ssl"] else False,
         headers=request_headers,
@@ -110,32 +111,33 @@ def create_network(get_networks, network_url, common_data, request_headers, subn
     response.raise_for_status()
 
 
-def test_create_network_smoke_test(salt_call_cli, delete_network, common_data, subnets):
-    expected_network_id = common_data["network_id"]
+def test_create_security_group_smoke_test(salt_call_cli, delete_security_group, common_data):
+    expected_security_group_id = common_data["security_group_id"]
     ret = salt_call_cli.run(
-        "vmc_networks.create",
-        subnets=subnets,
+        "vmc_security_groups.create",
         **common_data,
     )
     result_as_json = ret.json
-    assert result_as_json["id"] == result_as_json["display_name"] == expected_network_id
+    assert result_as_json["id"] == result_as_json["display_name"] == expected_security_group_id
 
 
-def test_get_networks_smoke_test(salt_call_cli, get_networks, common_data):
-    # No network ID here
-    del common_data["network_id"]
-    ret = salt_call_cli.run("vmc_networks.get", **common_data)
+def test_get_security_groups_smoke_test(salt_call_cli, get_security_groups, common_data):
+    # No security group id here
+    del common_data["security_group_id"]
+    ret = salt_call_cli.run("vmc_security_groups.get", **common_data)
     result_as_json = ret.json
-    assert result_as_json == get_networks
+    assert result_as_json == get_security_groups
 
 
-def test_update_network_smoke_test(salt_call_cli, create_network, common_data):
-    ret = salt_call_cli.run("vmc_networks.update", **common_data, display_name="network1")
+def test_update_security_group_smoke_test(salt_call_cli, common_data, create_security_group):
+    ret = salt_call_cli.run(
+        "vmc_security_groups.update", **common_data, display_name="updated_security_group"
+    )
     result = ret.json
     assert result["result"] == "success"
 
 
-def test_delete_network_smoke_test(salt_call_cli, create_network, common_data):
-    ret = salt_call_cli.run("vmc_networks.delete", **common_data)
+def test_delete_security_group_smoke_test(salt_call_cli, create_security_group, common_data):
+    ret = salt_call_cli.run("vmc_security_groups.delete", **common_data)
     result_as_json = ret.json
     assert result_as_json["result"] == "success"

@@ -391,6 +391,16 @@ def vmc_nsx_connect(vmc_config):
     )
 
 
+@pytest.fixture(scope="session")
+def vmc_vcenter_connect(vmc_config):
+    return vmc_config["vmc_vcenter_connect"]
+
+
+@pytest.fixture(scope="session")
+def vmc_vcenter_admin_connect(vmc_config):
+    return vmc_config["vmc_vcenter_admin_connect"]
+
+
 NSXT_CONFIG_FILE_NAME = "nsxt_config.json"
 
 
