@@ -57,46 +57,6 @@ def mocked_error_response():
     return error_response
 
 
-@pytest.fixture
-def get_mocked_data():
-    mocked_ok_response = {
-        "type": "ROUTED",
-        "subnets": [
-            {
-                "gateway_address": "192.168.1.1/24",
-                "dhcp_ranges": ["192.168.1.2-192.168.1.254"],
-                "network": "192.168.1.0/24",
-            }
-        ],
-        "connectivity_path": "/infra/tier-1s/cgw",
-        "admin_state": "UP",
-        "replication_mode": "MTEP",
-        "resource_type": "Segment",
-        "id": "sddc-cgw-network-1",
-        "display_name": "sddc-cgw-network-1",
-        "path": "/infra/tier-1s/cgw/segments/sddc-cgw-network-1",
-        "relative_path": "sddc-cgw-network-1",
-        "parent_path": "/infra/tier-1s/cgw",
-        "unique_id": "f21c4570-c771-4923-aeb7-126691d339e7",
-        "marked_for_delete": False,
-        "overridden": False,
-        "_create_time": 1618213319210,
-        "_create_user": "admin",
-        "_last_modified_time": 1618213319235,
-        "_last_modified_user": "admin",
-        "_system_owned": False,
-        "_system_owned": False,
-        "_protection": "NOT_PROTECTED",
-        "_revision": 0,
-    }
-
-    mocked_error_response = {
-        "error": "The credentials were incorrect or the account specified has been locked."
-    }
-    mocked_hostname = "nsx-t.vmwarevmc.com"
-    return mocked_hostname, mocked_ok_response, mocked_error_response
-
-
 def test_present_state_when_error_from_get_by_id(mocked_error_response):
     mock_get_by_id = create_autospec(
         vmc_networks_exec.get_by_id, return_value=mocked_error_response
@@ -210,7 +170,7 @@ def test_present_state_during_update_to_add_a_new_field(mocked_ok_response):
     assert result is not None
     assert result["changes"]["old"] == mocked_ok_response
     assert result["changes"]["new"] == mocked_updated_response
-    assert result["comment"] == "Updated Network {}".format(mocked_ok_response["id"])
+    assert result["comment"] == "Updated network {}".format(mocked_ok_response["id"])
     assert result["result"]
 
 
@@ -241,7 +201,7 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created Network {}".format(network_id)
+    assert result["comment"] == "Created network {}".format(network_id)
     assert result["result"]
 
 
@@ -278,7 +238,7 @@ def test_present_to_update_when_module_returns_success_response(mocked_ok_respon
     assert result is not None
     assert result["changes"]["new"] == mocked_updated_network
     assert result["changes"]["old"] == mocked_ok_response
-    assert result["comment"] == "Updated Network {}".format(network_id)
+    assert result["comment"] == "Updated network {}".format(network_id)
     assert result["result"]
 
 
@@ -370,7 +330,7 @@ def test_present_state_for_create_when_opts_test_is_true():
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State present will create Network {}".format(network_id)
+    assert result["comment"] == "State present will create network {}".format(network_id)
     assert result["result"] is None
 
 
@@ -397,7 +357,7 @@ def test_present_state_for_update_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State present will update Network {}".format(network_id)
+    assert result["comment"] == "State present will update network {}".format(network_id)
     assert result["result"] is None
 
 
@@ -429,7 +389,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_r
 
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response}
-    assert result["comment"] == "Deleted Network {}".format(network_id)
+    assert result["comment"] == "Deleted network {}".format(network_id)
     assert result["result"]
 
 
@@ -453,7 +413,7 @@ def test_absent_state_when_object_to_delete_does_not_exists():
 
     assert result is not None
     assert result["changes"] == {}
-    assert result["comment"] == "No Network found with Id {}".format(network_id)
+    assert result["comment"] == "No network found with ID {}".format(network_id)
     assert result["result"]
 
 
@@ -480,7 +440,7 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State absent will delete Network with Id {}".format(network_id)
+    assert result["comment"] == "State absent will delete network with ID {}".format(network_id)
     assert result["result"] is None
 
 
@@ -507,7 +467,7 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
     assert len(result["changes"]) == 0
     assert result[
         "comment"
-    ] == "State absent will do nothing as no Network found with Id {}".format(network_id)
+    ] == "State absent will do nothing as no network found with ID {}".format(network_id)
     assert result["result"] is None
 
 
@@ -622,7 +582,7 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
     assert result is not None
     assert result["changes"]["old"] is None
     assert result["changes"]["new"] == mocked_updated_response
-    assert result["comment"] == "Created Network {}".format(mocked_ok_response["id"])
+    assert result["comment"] == "Created network {}".format(mocked_ok_response["id"])
     assert result["result"]
 
 
@@ -686,7 +646,7 @@ def test_present_state_during_update_should_correctly_pass_args(mocked_ok_respon
     assert result is not None
     assert result["changes"]["old"] == mocked_ok_response
     assert result["changes"]["new"] == mocked_updated_response
-    assert result["comment"] == "Updated Network {}".format(mocked_ok_response["id"])
+    assert result["comment"] == "Updated network {}".format(mocked_ok_response["id"])
     assert result["result"]
 
 
@@ -720,5 +680,5 @@ def test_present_when_get_by_id_returns_not_found_error(mocked_ok_response):
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created Network {}".format(network_id)
+    assert result["comment"] == "Created network {}".format(network_id)
     assert result["result"]

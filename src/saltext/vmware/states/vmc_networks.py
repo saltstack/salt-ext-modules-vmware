@@ -268,11 +268,11 @@ def present(
         log.info("present is called with test option")
         if network:
             return vmc_state._create_state_response(
-                name=name, comment="State present will update Network {}".format(network_id)
+                name=name, comment="State present will update network {}".format(network_id)
             )
         else:
             return vmc_state._create_state_response(
-                name=name, comment="State present will create Network {}".format(network_id)
+                name=name, comment="State present will create network {}".format(network_id)
             )
 
     if network:
@@ -325,7 +325,7 @@ def present(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated Network {}".format(network_id),
+                comment="Updated network {}".format(network_id),
                 old_state=network,
                 new_state=updated_network,
                 result=True,
@@ -363,7 +363,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created Network {}".format(network_id),
+            comment="Created network {}".format(network_id),
             new_state=created_network,
             result=True,
         )
@@ -433,12 +433,12 @@ def absent(
         log.info("absent is called with test option")
         if network:
             return vmc_state._create_state_response(
-                name=name, comment="State absent will delete Network with Id {}".format(network_id)
+                name=name, comment="State absent will delete network with ID {}".format(network_id)
             )
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will do nothing as no Network found with Id {}".format(
+                comment="State absent will do nothing as no network found with ID {}".format(
                     network_id
                 ),
             )
@@ -463,12 +463,12 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted Network {}".format(network_id),
+            comment="Deleted network {}".format(network_id),
             old_state=network,
             result=True,
         )
     else:
         log.info("No Network found with Id %s", network_id)
         return vmc_state._create_state_response(
-            name=name, comment="No Network found with Id {}".format(network_id), result=True
+            name=name, comment="No network found with ID {}".format(network_id), result=True
         )
