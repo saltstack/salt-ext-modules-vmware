@@ -36,9 +36,7 @@ def test_tag_create(patch_salt_globals_tag, vmware_tag_name_c):
     Test create tag functionality
     """
     tag_name, cat_id = vmware_tag_name_c
-    res = tagging.create(
-        tag_name, cat_id, description="testy test tester"
-    )
+    res = tagging.create(tag_name, cat_id, description="testy test tester")
     assert "urn:vmomi:InventoryServiceTag:" in res
 
 

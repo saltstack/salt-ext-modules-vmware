@@ -9,7 +9,7 @@ def test_manage_create(patch_salt_globals_tag_state, patch_salt_globals_tag, vmw
     """
     test tag manage create
     """
-    tag_name, cat_id =vmware_tag_name_c
+    tag_name, cat_id = vmware_tag_name_c
     res = tagging_state.present(
         tag_name,
         description="testing state tag create",

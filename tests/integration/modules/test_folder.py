@@ -45,9 +45,7 @@ def test_rename(patch_salt_globals_folder, rename_test_folder_names):
     Test folder rename
     """
     old_name, new_name = rename_test_folder_names
-    ret = folder.rename(
-        old_name, new_name, "Datacenter", "vm"
-    )
+    ret = folder.rename(old_name, new_name, "Datacenter", "vm")
     assert ret["status"] == "renamed"
 
 
