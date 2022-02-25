@@ -196,40 +196,36 @@ def vmware_category():
     """
     try:
         cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
-        yield cat_ref["category"]
+        yield cat_ref
     finally:
-        tagging.delete_category(cat_ref["category"])
+        tagging.delete_category(cat_ref)
 
 
 @pytest.fixture
-def vmware_tag():
+def vmware_tag(vmware_category):
     """
     Return a vmware_tag for tagging and attributes
     """
     try:
-        cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
-        tag_ref = tagging.create("test-tag", cat_ref["category"], description="test tag")
-        yield tag_ref["tag"]
+        tag_ref = tagging.create("test-tag", vmware_category, description="test tag")
+        yield tag_ref
     finally:
-        tagging.delete(tag_ref["tag"])
-        tagging.delete_category(cat_ref["category"])
+        tagging.delete(tag_ref)
 
 
 @pytest.fixture
-def vmware_tag_name_c():
+def vmware_tag_name_c(vmware_category):
     """
     Return a vmware_tag for tagging and attributes
     """
     try:
-        cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
-        yield ["test-tag", cat_ref["category"]]
+        yield "test-tag", vmware_category
     finally:
         tags = tagging.list_()
-        for tag in tags["tags"]:
+        for tag in tags:
             res = tagging.get(tag)
-            if res["tag"]["name"] == "test-tag":
-                tagging.delete(res["tag"]["id"])
-        tagging.delete_category(cat_ref["category"])
+            if res["name"] == "test-tag":
+                tagging.delete(res["id"])
 
 
 @pytest.fixture
@@ -240,10 +236,10 @@ def vmware_cat_name_c():
     yield "test-cat"
     try:
         cats = tagging.list_category()
-        for cat in cats["categories"]:
+        for cat in cats:
             res = tagging.get_category(cat)
-            if res["category"]["name"] == "test-cat":
-                tagging.delete_category(res["category"]["id"])
+            if res["name"] == "test-cat":
+                tagging.delete_category(res["id"])
     except Exception:
         pass
 

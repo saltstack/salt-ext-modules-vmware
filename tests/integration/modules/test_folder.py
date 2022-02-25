@@ -17,7 +17,7 @@ def test_folder_name():
 def rename_test_folder_names():
     try:
         folder.create("test_folder", "Datacenter", "vm")
-        yield ["test_folder", "new_test_folder"]
+        yield "test_folder", "new_test_folder"
     finally:
         folder.destroy("new_test_folder", "Datacenter", "vm")
 
@@ -27,7 +27,7 @@ def move_test_folder_names():
     try:
         folder.create("test_folder_top", "Datacenter", "vm")
         folder.create("test_folder", "Datacenter", "vm")
-        yield ["test_folder_top", "test_folder"]
+        yield "test_folder_top", "test_folder"
     finally:
         folder.destroy("test_folder_top", "Datacenter", "vm")
 
@@ -44,8 +44,9 @@ def test_rename(patch_salt_globals_folder, rename_test_folder_names):
     """
     Test folder rename
     """
+    old_name, new_name = rename_test_folder_names
     ret = folder.rename(
-        rename_test_folder_names[0], rename_test_folder_names[1], "Datacenter", "vm"
+        old_name, new_name, "Datacenter", "vm"
     )
     assert ret["status"] == "renamed"
 
@@ -54,13 +55,14 @@ def test_move(patch_salt_globals_folder, move_test_folder_names):
     """
     Test folder move
     """
-    ret = folder.move(move_test_folder_names[1], move_test_folder_names[0], "Datacenter", "vm")
+    outside_folder, inside_folder = move_test_folder_names
+    ret = folder.move(inside_folder, outside_folder, "Datacenter", "vm")
     assert ret["status"] == "moved"
 
 
-def test_destoryed(patch_salt_globals_folder):
+def test_destroyed(patch_salt_globals_folder):
     """
-    Test folder destoryed
+    Test folder destroyed
     """
     folder.create("test_folder", "Datacenter", "vm")
     ret = folder.destroy("test_folder", "Datacenter", "vm")

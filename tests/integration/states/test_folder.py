@@ -26,7 +26,7 @@ def test_folder_name_c():
 def test_folder_name_rename():
     try:
         folder.manage("test_folder", "create", "Datacenter", "vm")
-        yield ["test_folder", "test_folder_new"]
+        yield "test_folder", "test_folder_new"
     finally:
         folder.manage("test_folder_new", "destroy", "Datacenter", "vm")
 
@@ -36,7 +36,7 @@ def test_folder_name_move():
     try:
         folder.manage("test_folder", "create", "Datacenter", "vm")
         folder.manage("test_folder_top", "create", "Datacenter", "vm")
-        yield ["test_folder", "test_folder_top"]
+        yield "test_folder", "test_folder_top"
     finally:
         folder.manage("test_folder", "destroy", "Datacenter", "vm")
         folder.manage("test_folder_top", "destroy", "Datacenter", "vm")
@@ -97,7 +97,8 @@ def test_rename_folder(patch_salt_globals_folder_state, test_folder_name_rename)
     """
     test rename folder
     """
-    ret = folder.rename(test_folder_name_rename[0], test_folder_name_rename[1], "Datacenter", "vm")
+    old_folder, new_folder = test_folder_name_rename
+    ret = folder.rename(old_folder, new_folder, "Datacenter", "vm")
     assert ret["result"] == True
     assert ret["comment"] == "renamed"
     assert ret["changes"]["new"] == "folder test_folder renamed test_folder_new"
@@ -107,7 +108,8 @@ def test_move_folder_test(patch_salt_globals_folder_state_test, test_folder_name
     """
     test move folder in test mode
     """
-    ret = folder.move(test_folder_name_move[0], test_folder_name_move[1], "Datacenter", "vm")
+    inside_folder, outside_folder = test_folder_name_move
+    ret = folder.move(inside_folder, outside_folder, "Datacenter", "vm")
     assert ret["result"] == True
     assert ret["comment"] == "These options are set to change."
     assert ret["changes"]["new"] == "folder test_folder will be moved to test_folder_top"
@@ -117,7 +119,8 @@ def test_move_folder(patch_salt_globals_folder_state, test_folder_name_move):
     """
     test move folder
     """
-    ret = folder.move(test_folder_name_move[0], test_folder_name_move[1], "Datacenter", "vm")
+    inside_folder, outside_folder = test_folder_name_move
+    ret = folder.move(inside_folder, outside_folder, "Datacenter", "vm")
     assert ret["result"] == True
     assert ret["comment"] == "moved"
     assert ret["changes"]["new"] == "folder test_folder moved to test_folder_top"

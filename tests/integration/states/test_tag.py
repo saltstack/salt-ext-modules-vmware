@@ -9,11 +9,11 @@ def test_manage_create(patch_salt_globals_tag_state, patch_salt_globals_tag, vmw
     """
     test tag manage create
     """
-
+    tag_name, cat_id =vmware_tag_name_c
     res = tagging_state.present(
-        vmware_tag_name_c[0],
+        tag_name,
         description="testing state tag create",
-        category_id=vmware_tag_name_c[1],
+        category_id=cat_id,
     )
     assert "created" in res["comment"]
 
