@@ -7,17 +7,6 @@ import pytest
 import requests
 from saltext.vmware.utils import vmc_request
 
-_hostname = ""
-_refresh_key = ""
-_authorization_host = ""
-_org_id = ""
-_sddc_id = ""
-_public_ip_name = "TEST_INTEGRATION_PUBLIC_IP"
-_public_ip_id = "TEST_INTEGRATION_PUBLIC_IP"
-_updated_public_ip_name = "UPDATED_INTEGRATION_PUBLIC_IP"
-_verify_ssl = True
-_cert = ""
-
 
 @pytest.fixture
 def request_headers(common_data):
@@ -85,7 +74,7 @@ def get_public_ips(common_data, public_ips_list_url, request_headers):
 @pytest.fixture
 def delete_public_ip(get_public_ips, public_ip_url, request_headers, common_data):
     for result in get_public_ips.get("results", []):
-        if result["id"] == common_data["public_ip"]:
+        if result["id"] == common_data["public_ip_id"]:
             session = requests.Session()
             response = session.delete(
                 url=public_ip_url,
@@ -99,16 +88,16 @@ def delete_public_ip(get_public_ips, public_ip_url, request_headers, common_data
 @pytest.fixture
 def create_public_ip(get_public_ips, public_ip_url, request_headers, common_data):
     for result in get_public_ips.get("results", []):
-        if result["id"] == common_data["public_ip"]:
+        if result["id"] == common_data["public_ip_id"]:
             return
 
     data = {
         "ip": None,
         "display_name": common_data["public_ip_name"],
-        "id": common_data["public_ip"],
+        "id": common_data["public_ip_name"],
     }
     session = requests.Session()
-    response = session.patch(
+    response = session.put(
         url=public_ip_url,
         json=data,
         verify=common_data["cert"] if common_data["verify_ssl"] else False,
@@ -120,6 +109,8 @@ def create_public_ip(get_public_ips, public_ip_url, request_headers, common_data
 
 def test_create_public_ip_smoke_test(salt_call_cli, delete_public_ip, common_data):
     public_ip = common_data["public_ip_name"]
+    del common_data["public_ip_id"]
+
     ret = salt_call_cli.run(
         "vmc_public_ip.create",
         **common_data,
@@ -131,18 +122,24 @@ def test_create_public_ip_smoke_test(salt_call_cli, delete_public_ip, common_dat
 def test_get_public_ips_smoke_test(salt_call_cli, get_public_ips, common_data):
     # No nat rule here
     del common_data["public_ip_id"]
+    del common_data["public_ip_name"]
+
     ret = salt_call_cli.run("vmc_public_ip.get", **common_data)
     result_as_json = ret.json
     assert result_as_json == get_public_ips
 
 
 def test_update_public_ip_smoke_test(salt_call_cli, common_data, create_public_ip):
-    ret = salt_call_cli.run("vmc_public_ip.update", **common_data, display_name="updated_public_ip")
+    del common_data["public_ip_name"]
+    ret = salt_call_cli.run(
+        "vmc_public_ip.update", **common_data, public_ip_name="updated_public_ip"
+    )
     result = ret.json
-    assert result["result"] == "success"
+    assert result["display_name"] == "updated_public_ip"
 
 
 def test_delete_public_ip_smoke_test(salt_call_cli, create_public_ip, common_data):
+    del common_data["public_ip_name"]
     ret = salt_call_cli.run("vmc_public_ip.delete", **common_data)
     result_as_json = ret.json
     assert result_as_json["result"] == "success"
