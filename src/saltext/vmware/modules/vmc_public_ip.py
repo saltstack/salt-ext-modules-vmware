@@ -242,3 +242,151 @@ def delete(
         verify_ssl=verify_ssl,
         cert=cert,
     )
+
+
+def create(
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    public_ip_name,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Create public ip for Given SDDC
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt vm_minion vmc_public_ip.create hostname=nsxt-manager.local public_ip_name=vmc_public_ip ...
+
+    hostname
+        The host name of NSX-T manager
+
+    refresh_key
+        refresh_key to get access token
+
+    authorization_host
+        hostname to get access token
+
+    org_id
+        org_id of the SDDC
+
+    sddc_id
+        sddc_id for which public ip should be retrieved
+
+    public_ip_name
+        name of public ip it will create id same as name
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
+        The certificate can be retrieved from browser.
+
+    """
+    log.info("Creating Public IP %s for SDDC %s", public_ip_name, sddc_id)
+
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = (
+        "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
+        "cloud-service/api/v1/infra/public-ips/{public_ip_id}"
+    )
+    api_url = api_url.format(
+        base_url=api_url_base, org_id=org_id, sddc_id=sddc_id, public_ip_id=public_ip_name
+    )
+
+    # not using json infrastructure as all feilds details are available from user_input
+    data = {"ip": None, "display_name": public_ip_name, "id": public_ip_name}
+
+    return vmc_request.call_api(
+        method=vmc_constants.PUT_REQUEST_METHOD,
+        url=api_url,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        description="vmc_public_ip.create",
+        data=data,
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
+
+
+def update(
+    hostname,
+    refresh_key,
+    authorization_host,
+    org_id,
+    sddc_id,
+    public_ip_id,
+    public_ip_name,
+    verify_ssl=True,
+    cert=None,
+):
+    """
+    Update public ip display name for given public ip id for Given SDDC
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt vm_minion vmc_public_ip.create hostname=nsxt-manager.local public_ip_name=vmc_public_ip ...
+
+    hostname
+        The host name of NSX-T manager
+
+    refresh_key
+        refresh_key to get access token
+
+    authorization_host
+        hostname to get access token
+
+    org_id
+        org_id of the SDDC
+
+    sddc_id
+        sddc_id for which public ip should be retrieved
+
+    public_ip_id
+        public ip id
+
+    public_ip_name
+        name of public ip it will be updated
+
+    verify_ssl
+        (Optional) Option to enable/disable SSL verification. Enabled by default.
+        If set to False, the certificate validation is skipped.
+
+    cert
+        (Optional) Path to the SSL certificate file to connect to NSX-T manager.
+        The certificate can be retrieved from browser.
+
+    """
+    log.info("Updating Public IP %s for SDDC %s", public_ip_id, sddc_id)
+
+    api_url_base = vmc_request.set_base_url(hostname)
+    api_url = (
+        "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
+        "cloud-service/api/v1/infra/public-ips/{public_ip_id}"
+    )
+    api_url = api_url.format(
+        base_url=api_url_base, org_id=org_id, sddc_id=sddc_id, public_ip_id=public_ip_id
+    )
+
+    # not using json infrastructure as all feilds details are available from user_input
+    data = {"display_name": public_ip_name}
+
+    return vmc_request.call_api(
+        method=vmc_constants.PUT_REQUEST_METHOD,
+        url=api_url,
+        refresh_key=refresh_key,
+        authorization_host=authorization_host,
+        description="vmc_public_ip.update",
+        data=data,
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
