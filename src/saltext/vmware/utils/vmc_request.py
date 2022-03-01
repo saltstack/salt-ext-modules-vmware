@@ -201,3 +201,7 @@ def _filter_kwargs(allowed_kwargs, allow_none=[], default_dict=None, **kwargs):
         if field in allow_none and val != vmc_constants.VMC_NONE:
             result[field] = val
     return result
+
+
+def _filter_vmc_none(**kwargs):
+    return {k: v for k, v in kwargs.items() if v != vmc_constants.VMC_NONE}
