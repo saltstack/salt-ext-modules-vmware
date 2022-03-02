@@ -28,4 +28,5 @@ State Modules
     saltext.vmware.states.tag
     saltext.vmware.states.vm
     saltext.vmware.states.vmc_nat_rules
+    saltext.vmware.states.vmc_public_ip
     saltext.vmware.states.vmc_security_rules
