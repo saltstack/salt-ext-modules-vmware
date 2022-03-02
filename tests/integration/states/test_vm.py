@@ -5,6 +5,7 @@ import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.modules.vm as vmm
 import saltext.vmware.states.vm as virtual_machine
 import saltext.vmware.utils.common as utils_common
+from unittest.mock import patch
 
 try:
     from pyVmomi import vim
@@ -12,6 +13,33 @@ try:
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
+
+
+@pytest.fixture
+def patch_salt_globals_vm_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        virtual_machine,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(virtual_machine, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_vm_state_test(patch_salt_globals_vm_state):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    with patch.dict(virtual_machine.__opts__, {"test": True}):
+        yield
+
 
 
 def test_set_boot_manager_dry(integration_test_config, patch_salt_globals_vm_state_test):

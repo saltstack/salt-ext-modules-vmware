@@ -2,6 +2,33 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 import saltext.vmware.states.folder as folder
+from unittest.mock import patch
+
+
+@pytest.fixture
+def patch_salt_globals_folder_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(
+        folder,
+        "__opts__",
+        {
+            "test": False,
+        },
+    )
+    setattr(folder, "__pillar__", vmware_conf)
+
+
+@pytest.fixture
+def patch_salt_globals_folder_state_test(patch_salt_globals_folder_state):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    with patch.dict(folder.__opts__, {"test": True}):
+        yield
 
 
 @pytest.fixture

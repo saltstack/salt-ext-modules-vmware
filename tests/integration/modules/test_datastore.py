@@ -4,6 +4,16 @@ import pytest
 from saltext.vmware.modules import datastore
 
 
+@pytest.fixture
+def patch_salt_globals_datastore(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(datastore, "__opts__", {})
+    setattr(datastore, "__pillar__", vmware_conf)
+
+
 def test_maintenance_mode(service_instance, integration_test_config, patch_salt_globals_datastore):
     """
     Test datastore maintenance mode

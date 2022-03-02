@@ -17,6 +17,16 @@ except ImportError:
     HAS_PYVMOMI = False
 
 
+@pytest.fixture
+def patch_salt_globals_vm(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    setattr(virtual_machine, "__opts__", {})
+    setattr(virtual_machine, "__pillar__", vmware_conf)
+
+
 @pytest.mark.parametrize(
     "arg_name",
     [
