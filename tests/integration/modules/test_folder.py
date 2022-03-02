@@ -1,8 +1,9 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
+from unittest.mock import patch
+
 import pytest
 import saltext.vmware.modules.folder as folder
-from unittest.mock import patch
 
 
 @pytest.fixture

@@ -1,8 +1,9 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
+from unittest.mock import patch
+
 import pytest
 import saltext.vmware.states.tag as tagging_state
-from unittest.mock import patch
 
 
 @pytest.fixture
