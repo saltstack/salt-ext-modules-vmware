@@ -223,7 +223,7 @@ def test_create_public_ip_called_with_url():
         ),
     ],
 )
-def test_assert_security_groups_create_should_correctly_filter_args(actual_args, expected_payload):
+def test_assert_public_ip_create_should_correctly_filter_args(actual_args, expected_payload):
     common_actual_args = {
         "hostname": "hostname",
         "refresh_key": "refresh_key",
@@ -292,7 +292,7 @@ def test_update_public_ip_called_with_url():
         ),
     ],
 )
-def test_assert_security_groups_update_should_correctly_filter_args(actual_args, expected_payload):
+def test_assert_public_ip_update_should_correctly_filter_args(actual_args, expected_payload):
     common_actual_args = {
         "hostname": "hostname",
         "refresh_key": "refresh_key",
