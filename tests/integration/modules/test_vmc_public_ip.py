@@ -7,17 +7,6 @@ import pytest
 import requests
 from saltext.vmware.utils import vmc_request
 
-_hostname = ""
-_refresh_key = ""
-_authorization_host = ""
-_org_id = ""
-_sddc_id = ""
-_public_ip_name = "TEST_INTEGRATION_PUBLIC_IP"
-_public_ip_id = "TEST_INTEGRATION_PUBLIC_IP"
-_updated_public_ip_name = "UPDATED_INTEGRATION_PUBLIC_IP"
-_verify_ssl = True
-_cert = ""
-
 
 @pytest.fixture
 def request_headers(common_data):
