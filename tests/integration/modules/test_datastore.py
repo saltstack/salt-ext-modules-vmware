@@ -1,5 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
+from unittest.mock import patch
+
 import pytest
 from saltext.vmware.modules import datastore
 
@@ -9,9 +11,10 @@ def patch_salt_globals_datastore(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-
-    setattr(datastore, "__opts__", {})
-    setattr(datastore, "__pillar__", vmware_conf)
+    with patch.object(datastore, "__opts__", {}, create=True), patch.object(
+        datastore, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 def test_maintenance_mode(service_instance, integration_test_config, patch_salt_globals_datastore):

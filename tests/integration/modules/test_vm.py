@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import tarfile
+from unittest.mock import patch
 
 import pytest
 import salt.exceptions
@@ -22,9 +23,10 @@ def patch_salt_globals_vm(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-
-    setattr(virtual_machine, "__opts__", {})
-    setattr(virtual_machine, "__pillar__", vmware_conf)
+    with patch.object(virtual_machine, "__opts__", {}, create=True), patch.object(
+        virtual_machine, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.mark.parametrize(

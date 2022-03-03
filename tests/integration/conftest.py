@@ -260,9 +260,10 @@ def patch_salt_globals_tag(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-
-    setattr(tagging, "__opts__", {})
-    setattr(tagging, "__pillar__", vmware_conf)
+    with patch.object(tagging, "__opts__", {"test": False}, create=True), patch.object(
+        tagging, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.fixture(scope="function")

@@ -11,15 +11,10 @@ def patch_salt_globals_tag_state(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-
-    setattr(
-        tagging_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(tagging_state, "__pillar__", vmware_conf)
+    with patch.object(tagging_state, "__opts__", {"test": False}, create=True), patch.object(
+        tagging_state, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.fixture

@@ -11,8 +11,10 @@ def patch_salt_globals_folder(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-    setattr(folder, "__opts__", {})
-    setattr(folder, "__pillar__", vmware_conf)
+    with patch.object(folder, "__opts__", {}, create=True), patch.object(
+        folder, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.fixture
