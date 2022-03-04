@@ -1,8 +1,30 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
+from unittest.mock import patch
+
 import pytest
-import saltext.vmware.modules.tag as tagging
 import saltext.vmware.states.tag as tagging_state
+
+
+@pytest.fixture
+def patch_salt_globals_tag_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+    with patch.object(tagging_state, "__opts__", {"test": False}, create=True), patch.object(
+        tagging_state, "__pillar__", vmware_conf, create=True
+    ):
+        yield
+
+
+@pytest.fixture
+def patch_salt_globals_tag_state_test(patch_salt_globals_tag_state):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    with patch.dict(tagging_state.__opts__, {"test": True}):
+        yield
 
 
 def test_manage_create(patch_salt_globals_tag_state, patch_salt_globals_tag, vmware_tag_name_c):
