@@ -1,7 +1,6 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 from unittest.mock import patch
-from venv import create
 
 import pytest
 import saltext.vmware.states.datastore as datastore
