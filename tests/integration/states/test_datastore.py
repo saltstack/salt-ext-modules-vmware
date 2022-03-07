@@ -8,7 +8,7 @@ def test_maintenance_mode_test(integration_test_config, patch_salt_globals_datas
     """
     Test datastore maintenance mode
     """
-    if integration_test_config["datastores"]:
+    if integration_test_config.get("datastores"):
         res = datastore.maintenance_mode(integration_test_config["datastores"][0], True)
         assert res["comment"] == "These options are set to change."
     else:
@@ -19,7 +19,7 @@ def test_maintenance_mode(integration_test_config, patch_salt_globals_datastore_
     """
     Test datastore maintenance mode
     """
-    if integration_test_config["datastores"]:
+    if integration_test_config.get("datastores"):
         res = datastore.maintenance_mode(integration_test_config["datastores"][0], True)
         assert res["comment"] == "These options changed."
     else:
@@ -32,7 +32,7 @@ def test_exit_maintenance_mode_test(
     """
     Test datastore exit maintenance mode
     """
-    if integration_test_config["datastores"]:
+    if integration_test_config.get("datastores"):
         res = datastore.maintenance_mode(integration_test_config["datastores"][0], False)
         assert res["comment"] == "These options are set to change."
     else:
@@ -43,7 +43,7 @@ def test_exit_maintenance_mode(integration_test_config, patch_salt_globals_datas
     """
     Test datastore exit maintenance mode
     """
-    if integration_test_config["datastores"]:
+    if integration_test_config.get("datastores"):
         res = datastore.maintenance_mode(integration_test_config["datastores"][0], False)
         assert res["comment"] == "These options changed."
     else:

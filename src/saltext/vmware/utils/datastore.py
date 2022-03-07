@@ -269,10 +269,10 @@ def enter_maintenance_mode(datastore_ref):
         Reference to datastore.
     """
     ret = datastore_ref.DatastoreEnterMaintenanceMode()
-    if ret.task.info.state == "success":
+    utils_common.wait_for_task(ret.task, datastore_ref.name, "Put datastore in maintenance mode")
+    if datastore_ref.summary.maintenanceMode == "inMaintenance":
         return True
-    else:
-        return False
+    return False
 
 
 def exit_maintenance_mode(datastore_ref):

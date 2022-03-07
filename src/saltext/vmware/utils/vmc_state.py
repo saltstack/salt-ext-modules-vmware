@@ -15,7 +15,8 @@ def _create_state_response(name, comment, old_state=None, new_state=None, result
     return state_response
 
 
-def _check_for_updates(existing_data, input_dict, updatable_keys, allowed_none=[]):
+def _check_for_updates(existing_data, input_dict, updatable_keys=None, allowed_none=[]):
+    updatable_keys = updatable_keys or input_dict.keys()
     for key in allowed_none:
         existing_data.setdefault(key, None)
 
