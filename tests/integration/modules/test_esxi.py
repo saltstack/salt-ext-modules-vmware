@@ -158,18 +158,6 @@ def test_list_pkgs(service_instance):
                 ]
             )
 
-    host = MagicMock()
-    host.configManager.imageConfigManager.FetchSoftwarePackages.side_effect = (
-        salt.exceptions.VMwareApiError
-    )
-    setattr(saltext.vmware.utils.esxi, "get_hosts", MagicMock(return_value=[host]))
-    with pytest.raises(salt.exceptions.SaltException) as exc:
-        ret = esxi.list_pkgs(
-            service_instance=service_instance,
-            datacenter_name="Datacenter",
-            cluster_name="Cluster",
-        )
-
 
 def test_manage_service(service_instance):
     """
@@ -367,7 +355,7 @@ def test_add(integration_test_config, service_instance):
     """
     Test esxi add
     """
-    if integration_test_config["esxi_manage_test_instance"]:
+    if "esxi_manage_test_instance" in integration_test_config:
         ret = esxi.add(
             integration_test_config["esxi_manage_test_instance"]["name"],
             integration_test_config["esxi_manage_test_instance"]["user"],
@@ -386,7 +374,7 @@ def test_manage_disconnect(integration_test_config, service_instance):
     """
     Test esxi manage disconnect task
     """
-    if integration_test_config["esxi_manage_test_instance"]:
+    if "esxi_manage_test_instance" in integration_test_config:
         ret = esxi.disconnect(
             integration_test_config["esxi_manage_test_instance"]["name"],
             service_instance=service_instance,
@@ -400,7 +388,7 @@ def test_move(integration_test_config, service_instance):
     """
     Test esxi move
     """
-    if integration_test_config["esxi_manage_test_instance"]:
+    if "esxi_manage_test_instance" in integration_test_config:
         ret = esxi.move(
             integration_test_config["esxi_manage_test_instance"]["name"],
             integration_test_config["esxi_manage_test_instance"]["move"],
@@ -418,7 +406,7 @@ def test_manage_connect(integration_test_config, service_instance):
     """
     Test esxi manage connect task
     """
-    if integration_test_config["esxi_manage_test_instance"]:
+    if "esxi_manage_test_instance" in integration_test_config:
         ret = esxi.connect(
             integration_test_config["esxi_manage_test_instance"]["name"],
             service_instance=service_instance,
@@ -432,7 +420,7 @@ def test_manage_remove(integration_test_config, service_instance):
     """
     Test esxi manage remove task
     """
-    if integration_test_config["esxi_manage_test_instance"]:
+    if "esxi_manage_test_instance" in integration_test_config:
         esxi.disconnect(
             integration_test_config["esxi_manage_test_instance"]["name"],
             service_instance=service_instance,
