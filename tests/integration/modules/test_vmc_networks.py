@@ -17,50 +17,53 @@ def subnets():
 
 
 @pytest.fixture
-def request_headers(common_data):
-    return vmc_request.get_headers(common_data["refresh_key"], common_data["authorization_host"])
+def request_headers(common_data_for_network):
+    return vmc_request.get_headers(
+        common_data_for_network["refresh_key"], common_data_for_network["authorization_host"]
+    )
 
 
 @pytest.fixture
-def network_url(common_data, network_id):
+def network_url(common_data_for_network, network_id):
     url = (
         "https://{hostname}/vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
         "policy/api/v1/infra/tier-1s/cgw/segments/{network_id}"
     )
     api_url = url.format(
-        hostname=common_data["hostname"],
-        org_id=common_data["org_id"],
-        sddc_id=common_data["sddc_id"],
+        hostname=common_data_for_network["hostname"],
+        org_id=common_data_for_network["org_id"],
+        sddc_id=common_data_for_network["sddc_id"],
         network_id=network_id,
     )
     return api_url
 
 
 @pytest.fixture
-def network_list_url(common_data):
+def network_list_url(common_data_for_network):
     url = (
         "https://{hostname}/vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
         "policy/api/v1/infra/tier-1s/cgw/segments"
     )
     api_url = url.format(
-        hostname=common_data["hostname"],
-        org_id=common_data["org_id"],
-        sddc_id=common_data["sddc_id"],
+        hostname=common_data_for_network["hostname"],
+        org_id=common_data_for_network["org_id"],
+        sddc_id=common_data_for_network["sddc_id"],
     )
     return api_url
 
 
 @pytest.fixture
-def common_data(vmc_config):
-    return vmc_config["vmc_nsx_connect"]
+def common_data_for_network(vmc_config):
+    data = vmc_config["vmc_nsx_connect"].copy()
+    return data
 
 
 @pytest.fixture
-def get_networks(common_data, network_list_url, request_headers):
+def get_networks(common_data_for_network, network_list_url, request_headers):
     session = requests.Session()
     response = session.get(
         url=network_list_url,
-        verify=common_data["cert"] if common_data["verify_ssl"] else False,
+        verify=common_data_for_network["cert"] if common_data_for_network["verify_ssl"] else False,
         headers=request_headers,
     )
     response.raise_for_status()
@@ -68,7 +71,7 @@ def get_networks(common_data, network_list_url, request_headers):
 
 
 @pytest.fixture
-def delete_network(get_networks, network_url, common_data, request_headers, network_id):
+def delete_network(get_networks, network_url, common_data_for_network, request_headers, network_id):
     """
     Sets up test requirements:
     Queries vmc api for networks
@@ -79,7 +82,9 @@ def delete_network(get_networks, network_url, common_data, request_headers, netw
             session = requests.Session()
             response = session.delete(
                 url=network_url,
-                verify=common_data["cert"] if common_data["verify_ssl"] else False,
+                verify=common_data_for_network["cert"]
+                if common_data_for_network["verify_ssl"]
+                else False,
                 headers=request_headers,
             )
             # raise error if any
@@ -87,11 +92,11 @@ def delete_network(get_networks, network_url, common_data, request_headers, netw
 
 
 def test_vmc_network_execution_module(
-    salt_call_cli, delete_network, subnets, common_data, network_id
+    salt_call_cli, delete_network, subnets, common_data_for_network, network_id
 ):
     # create network
     response = salt_call_cli.run(
-        "vmc_networks.create", network_id=network_id, subnets=subnets, **common_data
+        "vmc_networks.create", network_id=network_id, subnets=subnets, **common_data_for_network
     )
     response_as_json = response.json
     assert "error" not in response_as_json
@@ -99,19 +104,24 @@ def test_vmc_network_execution_module(
 
     # update network
     response = salt_call_cli.run(
-        "vmc_networks.update", network_id=network_id, display_name="network1", **common_data
+        "vmc_networks.update",
+        network_id=network_id,
+        display_name="network1",
+        **common_data_for_network
     )
     response_as_json = response.json
     assert "error" not in response_as_json
     assert response_as_json["result"] == "success"
 
     # delete network
-    response = salt_call_cli.run("vmc_networks.delete", network_id=network_id, **common_data)
+    response = salt_call_cli.run(
+        "vmc_networks.delete", network_id=network_id, **common_data_for_network
+    )
     response_as_json = response.json
     assert "error" not in response_as_json
     assert response_as_json["result"] == "success"
 
     # get networks
-    response = salt_call_cli.run("vmc_networks.get", **common_data)
+    response = salt_call_cli.run("vmc_networks.get", **common_data_for_network)
     response_as_json = response.json
     assert "error" not in response_as_json
