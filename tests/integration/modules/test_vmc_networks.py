@@ -7,8 +7,13 @@ from saltext.vmware.utils import vmc_request
 
 
 @pytest.fixture
+def network_id():
+    return "sample-network"
+
+
+@pytest.fixture
 def subnets():
-    return [{"gateway_address": "30.1.1.1/16"}]
+    return [{"gateway_address": "40.1.1.1/16"}]
 
 
 @pytest.fixture
@@ -17,7 +22,7 @@ def request_headers(common_data):
 
 
 @pytest.fixture
-def network_url(common_data):
+def network_url(common_data, network_id):
     url = (
         "https://{hostname}/vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
         "policy/api/v1/infra/tier-1s/cgw/segments/{network_id}"
@@ -26,7 +31,7 @@ def network_url(common_data):
         hostname=common_data["hostname"],
         org_id=common_data["org_id"],
         sddc_id=common_data["sddc_id"],
-        network_id=common_data["network_id"],
+        network_id=network_id,
     )
     return api_url
 
@@ -46,19 +51,8 @@ def network_list_url(common_data):
 
 
 @pytest.fixture
-def common_data(vmc_nsx_connect):
-    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
-    data = {
-        "hostname": hostname,
-        "refresh_key": refresh_key,
-        "authorization_host": authorization_host,
-        "org_id": org_id,
-        "sddc_id": sddc_id,
-        "network_id": "web-tier",
-        "verify_ssl": verify_ssl,
-        "cert": cert,
-    }
-    yield data
+def common_data(vmc_config):
+    return vmc_config["vmc_nsx_connect"]
 
 
 @pytest.fixture
@@ -74,14 +68,14 @@ def get_networks(common_data, network_list_url, request_headers):
 
 
 @pytest.fixture
-def delete_network(get_networks, network_url, common_data, request_headers):
+def delete_network(get_networks, network_url, common_data, request_headers, network_id):
     """
     Sets up test requirements:
     Queries vmc api for networks
     Deletes network if exists
     """
     for result in get_networks.get("results", []):
-        if result["id"] == common_data["network_id"]:
+        if result["id"] == network_id:
             session = requests.Session()
             response = session.delete(
                 url=network_url,
@@ -92,50 +86,33 @@ def delete_network(get_networks, network_url, common_data, request_headers):
             response.raise_for_status()
 
 
-@pytest.fixture
-def create_network(get_networks, network_url, common_data, request_headers, subnets):
-    for result in get_networks.get("results", []):
-        if result["id"] == common_data["network_id"]:
-            return
-
-    data = {"display_name": "web-tier", "subnets": subnets}
-    session = requests.Session()
-    response = session.put(
-        url=network_url,
-        json=data,
-        verify=common_data["cert"] if common_data["verify_ssl"] else False,
-        headers=request_headers,
-    )
-    # raise error if any
-    response.raise_for_status()
-
-
-def test_create_network_smoke_test(salt_call_cli, delete_network, common_data, subnets):
-    expected_network_id = common_data["network_id"]
-    ret = salt_call_cli.run(
+def test_vmc_networks_smoke_test(salt_call_cli, delete_network, subnets, common_data, network_id):
+    # create network
+    response = salt_call_cli.run(
         "vmc_networks.create",
+        network_id=network_id,
         subnets=subnets,
         **common_data,
     )
-    result_as_json = ret.json
-    assert result_as_json["id"] == result_as_json["display_name"] == expected_network_id
+    response_as_json = response.json
+    assert "error" not in response_as_json
+    assert response_as_json["id"] == response_as_json["display_name"] == network_id
 
+    # update network
+    response = salt_call_cli.run(
+        "vmc_networks.update", network_id=network_id, display_name="network1", **common_data
+    )
+    response_as_json = response.json
+    assert "error" not in response_as_json
+    assert response_as_json["result"] == "success"
 
-def test_get_networks_smoke_test(salt_call_cli, get_networks, common_data):
-    # No network ID here
-    del common_data["network_id"]
-    ret = salt_call_cli.run("vmc_networks.get", **common_data)
-    result_as_json = ret.json
-    assert result_as_json == get_networks
+    # delete network
+    response = salt_call_cli.run("vmc_networks.delete", network_id=network_id, **common_data)
+    response_as_json = response.json
+    assert "error" not in response_as_json
+    assert response_as_json["result"] == "success"
 
-
-def test_update_network_smoke_test(salt_call_cli, create_network, common_data):
-    ret = salt_call_cli.run("vmc_networks.update", **common_data, display_name="network1")
-    result = ret.json
-    assert result["result"] == "success"
-
-
-def test_delete_network_smoke_test(salt_call_cli, create_network, common_data):
-    ret = salt_call_cli.run("vmc_networks.delete", **common_data)
-    result_as_json = ret.json
-    assert result_as_json["result"] == "success"
+    # get networks
+    response = salt_call_cli.run("vmc_networks.get", **common_data)
+    response_as_json = response.json
+    assert "error" not in response_as_json
