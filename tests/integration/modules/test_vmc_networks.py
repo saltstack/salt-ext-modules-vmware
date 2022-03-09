@@ -89,10 +89,7 @@ def delete_network(get_networks, network_url, common_data, request_headers, netw
 def test_vmc_networks_smoke_test(salt_call_cli, delete_network, subnets, common_data, network_id):
     # create network
     response = salt_call_cli.run(
-        "vmc_networks.create",
-        network_id=network_id,
-        subnets=subnets,
-        **common_data,
+        "vmc_networks.create", network_id=network_id, subnets=subnets, **common_data
     )
     response_as_json = response.json
     assert "error" not in response_as_json
