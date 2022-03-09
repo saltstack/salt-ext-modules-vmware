@@ -54,8 +54,7 @@ def network_list_url(common_data_for_network):
 
 @pytest.fixture
 def common_data_for_network(vmc_config):
-    data = vmc_config["vmc_nsx_connect"].copy()
-    return data
+    return vmc_config["vmc_nsx_connect"]
 
 
 @pytest.fixture
