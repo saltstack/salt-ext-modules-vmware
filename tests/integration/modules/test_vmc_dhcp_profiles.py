@@ -8,6 +8,11 @@ from saltext.vmware.utils import vmc_request
 
 
 @pytest.fixture
+def profile_id():
+    return "sample-dhcp"
+
+
+@pytest.fixture
 def server_addresses():
     return ["10.1.1.1"]
 
@@ -23,7 +28,7 @@ def profile_type(common_data):
 
 
 @pytest.fixture
-def profile_url(common_data, profile_type):
+def profile_url(common_data, profile_type, profile_id):
     url = (
         "https://{hostname}/vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
         "policy/api/v1/infra/{profile_type}/{profile_id}"
@@ -33,7 +38,7 @@ def profile_url(common_data, profile_type):
         org_id=common_data["org_id"],
         sddc_id=common_data["sddc_id"],
         profile_type=profile_type,
-        profile_id=common_data["dhcp_profile_id"],
+        profile_id=profile_id,
     )
     return api_url
 
@@ -54,20 +59,10 @@ def profile_list_url(common_data, profile_type):
 
 
 @pytest.fixture
-def common_data(vmc_nsx_connect):
-    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
-    data = {
-        "hostname": hostname,
-        "refresh_key": refresh_key,
-        "authorization_host": authorization_host,
-        "org_id": org_id,
-        "sddc_id": sddc_id,
-        "type": "relay",
-        "dhcp_profile_id": "dhcp-test",
-        "verify_ssl": verify_ssl,
-        "cert": cert,
-    }
-    yield data
+def common_data(vmc_config):
+    common_data = vmc_config["vmc_nsx_connect"]
+    common_data["type"] = "relay"
+    return common_data
 
 
 @pytest.fixture
@@ -83,7 +78,7 @@ def get_dhcp_profiles(common_data, profile_list_url, request_headers):
 
 
 @pytest.fixture
-def delete_dhcp_profile(get_dhcp_profiles, profile_url, request_headers, common_data):
+def delete_dhcp_profile(get_dhcp_profiles, profile_url, request_headers, common_data, profile_id):
     """
     Sets up test requirements:
     Queries vmc api for DHCP profiles
@@ -91,7 +86,7 @@ def delete_dhcp_profile(get_dhcp_profiles, profile_url, request_headers, common_
     """
 
     for result in get_dhcp_profiles.get("results", []):
-        if result["id"] == common_data["dhcp_profile_id"]:
+        if result["id"] == profile_id:
             session = requests.Session()
             response = session.delete(
                 url=profile_url,
@@ -102,54 +97,40 @@ def delete_dhcp_profile(get_dhcp_profiles, profile_url, request_headers, common_
             response.raise_for_status()
 
 
-@pytest.fixture
-def create_dhcp_profile(
-    get_dhcp_profiles, profile_url, server_addresses, request_headers, common_data
+def test_vmc_dhcp_profile_execution_module(
+    salt_call_cli, delete_dhcp_profile, server_addresses, common_data, profile_id
 ):
-    for result in get_dhcp_profiles.get("results", []):
-        if result["id"] == common_data["dhcp_profile_id"]:
-            return
-
-    data = {"display_name": "dhcp-test", "server_addresses": server_addresses}
-    session = requests.Session()
-    response = session.put(
-        url=profile_url,
-        json=data,
-        verify=common_data["cert"] if common_data["verify_ssl"] else False,
-        headers=request_headers,
-    )
-    # raise error if any
-    response.raise_for_status()
-
-
-def test_create_dhcp_profile_smoke_test(
-    salt_call_cli, delete_dhcp_profile, common_data, server_addresses
-):
-    expected_profile_id = common_data["dhcp_profile_id"]
-    ret = salt_call_cli.run(
+    # create dhcp profile
+    response = salt_call_cli.run(
         "vmc_dhcp_profiles.create",
+        dhcp_profile_id=profile_id,
         server_addresses=server_addresses,
         **common_data,
     )
-    result_as_json = ret.json
-    assert result_as_json["id"] == result_as_json["display_name"] == expected_profile_id
+    response_as_json = response.json
+    assert "error" not in response_as_json
+    assert response_as_json["id"] == response_as_json["display_name"] == profile_id
 
+    # update dhcp profile
+    response = salt_call_cli.run(
+        "vmc_dhcp_profiles.update",
+        dhcp_profile_id=profile_id,
+        display_name="profile1",
+        **common_data,
+    )
+    response_as_json = response.json
+    assert "error" not in response_as_json
+    assert response_as_json["result"] == "success"
 
-def test_get_dhcp_profiles_smoke_test(salt_call_cli, get_dhcp_profiles, common_data):
-    # No profile ID here
-    del common_data["dhcp_profile_id"]
-    ret = salt_call_cli.run("vmc_dhcp_profiles.get", **common_data)
-    result_as_json = ret.json
-    assert result_as_json == get_dhcp_profiles
+    # delete dhcp profile
+    response = salt_call_cli.run(
+        "vmc_dhcp_profiles.delete", dhcp_profile_id=profile_id, **common_data
+    )
+    response_as_json = response.json
+    assert "error" not in response_as_json
+    assert response_as_json["result"] == "success"
 
-
-def test_update_dhcp_profile_smoke_test(salt_call_cli, common_data, create_dhcp_profile):
-    ret = salt_call_cli.run("vmc_dhcp_profiles.update", **common_data, display_name="fnord")
-    result = ret.json
-    assert result["result"] == "success"
-
-
-def test_delete_dhcp_profile_smoke_test(salt_call_cli, create_dhcp_profile, common_data):
-    ret = salt_call_cli.run("vmc_dhcp_profiles.delete", **common_data)
-    result_as_json = ret.json
-    assert result_as_json["result"] == "success"
+    # get dhcp profiles
+    response = salt_call_cli.run("vmc_dhcp_profiles.get", **common_data)
+    response_as_json = response.json
+    assert "error" not in response_as_json
