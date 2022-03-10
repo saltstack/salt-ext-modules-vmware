@@ -1,7 +1,20 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
+from unittest.mock import patch
+
 import pytest
 import saltext.vmware.modules.folder as folder
+
+
+@pytest.fixture
+def patch_salt_globals_folder(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+    with patch.object(folder, "__opts__", {}, create=True), patch.object(
+        folder, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.fixture

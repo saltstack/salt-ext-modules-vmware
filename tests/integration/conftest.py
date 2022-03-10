@@ -190,7 +190,7 @@ def vmware_datacenter(patch_salt_globals_datacenter):
 
 
 @pytest.fixture
-def vmware_category():
+def vmware_category(patch_salt_globals_tag):
     """
     Return a vmware_category for tagging and attributes
     """
@@ -229,7 +229,7 @@ def vmware_tag_name_c(vmware_category):
 
 
 @pytest.fixture
-def vmware_cat_name_c():
+def vmware_cat_name_c(patch_salt_globals_tag):
     """
     Return a vmware_tag for tagging and attributes
     """
@@ -245,32 +245,6 @@ def vmware_cat_name_c():
 
 
 @pytest.fixture
-def patch_salt_globals_folder(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(folder, "__opts__", {})
-    setattr(folder, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_folder_state(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        folder_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(folder_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
 def patch_salt_globals_datacenter(vmware_conf, patch_salt_globals):
     """
     Patch __opts__ and __pillar__
@@ -282,145 +256,14 @@ def patch_salt_globals_datacenter(vmware_conf, patch_salt_globals):
 
 
 @pytest.fixture
-def patch_salt_globals_datastore(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(datastore, "__opts__", {})
-    setattr(datastore, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_datastore_state(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        datastore_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(datastore_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_datastore_state_test(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        datastore_state,
-        "__opts__",
-        {
-            "test": True,
-        },
-    )
-    setattr(datastore_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_folder_state_test(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        folder_state,
-        "__opts__",
-        {
-            "test": True,
-        },
-    )
-    setattr(folder_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
 def patch_salt_globals_tag(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-
-    setattr(tagging, "__opts__", {})
-    setattr(tagging, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_tag_state(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        tagging_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(tagging_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_tag_state_test(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        tagging_state,
-        "__opts__",
-        {
-            "test": True,
-        },
-    )
-    setattr(tagging_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_vm(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(virtual_machine, "__opts__", {})
-    setattr(virtual_machine, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_vm_state(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        virtual_machine_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(virtual_machine_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_vm_state_test(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        virtual_machine_state,
-        "__opts__",
-        {
-            "test": True,
-        },
-    )
-    setattr(virtual_machine_state, "__pillar__", vmware_conf)
+    with patch.object(tagging, "__opts__", {"test": False}, create=True), patch.object(
+        tagging, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.fixture(scope="function")
