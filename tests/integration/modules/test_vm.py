@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import tarfile
+from unittest.mock import patch
 
 import pytest
 import salt.exceptions
@@ -15,6 +16,17 @@ try:
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
+
+
+@pytest.fixture
+def patch_salt_globals_vm(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+    with patch.object(virtual_machine, "__opts__", {}, create=True), patch.object(
+        virtual_machine, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.mark.parametrize(

@@ -47,3 +47,4 @@ Execution Modules
     saltext.vmware.modules.vmc_vm_disks
     saltext.vmware.modules.vmc_vm_stats
     saltext.vmware.modules.vmc_vpn_statistics
+    saltext.vmware.modules.vswitch

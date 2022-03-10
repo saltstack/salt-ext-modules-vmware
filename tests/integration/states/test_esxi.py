@@ -119,7 +119,7 @@ def test_user_present_absent_dry_run(vmware_datacenter, service_instance, dry_ru
 
     user_name = "A{}".format(uuid.uuid4())
     random_user = "Random{}".format(uuid.uuid4())
-    password = "Secret@123"
+    password = "GVh3J69oMcJ0tA"
 
     # create a new user
     ret = esxi.user_present(name=user_name, password=password)
