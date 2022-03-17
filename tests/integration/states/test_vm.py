@@ -1,5 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
+from unittest.mock import patch
+
 import pytest
 import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.modules.vm as vmm
@@ -12,6 +14,27 @@ try:
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
+
+
+@pytest.fixture
+def patch_salt_globals_vm_state(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+    with patch.object(virtual_machine, "__opts__", {"test": False}, create=True), patch.object(
+        virtual_machine, "__pillar__", vmware_conf, create=True
+    ):
+        yield
+
+
+@pytest.fixture
+def patch_salt_globals_vm_state_test(patch_salt_globals_vm_state):
+    """
+    Patch __opts__ and __pillar__
+    """
+
+    with patch.dict(virtual_machine.__opts__, {"test": True}):
+        yield
 
 
 def test_set_boot_manager_dry(integration_test_config, patch_salt_globals_vm_state_test):
