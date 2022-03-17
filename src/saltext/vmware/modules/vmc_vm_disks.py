@@ -13,13 +13,14 @@ from saltext.vmware.utils import vmc_vcenter_request
 log = logging.getLogger(__name__)
 
 __virtualname__ = "vmc_vm_disks"
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
     return __virtualname__
 
 
-def get(hostname, username, password, vm_id, verify_ssl=True, cert=None):
+def list_(hostname, username, password, vm_id, verify_ssl=True, cert=None):
     """
     Retrieves the available virtual disks for given VM.
 
@@ -61,7 +62,7 @@ def get(hostname, username, password, vm_id, verify_ssl=True, cert=None):
         method=vmc_constants.GET_REQUEST_METHOD,
         url=api_url,
         headers=headers,
-        description="vmc_vm_disks.get",
+        description="vmc_vm_disks.list",
         verify_ssl=verify_ssl,
         cert=cert,
     )

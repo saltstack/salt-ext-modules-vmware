@@ -57,22 +57,24 @@ def vmdk_file(salt_call_cli, get_vm_disks, common_data):
     return disk_detail["backing"]["vmdk_file"]
 
 
-@pytest.fixture
-def create_vm_disk(vm_disk_url, request_headers, common_data):
-    payload = {"new_vmdk": {}, "type": "SATA"}
-    session = requests.Session()
-    response = session.post(
-        url=vm_disk_url,
-        json=payload,
-        verify=common_data["cert"] if common_data["verify_ssl"] else False,
-        headers=request_headers,
-    )
-    # raise error if any
-    response.raise_for_status()
-    return response.json()
+def test_vm_disks_smoke_test(salt_call_cli, common_data, vmdk_file):
+    disk_id = "5001"
+    # Read a non - existent disk
+    ret = salt_call_cli.run("vmc_vm_disks.get_by_id", disk_id=disk_id, **common_data)
+    assert ret is not None
+    result_as_json = ret.json
+    assert "error" in result_as_json
+    assert result_as_json["error"]["error_type"] == "NOT_FOUND"
 
+    # existing disks should not contain non - existent disk id
+    ret = salt_call_cli.run("vmc_vm_disks.list", **common_data)
+    assert ret is not None
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    for disk in result_as_json:
+        assert disk.get("disk") != disk_id
 
-def test_create_vm_disk_smoke_test(salt_call_cli, common_data):
+    # create disk
     ret = salt_call_cli.run(
         "vmc_vm_disks.create",
         bus_adapter_type="SATA",
@@ -80,21 +82,14 @@ def test_create_vm_disk_smoke_test(salt_call_cli, common_data):
         **common_data,
     )
     assert ret is not None
-    assert "error" not in ret.json
-
-
-def test_get_vm_disks_smoke_test(salt_call_cli, get_vm_disks, common_data):
-    ret = salt_call_cli.run("vmc_vm_disks.get", **common_data)
-    assert ret is not None
     result_as_json = ret.json
     assert "error" not in result_as_json
-    assert result_as_json == get_vm_disks
+    disk_id = result_as_json
 
-
-def test_update_vm_disk_smoke_test(salt_call_cli, create_vm_disk, common_data, vmdk_file):
+    # update disk
     ret = salt_call_cli.run(
         "vmc_vm_disks.update",
-        disk_id=create_vm_disk,
+        disk_id=disk_id,
         backing_type="VMDK_FILE",
         vmdk_file=vmdk_file,
         **common_data,
@@ -103,13 +98,26 @@ def test_update_vm_disk_smoke_test(salt_call_cli, create_vm_disk, common_data, v
     result_as_json = ret.json
     assert result_as_json["result"] == "success"
 
+    # Get the disk again, check the updated values are proper
+    ret = salt_call_cli.run("vmc_vm_disks.get_by_id", disk_id=disk_id, **common_data)
+    assert ret is not None
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    assert result_as_json["backing"]["vmdk_file"] == vmdk_file
 
-def test_delete_vm_disk_smoke_test(salt_call_cli, create_vm_disk, common_data):
+    # delete disk
     ret = salt_call_cli.run(
         "vmc_vm_disks.delete",
-        disk_id=create_vm_disk,
+        disk_id=disk_id,
         **common_data,
     )
     assert ret is not None
     result_as_json = ret.json
     assert result_as_json["result"] == "success"
+
+    # Get the disk again, disk should not exist
+    ret = salt_call_cli.run("vmc_vm_disks.get_by_id", disk_id=disk_id, **common_data)
+    assert ret is not None
+    result_as_json = ret.json
+    assert "error" in result_as_json
+    assert result_as_json["error"]["error_type"] == "NOT_FOUND"

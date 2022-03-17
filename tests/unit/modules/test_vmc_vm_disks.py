@@ -30,9 +30,9 @@ def disk_data(mock_vmc_vcenter_request_call_api):
     yield data
 
 
-def test_get_should_return_api_response(mock_request_post_api, disk_data):
+def test_list_should_return_api_response(mock_request_post_api, disk_data):
     assert (
-        vmc_vm_disks.get(
+        vmc_vm_disks.list_(
             hostname="hostname",
             username="username",
             password="password",
@@ -43,10 +43,10 @@ def test_get_should_return_api_response(mock_request_post_api, disk_data):
     )
 
 
-def test_get_vm_disks_called_with_url(mock_request_post_api):
+def test_list_vm_disks_called_with_url(mock_request_post_api):
     expected_url = "https://hostname/api/vcenter/vm/vm_id/hardware/disk"
     with patch("saltext.vmware.utils.vmc_vcenter_request.call_api", autospec=True) as vmc_call_api:
-        vmc_vm_disks.get(
+        vmc_vm_disks.list_(
             hostname="hostname",
             username="username",
             password="password",
