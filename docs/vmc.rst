@@ -72,6 +72,33 @@ To find the VirtualMachine Identifier which is referred to as ``vm_id`` in some 
     Here ``vm-1003`` represents the ``vm_id``.
 
 
+Alternatively, to get the ``vm_id`` , execute ``vmc_sddc.get_vms`` function which returns a list of virtual machines
+associated with the SDDC.
+Sample output for ``vmc_sddc.get_vms``:
+
+    .. code::
+
+        [
+            {
+                "memory_size_MiB": 4096,
+                "vm": "vm-1001",
+                "name": "New Virtual Machine",
+                "power_state": "POWERED_OFF",
+                "cpu_count": 2
+            },
+            {
+                "memory_size_MiB": 8192,
+                "vm": "vm-20",
+                "name": "NSX-Edge-1",
+                "power_state": "POWERED_ON",
+                "cpu_count": 4
+            }
+        ]
+
+    Here ``vm-1001`` and ``vm-20`` represents the ``vm_id`` of corresponding virtual machines.
+
+
+
 Using script to create vmc_config.json
 --------------------------------------
 Below command will return the required information to create vmc_config.json which is required to run Integration tests for VMC
