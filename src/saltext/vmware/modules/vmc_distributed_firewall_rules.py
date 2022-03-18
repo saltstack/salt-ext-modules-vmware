@@ -12,6 +12,7 @@ from saltext.vmware.utils import vmc_templates
 log = logging.getLogger(__name__)
 
 __virtualname__ = "vmc_distributed_firewall_rules"
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -29,7 +30,7 @@ def _create_payload_for_distributed_firewall_rule(rule_id, user_input):
     return data
 
 
-def get(
+def list_(
     hostname,
     refresh_key,
     authorization_host,
@@ -51,7 +52,7 @@ def get(
 
     .. code-block:: bash
 
-        salt vm_minion vmc_distributed_firewall_rules.get hostname=nsxt-manager.local domain_id=cgw ...
+        salt vm_minion vmc_distributed_firewall_rules.list hostname=nsxt-manager.local domain_id=cgw ...
 
     hostname
         The host name of NSX-T manager
@@ -122,7 +123,7 @@ def get(
         url=api_url,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
-        description="vmc_distributed_firewall_rules.get",
+        description="vmc_distributed_firewall_rules.list",
         verify_ssl=verify_ssl,
         cert=cert,
         params=params,
