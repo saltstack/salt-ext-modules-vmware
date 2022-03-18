@@ -73,14 +73,13 @@ def test_present_state_when_error_from_get_by_id(mocked_ok_response, mocked_erro
         vmc_security_groups.__salt__, {"vmc_security_groups.get_by_id": mock_get_by_id}
     ):
         result = vmc_security_groups.present(
-            name="test_present",
+            name=mocked_ok_response["id"],
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=mocked_ok_response["id"],
         )
 
     assert result is not None
@@ -106,14 +105,13 @@ def test_present_state_when_error_from_create(mocked_error_response):
         },
     ):
         result = vmc_security_groups.present(
-            name="test_present",
+            name="security_group_id",
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id="security_group_id",
         )
 
     assert result is not None
@@ -141,14 +139,13 @@ def test_present_state_when_error_from_update(mocked_ok_response, mocked_error_r
         },
     ):
         result = vmc_security_groups.present(
-            name="test_present",
+            name=mocked_ok_response["id"],
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=mocked_ok_response["id"],
             display_name="updated security_group_id",
         )
 
@@ -182,21 +179,20 @@ def test_present_state_during_update_to_add_a_new_field(mocked_ok_response):
         },
     ):
         result = vmc_security_groups.present(
-            name="test_present",
+            name=mocked_ok_response["id"],
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=mocked_ok_response["id"],
             display_name="security_group_1",
         )
 
     assert result is not None
     assert result["changes"]["old"] == mocked_ok_response
     assert result["changes"]["new"] == mocked_updated_response
-    assert result["comment"] == "Updated Security group security_group_id"
+    assert result["comment"] == "Updated security group security_group_id"
     assert result["result"]
 
 
@@ -215,20 +211,19 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
         },
     ):
         result = vmc_security_groups.present(
-            name="test_present",
+            name=security_group_id,
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=security_group_id,
         )
 
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created Security group {}".format(security_group_id)
+    assert result["comment"] == "Created security group {}".format(security_group_id)
     assert result["result"]
 
 
@@ -253,21 +248,20 @@ def test_present_to_update_when_module_returns_success_response(mocked_ok_respon
         },
     ):
         result = vmc_security_groups.present(
-            name="test_present",
+            name=security_group_id,
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=security_group_id,
             display_name="updated security_group_id",
         )
 
     assert result is not None
     assert result["changes"]["new"] == mocked_updated_security_group
     assert result["changes"]["old"] == mocked_ok_response
-    assert result["comment"] == "Updated Security group {}".format(security_group_id)
+    assert result["comment"] == "Updated security group {}".format(security_group_id)
     assert result["result"]
 
 
@@ -293,14 +287,13 @@ def test_present_to_update_when_get_by_id_after_update_returns_error(
         },
     ):
         result = vmc_security_groups.present(
-            name="test_present",
+            name=security_group_id,
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=security_group_id,
             display_name="updated security_group_id",
         )
 
@@ -325,14 +318,13 @@ def test_present_to_update_when_user_input_and_existing_security_group_has_ident
         {"vmc_security_groups.get_by_id": mock_get_by_id_response},
     ):
         result = vmc_security_groups.present(
-            name="test_present",
+            name=mocked_ok_response["id"],
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=mocked_ok_response["id"],
         )
 
     assert result is not None
@@ -351,21 +343,18 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
     ):
         with patch.dict(vmc_security_groups.__opts__, {"test": True}):
             result = vmc_security_groups.present(
-                name="test_present",
+                name=security_group_id,
                 hostname="nsx-t.vmwarevmc.com",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
                 sddc_id="sddc_id",
                 domain_id="domain_id",
-                security_group_id=security_group_id,
             )
 
     assert result is not None
-    assert len(result["changes"]) == 0
-    assert result["comment"] == "State present will create Security group {}".format(
-        security_group_id
-    )
+    assert not result["changes"]
+    assert result["comment"] == "Security group {} will be created".format(security_group_id)
     assert result["result"] is None
 
 
@@ -408,7 +397,6 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
         "org_id": "org_id",
         "sddc_id": "sddc_id",
         "domain_id": "domain_id",
-        "security_group_id": mocked_ok_response["id"],
         "verify_ssl": False,
     }
 
@@ -425,7 +413,7 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
             "vmc_security_groups.create": mock_create,
         },
     ):
-        result = vmc_security_groups.present(name="secuirty group create", **actual_args)
+        result = vmc_security_groups.present(name=mocked_ok_response["id"], **actual_args)
 
     call_kwargs = mock_create.mock_calls[0][-1]
 
@@ -435,7 +423,7 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
     assert result is not None
     assert result["changes"]["old"] is None
     assert result["changes"]["new"] == mocked_updated_response
-    assert result["comment"] == "Created Security group security_group_id"
+    assert result["comment"] == "Created security group security_group_id"
     assert result["result"]
 
 
@@ -451,21 +439,18 @@ def test_present_state_for_update_when_opts_test_is_true(mocked_ok_response):
     ):
         with patch.dict(vmc_security_groups.__opts__, {"test": True}):
             result = vmc_security_groups.present(
-                name="test_present",
+                name=security_group_id,
                 hostname="nsx-t.vmwarevmc.com",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
                 sddc_id="sddc_id",
                 domain_id="domain_id",
-                security_group_id=security_group_id,
             )
 
     assert result is not None
-    assert len(result["changes"]) == 0
-    assert result["comment"] == "State present will update Security group {}".format(
-        security_group_id
-    )
+    assert not result["changes"]
+    assert result["comment"] == "Security group {} will be updated".format(security_group_id)
     assert result["result"] is None
 
 
@@ -510,7 +495,6 @@ def test_present_state_during_update_should_correctly_pass_args(mocked_ok_respon
         "org_id": "org_id",
         "sddc_id": "sddc_id",
         "domain_id": "domain_id",
-        "security_group_id": mocked_ok_response["id"],
         "verify_ssl": False,
     }
 
@@ -527,7 +511,7 @@ def test_present_state_during_update_should_correctly_pass_args(mocked_ok_respon
             "vmc_security_groups.update": mock_update,
         },
     ):
-        result = vmc_security_groups.present(name="secuirty group update", **actual_args)
+        result = vmc_security_groups.present(name=mocked_ok_response["id"], **actual_args)
 
     call_kwargs = mock_update.mock_calls[0][-1]
 
@@ -537,7 +521,7 @@ def test_present_state_during_update_should_correctly_pass_args(mocked_ok_respon
     assert result is not None
     assert result["changes"]["old"] == mocked_ok_response
     assert result["changes"]["new"] == mocked_updated_response
-    assert result["comment"] == "Updated Security group security_group_id"
+    assert result["comment"] == "Updated security group security_group_id"
     assert result["result"]
 
 
@@ -558,19 +542,18 @@ def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_r
         },
     ):
         result = vmc_security_groups.absent(
-            name="test_absent",
+            name=security_group_id,
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=security_group_id,
         )
 
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response}
-    assert result["comment"] == "Deleted Security group {}".format(security_group_id)
+    assert result["comment"] == "Deleted security group {}".format(security_group_id)
     assert result["result"]
 
 
@@ -583,19 +566,18 @@ def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
         {"vmc_security_groups.get_by_id": mock_get_by_id_response},
     ):
         result = vmc_security_groups.absent(
-            name="test_absent",
+            name=security_group_id,
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=security_group_id,
         )
 
     assert result is not None
     assert result["changes"] == {}
-    assert result["comment"] == "No Security group found with Id {}".format(security_group_id)
+    assert result["comment"] == "No security group found with ID {}".format(security_group_id)
     assert result["result"]
 
 
@@ -611,19 +593,18 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
     ):
         with patch.dict(vmc_security_groups.__opts__, {"test": True}):
             result = vmc_security_groups.absent(
-                name="test_absent",
+                name=security_group_id,
                 hostname="nsx-t.vmwarevmc.com",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
                 sddc_id="sddc_id",
                 domain_id="domain_id",
-                security_group_id=security_group_id,
             )
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State absent will delete Security group with Id {}".format(
+    assert result["comment"] == "State absent will delete security group with ID {}".format(
         security_group_id
     )
     assert result["result"] is None
@@ -641,21 +622,20 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
     ):
         with patch.dict(vmc_security_groups.__opts__, {"test": True}):
             result = vmc_security_groups.absent(
-                name="test_absent",
+                name=security_group_id,
                 hostname="nsx-t.vmwarevmc.com",
                 refresh_key="refresh_key",
                 authorization_host="authorization_host",
                 org_id="org_id",
                 sddc_id="sddc_id",
                 domain_id="domain_id",
-                security_group_id=security_group_id,
             )
 
     assert result is not None
     assert len(result["changes"]) == 0
     assert result[
         "comment"
-    ] == "State absent will do nothing as no Security group found with Id {}".format(
+    ] == "State absent will do nothing as no security group found with ID {}".format(
         security_group_id
     )
     assert result["result"] is None
@@ -677,14 +657,13 @@ def test_absent_with_error_from_delete(mocked_ok_response, mocked_error_response
         },
     ):
         result = vmc_security_groups.absent(
-            name="test_absent",
+            name="security_group_id",
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id="security_group_id",
         )
 
     assert result is not None
@@ -705,14 +684,13 @@ def test_absent_state_when_error_from_get_by_id(mocked_ok_response, mocked_error
         vmc_security_groups.__salt__, {"vmc_security_groups.get_by_id": mock_get_by_id}
     ):
         result = vmc_security_groups.absent(
-            name="test_absent",
+            name=mocked_ok_response["id"],
             hostname="nsx-t.vmwarevmc.com",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
             domain_id="domain_id",
-            security_group_id=mocked_ok_response["id"],
         )
 
     assert result is not None
@@ -722,3 +700,38 @@ def test_absent_state_when_error_from_get_by_id(mocked_ok_response, mocked_error
         == "The credentials were incorrect or the account specified has been locked."
     )
     assert not result["result"]
+
+
+def test_present_when_get_by_id_returns_not_found_error(mocked_ok_response):
+    error_response = {"error": "security group could not be found"}
+    mock_get_by_id_response = create_autospec(
+        vmc_security_groups_exec.get_by_id, return_value=error_response
+    )
+    mock_create_response = create_autospec(
+        vmc_security_groups_exec.create, return_value=mocked_ok_response
+    )
+
+    security_group_id = mocked_ok_response["id"]
+
+    with patch.dict(
+        vmc_security_groups.__salt__,
+        {
+            "vmc_security_groups.get_by_id": mock_get_by_id_response,
+            "vmc_security_groups.create": mock_create_response,
+        },
+    ):
+        result = vmc_security_groups.present(
+            name=security_group_id,
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            domain_id="domain_id",
+        )
+
+    assert result is not None
+    assert result["changes"]["new"] == mocked_ok_response
+    assert result["changes"]["old"] is None
+    assert result["comment"] == "Created security group {}".format(security_group_id)
+    assert result["result"]

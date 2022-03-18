@@ -7,7 +7,7 @@ Example usage :
 
 .. code-block:: yaml
 
-    ensure_security_group:
+    Security_group_1:
       vmc_security_groups.present:
         - hostname: sample-nsx.vmwarevmc.com
         - refresh_key: 7jPSGSZpCa8e5Ouks4UY5cZyOtynAhF
@@ -15,7 +15,6 @@ Example usage :
         - org_id: 10e1092f-51d0-473a-80f8-137652c39fd0
         - sddc_id: b43da080-2626-f64c-88e8-7f31d9d2c306
         - domain_id: mgw
-        - security_group_id: Security_group_1
         - verify_ssl: False
         - cert: /path/to/client/certificate
 
@@ -32,21 +31,6 @@ from saltext.vmware.utils import vmc_constants
 from saltext.vmware.utils import vmc_state
 
 log = logging.getLogger(__name__)
-SECURITY_GROUP_NOT_FOUND_ERROR = "could not be found"
-
-
-try:
-    from saltext.vmware.modules import vmc_security_groups
-
-    HAS_SECURITY_GROUPS = True
-except ImportError:
-    HAS_SECURITY_GROUPS = False
-
-
-def __virtual__():
-    if not HAS_SECURITY_GROUPS:
-        return False, "'vmc_security_groups' binary not found on system"
-    return "vmc_security_groups"
 
 
 def present(
@@ -57,7 +41,6 @@ def present(
     org_id,
     sddc_id,
     domain_id,
-    security_group_id,
     verify_ssl=True,
     cert=None,
     expression=None,
@@ -67,6 +50,10 @@ def present(
 ):
     """
     Ensure a given security group exists for given SDDC
+
+    name
+        Indicates the security group id, any unique string identifying the security group.
+        Also same as the display_name by default.
 
     hostname
         The host name of NSX-T manager
@@ -85,9 +72,6 @@ def present(
 
     domain_id
         The domain_id for which the security group should belong to. Possible values: mgw, cgw
-
-    security_group_id
-        Id of the security_group to be added to SDDC
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -167,7 +151,7 @@ def present(
             }
 
     """
-
+    security_group_id = name
     input_dict = {
         "expression": expression,
         "description": description,
@@ -177,7 +161,7 @@ def present(
 
     input_dict = {k: v for k, v in input_dict.items() if v != vmc_constants.VMC_NONE}
 
-    get_security_group = __salt__["vmc_security_groups.get_by_id"](
+    security_group = __salt__["vmc_security_groups.get_by_id"](
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -189,33 +173,27 @@ def present(
         cert=cert,
     )
 
-    existing_security_group = None
-
-    if "error" not in get_security_group:
-        log.info("Security group found with Id %s", security_group_id)
-        existing_security_group = get_security_group
-    elif SECURITY_GROUP_NOT_FOUND_ERROR not in get_security_group["error"]:
-        return vmc_state._create_state_response(
-            name=name, comment=get_security_group["error"], result=False
-        )
+    if "error" in security_group:
+        if "could not be found" in security_group["error"]:
+            security_group = None
+        else:
+            return vmc_state._create_state_response(
+                name=name, comment=security_group["error"], result=False
+            )
 
     if __opts__.get("test"):
         log.info("present is called with test option")
-        if existing_security_group:
-            return vmc_state._create_state_response(
-                name=name,
-                comment="State present will update Security group {}".format(security_group_id),
-            )
-        else:
-            return vmc_state._create_state_response(
-                name=name,
-                comment="State present will create Security group {}".format(security_group_id),
-            )
+        return vmc_state._create_state_response(
+            name=name,
+            comment="Security group {} will be {}".format(
+                security_group_id, "updated" if security_group else "created"
+            ),
+        )
 
-    if existing_security_group:
+    if security_group:
         updatable_keys = input_dict.keys()
         is_update_required = vmc_state._check_for_updates(
-            existing_security_group, input_dict, updatable_keys, ["tags"]
+            security_group, input_dict, updatable_keys, ["tags"]
         )
 
         if is_update_required:
@@ -240,7 +218,7 @@ def present(
                     name=name, comment=updated_security_group["error"], result=False
                 )
 
-            get_security_group_after_update = __salt__["vmc_security_groups.get_by_id"](
+            updated_security_group = __salt__["vmc_security_groups.get_by_id"](
                 hostname=hostname,
                 refresh_key=refresh_key,
                 authorization_host=authorization_host,
@@ -252,16 +230,16 @@ def present(
                 cert=cert,
             )
 
-            if "error" in get_security_group_after_update:
+            if "error" in updated_security_group:
                 return vmc_state._create_state_response(
-                    name=name, comment=get_security_group_after_update["error"], result=False
+                    name=name, comment=updated_security_group["error"], result=False
                 )
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated Security group {}".format(security_group_id),
-                old_state=existing_security_group,
-                new_state=get_security_group_after_update,
+                comment="Updated security group {}".format(security_group_id),
+                old_state=security_group,
+                new_state=updated_security_group,
                 result=True,
             )
         else:
@@ -272,7 +250,7 @@ def present(
                 result=True,
             )
     else:
-        log.info("No Security group found with Id %s", security_group_id)
+        log.info("No security group found with ID %s", security_group_id)
         created_security_group = __salt__["vmc_security_groups.create"](
             hostname=hostname,
             refresh_key=refresh_key,
@@ -295,7 +273,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created Security group {}".format(security_group_id),
+            comment="Created security group {}".format(security_group_id),
             new_state=created_security_group,
             result=True,
         )
@@ -309,12 +287,14 @@ def absent(
     org_id,
     sddc_id,
     domain_id,
-    security_group_id,
     verify_ssl=True,
     cert=None,
 ):
     """
     Ensure a given security group does not exist on given SDDC
+
+    name
+        Indicates the security group id, any unique string identifying the security group.
 
     hostname
         The host name of NSX-T manager
@@ -334,9 +314,6 @@ def absent(
     domain_id
         The domain_id for which the security group should belong to. Possible values: mgw, cgw
 
-    security_group_id
-        Id of the security_group to be deleted from SDDC
-
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
@@ -347,8 +324,9 @@ def absent(
 
     """
 
-    log.info("Checking if Security group with Id %s is present", security_group_id)
-    get_security_group = __salt__["vmc_security_groups.get_by_id"](
+    security_group_id = name
+    log.info("Checking if security group with ID %s is present", security_group_id)
+    security_group = __salt__["vmc_security_groups.get_by_id"](
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -360,35 +338,33 @@ def absent(
         cert=cert,
     )
 
-    existing_security_group = None
-
-    if "error" not in get_security_group:
-        log.info("Security group found with Id %s", security_group_id)
-        existing_security_group = get_security_group
-    elif SECURITY_GROUP_NOT_FOUND_ERROR not in get_security_group["error"]:
-        return vmc_state._create_state_response(
-            name=name, comment=get_security_group["error"], result=False
-        )
+    if "error" in security_group:
+        if "could not be found" in security_group["error"]:
+            security_group = None
+        else:
+            return vmc_state._create_state_response(
+                name=name, comment=security_group["error"], result=False
+            )
 
     if __opts__.get("test"):
         log.info("absent is called with test option")
-        if existing_security_group:
+        if security_group:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will delete Security group with Id {}".format(
+                comment="State absent will delete security group with ID {}".format(
                     security_group_id
                 ),
             )
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will do nothing as no Security group found with Id {}".format(
+                comment="State absent will do nothing as no security group found with ID {}".format(
                     security_group_id
                 ),
             )
 
-    if existing_security_group:
-        log.info("Security group found with Id %s", security_group_id)
+    if security_group:
+        log.info("Security group found with ID %s", security_group_id)
         deleted_security_group = __salt__["vmc_security_groups.delete"](
             hostname=hostname,
             refresh_key=refresh_key,
@@ -408,14 +384,14 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted Security group {}".format(security_group_id),
-            old_state=existing_security_group,
+            comment="Deleted security group {}".format(security_group_id),
+            old_state=security_group,
             result=True,
         )
     else:
-        log.info("No Security group found with Id %s", security_group_id)
+        log.info("No security group found with ID %s", security_group_id)
         return vmc_state._create_state_response(
             name=name,
-            comment="No Security group found with Id {}".format(security_group_id),
+            comment="No security group found with ID {}".format(security_group_id),
             result=True,
         )
