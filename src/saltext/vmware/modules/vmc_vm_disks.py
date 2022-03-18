@@ -28,7 +28,7 @@ def list_(hostname, username, password, vm_id, verify_ssl=True, cert=None):
 
     .. code-block:: bash
 
-        salt vm_minion vmc_vm_disks.get hostname=sample-vcenter.vmwarevmc.com ...
+        salt vm_minion vmc_vm_disks.list hostname=sample-vcenter.vmwarevmc.com ...
 
     hostname
         Hostname of the vCenter console
@@ -303,8 +303,8 @@ def create(
         The certificate can be retrieved from browser.
 
     backing
-        (optional) Existing physical resource backing for the virtual disk.
-        Exactly one of backing or new_vmdk must be specified.
+        Existing physical resource backing for the virtual disk.
+        This is required unless `new_vmdk` is provided.
         If unset, the virtual disk will not be connected to an existing backing.
 
         It is a json object which can contain 'type' and 'vmdk_file' keys.
@@ -326,8 +326,8 @@ def create(
                 }
 
     new_vmdk
-        (optional) Specification for creating a new VMDK backing for the virtual disk.
-        Exactly one of backing or new_vmdk must be specified.
+        Specification for creating a new VMDK backing for the virtual disk.
+        This is required unless `backing` is provided.
         If unset, a new VMDK backing will not be created.
 
         It is a json object which can contain 'capacity', 'name' and 'storage_policy' keys.
