@@ -16,13 +16,14 @@ from saltext.vmware.utils import vmc_request
 log = logging.getLogger(__name__)
 
 __virtualname__ = "vmc_public_ip"
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
     return __virtualname__
 
 
-def get(
+def list_(
     hostname,
     refresh_key,
     authorization_host,
@@ -42,7 +43,7 @@ def get(
 
     .. code-block:: bash
 
-        salt vm_minion vmc_public_ip.get hostname=nsxt-manager.local  ...
+        salt vm_minion vmc_public_ip.list hostname=nsxt-manager.local  ...
 
     hostname
         The host name of NSX-T manager
@@ -102,7 +103,7 @@ def get(
         url=api_url,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
-        description="vmc_public_ip.get",
+        description="vmc_public_ip.list",
         verify_ssl=verify_ssl,
         cert=cert,
         params=params,
@@ -120,7 +121,7 @@ def get_by_id(
     cert=None,
 ):
     """
-    Retrieves Public IPs from Given SDDC
+    Retrieves given public IP from the given SDDC
 
     CLI Example:
 

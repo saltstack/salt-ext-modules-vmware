@@ -34,9 +34,9 @@ def public_ip_data(mock_vmc_request_call_api, public_ip_data_by_id):
     yield data
 
 
-def test_get_public_ip_should_return_api_response(public_ip_data):
+def test_list_public_ip_should_return_api_response(public_ip_data):
     assert (
-        vmc_public_ip.get(
+        vmc_public_ip.list_(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -48,13 +48,13 @@ def test_get_public_ip_should_return_api_response(public_ip_data):
     )
 
 
-def test_get_public_ips_called_with_url():
+def test_list_public_ips_called_with_url():
     expected_url = (
         "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/"
         "cloud-service/api/v1/infra/public-ips"
     )
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        result = vmc_public_ip.get(
+        result = vmc_public_ip.list_(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -98,7 +98,7 @@ def test_assert_get_public_ip_should_correctly_filter_args(actual_args, expected
     }
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         actual_args.update(common_actual_args)
-        vmc_public_ip.get(**actual_args)
+        vmc_public_ip.list_(**actual_args)
 
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["params"] == expected_params
