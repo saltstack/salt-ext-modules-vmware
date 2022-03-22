@@ -8,7 +8,7 @@ Example usage :
 
 .. code-block:: yaml
 
-    ensure_distributed_firewall rule:
+    Distributed_Firewall_Rule_1:
       vmc_distributed_firewall_rules.present:
         - hostname: sample-nsx.vmwarevmc.com
         - refresh_key: 7jPSGSZpCa8e5Ouks4UY5cZyOtynAhF
@@ -16,7 +16,6 @@ Example usage :
         - org_id: 10e1092f-51d0-473a-80f8-137652c39fd0
         - sddc_id: b43da080-2626-f64c-88e8-7f31d9d2c306
         - domain_id: mgw
-        - rule_id: vCenter_Inbound_Rule_2
         - verify_ssl: False
         - cert: /path/to/client/certificate
 
@@ -33,20 +32,6 @@ from saltext.vmware.utils import vmc_constants
 from saltext.vmware.utils import vmc_state
 
 log = logging.getLogger(__name__)
-DISTRIBUTED_FIREWALL_RULE_NOT_FOUND_ERROR = "could not be found"
-
-try:
-    from saltext.vmware.modules import vmc_distributed_firewall_rules
-
-    HAS_DISTRIBUTED_FIREWALL_RULES = True
-except ImportError:
-    HAS_DISTRIBUTED_FIREWALL_RULES = False
-
-
-def __virtual__():
-    if not HAS_DISTRIBUTED_FIREWALL_RULES:
-        return False, "'vmc_distributed_firewall_rules' binary not found on system"
-    return "vmc_distributed_firewall_rules"
 
 
 def present(
@@ -58,7 +43,6 @@ def present(
     sddc_id,
     domain_id,
     security_policy_id,
-    rule_id,
     verify_ssl=True,
     cert=None,
     source_groups=None,
@@ -78,6 +62,10 @@ def present(
 ):
     """
     Ensure a given distributed firewall rule exists for given SDDC
+
+    name
+        Indicates the distributed firewall rule id, any unique string identifying the  distributed firewall rule.
+        Also same as the display_name by default.
 
     hostname
         The host name of NSX-T manager
@@ -99,9 +87,6 @@ def present(
 
     secuirty_policy_id
         The  secuirty_policy_id for which the distributed firewall rules should belongs to
-
-    rule_id
-        Id of the distributed_firewall_rule to be added to SDDC
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -215,6 +200,7 @@ def present(
 
     """
 
+    rule_id = name
     input_dict = {
         "source_groups": source_groups,
         "destination_groups": destination_groups,
@@ -234,7 +220,7 @@ def present(
 
     input_dict = {k: v for k, v in input_dict.items() if v != vmc_constants.VMC_NONE}
 
-    get_distributed_firewall_rule = __salt__["vmc_distributed_firewall_rules.get_by_id"](
+    distributed_firewall_rule = __salt__["vmc_distributed_firewall_rules.get_by_id"](
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -247,33 +233,27 @@ def present(
         cert=cert,
     )
 
-    existing_distributed_firewall_rule = None
-
-    if "error" not in get_distributed_firewall_rule:
-        log.info("Distributed firewall rule found with Id %s", rule_id)
-        existing_distributed_firewall_rule = get_distributed_firewall_rule
-    elif DISTRIBUTED_FIREWALL_RULE_NOT_FOUND_ERROR not in get_distributed_firewall_rule["error"]:
-        return vmc_state._create_state_response(
-            name=name, comment=get_distributed_firewall_rule["error"], result=False
-        )
+    if "error" in distributed_firewall_rule:
+        if "could not be found" in distributed_firewall_rule["error"]:
+            distributed_firewall_rule = None
+        else:
+            return vmc_state._create_state_response(
+                name=name, comment=distributed_firewall_rule["error"], result=False
+            )
 
     if __opts__.get("test"):
         log.info("present is called with test option")
-        if existing_distributed_firewall_rule:
-            return vmc_state._create_state_response(
-                name=name,
-                comment="State present will update Distributed firewall rule {}".format(rule_id),
-            )
-        else:
-            return vmc_state._create_state_response(
-                name=name,
-                comment="State present will create Distributed firewall rule {}".format(rule_id),
-            )
+        return vmc_state._create_state_response(
+            name=name,
+            comment="Distributed firewall rule {} will be {}".format(
+                rule_id, "updated" if distributed_firewall_rule else "created"
+            ),
+        )
 
-    if existing_distributed_firewall_rule:
+    if distributed_firewall_rule:
         updatable_keys = input_dict.keys()
         is_update_required = vmc_state._check_for_updates(
-            existing_distributed_firewall_rule, input_dict, updatable_keys, ["tags"]
+            distributed_firewall_rule, input_dict, updatable_keys, ["tags"]
         )
 
         if is_update_required:
@@ -309,7 +289,7 @@ def present(
                     name=name, comment=updated_distributed_firewall_rule["error"], result=False
                 )
 
-            get_distributed_firewall_rule_after_update = __salt__[
+            updated_distributed_firewall_rule = __salt__[
                 "vmc_distributed_firewall_rules.get_by_id"
             ](
                 hostname=hostname,
@@ -324,29 +304,29 @@ def present(
                 cert=cert,
             )
 
-            if "error" in get_distributed_firewall_rule_after_update:
+            if "error" in updated_distributed_firewall_rule:
                 return vmc_state._create_state_response(
                     name=name,
-                    comment=get_distributed_firewall_rule_after_update["error"],
+                    comment=updated_distributed_firewall_rule["error"],
                     result=False,
                 )
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated Distributed firewall rule {}".format(rule_id),
-                old_state=existing_distributed_firewall_rule,
-                new_state=get_distributed_firewall_rule_after_update,
+                comment="Updated distributed firewall rule {}".format(rule_id),
+                old_state=distributed_firewall_rule,
+                new_state=updated_distributed_firewall_rule,
                 result=True,
             )
         else:
-            log.info("All fields are same as existing Distributed firewall rule %s", rule_id)
+            log.info("All fields are same as existing distributed firewall rule %s", rule_id)
             return vmc_state._create_state_response(
                 name=name,
                 comment="Distributed firewall rule exists already, no action to perform",
                 result=True,
             )
     else:
-        log.info("No Distributed firewall rule found with Id %s", rule_id)
+        log.info("No distributed firewall rule found with ID %s", rule_id)
         created_distributed_firewall_rule = __salt__["vmc_distributed_firewall_rules.create"](
             hostname=hostname,
             refresh_key=refresh_key,
@@ -380,7 +360,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created Distributed firewall rule {}".format(rule_id),
+            comment="Created distributed firewall rule {}".format(rule_id),
             new_state=created_distributed_firewall_rule,
             result=True,
         )
@@ -395,12 +375,14 @@ def absent(
     sddc_id,
     domain_id,
     security_policy_id,
-    rule_id,
     verify_ssl=True,
     cert=None,
 ):
     """
     Ensure a given distributed firewall rule does not exist on given SDDC
+
+    name
+        Indicates the distributed firewall rule id, any unique string identifying the distributed firewall rule.
 
     hostname
         The host name of NSX-T manager
@@ -420,9 +402,6 @@ def absent(
     domain_id
         The domain_id for which the Distributed firewall rule belongs to. Possible values: default, cgw
 
-    rule_id
-        Id of the distributed_firewall_rule to be deleted from SDDC
-
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
@@ -433,8 +412,9 @@ def absent(
 
     """
 
-    log.info("Checking if Distributed firewall rule with Id %s is present", rule_id)
-    get_distributed_firewall_rule = __salt__["vmc_distributed_firewall_rules.get_by_id"](
+    rule_id = name
+    log.info("Checking if distributed firewall rule with ID %s is present", rule_id)
+    distributed_firewall_rule = __salt__["vmc_distributed_firewall_rules.get_by_id"](
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -447,35 +427,33 @@ def absent(
         cert=cert,
     )
 
-    existing_distributed_firewall_rule = None
-
-    if "error" not in get_distributed_firewall_rule:
-        log.info("Distributed firewall rule found with Id %s", rule_id)
-        existing_distributed_firewall_rule = get_distributed_firewall_rule
-    elif DISTRIBUTED_FIREWALL_RULE_NOT_FOUND_ERROR not in get_distributed_firewall_rule["error"]:
-        return vmc_state._create_state_response(
-            name=name, comment=get_distributed_firewall_rule["error"], result=False
-        )
+    if "error" in distributed_firewall_rule:
+        if "could not be found" in distributed_firewall_rule["error"]:
+            distributed_firewall_rule = None
+        else:
+            return vmc_state._create_state_response(
+                name=name, comment=distributed_firewall_rule["error"], result=False
+            )
 
     if __opts__.get("test"):
         log.info("absent is called with test option")
-        if existing_distributed_firewall_rule:
+        if distributed_firewall_rule:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will delete Distributed firewall rule with Id {}".format(
+                comment="State absent will delete distributed firewall rule with ID {}".format(
                     rule_id
                 ),
             )
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will do nothing as no Distributed firewall rule found with Id {}".format(
+                comment="State absent will do nothing as no distributed firewall rule found with ID {}".format(
                     rule_id
                 ),
             )
 
-    if existing_distributed_firewall_rule:
-        log.info("Distributed firewall rule found with Id %s", rule_id)
+    if distributed_firewall_rule:
+        log.info("Distributed firewall rule found with ID %s", rule_id)
         deleted_distributed_firewall_rule = __salt__["vmc_distributed_firewall_rules.delete"](
             hostname=hostname,
             refresh_key=refresh_key,
@@ -496,14 +474,14 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted Distributed firewall rule {}".format(rule_id),
-            old_state=existing_distributed_firewall_rule,
+            comment="Deleted distributed firewall rule {}".format(rule_id),
+            old_state=distributed_firewall_rule,
             result=True,
         )
     else:
-        log.info("No Distributed firewall rule found with Id %s", rule_id)
+        log.info("No distributed firewall rule found with ID %s", rule_id)
         return vmc_state._create_state_response(
             name=name,
-            comment="No Distributed firewall rule found with Id {}".format(rule_id),
+            comment="No distributed firewall rule found with ID {}".format(rule_id),
             result=True,
         )
