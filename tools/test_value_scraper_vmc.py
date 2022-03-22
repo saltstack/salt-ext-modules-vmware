@@ -102,6 +102,31 @@ def get_vcenter_server_detail(args):
     return output["vcenter_detail"]
 
 
+def get_vcenter_admin_detail(args):
+    output = vmc_sddc.get_by_id(
+        args.vmc_hostname,
+        args.refresh_key,
+        args.authorization_host,
+        args.org_id,
+        args.sddc_id,
+        False,
+    )
+    if "error" in output:
+        print(f'Error while getting vcenter_admin_detail: {output["error"]}')
+        sys.exit()
+
+    vcenter_admin = output["resource_config"]["admin_username"]
+    vcenter_admin_password = output["resource_config"]["admin_password"]
+    vcenter_url = output["resource_config"]["vc_url"]
+    vcenter_server = get_server_from_url(vcenter_url)
+    vcenter_admin_detail = {
+        "vcenter_server": vcenter_server,
+        "username": vcenter_admin,
+        "password": vcenter_admin_password,
+    }
+    return vcenter_admin_detail
+
+
 def update_vmc_vcenter_config(config, config_vcenter, vcenter_server_detail, args):
     config["hostname"] = args.vmc_hostname
     config["vcenter_hostname"] = vcenter_server_detail["vcenter_server"]
@@ -116,6 +141,13 @@ def update_vmc_vcenter_config(config, config_vcenter, vcenter_server_detail, arg
     config_vcenter["username"] = vcenter_server_detail["username"]
     config_vcenter["password"] = vcenter_server_detail["password"]
     config_vcenter["verify_ssl"] = False
+
+
+def update_vmc_vcenter_admin_config(vcenter_admin_config, vcenter_admin_detail):
+    vcenter_admin_config["hostname"] = vcenter_admin_detail["vcenter_server"]
+    vcenter_admin_config["username"] = vcenter_admin_detail["username"]
+    vcenter_admin_config["password"] = vcenter_admin_detail["password"]
+    vcenter_admin_config["verify_ssl"] = False
 
 
 def do_it(args, config_file):
@@ -133,6 +165,10 @@ def do_it(args, config_file):
     update_vmc_vcenter_config(
         config["vmc_connect"], config["vmc_vcenter_connect"], vcenter_server_detail, args
     )
+
+    vcenter_admin_detail = get_vcenter_admin_detail(args)
+    print("******** updating vmc vcenter admin config *********")
+    update_vmc_vcenter_admin_config(config["vmc_vcenter_admin_connect"], vcenter_admin_detail)
 
     json_config = json.dumps(config, indent=2, sort_keys=True)
     config_file.write_text(json_config)

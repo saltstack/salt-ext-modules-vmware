@@ -57,9 +57,11 @@ def distributed_firewall_rules_data(
     yield data
 
 
-def test_get_distributed_firewall_rules_should_return_api_response(distributed_firewall_rules_data):
+def test_list_distributed_firewall_rules_should_return_api_response(
+    distributed_firewall_rules_data,
+):
     assert (
-        vmc_distributed_firewall_rules.get(
+        vmc_distributed_firewall_rules.list_(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -73,13 +75,13 @@ def test_get_distributed_firewall_rules_should_return_api_response(distributed_f
     )
 
 
-def test_get_distributed_firewall_rules_called_with_url():
+def test_list_distributed_firewall_rules_called_with_url():
     expected_url = (
         "https://hostname/vmc/reverse-proxy/api/orgs/org_id/sddcs/sddc_id/policy/api/"
         "v1/infra/domains/domain_id/security-policies/security_policy_id/rules"
     )
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        result = vmc_distributed_firewall_rules.get(
+        result = vmc_distributed_firewall_rules.list_(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -115,7 +117,7 @@ def test_get_distributed_firewall_rules_called_with_url():
         ),
     ],
 )
-def test_assert_get_distributed_firewall_rules_should_correctly_filter_args(
+def test_assert_list_distributed_firewall_rules_should_correctly_filter_args(
     actual_args, expected_params
 ):
     common_actual_args = {
@@ -130,7 +132,7 @@ def test_assert_get_distributed_firewall_rules_should_correctly_filter_args(
     }
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         actual_args.update(common_actual_args)
-        vmc_distributed_firewall_rules.get(**actual_args)
+        vmc_distributed_firewall_rules.list_(**actual_args)
 
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["params"] == expected_params

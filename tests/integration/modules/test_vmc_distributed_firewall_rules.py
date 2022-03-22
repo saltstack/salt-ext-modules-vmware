@@ -9,6 +9,15 @@ from saltext.vmware.utils import vmc_request
 
 
 @pytest.fixture
+def common_data(vmc_config):
+    data = vmc_config["vmc_nsx_connect"].copy()
+    data["domain_id"] = "default"
+    data["security_policy_id"] = "default-layer3-section"
+    data["rule_id"] = "Integration_DFR_1"
+    return data
+
+
+@pytest.fixture
 def request_headers(common_data):
     return vmc_request.get_headers(common_data["refresh_key"], common_data["authorization_host"])
 
@@ -47,24 +56,6 @@ def distributed_firewall_rules_list_url(common_data):
 
 
 @pytest.fixture
-def common_data(vmc_nsx_connect):
-    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
-    data = {
-        "hostname": hostname,
-        "refresh_key": refresh_key,
-        "authorization_host": authorization_host,
-        "org_id": org_id,
-        "sddc_id": sddc_id,
-        "domain_id": "default",
-        "security_policy_id": "default-layer3-section",
-        "rule_id": "Integration_module_DFR_1",
-        "verify_ssl": verify_ssl,
-        "cert": cert,
-    }
-    yield data
-
-
-@pytest.fixture
 def get_distributed_firewall_rules(
     common_data, distributed_firewall_rules_list_url, request_headers
 ):
@@ -100,76 +91,54 @@ def delete_distributed_firewall_rule(
             response.raise_for_status()
 
 
-@pytest.fixture
-def create_distributed_firewall_rule(
-    get_distributed_firewall_rules, distributed_firewall_rule_url, request_headers, common_data
+def test_distributed_firewall_rule_smoke_test(
+    salt_call_cli, common_data, delete_distributed_firewall_rule
 ):
-    for result in get_distributed_firewall_rules.get("results", []):
-        if result["id"] == common_data["rule_id"]:
-            return
+    rule_id = common_data.pop("rule_id")
 
-    data = {
-        "sequence_number": 1,
-        "source_groups": ["ANY"],
-        "destination_groups": ["ANY"],
-        "scope": ["ANY"],
-        "action": "DROP",
-        "services": ["ANY"],
-        "description": " common entry",
-        "disabled": False,
-        "logged": False,
-        "direction": "IN_OUT",
-        "tag": "",
-        "notes": "",
-    }
-    session = requests.Session()
-    response = session.patch(
-        url=distributed_firewall_rule_url,
-        json=data,
-        verify=common_data["cert"] if common_data["verify_ssl"] else False,
-        headers=request_headers,
-    )
-    # raise error if any
-    response.raise_for_status()
+    # existing distributed firewall rules should not contain non-existent rule
+    ret = salt_call_cli.run("vmc_distributed_firewall_rules.list", **common_data)
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    for result in result_as_json.get("results", []):
+        assert result["id"] != rule_id
 
-
-def test_create_distributed_firewall_rule_smoke_test(
-    salt_call_cli, delete_distributed_firewall_rule, common_data
-):
-    expected_rule_id = common_data["rule_id"]
+    # create distributed firewall rule
     ret = salt_call_cli.run(
         "vmc_distributed_firewall_rules.create",
+        rule_id=rule_id,
         **common_data,
     )
     result_as_json = ret.json
-    assert result_as_json["id"] == result_as_json["display_name"] == expected_rule_id
+    assert result_as_json["id"] == result_as_json["display_name"] == rule_id
 
-
-def test_get_distributed_firewall_rule_smoke_test(
-    salt_call_cli, get_distributed_firewall_rules, common_data
-):
-    # No distributed firewall rule id here
-    del common_data["rule_id"]
-    ret = salt_call_cli.run("vmc_distributed_firewall_rules.get", **common_data)
-    result_as_json = ret.json
-    assert result_as_json == get_distributed_firewall_rules
-
-
-def test_update_distributed_firewall_rule_smoke_test(
-    salt_call_cli, common_data, create_distributed_firewall_rule
-):
+    # update distributed firewall rule
     ret = salt_call_cli.run(
         "vmc_distributed_firewall_rules.update",
-        **common_data,
+        rule_id=rule_id,
         display_name="updated_distributed_firewall_rule",
+        **common_data,
     )
     result = ret.json
     assert result["result"] == "success"
 
+    # get the distributed firewall rule and check if the updated values are proper
+    ret = salt_call_cli.run(
+        "vmc_distributed_firewall_rules.get_by_id", rule_id=rule_id, **common_data
+    )
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    assert result_as_json["display_name"] == "updated_distributed_firewall_rule"
 
-def test_delete_distributed_firewall_rule_smoke_test(
-    salt_call_cli, create_distributed_firewall_rule, common_data
-):
-    ret = salt_call_cli.run("vmc_distributed_firewall_rules.delete", **common_data)
+    # delete distributed firewall rule
+    ret = salt_call_cli.run("vmc_distributed_firewall_rules.delete", rule_id=rule_id, **common_data)
     result_as_json = ret.json
     assert result_as_json["result"] == "success"
+
+    # get the distributed firewall rule again, item should not exist
+    ret = salt_call_cli.run(
+        "vmc_distributed_firewall_rules.get_by_id", rule_id=rule_id, **common_data
+    )
+    result_as_json = ret.json
+    assert "error" in result_as_json
+    assert "could not be found" in result_as_json["error"]

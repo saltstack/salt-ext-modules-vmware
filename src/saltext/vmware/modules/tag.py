@@ -46,7 +46,7 @@ def create(tag_name, category_id, description=""):
         "/rest/com/vmware/cis/tagging/tag", "POST", body=data, opts=__opts__, pillar=__pillar__
     )
     response = response["response"].json()
-    return {"tag": response["value"]}
+    return response["value"]
 
 
 def get(tag_id):
@@ -59,7 +59,7 @@ def get(tag_id):
     url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
     response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
     response = response["response"].json()
-    return {"tag": response["value"]}
+    return response["value"]
 
 
 def update(tag_id, tag_name=None, description=None):
@@ -83,7 +83,7 @@ def update(tag_id, tag_name=None, description=None):
     url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
     response = connect.request(url, "PATCH", body=spec, opts=__opts__, pillar=__pillar__)
     if response["response"].status_code == 200:
-        return {"tag": "updated"}
+        return "updated"
     return {
         "tag": "failed to update",
         "status_code": response["response"].status_code,
@@ -101,7 +101,7 @@ def delete(tag_id):
     url = f"/rest/com/vmware/cis/tagging/tag/id:{tag_id}"
     response = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
     if response["response"].status_code == 200:
-        return {"tag": "deleted"}
+        return "deleted"
     return {
         "tag": "failed to update",
         "status_code": response.status_code,
@@ -117,7 +117,7 @@ def list_():
         "/rest/com/vmware/cis/tagging/tag", "GET", opts=__opts__, pillar=__pillar__
     )
     response = response["response"].json()
-    return {"tags": response["value"]}
+    return response["value"]
 
 
 def list_category():
@@ -128,7 +128,7 @@ def list_category():
         "/rest/com/vmware/cis/tagging/category", "GET", opts=__opts__, pillar=__pillar__
     )
     response = response["response"].json()
-    return {"categories": response["value"]}
+    return response["value"]
 
 
 def get_category(category_id):
@@ -141,7 +141,7 @@ def get_category(category_id):
     url = f"/rest/com/vmware/cis/tagging/category/id:{category_id}"
     response = connect.request(url, "GET", opts=__opts__, pillar=__pillar__)
     response = response["response"].json()
-    return {"category": response["value"]}
+    return response["value"]
 
 
 def create_category(category_name, associable_types, cardinality, description=""):
@@ -172,7 +172,7 @@ def create_category(category_name, associable_types, cardinality, description=""
         "/rest/com/vmware/cis/tagging/category", "POST", body=data, opts=__opts__, pillar=__pillar__
     )
     response = response["response"].json()
-    return {"category": response["value"]}
+    return response["value"]
 
 
 def update_category(
@@ -208,7 +208,7 @@ def update_category(
     url = f"/rest/com/vmware/cis/tagging/category/id:{category_id}"
     response = connect.request(url, "PATCH", body=spec, opts=__opts__, pillar=__pillar__)
     if response["response"].status_code == 200:
-        return {"category": "updated"}
+        return "updated"
     return {
         "category": "failed to update",
         "status_code": response["response"].status_code,
@@ -226,7 +226,7 @@ def delete_category(category_id):
     url = f"/rest/com/vmware/cis/tagging/category/id:{category_id}"
     response = connect.request(url, "DELETE", opts=__opts__, pillar=__pillar__)
     if response["response"].status_code == 200:
-        return {"category": "deleted"}
+        return "deleted"
     return {
         "category": "failed to update",
         "status_code": response.status_code,

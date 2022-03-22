@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import tarfile
+from unittest.mock import patch
 
 import pytest
+import salt.exceptions
 import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.modules.vm as virtual_machine
 import saltext.vmware.utils.common as utils_common
@@ -14,6 +16,17 @@ try:
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
+
+
+@pytest.fixture
+def patch_salt_globals_vm(vmware_conf):
+    """
+    Patch __opts__ and __pillar__
+    """
+    with patch.object(virtual_machine, "__opts__", {}, create=True), patch.object(
+        virtual_machine, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -59,11 +72,15 @@ def test_ovf_deploy(integration_test_config, patch_salt_globals_vm):
     """
     Test deploy virtual machine through an OVF
     """
-    res = virtual_machine.deploy_ovf(
-        vm_name="test1",
-        host_name=integration_test_config["esxi_host_name"],
-        ovf_path="tests/test_files/centos-7-tools.ovf",
-    )
+    try:
+        res = virtual_machine.deploy_ovf(
+            vm_name="test1",
+            host_name=integration_test_config["esxi_host_name"],
+            ovf_path="tests/test_files/centos-7-tools.ovf",
+        )
+    except salt.exceptions.VMwareApiError as exc:
+        if "Host did not have any virtual network defined" in str(exc):
+            pytest.skip("test requires at least one virtual machine")
     assert res["deployed"] == True
 
 
@@ -74,11 +91,16 @@ def test_ova_deploy(integration_test_config, patch_salt_globals_vm):
     tar = tarfile.open("tests/test_files/sample.tar", "w")
     tar.add("tests/test_files/centos-7-tools.ovf")
     tar.close()
-    res = virtual_machine.deploy_ova(
-        vm_name="test2",
-        host_name=integration_test_config["esxi_host_name"],
-        ova_path="tests/test_files/sample.tar",
-    )
+    try:
+        res = virtual_machine.deploy_ova(
+            vm_name="test2",
+            host_name=integration_test_config["esxi_host_name"],
+            ova_path="tests/test_files/sample.tar",
+        )
+    except salt.exceptions.VMwareApiError as exc:
+        if "Host did not have any virtual network defined" in str(exc):
+            os.remove("tests/test_files/sample.tar")
+            pytest.skip("test requires at least one virtual machine")
     os.remove("tests/test_files/sample.tar")
     assert res["deployed"] == True
 
