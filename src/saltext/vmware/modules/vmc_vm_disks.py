@@ -68,7 +68,7 @@ def list_(hostname, username, password, vm_id, verify_ssl=True, cert=None):
     )
 
 
-def get_by_id(hostname, username, password, vm_id, disk_id, verify_ssl=True, cert=None):
+def get(hostname, username, password, vm_id, disk_id, verify_ssl=True, cert=None):
     """
     Retrieves details of given virtual disk for given VM.
 
@@ -76,7 +76,7 @@ def get_by_id(hostname, username, password, vm_id, disk_id, verify_ssl=True, cer
 
     .. code-block:: bash
 
-        salt vm_minion vmc_vm_disks.get_by_id hostname=sample-vcenter.vmwarevmc.com ...
+        salt vm_minion vmc_vm_disks.get hostname=sample-vcenter.vmwarevmc.com ...
 
     hostname
         Hostname of the vCenter console
@@ -113,7 +113,7 @@ def get_by_id(hostname, username, password, vm_id, disk_id, verify_ssl=True, cer
         method=vmc_constants.GET_REQUEST_METHOD,
         url=api_url,
         headers=headers,
-        description="vmc_vm_disks.get_by_id",
+        description="vmc_vm_disks.get",
         verify_ssl=verify_ssl,
         cert=cert,
     )
@@ -264,8 +264,9 @@ def create(
     bus_adapter_type,
     verify_ssl=True,
     cert=None,
-    backing=None,
-    new_vmdk=None,
+    vmdk=None,
+    capacity=None,
+    storage_policy_id=None,
     scsi=None,
     sata=None,
     ide=None,
@@ -302,68 +303,20 @@ def create(
         (optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
 
-    backing
-        Existing physical resource backing for the virtual disk.
-        This is required unless `new_vmdk` is provided.
-        If unset, the virtual disk will not be connected to an existing backing.
+    vmdk
+        (optional) If empty, ``None``, or a string create a new VMDK.
+        If empty or ``None``, creates new VMDK with a name (derived from the name of the virtual machine) chosen by the server.
+        If vmdk ends with ``.vmdk``, it must refer to an existing VMDK.
+        Otherwise, ``vmdk`` will be the stem of the new VMDK.
+        Example ``vmdk="test-vm-1"`` will result in ``[WorkloadDatastore] 8dff8760-b6da-24d2-475b-0200a629f7fc/test-vm-1.vmdk``.
 
-        It is a json object which can contain 'type' and 'vmdk_file' keys.
+    capacity
+        (Optional) The capacity for the disk, in bytes. If unset, defaults to a guest-specific capacity.
+        Prohibited if the ``vmdk`` ends with ``.vmdk``
 
-        'type': (String) (mandatory)
-            Backing type for the virtual disk. Possible values are: VMDK_FILE
-
-        'vmdk_file': (String) (optional)
-            Path of the VMDK file backing the virtual disk.
-            This field is optional and it is only relevant when the value of backing type is VMDK_FILE
-
-        For ex:
-
-            .. code::
-
-                "backing": {
-                    "type": "VMDK_FILE",
-                    "vmdk_file": "[WorkloadDatastore] 8dff8760-b6da-24d2-475b-0200a629f7fc/test-vm-1.vmdk"
-                }
-
-    new_vmdk
-        Specification for creating a new VMDK backing for the virtual disk.
-        This is required unless `backing` is provided.
-        If unset, a new VMDK backing will not be created.
-
-        It is a json object which can contain 'capacity', 'name' and 'storage_policy' keys.
-
-        'capacity': (Integer As Int64) (optional)
-            Capacity of the virtual disk backing in bytes. If unset, defaults to a guest-specific capacity.
-
-        'name': (String) (optional)
-            Base name of the VMDK file. The name should not include the '.vmdk' file extension.
-            If unset, a name (derived from the name of the virtual machine) will be chosen by the server.
-
-        'storage_policy': (optional)
-            The storage_policy structure contains information about the storage policy that is to be associated
-            with the VMDK file. If unset the default storage policy of the target datastore (if applicable)
-            is applied. Currently a default storage policy is only supported by
-            object based datastores : VVol & vSAN.
-            For non-object datastores, if unset then no storage policy would be associated with the VMDK file.
-
-            It is a json object which contains a key 'policy'.
-
-            'policy': (String) (mandatory)
-                Identifier of the storage policy which should be associated with the VMDK file.
-                When clients pass a value of this structure as a parameter, the field must be
-                an identifier for the resource type: com.vmware.vcenter.StoragePolicy.
-
-        For ex:
-
-            .. code::
-
-                "new_vmdk": {
-                    "capacity": 17179869184,
-                    "name": "test-1",
-                    "storage_policy": {
-                        "policy":"aa6d5a82-1c88-45da-85d3-3d74b91a5bad"
-                    }
-                }
+    storage_policy_id
+        (Optional) The identifier for the storage policy to be used when creating the vmdk file. Prohibited if
+        the ``vmdk`` ends with ``.vmdk``
 
     scsi
         (optional) Address for attaching the device to a virtual SCSI adapter. If unset, the server will choose
@@ -434,21 +387,28 @@ def create(
                     "primary": false
                 }
 
-    NOTE:  Exactly one of backing or new_vmdk must be specified. Else the request will be rejected.
-
     """
 
     log.info("Creating virtual disk on virtual %s adapter for VM %s", bus_adapter_type, vm_id)
 
-    if backing is None and new_vmdk is None:
-        error_msg = "Exactly one of backing or new_vmdk must be specified to create virtual disk"
-        log.error(error_msg)
-        return {vmc_constants.ERROR: error_msg}
-
-    if backing is not None and new_vmdk is not None:
-        error_msg = "Either an existing disk backing or a new VMDK may be specified but not both"
-        log.error(error_msg)
-        return {vmc_constants.ERROR: error_msg}
+    backing = None
+    new_vmdk = None
+    if vmdk and vmdk.endswith(".vmdk"):
+        if capacity is not None or storage_policy_id is not None:
+            error_msg = "If vmdk={!r} ends in '.vmdk' then capacity and storage_policy_id cannot be specified".format(
+                vmdk
+            )
+            log.error(error_msg)
+            return {vmc_constants.ERROR: error_msg}
+        backing = {"type": "VMDK_FILE", "vmdk_file": vmdk}
+    else:
+        new_vmdk = {}
+        if vmdk:
+            new_vmdk["name"] = vmdk
+        if capacity:
+            new_vmdk["capacity"] = int(capacity)
+        if storage_policy_id:
+            new_vmdk["storage_policy"] = {"policy": storage_policy_id}
 
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = "{base_url}api/vcenter/vm/{vm_id}/hardware/disk"

@@ -57,9 +57,9 @@ def test_list_vm_disks_called_with_url(mock_request_post_api):
     assert call_kwargs["url"] == expected_url
 
 
-def test_get_by_id_should_return_api_response(mock_request_post_api, disk_data_by_id):
+def test_get_should_return_api_response(mock_request_post_api, disk_data_by_id):
     assert (
-        vmc_vm_disks.get_by_id(
+        vmc_vm_disks.get(
             hostname="hostname",
             username="username",
             password="password",
@@ -71,10 +71,10 @@ def test_get_by_id_should_return_api_response(mock_request_post_api, disk_data_b
     )
 
 
-def test_get_vm_disk_by_id_called_with_url(mock_request_post_api):
+def test_get_vm_disk_called_with_url(mock_request_post_api):
     expected_url = "https://hostname/api/vcenter/vm/vm_id/hardware/disk/disk_id"
     with patch("saltext.vmware.utils.vmc_vcenter_request.call_api", autospec=True) as vmc_call_api:
-        vmc_vm_disks.get_by_id(
+        vmc_vm_disks.get(
             hostname="hostname",
             username="username",
             password="password",
@@ -99,16 +99,28 @@ def test_create_when_api_should_return_successfully_created_message(
             vm_id="vm_id",
             bus_adapter_type="IDE",
             verify_ssl=False,
-            new_vmdk={},
         )
         == expected_response
     )
 
 
-def test_create_when_both_backing_and_new_vmdk_is_not_passed(mock_vcenter_headers):
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"vmdk": "foo.vmdk", "capacity": 450, "storage_policy_id": "abc1"},
+        {"vmdk": "foo.vmdk", "capacity": 450},
+        {"vmdk": "foo.vmdk", "storage_policy_id": "abc1"},
+    ],
+)
+def test_create_with_dot_vmdk_file_name_and_capacity_and_storage_policy_id_should_error(
+    mock_vcenter_headers, mock_vmc_vcenter_request_call_api, kwargs
+):
     expected_error = {
-        "error": "Exactly one of backing or new_vmdk must be specified to create virtual disk"
+        "error": "If vmdk={!r} ends in '.vmdk' then capacity and storage_policy_id cannot be specified".format(
+            kwargs["vmdk"]
+        )
     }
+
     assert (
         vmc_vm_disks.create(
             hostname="hostname",
@@ -117,16 +129,17 @@ def test_create_when_both_backing_and_new_vmdk_is_not_passed(mock_vcenter_header
             vm_id="vm_id",
             bus_adapter_type="IDE",
             verify_ssl=False,
+            **kwargs
         )
         == expected_error
     )
 
 
-def test_create_for_multi_disk_backings_error(mock_vcenter_headers):
-    expected_error = {
-        "error": "Either an existing disk backing or a new VMDK may be specified but not both"
-    }
-    assert (
+def test_create_with_dot_vmdk_file_should_pass_backing_information_to_api_call(
+    mock_vcenter_headers,
+):
+    expected_backing = {"type": "VMDK_FILE", "vmdk_file": "example.vmdk"}
+    with patch("saltext.vmware.utils.vmc_vcenter_request.call_api", autospec=True) as vmc_call_api:
         vmc_vm_disks.create(
             hostname="hostname",
             username="username",
@@ -134,11 +147,49 @@ def test_create_for_multi_disk_backings_error(mock_vcenter_headers):
             vm_id="vm_id",
             bus_adapter_type="IDE",
             verify_ssl=False,
-            new_vmdk={},
-            backing={},
+            vmdk="example.vmdk",
         )
-        == expected_error
-    )
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert "backing" in call_kwargs["data"]
+    assert call_kwargs["data"]["backing"] == expected_backing
+
+
+@pytest.mark.parametrize(
+    "kwargs, expected_new_vmdk",
+    [
+        ({}, {}),
+        ({"vmdk": ""}, {}),
+        ({"vmdk": None}, {}),
+        (
+            {"vmdk": "foo", "capacity": 450, "storage_policy_id": "abc1"},
+            {"name": "foo", "capacity": 450, "storage_policy": {"policy": "abc1"}},
+        ),
+        ({"vmdk": "foo-bar", "capacity": 450}, {"name": "foo-bar", "capacity": 450}),
+        (
+            {"vmdk": "foo-test", "storage_policy_id": "abc1"},
+            {"name": "foo-test", "storage_policy": {"policy": "abc1"}},
+        ),
+    ],
+)
+def test_create_with_vmdk_name_and_capacity_and_storage_policy_id_should_pass_expected_new_vmdk(
+    mock_vcenter_headers, kwargs, expected_new_vmdk
+):
+    with patch("saltext.vmware.utils.vmc_vcenter_request.call_api", autospec=True) as vmc_call_api:
+        vmc_vm_disks.create(
+            hostname="hostname",
+            username="username",
+            password="password",
+            vm_id="vm_id",
+            bus_adapter_type="IDE",
+            verify_ssl=False,
+            **kwargs
+        )
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["data"]["backing"] is None
+    assert "new_vmdk" in call_kwargs["data"]
+    assert call_kwargs["data"]["new_vmdk"] == expected_new_vmdk
 
 
 def test_create_vm_disk_called_with_url(mock_vcenter_headers):
@@ -151,7 +202,6 @@ def test_create_vm_disk_called_with_url(mock_vcenter_headers):
             vm_id="vm_id",
             bus_adapter_type="IDE",
             verify_ssl=False,
-            new_vmdk={},
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
