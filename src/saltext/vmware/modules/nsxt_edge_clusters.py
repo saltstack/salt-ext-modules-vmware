@@ -47,9 +47,13 @@ def get(
 ):
     """
     Lists all the Edge clusters present in the NSX-T Manager
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_edge_clusters.get hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
     username
@@ -106,9 +110,13 @@ def get_by_display_name(
 ):
     """
     Lists all the edge clusters based on display name in the NSX-T Manager
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_edge_clusters.get_edge_clusters_by_display_name hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
     username
@@ -175,11 +183,16 @@ def create(
     members=None,
     resource_type=None,
 ):
+
     """
     Creates an Edge Cluster with given specifications
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_edge_cluster.create hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
     username
@@ -224,8 +237,10 @@ def create(
           validate_certs: False
           display_name: edge-cluster-1  `
           cluster_profile_bindings:
+
            - profile_name: "nsx-edge-profile"
              resource_type: EdgeHighAvailabilityProfile
+
           members:
            - transport_node_name: "TN_1"
     """
@@ -283,10 +298,15 @@ def update(
     resource_type=None,
 ):
     """
+
     Updates Edge clusters with given specifications
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_edge_clusters.create hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
     username
@@ -316,10 +336,14 @@ def update(
         display_name: edge-cluster-1
         description: edit edge cluster nodes
         cluster_profile_bindings:
+
          - profile_name: "nsx-edge-profile"
            resource_type: EdgeHighAvailabilityProfile
+
         members:
+
          - transport_node_name: "TN_1"
+
         _revision: 0
     """
     log.info("Updating Edge Clusters")
@@ -362,10 +386,15 @@ def delete(
     cert_common_name=None,
 ):
     """
+
     Deletes edge clusters with given id
+
     CLI Example:
+
     .. code-block:: bash
+
         salt vm_minion nsxt_edge_clusters.delete hostname=nsxt-manager.local username=admin ...
+
     hostname
         The host name of NSX-T manager
     username
