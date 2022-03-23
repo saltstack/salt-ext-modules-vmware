@@ -138,7 +138,7 @@ create_distributed_firewall_rules = {
     "scope": ["ANY"],
     "action": "DROP",
     "services": ["ANY"],
-    "description": " common entry",
+    "description": "",
     "disabled": False,
     "logged": False,
     "direction": "IN_OUT",
