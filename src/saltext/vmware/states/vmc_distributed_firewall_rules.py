@@ -15,7 +15,8 @@ Example usage :
         - authorization_host: console-stg.cloud.vmware.com
         - org_id: 10e1092f-51d0-473a-80f8-137652c39fd0
         - sddc_id: b43da080-2626-f64c-88e8-7f31d9d2c306
-        - domain_id: mgw
+        - domain_id: default
+        - security_policy_id: default-layer3-section
         - verify_ssl: False
         - cert: /path/to/client/certificate
 
@@ -85,8 +86,8 @@ def present(
     domain_id
         The domain_id for which the Distributed firewall rule belongs to. Possible values: default, cgw
 
-    secuirty_policy_id
-        The  secuirty_policy_id for which the distributed firewall rules should belongs to
+    security_policy_id
+        The  security_policy_id for which the distributed firewall rules should belongs to
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -245,7 +246,7 @@ def present(
         log.info("present is called with test option")
         return vmc_state._create_state_response(
             name=name,
-            comment="Distributed firewall rule {} will be {}".format(
+            comment="Distributed firewall rule {} would have been {}".format(
                 rule_id, "updated" if distributed_firewall_rule else "created"
             ),
         )
@@ -401,6 +402,9 @@ def absent(
 
     domain_id
         The domain_id for which the Distributed firewall rule belongs to. Possible values: default, cgw
+
+    security_policy_id
+        The  security_policy_id for which the distributed firewall rules belongs to
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.

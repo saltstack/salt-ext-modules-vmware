@@ -369,7 +369,9 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "Distributed firewall rule {} will be created".format(rule_id)
+    assert result["comment"] == "Distributed firewall rule {} would have been created".format(
+        rule_id
+    )
     assert result["result"] is None
 
 
@@ -397,7 +399,9 @@ def test_present_state_for_update_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "Distributed firewall rule {} will be updated".format(rule_id)
+    assert result["comment"] == "Distributed firewall rule {} would have been updated".format(
+        rule_id
+    )
     assert result["result"] is None
 
 
