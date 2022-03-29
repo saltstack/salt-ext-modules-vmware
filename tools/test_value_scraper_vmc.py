@@ -157,6 +157,48 @@ def do_it(args, config_file):
     except Exception as e:
         exit(f"Bad config: {e}")
 
+    cloud_url = None
+    refresh_key = args.refresh_key or config.get("refresh_key")
+    if not refresh_key:
+        print("No [-r REFRESH_KEY] provided. The refresh key is your SDDC API key")
+        print(
+            "Note: if you have multiple organizations, ensure that your organization is the correct one.\n"
+        )
+        cloud_url = input("What URL do you use to get to your VMware Cloud Services? ")
+        print(
+            "You should be able to get your API key from:",
+            cloud_url + "/csp/gateway/portal/#/user/tokens",
+        )
+        refresh_key = input("Refresh key: ").strip()
+
+    org_id = args.org_id or config.get("org_id")
+    if not org_id:
+        print("No [-o ORG_ID] provided. The ORG_ID is uuid of organization")
+        if not cloud_url:
+            cloud_url = input("What URL do you use to get to yur VMware Cloud Services? ")
+        print(
+            "You should be able to get the ORG_ID",
+            cloud_url + "/csp/gateway/portal/#/organization/info",
+        )
+        print("Pick the Long Organization ID\n")
+        org_id = input("ORG_ID: ").strip()
+
+    sddc_id = args.sddc_id or config.get("sddc_id")
+    if not sddc_id:
+        print("No [-s SDDC_ID] provided. The SDDC_ID is uuid of SDDC")
+        vmc_hostname = input("What URL do you use to get to your VMware Cloud Console? ")
+
+        print("You should be able to get the SDDC_ID from:", vmc_hostname + "/console/sddcs")
+        print(
+            "Choose the SDDC from the list of available SDDCs and Navigate to the support tab of the chosen SDDC."
+        )
+        print("Pick the SDDC ID\n")
+        sddc_id = input("SDDC_ID: ").strip()
+
+    args.refresh_key = refresh_key
+    args.org_id = org_id
+    args.sddc_id = sddc_id
+
     nsx_reverse_proxy_server = get_nsx_reverse_proxy_server(args)
     print("******** updating vmc nsx config *********")
     update_vmc_nsx_config(config["vmc_nsx_connect"], nsx_reverse_proxy_server, args)
@@ -174,49 +216,8 @@ def do_it(args, config_file):
     config_file.write_text(json_config)
 
 
-class ArgumentParser(argparse.ArgumentParser):
-    def error(self, message):
-        print("{}: error: {}\n".format(self.prog, message))
-        self.print_help(sys.stderr)
-
-        cloud_url = None
-        if "refresh_key" in message:
-            print("No [-r REFRESH_KEY] provided. The refresh key is your SDDC API key")
-            cloud_url = input("What URL do you use to get to your VMware Cloud Services? ")
-            print(
-                "You should be able to get your API key from:",
-                cloud_url + "/csp/gateway/portal/#/user/tokens",
-            )
-            print(
-                "Note: if you have multiple organizations, ensure that your organization is the correct one.\n"
-            )
-
-        if "org_id" in message:
-            print("No [-o ORG_ID] provided. The ORG_ID is uuid of organization")
-            if not cloud_url:
-                cloud_url = input("What URL do you use to get to yur VMware Cloud Services? ")
-
-            print(
-                "You should be able to get the ORG_ID",
-                cloud_url + "/csp/gateway/portal/#/organization/info",
-            )
-            print("Pick the Long Organization ID\n")
-
-        if "sddc_id" in message:
-            print("No [-s SDDC_ID] provided. The SDDC_ID is uuid of SDDC")
-            vmc_hostname = input("What URL do you use to get to your VMware Cloud Console? ")
-
-            print("You should be able to get the SDDC_ID from:", vmc_hostname + "/console/sddcs")
-            print(
-                "Choose the SDDC from the list of available SDDCs and Navigate to the support tab of the chosen SDDC."
-            )
-            print("Pick the SDDC ID\n")
-
-        self.exit(2)
-
-
 if __name__ == "__main__":
-    parser = ArgumentParser(
+    parser = argparse.ArgumentParser(
         description="Run this before running integration tests for vmc",
         epilog="""
         Example  usage creation of file local/vmc_config.json:
@@ -258,11 +259,10 @@ if __name__ == "__main__":
         "-r",
         "--refresh_key",
         dest="refresh_key",
-        required=True,
         help="CSP API token for accessing VMC ",
     )
-    parser.add_argument("-o", "--org_id", dest="org_id", required=True, help="Organization id")
-    parser.add_argument("-s", "--sddc_id", dest="sddc_id", required=True, help="SDDC id")
+    parser.add_argument("-o", "--org_id", dest="org_id", help="Organization id")
+    parser.add_argument("-s", "--sddc_id", dest="sddc_id", help="SDDC id")
     args = parser.parse_args()
 
     config_file = args.CONFIG_FILE
