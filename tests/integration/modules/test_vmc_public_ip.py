@@ -86,7 +86,7 @@ def test_public_ip_smoke_test(salt_call_cli, common_data, delete_public_ip):
     # create public IP
     ret = salt_call_cli.run(
         "vmc_public_ip.create",
-        public_ip_name=public_ip_id,
+        name=public_ip_id,
         **common_data,
     )
     result_as_json = ret.json
@@ -95,20 +95,20 @@ def test_public_ip_smoke_test(salt_call_cli, common_data, delete_public_ip):
     # update public IP
     ret = salt_call_cli.run(
         "vmc_public_ip.update",
-        public_ip_id=public_ip_id,
-        public_ip_name="updated_public_ip",
+        id=public_ip_id,
+        name="updated_public_ip",
         **common_data,
     )
     result_as_json = ret.json
     assert result_as_json["display_name"] == "updated_public_ip"
 
     # delete public IP
-    ret = salt_call_cli.run("vmc_public_ip.delete", public_ip_id=public_ip_id, **common_data)
+    ret = salt_call_cli.run("vmc_public_ip.delete", id=public_ip_id, **common_data)
     result_as_json = ret.json
     assert result_as_json["result"] == "success"
 
     # get the public IP, item should not exist
-    ret = salt_call_cli.run("vmc_public_ip.get", public_ip_id=public_ip_id, **common_data)
+    ret = salt_call_cli.run("vmc_public_ip.get", id=public_ip_id, **common_data)
     result_as_json = ret.json
     assert "error" in result_as_json
     assert "PublicIp Object Not Found" in result_as_json["error"]

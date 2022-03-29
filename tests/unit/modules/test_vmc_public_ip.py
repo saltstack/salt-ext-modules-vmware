@@ -107,12 +107,12 @@ def test_assert_get_public_ip_should_correctly_filter_args(actual_args, expected
 def test_get_public_ip_by_id_should_return_api_response(public_ip_data_by_id):
     assert (
         vmc_public_ip.get(
+            id="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            public_ip_id="TEST_IP",
             verify_ssl=False,
         )
         == public_ip_data_by_id
@@ -126,12 +126,12 @@ def test_get_public_ip_by_id_called_with_url():
     )
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         result = vmc_public_ip.get(
+            id="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            public_ip_id="TEST_IP",
             verify_ssl=False,
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
@@ -144,12 +144,12 @@ def test_delete_public_ip_should_return_api_response(mock_vmc_request_call_api):
     mock_vmc_request_call_api.return_value = data
     assert (
         vmc_public_ip.delete(
+            id="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            public_ip_id="TEST_IP",
             verify_ssl=False,
         )
         == data
@@ -163,12 +163,12 @@ def test_delete_public_ip_called_with_url():
     )
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         result = vmc_public_ip.delete(
+            id="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            public_ip_id="TEST_IP",
             verify_ssl=False,
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
@@ -181,12 +181,12 @@ def test_create_public_ip_should_return_api_response(mock_vmc_request_call_api):
     mock_vmc_request_call_api.return_value = data
     assert (
         vmc_public_ip.create(
+            name="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            public_ip_name="TEST_IP",
             verify_ssl=False,
         )
         == data
@@ -200,12 +200,12 @@ def test_create_public_ip_called_with_url():
     )
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         result = vmc_public_ip.create(
+            name="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            public_ip_name="TEST_IP",
             verify_ssl=False,
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
@@ -225,12 +225,12 @@ def test_create_public_ip_called_with_url():
 )
 def test_assert_public_ip_create_should_correctly_filter_args(actual_args, expected_payload):
     common_actual_args = {
+        "name": "TEST_IP",
         "hostname": "hostname",
         "refresh_key": "refresh_key",
         "authorization_host": "authorization_host",
         "org_id": "org_id",
         "sddc_id": "sddc_id",
-        "public_ip_name": "TEST_IP",
         "verify_ssl": False,
     }
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
@@ -246,13 +246,13 @@ def test_update_public_ip_should_return_api_response(mock_vmc_request_call_api):
     mock_vmc_request_call_api.return_value = data
     assert (
         vmc_public_ip.update(
+            id="4ee86a7c-48af-48c8-a72e-2c6e8dbf3c9f",
+            name="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            public_ip_id="4ee86a7c-48af-48c8-a72e-2c6e8dbf3c9f",
-            public_ip_name="TEST_IP",
             verify_ssl=False,
         )
         == data
@@ -266,13 +266,13 @@ def test_update_public_ip_called_with_url():
     )
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         result = vmc_public_ip.update(
+            id="TEST_IP",
+            name="Update_TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
             org_id="org_id",
             sddc_id="sddc_id",
-            public_ip_id="TEST_IP",
-            public_ip_name="Update_TEST_IP",
             verify_ssl=False,
         )
     call_kwargs = vmc_call_api.mock_calls[0][-1]
@@ -285,7 +285,7 @@ def test_update_public_ip_called_with_url():
     [
         # One required parameter
         (
-            {"public_ip_name": "updated public ip"},
+            {"name": "updated public ip"},
             {
                 "display_name": "updated public ip",
             },
@@ -294,12 +294,12 @@ def test_update_public_ip_called_with_url():
 )
 def test_assert_public_ip_update_should_correctly_filter_args(actual_args, expected_payload):
     common_actual_args = {
+        "id": "TEST_IP",
         "hostname": "hostname",
         "refresh_key": "refresh_key",
         "authorization_host": "authorization_host",
         "org_id": "org_id",
         "sddc_id": "sddc_id",
-        "public_ip_id": "TEST_IP",
         "verify_ssl": False,
     }
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
