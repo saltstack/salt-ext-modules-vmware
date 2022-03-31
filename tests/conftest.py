@@ -1,10 +1,18 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import os
+import pathlib
+import tempfile
 
 import pytest
 from saltext.vmware import PACKAGE_ROOT
 from saltfactories.utils import random_string
+
+
+@pytest.fixture(scope="session")
+def session_temp_dir():
+    with tempfile.TemporaryDirectory() as d:
+        yield pathlib.Path(d).resolve()
 
 
 @pytest.fixture(scope="session")
