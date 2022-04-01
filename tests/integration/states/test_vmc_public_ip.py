@@ -5,7 +5,12 @@ import pytest
 import requests
 from saltext.vmware.utils import vmc_request
 
-from tests.integration.conftest import get_config
+
+@pytest.fixture
+def common_data(vmc_config):
+    data = vmc_config["vmc_nsx_connect"].copy()
+    data["public_ip_id"] = "TEST_INTEGRATION_PUBLIC_IP"
+    return data
 
 
 @pytest.fixture
@@ -43,23 +48,6 @@ def public_ips_list_url(common_data):
 
 
 @pytest.fixture
-def common_data(vmc_nsx_connect):
-    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
-    data = {
-        "hostname": hostname,
-        "refresh_key": refresh_key,
-        "authorization_host": authorization_host,
-        "org_id": org_id,
-        "sddc_id": sddc_id,
-        "public_ip_name": "TEST_INTEGRATION_PUBLIC_IP",
-        "public_ip_id": "TEST_INTEGRATION_PUBLIC_IP",
-        "verify_ssl": verify_ssl,
-        "cert": cert,
-    }
-    yield data
-
-
-@pytest.fixture
 def get_public_ips(common_data, public_ips_list_url, request_headers):
     session = requests.Session()
     response = session.get(
@@ -74,7 +62,7 @@ def get_public_ips(common_data, public_ips_list_url, request_headers):
 @pytest.fixture
 def delete_public_ip(get_public_ips, public_ip_url, request_headers, common_data):
     for result in get_public_ips.get("results", []):
-        if result["id"] == common_data["public_ip"]:
+        if result["id"] == common_data["public_ip_id"]:
             session = requests.Session()
             response = session.delete(
                 url=public_ip_url,
@@ -85,24 +73,15 @@ def delete_public_ip(get_public_ips, public_ip_url, request_headers, common_data
             response.raise_for_status()
 
 
-def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, vmc_nsx_connect, common_data):
-    # Invoke present state to create public ip
-    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
-    public_ip_id = common_data["public_ip_id"]
-    public_ip_name = common_data["public_ip_name"]
-    updated_display_name = "updated public_ip"
+def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, common_data):
+    public_ip_id = common_data.pop("public_ip_id")
+
+    # Invoke present state to create public IP
     response = salt_call_cli.run(
         "state.single",
         "vmc_public_ip.present",
-        name="present",
-        hostname=hostname,
-        refresh_key=refresh_key,
-        authorization_host=authorization_host,
-        org_id=org_id,
-        sddc_id=sddc_id,
-        public_ip_name=public_ip_name,
-        verify_ssl=verify_ssl,
-        cert=cert,
+        name=public_ip_id,
+        **common_data,
     )
     response_json = response.json
     result = list(response_json.values())[0]
@@ -110,45 +89,32 @@ def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, vmc_nsx_con
 
     assert changes["old"] is None
     assert changes["new"]["id"] == public_ip_id
-    assert result["comment"] == "Created public ip {}".format(public_ip_id)
+    assert result["comment"] == "Created public IP {}".format(public_ip_id)
 
-    # Test present to update with identical fields
+    # Test present to update public IP with identical fields
     response = salt_call_cli.run(
         "state.single",
         "vmc_public_ip.present",
-        name="present",
-        hostname=hostname,
-        refresh_key=refresh_key,
-        authorization_host=authorization_host,
-        org_id=org_id,
-        sddc_id=sddc_id,
-        public_ip_id=public_ip_id,
-        public_ip_name=public_ip_name,
-        verify_ssl=verify_ssl,
-        cert=cert,
+        name=public_ip_id,
+        display_name=public_ip_id,
+        **common_data,
     )
     response_json = response.json
     result = list(response_json.values())[0]
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}
-    assert result["comment"] == "public ip exists already, no action to perform"
+    assert result["comment"] == "Public IP exists already, no action to perform"
 
-    # Invoke present state to update public ip with new display_name
+    updated_display_name = "updated public_ip"
+
+    # Invoke present state to update public IP with new display_name
     response = salt_call_cli.run(
         "state.single",
         "vmc_public_ip.present",
-        name="present",
-        hostname=hostname,
-        refresh_key=refresh_key,
-        authorization_host=authorization_host,
-        org_id=org_id,
-        sddc_id=sddc_id,
-        public_ip_id=public_ip_id,
-        public_ip_name=updated_display_name,
-        verify_ssl=verify_ssl,
-        cert=cert,
         display_name=updated_display_name,
+        public_ip_id=public_ip_id,
+        **common_data,
     )
     response_json = response.json
     result = list(response_json.values())[0]
@@ -156,21 +122,14 @@ def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, vmc_nsx_con
 
     assert changes["old"]["display_name"] != changes["new"]["display_name"]
     assert changes["new"]["display_name"] == updated_display_name
-    assert result["comment"] == "Updated public ip {}".format(public_ip_id)
+    assert result["comment"] == "Updated public IP {}".format(public_ip_id)
 
-    # Invoke absent to delete the public ip
+    # Invoke absent to delete the public IP
     response = salt_call_cli.run(
         "state.single",
         "vmc_public_ip.absent",
-        name="absent",
-        hostname=hostname,
-        refresh_key=refresh_key,
-        authorization_host=authorization_host,
-        org_id=org_id,
-        sddc_id=sddc_id,
-        public_ip_id=public_ip_id,
-        verify_ssl=verify_ssl,
-        cert=cert,
+        name=public_ip_id,
+        **common_data,
     )
     response_json = response.json
     result = list(response_json.values())[0]
@@ -178,25 +137,18 @@ def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, vmc_nsx_con
 
     assert changes["new"] is None
     assert changes["old"]["id"] == public_ip_id
-    assert result["comment"] == "Deleted public ip {}".format(public_ip_id)
+    assert result["comment"] == "Deleted public IP {}".format(public_ip_id)
 
-    # Invoke absent when public ip is not present
+    # Invoke absent when public IP is not present
     response = salt_call_cli.run(
         "state.single",
         "vmc_public_ip.absent",
-        name="absent",
-        hostname=hostname,
-        refresh_key=refresh_key,
-        authorization_host=authorization_host,
-        org_id=org_id,
-        sddc_id=sddc_id,
-        public_ip_id=public_ip_id,
-        verify_ssl=verify_ssl,
-        cert=cert,
+        name=public_ip_id,
+        **common_data,
     )
     response_json = response.json
     result = list(response_json.values())[0]
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}
-    assert result["comment"] == "No public ip found with Id {}".format(public_ip_id)
+    assert result["comment"] == "No public IP found with ID {}".format(public_ip_id)
