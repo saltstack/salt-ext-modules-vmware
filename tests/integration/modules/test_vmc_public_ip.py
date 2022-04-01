@@ -1,11 +1,16 @@
 """
     Integration Tests for vmc_public_ip execution module
 """
-import json
-
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request
+
+
+@pytest.fixture
+def common_data(vmc_config):
+    data = vmc_config["vmc_nsx_connect"].copy()
+    data["public_ip_id"] = "TEST_INTEGRATION_PUBLIC_IP"
+    return data
 
 
 @pytest.fixture
@@ -43,23 +48,6 @@ def public_ips_list_url(common_data):
 
 
 @pytest.fixture
-def common_data(vmc_nsx_connect):
-    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
-    data = {
-        "hostname": hostname,
-        "refresh_key": refresh_key,
-        "authorization_host": authorization_host,
-        "org_id": org_id,
-        "sddc_id": sddc_id,
-        "public_ip_name": "TEST_INTEGRATION_PUBLIC_IP",
-        "public_ip_id": "TEST_INTEGRATION_PUBLIC_IP",
-        "verify_ssl": verify_ssl,
-        "cert": cert,
-    }
-    yield data
-
-
-@pytest.fixture
 def get_public_ips(common_data, public_ips_list_url, request_headers):
     session = requests.Session()
     response = session.get(
@@ -74,7 +62,7 @@ def get_public_ips(common_data, public_ips_list_url, request_headers):
 @pytest.fixture
 def delete_public_ip(get_public_ips, public_ip_url, request_headers, common_data):
     for result in get_public_ips.get("results", []):
-        if result["id"] == common_data["public_ip"]:
+        if result["id"] == common_data["public_ip_id"]:
             session = requests.Session()
             response = session.delete(
                 url=public_ip_url,
@@ -85,53 +73,42 @@ def delete_public_ip(get_public_ips, public_ip_url, request_headers, common_data
             response.raise_for_status()
 
 
-@pytest.fixture
-def create_public_ip(get_public_ips, public_ip_url, request_headers, common_data):
-    for result in get_public_ips.get("results", []):
-        if result["id"] == common_data["public_ip"]:
-            return
+def test_public_ip_smoke_test(salt_call_cli, common_data, delete_public_ip):
+    public_ip_id = common_data.pop("public_ip_id")
 
-    data = {
-        "ip": None,
-        "display_name": common_data["public_ip_name"],
-        "id": common_data["public_ip"],
-    }
-    session = requests.Session()
-    response = session.patch(
-        url=public_ip_url,
-        json=data,
-        verify=common_data["cert"] if common_data["verify_ssl"] else False,
-        headers=request_headers,
-    )
-    # raise error if any
-    response.raise_for_status()
+    # existing public IPs should not contain non-existent public IP
+    ret = salt_call_cli.run("vmc_public_ip.list", **common_data)
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    for result in result_as_json.get("results", []):
+        assert result["id"] != public_ip_id
 
-
-def test_create_public_ip_smoke_test(salt_call_cli, delete_public_ip, common_data):
-    public_ip = common_data["public_ip_name"]
+    # create public IP
     ret = salt_call_cli.run(
         "vmc_public_ip.create",
+        name=public_ip_id,
         **common_data,
     )
     result_as_json = ret.json
-    assert result_as_json["id"] == result_as_json["display_name"] == public_ip
+    assert result_as_json["id"] == result_as_json["display_name"] == public_ip_id
 
-
-def test_get_public_ips_smoke_test(salt_call_cli, get_public_ips, common_data):
-    # No nat rule here
-    del common_data["public_ip_id"]
-    ret = salt_call_cli.run("vmc_public_ip.get", **common_data)
+    # update public IP
+    ret = salt_call_cli.run(
+        "vmc_public_ip.update",
+        id=public_ip_id,
+        name="updated_public_ip",
+        **common_data,
+    )
     result_as_json = ret.json
-    assert result_as_json == get_public_ips
+    assert result_as_json["display_name"] == "updated_public_ip"
 
-
-def test_update_public_ip_smoke_test(salt_call_cli, common_data, create_public_ip):
-    ret = salt_call_cli.run("vmc_public_ip.update", **common_data, display_name="updated_public_ip")
-    result = ret.json
-    assert result["result"] == "success"
-
-
-def test_delete_public_ip_smoke_test(salt_call_cli, create_public_ip, common_data):
-    ret = salt_call_cli.run("vmc_public_ip.delete", **common_data)
+    # delete public IP
+    ret = salt_call_cli.run("vmc_public_ip.delete", id=public_ip_id, **common_data)
     result_as_json = ret.json
     assert result_as_json["result"] == "success"
+
+    # get the public IP, item should not exist
+    ret = salt_call_cli.run("vmc_public_ip.get", id=public_ip_id, **common_data)
+    result_as_json = ret.json
+    assert "error" in result_as_json
+    assert "PublicIp Object Not Found" in result_as_json["error"]
