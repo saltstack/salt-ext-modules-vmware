@@ -106,14 +106,14 @@ def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, common_data
     assert changes == {}
     assert result["comment"] == "Public IP exists already, no action to perform"
 
-    updated_display_name = "updated public_ip"
+    updated_display_name = "updated_public_ip"
 
     # Invoke present state to update public IP with new display_name
     response = salt_call_cli.run(
         "state.single",
         "vmc_public_ip.present",
         display_name=updated_display_name,
-        public_ip_id=public_ip_id,
+        name=public_ip_id,
         **common_data,
     )
     response_json = response.json
