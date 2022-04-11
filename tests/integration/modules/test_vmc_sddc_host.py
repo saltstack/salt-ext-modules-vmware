@@ -59,8 +59,6 @@ def get_sddc_hosts(common_data, sddc_host_list_url, request_headers):
 
 
 def test_get_sddc_hosts_smoke_test(salt_call_cli, get_sddc_hosts, common_data):
-    # No nat rule here
-    del common_data["nat_rule"]
     ret = salt_call_cli.run("vmc_sddc_host.get", **common_data)
     result_as_json = ret.json
     assert result_as_json == get_sddc_hosts
