@@ -164,10 +164,10 @@ def do_it(args, config_file):
         print(
             "Note: if you have multiple organizations, ensure that your organization is the correct one.\n"
         )
-        cloud_url = input("What URL do you use to get to your VMware Cloud Services? ")
+        cloud_url = input("What URL do you use to get to your VMware Cloud Services? https://")
         print(
             "You should be able to get your API key from:",
-            cloud_url + "/csp/gateway/portal/#/user/tokens",
+            urllib.parse.urljoin("https://" + cloud_url, "/csp/gateway/portal/#/user/tokens"),
         )
         refresh_key = input("Refresh key: ").strip()
 
@@ -178,7 +178,7 @@ def do_it(args, config_file):
             cloud_url = input("What URL do you use to get to yur VMware Cloud Services? ")
         print(
             "You should be able to get the ORG_ID",
-            cloud_url + "/csp/gateway/portal/#/organization/info",
+            urllib.parse.urljoin("https://" + cloud_url, "/csp/gateway/portal/#/organization/info"),
         )
         print("Pick the Long Organization ID\n")
         org_id = input("ORG_ID: ").strip()
@@ -186,18 +186,21 @@ def do_it(args, config_file):
     sddc_id = args.sddc_id or config.get("sddc_id")
     if not sddc_id:
         print("No [-s SDDC_ID] provided. The SDDC_ID is uuid of SDDC")
-        vmc_hostname = input("What URL do you use to get to your VMware Cloud Console? ")
+        vmc_hostname = input("What URL do you use to get to your VMware Cloud Console? https://")
 
-        print("You should be able to get the SDDC_ID from:", vmc_hostname + "/console/sddcs")
+        print(
+            "You should be able to get the SDDC_ID from:",
+            urllib.parse.urljoin("https://" + vmc_hostname, "/console/sddcs"),
+        )
         print(
             "Choose the SDDC from the list of available SDDCs and Navigate to the support tab of the chosen SDDC."
         )
         print("Pick the SDDC ID\n")
         sddc_id = input("SDDC_ID: ").strip()
 
-    args.refresh_key = refresh_key
-    args.org_id = org_id
-    args.sddc_id = sddc_id
+    args.refresh_key = config["refresh_key"] = refresh_key
+    args.org_id = config["org_id"] = org_id
+    args.sddc_id = config["sddc_id"] = sddc_id
 
     nsx_reverse_proxy_server = get_nsx_reverse_proxy_server(args)
     print("******** updating vmc nsx config *********")
@@ -231,12 +234,14 @@ if __name__ == "__main__":
         "-c",
         dest="create",
         action="store_true",
-        default=False,
+        default=None,
         help="Create config file if not exists.",
     )
     parser.add_argument(
         "CONFIG_FILE",
         type=Path,
+        default=Path(__file__).parent.parent / "local" / "vmc_config.json",
+        nargs="?",
         help="Path to vmc config file. \n"
         "Tests will read from local/vmc_config.json or user can specify path using the environment variable `VMC_CONFIG`",
     )
@@ -264,11 +269,16 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--org_id", dest="org_id", help="Organization id")
     parser.add_argument("-s", "--sddc_id", dest="sddc_id", help="SDDC id")
     args = parser.parse_args()
+    # print(args); exit()
 
     config_file = args.CONFIG_FILE
-    print(config_file)
     if not config_file.is_file():
-        if args.create:
+        if args.create is True or (
+            args.create is None
+            and input(f"{config_file} does not exist, create? [Y/n]:").strip().lower()
+            in ("", "y", "yes")
+        ):
+            config_file.parent.mkdir(parents=True, exist_ok=True)
             config_file.write_text(json.dumps(vmc_config_dict))
             do_it(args, config_file=config_file)
         else:
