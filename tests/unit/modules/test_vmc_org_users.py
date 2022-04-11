@@ -100,8 +100,8 @@ def org_users_data(mock_vmc_request_call_api, org_user_data):
     yield data
 
 
-def test_get_org_users_should_return_api_response(org_users_data):
-    result = vmc_org_users.get(
+def test_list_org_users_should_return_api_response(org_users_data):
+    result = vmc_org_users.list(
         hostname="hostname",
         refresh_key="refresh_key",
         org_id="org_id",
@@ -110,10 +110,10 @@ def test_get_org_users_should_return_api_response(org_users_data):
     assert result == org_users_data
 
 
-def test_get_org_users_called_with_url():
+def test_list_org_users_called_with_url():
     expected_url = "https://hostname/csp/gateway/am/api/v2/orgs/org_id/users"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_org_users.get(
+        vmc_org_users.list(
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
@@ -162,7 +162,7 @@ def test_get_org_users_called_with_url():
         ),
     ],
 )
-def test_assert_get_org_users_should_correctly_filter_args(actual_args, expected_params):
+def test_assert_list_org_users_should_correctly_filter_args(actual_args, expected_params):
     common_actual_args = {
         "hostname": "hostname",
         "refresh_key": "refresh_key",
@@ -171,7 +171,7 @@ def test_assert_get_org_users_should_correctly_filter_args(actual_args, expected
     }
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         actual_args.update(common_actual_args)
-        vmc_org_users.get(**actual_args)
+        vmc_org_users.list(**actual_args)
 
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["params"] == expected_params

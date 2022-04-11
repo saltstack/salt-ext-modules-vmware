@@ -17,7 +17,7 @@ def __virtual__():
     return __virtualname__
 
 
-def get(
+def list(
     hostname,
     refresh_key,
     org_id,
