@@ -243,7 +243,7 @@ def delete(
 
 
 def create(
-    name,
+    id,
     hostname,
     refresh_key,
     authorization_host,
@@ -259,9 +259,9 @@ def create(
 
     .. code-block:: bash
 
-        salt vm_minion vmc_public_ip.create hostname=nsxt-manager.local name=vmc_public_ip ...
+        salt vm_minion vmc_public_ip.create hostname=nsxt-manager.local id=public-ip-1 ...
 
-    name
+    id
         The ID and name that the public IP will be created with.
 
     hostname
@@ -288,19 +288,17 @@ def create(
         The certificate can be retrieved from browser.
 
     """
-    log.info("Creating Public IP %s for SDDC %s", name, sddc_id)
+    log.info("Creating Public IP %s for SDDC %s", id, sddc_id)
 
     api_url_base = vmc_request.set_base_url(hostname)
     api_url = (
         "{base_url}vmc/reverse-proxy/api/orgs/{org_id}/sddcs/{sddc_id}/"
         "cloud-service/api/v1/infra/public-ips/{public_ip_id}"
     )
-    api_url = api_url.format(
-        base_url=api_url_base, org_id=org_id, sddc_id=sddc_id, public_ip_id=name
-    )
+    api_url = api_url.format(base_url=api_url_base, org_id=org_id, sddc_id=sddc_id, public_ip_id=id)
 
-    # not using json infrastructure as all feilds details are available from user_input
-    data = {"ip": None, "display_name": name, "id": name}
+    # not using json infrastructure as all fields are available from user_input
+    data = {"ip": None, "display_name": id, "id": id}
 
     return vmc_request.call_api(
         method=vmc_constants.PUT_REQUEST_METHOD,
@@ -316,7 +314,7 @@ def create(
 
 def update(
     id,
-    name,
+    display_name,
     hostname,
     refresh_key,
     authorization_host,
@@ -332,12 +330,12 @@ def update(
 
     .. code-block:: bash
 
-        salt vm_minion vmc_public_ip.create hostname=nsxt-manager.local name=vmc_public_ip ...
+        salt vm_minion vmc_public_ip.create hostname=nsxt-manager.local id=public-ip-1 display_name=public_ip ...
 
     id
         ID of the public IP to update.
 
-    name
+    display_name
         The new name of the public IP.
 
     hostname
@@ -374,7 +372,7 @@ def update(
     api_url = api_url.format(base_url=api_url_base, org_id=org_id, sddc_id=sddc_id, public_ip_id=id)
 
     # not using json infrastructure as all feilds details are available from user_input
-    data = {"display_name": name}
+    data = {"display_name": display_name}
 
     return vmc_request.call_api(
         method=vmc_constants.PUT_REQUEST_METHOD,

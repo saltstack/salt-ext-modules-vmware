@@ -86,7 +86,7 @@ def test_public_ip_smoke_test(salt_call_cli, common_data, delete_public_ip):
     # create public IP
     ret = salt_call_cli.run(
         "vmc_public_ip.create",
-        name=public_ip_id,
+        id=public_ip_id,
         **common_data,
     )
     result_as_json = ret.json
@@ -96,7 +96,7 @@ def test_public_ip_smoke_test(salt_call_cli, common_data, delete_public_ip):
     ret = salt_call_cli.run(
         "vmc_public_ip.update",
         id=public_ip_id,
-        name="updated_public_ip",
+        display_name="updated_public_ip",
         **common_data,
     )
     result_as_json = ret.json

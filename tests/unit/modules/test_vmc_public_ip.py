@@ -181,7 +181,7 @@ def test_create_public_ip_should_return_api_response(mock_vmc_request_call_api):
     mock_vmc_request_call_api.return_value = data
     assert (
         vmc_public_ip.create(
-            name="TEST_IP",
+            id="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -200,7 +200,7 @@ def test_create_public_ip_called_with_url():
     )
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         result = vmc_public_ip.create(
-            name="TEST_IP",
+            id="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -225,7 +225,7 @@ def test_create_public_ip_called_with_url():
 )
 def test_assert_public_ip_create_should_correctly_filter_args(actual_args, expected_payload):
     common_actual_args = {
-        "name": "TEST_IP",
+        "id": "TEST_IP",
         "hostname": "hostname",
         "refresh_key": "refresh_key",
         "authorization_host": "authorization_host",
@@ -247,7 +247,7 @@ def test_update_public_ip_should_return_api_response(mock_vmc_request_call_api):
     assert (
         vmc_public_ip.update(
             id="4ee86a7c-48af-48c8-a72e-2c6e8dbf3c9f",
-            name="TEST_IP",
+            display_name="TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -267,7 +267,7 @@ def test_update_public_ip_called_with_url():
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         result = vmc_public_ip.update(
             id="TEST_IP",
-            name="Update_TEST_IP",
+            display_name="Update_TEST_IP",
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -285,7 +285,7 @@ def test_update_public_ip_called_with_url():
     [
         # One required parameter
         (
-            {"name": "updated public ip"},
+            {"display_name": "updated public ip"},
             {
                 "display_name": "updated public ip",
             },
