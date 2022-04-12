@@ -1,6 +1,9 @@
 """
     Integration Tests for vmc_sddc_cluster execution module
 """
+import json
+import os
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request
@@ -63,10 +66,11 @@ def test_sddc_clusters_smoke_test(salt_call_cli, list_sddc_clusters, common_data
     ret = salt_call_cli.run("vmc_sddc_clusters.list", **common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
-    assert len(result_as_json["clusters"]) == 1
+    existing_clusters = len(result_as_json["clusters"])
+    assert existing_clusters >= 1
 
     # create SDDC cluster
-    ret = salt_call_cli.run("vmc_sddc_clusters.create", **common_data, num_hosts=1)
+    ret = salt_call_cli.run("vmc_sddc_clusters.create", num_hosts=1, **common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
 
@@ -74,9 +78,14 @@ def test_sddc_clusters_smoke_test(salt_call_cli, list_sddc_clusters, common_data
     ret = salt_call_cli.run("vmc_sddc_clusters.list", **common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
-    assert len(result_as_json["clusters"]) == 2
+    assert len(result_as_json["clusters"]) == existing_clusters + 1
+    existing_clusters = existing_clusters + 1
 
-    cluster_id = result_as_json["clusters"][1]["cluster_id"]
+    cluster_id = result_as_json["clusters"][existing_clusters - 1]["cluster_id"]
+    cluster_status = result_as_json["clusters"][existing_clusters - 1]["status"]
+
+    # while cluster_status != 'READY' or cluster_status != 'FAILED':
+    #     os.wait()
 
     # delete SDDC cluster
     ret = salt_call_cli.run("vmc_sddc_clusters.delete", cluster_id, **common_data)
@@ -87,7 +96,7 @@ def test_sddc_clusters_smoke_test(salt_call_cli, list_sddc_clusters, common_data
     ret = salt_call_cli.run("vmc_sddc_clusters.list", **common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
-    assert len(result_as_json["clusters"]) == 1
+    assert len(result_as_json["clusters"]) == existing_clusters - 1
 
 
 def test_get_sddc_primary_cluster_smoke_test(salt_call_cli, list_sddc_clusters, common_data):
