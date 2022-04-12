@@ -21,26 +21,38 @@ def __virtual__():
 def list_(hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl=True, cert=None):
     """
     Retrieves Clusters list for the given SDDC
+
     Please refer the `VMC Get SDDC documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/get/>`_ to get insight of functionality and input parameters
+
     CLI Example:
+
     .. code-block:: bash
+
     salt <minion-key-id> vmc_sddc_cluster.get hostname=vmc.vmware.com ...
+
     hostname
         The host name of VMC
+
     refresh_key
         API Token of the user which is used to get the Access Token required for VMC operations
+
     authorization_host
         Hostname of the Cloud Services Platform (CSP)
+
     org_id
         The Id of organization to which the SDDC belongs to
+
     sddc_id
         The Id of SDDC for which the clusters would be retrieved
+
     verify_ssl
     (Optional) Option to enable/disable SSL verification. Enabled by default.
     If set to False, the certificate validation is skipped.
+
     cert
     (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
     The certificate can be retrieved from browser.
+
     """
     log.info("Retrieving clusters for the sddc %s in the organization %s", sddc_id, org_id)
     sddc_detail = vmc_sddc.get_by_id(
@@ -75,46 +87,67 @@ def create(
 ):
     """
     Creates a new cluster for a given SDDC with passed config
-    Please refer the `VMC Get primary cluster documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/clusters/post/>`_ to get insight of functionality and input parameters
+
+    Please refer the `VMC create cluster documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/clusters/post/>`_ to get insight of functionality and input parameters
+
     CLI Example:
+
     .. code-block:: bash
+
         salt <minion-key-id> vmc_sddc_cluster.create hostname=vmc.vmware.com ...
+
     hostname
         The host name of VMC
+
     refresh_key
         API Token of the user which is used to get the Access Token required for VMC operations
+
     authorization_host
         Hostname of the Cloud Services Platform (CSP)
+
     org_id
         The Id of organization to which the SDDC belongs to
+
     sddc_id
         The Id of SDDC for which the cluster would be created
+
     num_hosts: Integer
-    (Required) Number of hosts in a cluster
+        (Required) Number of hosts in a cluster
+
     host_cpu_cores_count: Integer
-    (Optional) Customize CPU cores on hosts in a cluster.
-    Specify number of cores to be enabled on hosts in a cluster
+        (Optional) Customize CPU cores on hosts in a cluster.
+        Specify number of cores to be enabled on hosts in a cluster
+
     host_instance_type: enum
-    (Optional) The instance type for the esx hosts added to this cluster.
-    Possible values are: i3.metal, r5.metal, i3en.metal
+        (Optional) The instance type for the esx hosts added to this cluster.
+        Possible values are: i3.metal, r5.metal, i3en.metal
+
     msft_license_config
-    (Optional) The desired Microsoft license status to apply to this cluster
-    msft_license_config expects to be passed as a dict with provided licences
-     .. code::
-         msft_license_config": {
-            "mssql_licensing": "string",
-            "windows_licensing": "string"
-        }
+        (Optional) The desired Microsoft license status to apply to this cluster
+        msft_license_config expects to be passed as a dict with provided licences
+
+         .. code-block::
+
+                 msft_license_config": {
+                    "mssql_licensing": "string",
+                    "windows_licensing": "string"
+                }
+
     storage_capacity: Integer
-    (Optional) For EBS-backed instances only, the requested storage capacity in GiB.
+        (Optional) For EBS-backed instances only, the requested storage capacity in GiB.
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
+
     For example:
-        .. code::
+
+        .. code-block::
+
              {
                 "host_cpu_cores_count": 0,
                 "host_instance_type": "i3.metal",
@@ -126,6 +159,7 @@ def create(
                 "num_hosts": 1,
                 "storage_capacity": 0
             }
+
     """
     log.info("Creating a new cluster in the SDDC %s", sddc_id)
     api_base_url = vmc_request.set_base_url(hostname)
@@ -166,26 +200,38 @@ def get_primary(
 ):
     """
     Retrieves the primary cluster in provided customer sddc UUID
+
     Please refer the `VMC Get primary cluster documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/primarycluster/get/>`_ to get insight of functionality and input parameters
+
     CLI Example:
+
     .. code-block:: bash
+
         salt <minion-key-id> vmc_sddc_cluster.get_primary_cluster hostname=vmc.vmware.com ...
+
     hostname
         The host name of VMC
+
     refresh_key
         API Token of the user which is used to get the Access Token required for VMC operations
+
     authorization_host
         Hostname of the Cloud Services Platform (CSP)
+
     org_id
         The Id of organization to which the SDDC belongs to
+
     sddc_id
         The Id of SDDC for which the cluster would be retrieved
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
+
     """
     log.info(
         "Retrieves the primary cluster for the sddc %s in the organization %s", sddc_id, org_id
@@ -216,31 +262,46 @@ def delete(
     cert=None,
 ):
     """
+
     Delete the cluster in the given SDDC
     Please refer the `VMC Delete SDDC cluster documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/clusters/cluster/delete/>`_ to get insight of functionality and input parameters
+
+
            This is a force operation which will delete the cluster even if there can be a data loss.
            Before calling this operation, all the VMs should be powered off.
+
             CLI Example:
+
             .. code-block:: bash
+
                 salt <minion-key-id> vmc_sddc_cluster.create hostname=vmc.vmware.com ...
+
             hostname
                 The host name of VMC
+
             refresh_key
                 API Token of the user which is used to get the Access Token required for VMC operations
+
             authorization_host
                 Hostname of the Cloud Services Platform (CSP)
+
             org_id
                 The Id of organization to which the SDDC belongs to
+
             sddc_id
                 The Id of SDDC for which the cluster would be deleted
+
             cluster_id
                 The Id of the cluster that would get deleted
+
             verify_ssl
                 (Optional) Option to enable/disable SSL verification. Enabled by default.
                 If set to False, the certificate validation is skipped.
+
             cert
                 (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
                 The certificate can be retrieved from browser.
+
     """
     log.info("Deleting a cluster %s in the SDDC %s", cluster_id, sddc_id)
     api_base_url = vmc_request.set_base_url(hostname)
