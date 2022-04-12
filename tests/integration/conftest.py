@@ -5,6 +5,7 @@ import os
 import uuid
 from collections import namedtuple
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.cluster as cluster_mod
@@ -81,7 +82,7 @@ def service_instance(integration_test_config):
 
 
 @pytest.fixture
-def patch_salt_globals():
+def patch_salt_globals(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
@@ -93,8 +94,10 @@ def patch_salt_globals():
     setattr(cluster_ha_mod, "__pillar__", {})
     setattr(cluster_drs_mod, "__opts__", {})
     setattr(cluster_drs_mod, "__pillar__", {})
-    setattr(esxi_mod, "__pillar__", {})
-    setattr(esxi_st, "__pillar__", {})
+    setattr(esxi_mod, "__pillar__", vmware_conf)
+    setattr(esxi_mod, "__opts__", {})
+    setattr(esxi_st, "__pillar__", vmware_conf)
+    setattr(folder, "__pillar__", vmware_conf)
     setattr(license_mgr_st, "__opts__", {})
     setattr(license_mgr_st, "__pillar__", {})
     setattr(license_mgr_mod, "__opts__", {})
@@ -142,6 +145,12 @@ def patch_salt_globals():
             "vmware_esxi.add_role": esxi_mod.add_role,
             "vmware_esxi.update_role": esxi_mod.update_role,
             "vmware_esxi.remove_role": esxi_mod.remove_role,
+            "vmware_esxi.in_maintenance_mode": esxi_mod.in_maintenance_mode,
+            "vmware_esxi.maintenance_mode": esxi_mod.maintenance_mode,
+            "vmware_esxi.exit_maintenance_mode": esxi_mod.exit_maintenance_mode,
+            "vmware_esxi.in_lockdown_mode": esxi_mod.in_lockdown_mode,
+            "vmware_esxi.lockdown_mode": esxi_mod.lockdown_mode,
+            "vmware_esxi.exit_lockdown_mode": esxi_mod.exit_lockdown_mode,
             "vmware_esxi.get_role": esxi_mod.get_role,
             "vmware_esxi.create_vmkernel_adapter": esxi_mod.create_vmkernel_adapter,
             "vmware_esxi.delete_vmkernel_adapter": esxi_mod.delete_vmkernel_adapter,
@@ -170,98 +179,80 @@ def patch_salt_globals():
 
 
 @pytest.fixture(scope="function")
-def vmware_datacenter(patch_salt_globals, service_instance):
+def vmware_datacenter(patch_salt_globals_datacenter):
     """
     Return a vmware_datacenter during start of a test and tear it down once the test ends
     """
     dc_name = str(uuid.uuid4())
-    dc = datacenter_mod.create(name=dc_name, service_instance=service_instance)
+    dc = datacenter_mod.create(name=dc_name)
     yield dc_name
-    datacenter_mod.delete(name=dc_name, service_instance=service_instance)
+    datacenter_mod.delete(name=dc_name)
 
 
 @pytest.fixture
-def patch_salt_globals_folder(vmware_conf):
+def vmware_category(patch_salt_globals_tag):
     """
-    Patch __opts__ and __pillar__
+    Return a vmware_category for tagging and attributes
     """
-
-    setattr(folder, "__opts__", {})
-    setattr(folder, "__pillar__", vmware_conf)
+    try:
+        cat_ref = tagging.create_category("test-cat", ["string"], "SINGLE", "test category")
+        yield cat_ref
+    finally:
+        tagging.delete_category(cat_ref)
 
 
 @pytest.fixture
-def patch_salt_globals_folder_state(vmware_conf):
+def vmware_tag(vmware_category):
     """
-    Patch __opts__ and __pillar__
+    Return a vmware_tag for tagging and attributes
     """
-
-    setattr(
-        folder_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(folder_state, "__pillar__", vmware_conf)
+    try:
+        tag_ref = tagging.create("test-tag", vmware_category, description="test tag")
+        yield tag_ref
+    finally:
+        tagging.delete(tag_ref)
 
 
 @pytest.fixture
-def patch_salt_globals_datastore(vmware_conf):
+def vmware_tag_name_c(vmware_category):
     """
-    Patch __opts__ and __pillar__
+    Return a vmware_tag for tagging and attributes
     """
-
-    setattr(datastore, "__opts__", {})
-    setattr(datastore, "__pillar__", vmware_conf)
+    try:
+        yield "test-tag", vmware_category
+    finally:
+        tags = tagging.list_()
+        for tag in tags:
+            res = tagging.get(tag)
+            if res["name"] == "test-tag":
+                tagging.delete(res["id"])
 
 
 @pytest.fixture
-def patch_salt_globals_datastore_state(vmware_conf):
+def vmware_cat_name_c(patch_salt_globals_tag):
     """
-    Patch __opts__ and __pillar__
+    Return a vmware_tag for tagging and attributes
     """
-
-    setattr(
-        datastore_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(datastore_state, "__pillar__", vmware_conf)
+    yield "test-cat"
+    try:
+        cats = tagging.list_category()
+        for cat in cats:
+            res = tagging.get_category(cat)
+            if res["name"] == "test-cat":
+                tagging.delete_category(res["id"])
+    except Exception:
+        pass
 
 
 @pytest.fixture
-def patch_salt_globals_datastore_state_test(vmware_conf):
+def patch_salt_globals_datacenter(vmware_conf, patch_salt_globals):
     """
     Patch __opts__ and __pillar__
     """
-
-    setattr(
-        datastore_state,
-        "__opts__",
-        {
-            "test": True,
-        },
-    )
-    setattr(datastore_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_folder_state_test(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        folder_state,
-        "__opts__",
-        {
-            "test": True,
-        },
-    )
-    setattr(folder_state, "__pillar__", vmware_conf)
+    with patch.dict(datacenter_mod.__opts__, {"test": False}), patch.dict(
+        datacenter_mod.__pillar__, vmware_conf
+    ):
+        yield
 
 
 @pytest.fixture
@@ -269,83 +260,10 @@ def patch_salt_globals_tag(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-
-    setattr(tagging, "__opts__", {})
-    setattr(tagging, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_tag_state(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        tagging_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(tagging_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_tag_state_test(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        tagging_state,
-        "__opts__",
-        {
-            "test": True,
-        },
-    )
-    setattr(tagging_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_vm(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(virtual_machine, "__opts__", {})
-    setattr(virtual_machine, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_vm_state(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        virtual_machine_state,
-        "__opts__",
-        {
-            "test": False,
-        },
-    )
-    setattr(virtual_machine_state, "__pillar__", vmware_conf)
-
-
-@pytest.fixture
-def patch_salt_globals_vm_state_test(vmware_conf):
-    """
-    Patch __opts__ and __pillar__
-    """
-
-    setattr(
-        virtual_machine_state,
-        "__opts__",
-        {
-            "test": True,
-        },
-    )
-    setattr(virtual_machine_state, "__pillar__", vmware_conf)
+    with patch.object(tagging, "__opts__", {"test": False}, create=True), patch.object(
+        tagging, "__pillar__", vmware_conf, create=True
+    ):
+        yield
 
 
 @pytest.fixture(scope="function")
@@ -389,6 +307,16 @@ def vmc_nsx_connect(vmc_config):
         vmc_nsx_config["verify_ssl"],
         vmc_nsx_config["cert"],
     )
+
+
+@pytest.fixture(scope="session")
+def vmc_vcenter_connect(vmc_config):
+    return vmc_config["vmc_vcenter_connect"]
+
+
+@pytest.fixture(scope="session")
+def vmc_vcenter_admin_connect(vmc_config):
+    return vmc_config["vmc_vcenter_admin_connect"]
 
 
 NSXT_CONFIG_FILE_NAME = "nsxt_config.json"

@@ -119,7 +119,7 @@ def test_user_present_absent_dry_run(vmware_datacenter, service_instance, dry_ru
 
     user_name = "A{}".format(uuid.uuid4())
     random_user = "Random{}".format(uuid.uuid4())
-    password = "Secret@123"
+    password = "GVh3J69oMcJ0tA"
 
     # create a new user
     ret = esxi.user_present(name=user_name, password=password)
@@ -279,24 +279,24 @@ def test_vmkernel_adapter_present(vmware_datacenter, service_instance):
     assert not delete_ret["changes"]
 
 
-def test_maintenance_mode(service_instance):
-    hosts = list(esxi_mod.get(service_instance=service_instance))
+def test_maintenance_mode(patch_salt_globals):
+    hosts = list(esxi_mod.get())
     assert hosts
     host = hosts[0]
     try:
         for i in range(3):
-            ret = esxi.maintenance_mode(host, True, 120, service_instance=service_instance)
+            ret = esxi.maintenance_mode(host, True, 120)
             assert ret["result"]
             if not i:
                 assert ret["changes"]
             else:
                 assert not ret["changes"]
     except Exception as e:
-        esxi.maintenance_mode(host, False, 120, service_instance=service_instance)
+        esxi.maintenance_mode(host, False, 120)
         raise e
 
     for i in range(3):
-        ret = esxi.maintenance_mode(host, False, 120, service_instance=service_instance)
+        ret = esxi.maintenance_mode(host, False, 120)
         assert ret["result"]
         if not i:
             assert ret["changes"]
@@ -304,34 +304,34 @@ def test_maintenance_mode(service_instance):
             assert not ret["changes"]
 
 
-def test_maintenance_mode_dry_run(service_instance, dry_run):
-    hosts = list(esxi_mod.get(service_instance=service_instance))
+def test_maintenance_mode_dry_run(patch_salt_globals, dry_run):
+    hosts = list(esxi_mod.get())
     assert hosts
     host = hosts[0]
-    ret = esxi.maintenance_mode(host, True, 120, service_instance=service_instance)
+    ret = esxi.maintenance_mode(host, True, 120)
     assert ret["result"] is None
     assert ret["changes"]
     assert ret["comment"] == "These options are set to change."
 
 
-def test_lockdown_mode(service_instance):
-    hosts = list(esxi_mod.get(service_instance=service_instance))
+def test_lockdown_mode(patch_salt_globals):
+    hosts = list(esxi_mod.get())
     assert hosts
     host = hosts[0]
     try:
         for i in range(3):
-            ret = esxi.lockdown_mode(host, True, service_instance=service_instance)
+            ret = esxi.lockdown_mode(host, True)
             assert ret["result"]
             if not i:
                 assert ret["changes"]
             else:
                 assert not ret["changes"]
     except Exception as e:
-        esxi.lockdown_mode(host, False, service_instance=service_instance)
+        esxi.lockdown_mode(host, False)
         raise e
 
     for i in range(3):
-        ret = esxi.lockdown_mode(host, False, service_instance=service_instance)
+        ret = esxi.lockdown_mode(host, False)
         assert ret["result"]
         if not i:
             assert ret["changes"]
@@ -339,11 +339,11 @@ def test_lockdown_mode(service_instance):
             assert not ret["changes"]
 
 
-def test_lockdown_mode_dry_run(service_instance, dry_run):
-    hosts = list(esxi_mod.get(service_instance=service_instance))
+def test_lockdown_mode_dry_run(patch_salt_globals, dry_run):
+    hosts = list(esxi_mod.get())
     assert hosts
     host = hosts[0]
-    ret = esxi.lockdown_mode(host, True, service_instance=service_instance)
+    ret = esxi.lockdown_mode(host, True)
     assert ret["result"] is None
     assert ret["changes"]
     assert ret["comment"] == "These options are set to change."

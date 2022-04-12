@@ -14,11 +14,10 @@ def dry_run():
     setattr(datacenter, "__opts__", {"test": False})
 
 
-def test_present(vmware_datacenter):
+def test_present(vmware_datacenter, patch_salt_globals_datacenter):
     """
     Test scenarios for datacenter.present state run
     """
-
     # datacenter.present on an existing datacenter. No changes should be made.
     ret = datacenter.present(name=vmware_datacenter)
     assert ret["name"] == vmware_datacenter
@@ -37,7 +36,7 @@ def test_present(vmware_datacenter):
     datacenter_mod.delete(name=dc)
 
 
-def test_absent(vmware_datacenter):
+def test_absent(vmware_datacenter, patch_salt_globals_datacenter):
     """
     Test scenarios for datacenter.absent state run.
     """
@@ -55,7 +54,7 @@ def test_absent(vmware_datacenter):
     assert ret["result"] is True
 
 
-def test_present_dry_run(vmware_datacenter, dry_run):
+def test_present_dry_run(vmware_datacenter, patch_salt_globals_datacenter, dry_run):
     """
     Test scenarios for datacenter.present state run with test=True
     """
@@ -76,7 +75,7 @@ def test_present_dry_run(vmware_datacenter, dry_run):
     assert ret["result"] is None
 
 
-def test_absent_dry_run(vmware_datacenter, dry_run):
+def test_absent_dry_run(vmware_datacenter, patch_salt_globals_datacenter, dry_run):
     """
     Test scenarios for datacenter.absent state run with test=True
     """

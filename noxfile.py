@@ -18,7 +18,7 @@ nox.options.reuse_existing_virtualenvs = True
 nox.options.error_on_missing_interpreters = False
 
 # Python versions to test against
-PYTHON_VERSIONS = ("3", "3.5", "3.6", "3.7", "3.8", "3.9")
+PYTHON_VERSIONS = ("3", "3.5", "3.6", "3.7", "3.8", "3.9", "3.10")
 # Be verbose when running under a CI context
 CI_RUN = (
     os.environ.get("JENKINS_URL") or os.environ.get("CI") or os.environ.get("DRONE") is not None
@@ -432,3 +432,12 @@ def gen_api_docs(session):
         "src/saltext",
         "src/saltext/vmware/config/schemas",
     )
+
+
+@nox.session(name="review", python="3")
+def review(session):
+    """
+    Useful for code reviews - builds the docs locally and runs the full test suite.
+    """
+    session.notify("docs")
+    session.notify(f"tests-{session.python}")
