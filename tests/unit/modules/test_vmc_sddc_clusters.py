@@ -145,7 +145,7 @@ def sddc_data_by_id(mock_vmc_request_call_api, cluster_data_by_id):
 
 @pytest.fixture
 def clusters_data(cluster_data_by_id):
-    data = {"description": "vmc_sddc_clusters.get", "clusters": cluster_data_by_id}
+    data = {"description": "vmc_sddc_clusters.list", "clusters": cluster_data_by_id}
     yield data
 
 
@@ -156,8 +156,8 @@ def primary_cluster_data(mock_vmc_request_call_api, cluster_data_by_id):
     yield data
 
 
-def test_get_clusters_should_return_api_response(sddc_data_by_id, clusters_data):
-    result = vmc_sddc_clusters.get(
+def test_list_clusters_should_return_api_response(sddc_data_by_id, clusters_data):
+    result = vmc_sddc_clusters.list(
         hostname="hostname",
         refresh_key="refresh_key",
         authorization_host="authorization_host",
@@ -168,10 +168,10 @@ def test_get_clusters_should_return_api_response(sddc_data_by_id, clusters_data)
     assert result == clusters_data
 
 
-def test_get_clusters_called_with_url():
+def test_list_sddc_clusters_called_with_url():
     expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs/sddc_id"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_sddc_clusters.get(
+        vmc_sddc_clusters.list(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -184,8 +184,64 @@ def test_get_clusters_called_with_url():
     assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
 
 
-def test_get_primary_cluster_should_return_single_sddc(primary_cluster_data):
-    result = vmc_sddc_clusters.get_primary_cluster(
+def test_list_sddc_clusters_fail_with_error(mock_vmc_request_call_api):
+    expected_response = {"error": "Given SDDC does not exist"}
+    mock_vmc_request_call_api.return_value = expected_response
+    result = vmc_sddc_clusters.list(
+        hostname="hostname",
+        refresh_key="refresh_key",
+        authorization_host="authorization_host",
+        org_id="org_id",
+        sddc_id="wrong_sddc_id",
+        verify_ssl=False,
+    )
+    assert "error" in result
+
+
+def test_create_cluster_when_api_should_return_api_response(
+    mock_vmc_request_call_api,
+):
+    expected_response = {"message": "Cluster created successfully"}
+    mock_vmc_request_call_api.return_value = expected_response
+    assert (
+        vmc_sddc_clusters.create(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            num_hosts=1,
+            host_cpu_cores_count=1,
+            host_instance_type=" i3.metal",
+            storage_capacity=1,
+            verify_ssl=False,
+        )
+        == expected_response
+    )
+
+
+def test_create_cluster_called_with_url():
+    expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs/sddc_id/clusters"
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        vmc_sddc_clusters.create(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            num_hosts=1,
+            host_cpu_cores_count=1,
+            host_instance_type=" i3.metal",
+            storage_capacity=1,
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.POST_REQUEST_METHOD
+
+
+def test_get_primary_cluster_should_return_single_cluster(primary_cluster_data):
+    result = vmc_sddc_clusters.get_primary(
         hostname="hostname",
         refresh_key="refresh_key",
         authorization_host="authorization_host",
@@ -199,7 +255,7 @@ def test_get_primary_cluster_should_return_single_sddc(primary_cluster_data):
 def test_get_primary_cluster_called_with_url():
     expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs/sddc_id/primarycluster"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_sddc_clusters.get_primary_cluster(
+        vmc_sddc_clusters.get_primary(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -210,3 +266,39 @@ def test_get_primary_cluster_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+def test_delete_cluster_when_api_should_return_api_response(
+    mock_vmc_request_call_api,
+):
+    expected_response = {"message": "Cluster deleted successfully"}
+    mock_vmc_request_call_api.return_value = expected_response
+    assert (
+        vmc_sddc_clusters.delete(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            cluster_id="cluster_id",
+            verify_ssl=False,
+        )
+        == expected_response
+    )
+
+
+def test_delete_cluster_called_with_url():
+    expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs/sddc_id/clusters/cluster_id"
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        vmc_sddc_clusters.delete(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            cluster_id="cluster_id",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.DELETE_REQUEST_METHOD
