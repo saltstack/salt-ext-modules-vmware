@@ -82,7 +82,6 @@ def test_sddc_clusters_smoke_test(salt_call_cli, list_sddc_clusters, common_data
         existing_clusters = existing_clusters + 1
 
         cluster_id = result_as_json["clusters"][existing_clusters - 1]["cluster_id"]
-        # cluster_status = result_as_json["clusters"][existing_clusters - 1]["cluster_state"]
 
         # delete SDDC cluster
         ret = salt_call_cli.run("vmc_sddc_clusters.delete", cluster_id, **common_data)
@@ -96,7 +95,7 @@ def test_sddc_clusters_smoke_test(salt_call_cli, list_sddc_clusters, common_data
         assert "Another cluster creation is in progress" in result_as_json["error"][0]
 
 
-def test_get_sddc_primary_cluster_smoke_test(salt_call_cli, list_sddc_clusters, common_data):
+def test_get_sddc_primary_cluster_smoke_test(salt_call_cli, common_data):
     ret = salt_call_cli.run("vmc_sddc_clusters.get_primary", **common_data)
     result_as_json = ret.json
     assert result_as_json["cluster_name"] == "Cluster-1"
