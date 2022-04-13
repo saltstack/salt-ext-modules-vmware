@@ -47,7 +47,7 @@ def sddc_host_list_url(common_data):
 
 
 @pytest.fixture
-def get_sddc_hosts(common_data, sddc_host_list_url, request_headers):
+def list_sddc_hosts(common_data, sddc_host_list_url, request_headers):
     session = requests.Session()
     response = session.get(
         url=sddc_host_list_url,
@@ -58,7 +58,53 @@ def get_sddc_hosts(common_data, sddc_host_list_url, request_headers):
     return response.json()
 
 
-def test_get_sddc_hosts_smoke_test(salt_call_cli, get_sddc_hosts, common_data):
-    ret = salt_call_cli.run("vmc_sddc_host.get", **common_data)
+@pytest.fixture
+def get_primary_cluster_id(common_data, salt_call_cli):
+    ret = salt_call_cli.run("vmc_sddc_clusters.get_primary", **common_data)
     result_as_json = ret.json
-    assert result_as_json == get_sddc_hosts
+    return result_as_json["cluster_id"]
+
+
+def test_get_sddc_hosts_smoke_test(salt_call_cli, list_sddc_hosts, common_data):
+    ret = salt_call_cli.run("vmc_sddc_host.list", **common_data)
+    result_as_json = ret.json
+    assert result_as_json == list_sddc_hosts
+
+
+def test_sddc_host_smoke_test(salt_call_cli, get_primary_cluster_id, common_data):
+    cluster_id = get_primary_cluster_id
+    # get the list of SDDC hosts
+    ret = salt_call_cli.run("vmc_sddc_host.list", **common_data)
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    existing_hosts = len(result_as_json["esx_hosts"])
+    assert existing_hosts >= 1
+
+    # add SDDC hosts
+    ret = salt_call_cli.run(
+        "vmc_sddc_host.manage", num_hosts=1, cluster_id=cluster_id, **common_data
+    )
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    assert result_as_json["status"] == "STARTED"
+
+    # get the list of SDDC hosts again to get latest hosts count
+    ret = salt_call_cli.run("vmc_sddc_host.list", **common_data)
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    existing_hosts = len(result_as_json["esx_hosts"])
+
+    # remove SDDC hosts
+    ret = salt_call_cli.run(
+        "vmc_sddc_host.manage", action="remove", cluster_id=cluster_id, **common_data
+    )
+    result_as_json = ret.json
+    if existing_hosts > 1:
+        assert "error" not in result_as_json
+        assert result_as_json["status"] == "STARTED"
+    else:
+        assert "error" in result_as_json
+        assert (
+            f"This cluster with id {{cluster_id}} must have at least 1 hosts."
+            == result_as_json["error"][0]
+        )
