@@ -67,7 +67,7 @@ def list_(hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl
     if "error" in sddc_detail:
         return sddc_detail
     cluster_details = sddc_detail["resource_config"]["clusters"]
-    result = {"description": "vmc_sddc_clusters.list", "clusters": cluster_details}
+    result = {"description": "vmc_sddc_clusters.list_", "clusters": cluster_details}
     return result
 
 

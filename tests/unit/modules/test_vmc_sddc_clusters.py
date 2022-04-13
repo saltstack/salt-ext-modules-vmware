@@ -145,7 +145,7 @@ def sddc_data_by_id(mock_vmc_request_call_api, cluster_data_by_id):
 
 @pytest.fixture
 def clusters_data(cluster_data_by_id):
-    data = {"description": "vmc_sddc_clusters.list", "clusters": cluster_data_by_id}
+    data = {"description": "vmc_sddc_clusters.list_", "clusters": cluster_data_by_id}
     yield data
 
 
@@ -157,7 +157,7 @@ def primary_cluster_data(mock_vmc_request_call_api, cluster_data_by_id):
 
 
 def test_list_clusters_should_return_api_response(sddc_data_by_id, clusters_data):
-    result = vmc_sddc_clusters.list(
+    result = vmc_sddc_clusters.list_(
         hostname="hostname",
         refresh_key="refresh_key",
         authorization_host="authorization_host",
@@ -171,7 +171,7 @@ def test_list_clusters_should_return_api_response(sddc_data_by_id, clusters_data
 def test_list_sddc_clusters_called_with_url():
     expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs/sddc_id"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_sddc_clusters.list(
+        vmc_sddc_clusters.list_(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
@@ -187,7 +187,7 @@ def test_list_sddc_clusters_called_with_url():
 def test_list_sddc_clusters_fail_with_error(mock_vmc_request_call_api):
     expected_response = {"error": "Given SDDC does not exist"}
     mock_vmc_request_call_api.return_value = expected_response
-    result = vmc_sddc_clusters.list(
+    result = vmc_sddc_clusters.list_(
         hostname="hostname",
         refresh_key="refresh_key",
         authorization_host="authorization_host",
@@ -272,6 +272,27 @@ def test_delete_cluster_when_api_should_return_api_response(
     mock_vmc_request_call_api,
 ):
     expected_response = {"message": "Cluster deleted successfully"}
+    mock_vmc_request_call_api.return_value = expected_response
+    assert (
+        vmc_sddc_clusters.delete(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            authorization_host="authorization_host",
+            org_id="org_id",
+            sddc_id="sddc_id",
+            cluster_id="cluster_id",
+            verify_ssl=False,
+        )
+        == expected_response
+    )
+
+
+def test_delete_cluster_when_api_should_return_error_when_cluster_is_in_maintenance(
+    mock_vmc_request_call_api,
+):
+    expected_response = {
+        "message": "Cluster is currently not in a state where it can be deleted. Please try once the status is READY or FAILED."
+    }
     mock_vmc_request_call_api.return_value = expected_response
     assert (
         vmc_sddc_clusters.delete(
