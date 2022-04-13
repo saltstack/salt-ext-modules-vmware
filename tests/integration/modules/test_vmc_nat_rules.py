@@ -7,6 +7,15 @@ from saltext.vmware.utils import vmc_request
 
 
 @pytest.fixture
+def common_data(vmc_config):
+    data = vmc_config["vmc_nsx_connect"].copy()
+    data["tier1"] = "cgw"
+    data["nat"] = "USER"
+    data["nat_rule"] = "Integration_NAT_1"
+    return data
+
+
+@pytest.fixture
 def request_headers(common_data):
     return vmc_request.get_headers(common_data["refresh_key"], common_data["authorization_host"])
 
@@ -45,32 +54,6 @@ def nat_rules_list_url(common_data):
 
 
 @pytest.fixture
-def common_data(vmc_nsx_connect):
-    hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl, cert = vmc_nsx_connect
-    data = {
-        "hostname": hostname,
-        "refresh_key": refresh_key,
-        "authorization_host": authorization_host,
-        "org_id": org_id,
-        "sddc_id": sddc_id,
-        "tier1": "cgw",
-        "nat": "USER",
-        "nat_rule": "NAT_RULE2",
-        "verify_ssl": verify_ssl,
-        "cert": cert,
-    }
-    yield data
-
-
-@pytest.fixture(scope="module")
-def nat_rule_test_data():
-    tier1 = "cgw"
-    nat = "USER"
-    nat_rule = "NAT_RULE2"
-    return tier1, nat, nat_rule
-
-
-@pytest.fixture
 def get_nat_rules(common_data, nat_rules_list_url, request_headers):
     session = requests.Session()
     response = session.get(
@@ -102,62 +85,50 @@ def delete_nat_rule(get_nat_rules, nat_rule_url, request_headers, common_data):
             response.raise_for_status()
 
 
-@pytest.fixture
-def create_nat_rule(get_nat_rules, nat_rule_url, request_headers, common_data):
-    for result in get_nat_rules.get("results", []):
-        if result["id"] == common_data["nat_rule"]:
-            return
+def test_nat_rules_smoke_test(salt_call_cli, delete_nat_rule, common_data):
+    rule_id = common_data.pop("nat_rule")
 
-    data = {
-        "action": "REFLEXIVE",
-        "translated_network": "192.168.1.1",
-        "source_network": "10.117.5.73",
-        "sequence_number": 0,
-        "logging": False,
-        "enabled": False,
-        "scope": ["/infra/labels/cgw-public"],
-        "firewall_match": "MATCH_INTERNAL_ADDRESS",
-        "display_name": common_data["nat_rule"],
-        "id": common_data["nat_rule"],
-    }
-    session = requests.Session()
-    response = session.put(
-        url=nat_rule_url,
-        json=data,
-        verify=common_data["cert"] if common_data["verify_ssl"] else False,
-        headers=request_headers,
-    )
-    # raise error if any
-    response.raise_for_status()
-
-
-def test_create_nat_rule_smoke_test(salt_call_cli, delete_nat_rule, common_data):
-    nat_rule = common_data["nat_rule"]
-    ret = salt_call_cli.run(
-        "vmc_nat_rules.create",
-        **common_data,
-        translated_network="192.168.1.1",
-        source_network="10.117.5.73"
-    )
-    result_as_json = ret.json
-    assert result_as_json["id"] == result_as_json["display_name"] == nat_rule
-
-
-def test_get_nat_rules_smoke_test(salt_call_cli, get_nat_rules, common_data):
-    # No nat rule here
-    del common_data["nat_rule"]
+    # existing nat rules should not contain non-existent rule
     ret = salt_call_cli.run("vmc_nat_rules.get", **common_data)
     result_as_json = ret.json
-    assert result_as_json == get_nat_rules
+    assert "error" not in result_as_json
+    for result in result_as_json.get("results", []):
+        assert result["id"] != rule_id
 
+    # create nat rule
+    ret = salt_call_cli.run(
+        "vmc_nat_rules.create",
+        nat_rule=rule_id,
+        translated_network="192.168.1.1",
+        source_network="10.117.5.73",
+        **common_data,
+    )
+    result_as_json = ret.json
+    assert result_as_json["id"] == result_as_json["display_name"] == rule_id
 
-def test_update_nat_rule_smoke_test(salt_call_cli, common_data, create_nat_rule):
-    ret = salt_call_cli.run("vmc_nat_rules.update", **common_data, display_name="updated_nat_rule")
+    # update nat rule
+    ret = salt_call_cli.run(
+        "vmc_nat_rules.update",
+        nat_rule=rule_id,
+        display_name="updated_nat_rule",
+        **common_data,
+    )
     result = ret.json
     assert result["result"] == "success"
 
+    # get the nat rule and check if the updated values are proper
+    ret = salt_call_cli.run("vmc_nat_rules.get_by_id", nat_rule=rule_id, **common_data)
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    assert result_as_json["display_name"] == "updated_nat_rule"
 
-def test_delete_nat_rule_smoke_test(salt_call_cli, create_nat_rule, common_data):
-    ret = salt_call_cli.run("vmc_nat_rules.delete", **common_data)
+    # delete nat rule
+    ret = salt_call_cli.run("vmc_nat_rules.delete", nat_rule=rule_id, **common_data)
     result_as_json = ret.json
     assert result_as_json["result"] == "success"
+
+    # get the nat rule again, item should not exist
+    ret = salt_call_cli.run("vmc_nat_rules.get_by_id", nat_rule=rule_id, **common_data)
+    result_as_json = ret.json
+    assert "error" in result_as_json
+    assert "could not be found" in result_as_json["error"]
