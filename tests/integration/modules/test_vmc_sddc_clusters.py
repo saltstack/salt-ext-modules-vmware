@@ -16,26 +16,9 @@ def request_headers(common_data):
 
 @pytest.fixture
 def common_data(vmc_connect):
-    (
-        hostname,
-        refresh_key,
-        authorization_host,
-        org_id,
-        sddc_id,
-        verify_ssl,
-        cert,
-        vcenter_hostname,
-    ) = vmc_connect
-    data = {
-        "hostname": hostname,
-        "refresh_key": refresh_key,
-        "authorization_host": authorization_host,
-        "org_id": org_id,
-        "sddc_id": sddc_id,
-        "verify_ssl": verify_ssl,
-        "cert": cert,
-    }
-    yield data
+    data = vmc_connect.copy()
+    data.pop("vcenter_hostname")
+    return data
 
 
 @pytest.fixture
