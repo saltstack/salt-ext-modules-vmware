@@ -7,32 +7,15 @@ from saltext.vmware.utils import vmc_request
 
 
 @pytest.fixture
-def request_headers(common_data):
-    return vmc_request.get_headers(common_data["refresh_key"], common_data["authorization_host"])
+def common_data(vmc_connect):
+    data = vmc_connect.copy()
+    data.pop("vcenter_hostname")
+    return data
 
 
 @pytest.fixture
-def common_data(vmc_connect):
-    (
-        hostname,
-        refresh_key,
-        authorization_host,
-        org_id,
-        sddc_id,
-        verify_ssl,
-        cert,
-        vcenter_hostname,
-    ) = vmc_connect
-    data = {
-        "hostname": hostname,
-        "refresh_key": refresh_key,
-        "authorization_host": authorization_host,
-        "org_id": org_id,
-        "sddc_id": sddc_id,
-        "verify_ssl": verify_ssl,
-        "cert": cert,
-    }
-    yield data
+def request_headers(common_data):
+    return vmc_request.get_headers(common_data["refresh_key"], common_data["authorization_host"])
 
 
 @pytest.fixture
@@ -65,12 +48,6 @@ def get_primary_cluster_id(common_data, salt_call_cli):
     return result_as_json["cluster_id"]
 
 
-def test_get_sddc_hosts_smoke_test(salt_call_cli, list_sddc_hosts, common_data):
-    ret = salt_call_cli.run("vmc_sddc_host.list", **common_data)
-    result_as_json = ret.json
-    assert result_as_json == list_sddc_hosts
-
-
 def test_sddc_host_smoke_test(salt_call_cli, get_primary_cluster_id, common_data):
     cluster_id = get_primary_cluster_id
     # get the list of SDDC hosts
@@ -96,7 +73,7 @@ def test_sddc_host_smoke_test(salt_call_cli, get_primary_cluster_id, common_data
 
     # remove SDDC hosts
     ret = salt_call_cli.run(
-        "vmc_sddc_host.manage", action="remove", cluster_id=cluster_id, **common_data
+        "vmc_sddc_host.manage", action="remove", cluster_id=cluster_id, num_hosts=1, **common_data
     )
     result_as_json = ret.json
     if existing_hosts > 1:
