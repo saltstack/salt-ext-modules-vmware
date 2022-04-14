@@ -218,3 +218,14 @@ create_vm_disks = {
     "scsi": None,
     "type": None,
 }
+
+add_org_users = {
+    "skipNotify": False,
+    "userNames": ["test@vmware.com"],
+    "organizationRoles": [{"name": "org_member", "expiresAt": None}],
+    "serviceRolesDtos": None,
+    "customRoles": None,
+    "skipNotifyRegistration": False,
+    "invitedBy": None,
+    "customGroupsIds": None,
+}

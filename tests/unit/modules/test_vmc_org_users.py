@@ -100,8 +100,14 @@ def org_users_data(mock_vmc_request_call_api, org_user_data):
     yield data
 
 
+@pytest.fixture
+def organization_roles():
+    data = [{"name": "org_member", "expiresAt": None}, {"name": "developer", "expiresAt": None}]
+    yield data
+
+
 def test_list_org_users_should_return_api_response(org_users_data):
-    result = vmc_org_users.list(
+    result = vmc_org_users.list_(
         hostname="hostname",
         refresh_key="refresh_key",
         org_id="org_id",
@@ -113,7 +119,7 @@ def test_list_org_users_should_return_api_response(org_users_data):
 def test_list_org_users_called_with_url():
     expected_url = "https://hostname/csp/gateway/am/api/v2/orgs/org_id/users"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_org_users.list(
+        vmc_org_users.list_(
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
@@ -171,7 +177,178 @@ def test_assert_list_org_users_should_correctly_filter_args(actual_args, expecte
     }
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         actual_args.update(common_actual_args)
-        vmc_org_users.list(**actual_args)
+        vmc_org_users.list_(**actual_args)
 
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["params"] == expected_params
+
+
+def test_add_org_user_should_return_api_response(mock_vmc_request_call_api, organization_roles):
+    data = {"message": "User has been added successfully"}
+    mock_vmc_request_call_api.return_value = data
+    assert (
+        vmc_org_users.add(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            org_id="org_id",
+            user_names=["user1, user2"],
+            organization_roles=organization_roles,
+            verify_ssl=False,
+        )
+        == data
+    )
+
+
+def test_add_org_user_called_with_url(organization_roles):
+    expected_url = "https://hostname/csp/gateway/am/api/orgs/org_id/invitations"
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        vmc_org_users.add(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            org_id="org_id",
+            user_names=["user1, user2"],
+            organization_roles=organization_roles,
+            verify_ssl=False,
+        )
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.POST_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_payload",
+    [
+        # all actual args are None
+        (
+            {},
+            {
+                "userNames": ["test1@vmware.com"],
+                "organizationRoles": [
+                    {"name": "org_member", "expiresAt": None},
+                    {"name": "developer", "expiresAt": None},
+                ],
+                "skipNotify": False,
+                "customRoles": None,
+                "serviceRolesDtos": None,
+                "skipNotifyRegistration": False,
+                "invitedBy": None,
+                "customGroupsIds": None,
+            },
+        ),
+        # all args have values
+        (
+            {
+                "user_names": ["test1@vmware.com"],
+                "organization_roles": [
+                    {"name": "org_member", "expiresAt": None},
+                    {"name": "developer", "expiresAt": None},
+                ],
+                "skip_notify": False,
+                "custom_roles": [
+                    {"name": "name1", "resource": "resource1", "expiresAt": 3609941597}
+                ],
+                "service_roles": [{"name": "vmc-user:full", "expiresAt": None}],
+                "skip_notify_registration": False,
+                "invited_by": "owner@vmware.com",
+                "custom_groups_ids": ["abc@vmware.com"],
+            },
+            {
+                "userNames": ["test1@vmware.com"],
+                "organizationRoles": [
+                    {"name": "org_member", "expiresAt": None},
+                    {"name": "developer", "expiresAt": None},
+                ],
+                "skipNotify": False,
+                "customRoles": [
+                    {"name": "name1", "resource": "resource1", "expiresAt": 3609941597}
+                ],
+                "serviceRolesDtos": [{"name": "vmc-user:full", "expiresAt": None}],
+                "skipNotifyRegistration": False,
+                "invitedBy": "owner@vmware.com",
+                "customGroupsIds": ["abc@vmware.com"],
+            },
+        ),
+    ],
+)
+def test_assert_add_org_users_should_correctly_filter_args(
+    actual_args, expected_payload, organization_roles
+):
+    common_actual_args = {
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "org_id": "org_id",
+        "user_names": ["test1@vmware.com"],
+        "organization_roles": organization_roles,
+        "verify_ssl": False,
+    }
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        actual_args.update(common_actual_args)
+        vmc_org_users.add(**actual_args)
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["data"] == expected_payload
+
+
+def test_remove_org_user_should_return_api_response(
+    mock_vmc_request_call_api,
+):
+    expected_response = {"message": "Users removed successfully"}
+    mock_vmc_request_call_api.return_value = expected_response
+    assert (
+        vmc_org_users.remove(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            org_id="org_id",
+            user_ids=["user1", "user2"],
+            verify_ssl=False,
+        )
+        == expected_response
+    )
+
+
+def test_remove_sddc_called_with_url():
+    expected_url = "https://hostname/csp/gateway/am/api/v2/orgs/org_id/users"
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        vmc_org_users.remove(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            org_id="org_id",
+            user_ids=["user1", "user2"],
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.DELETE_REQUEST_METHOD
+
+
+def test_search_org_user_should_return_api_response(
+    mock_vmc_request_call_api,
+):
+    expected_response = {"message": "User found successfully"}
+    mock_vmc_request_call_api.return_value = expected_response
+    assert (
+        vmc_org_users.search(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            org_id="org_id",
+            user_search_term="us",
+            verify_ssl=False,
+        )
+        == expected_response
+    )
+
+
+def test_search_sddc_called_with_url():
+    expected_url = "https://hostname/csp/gateway/am/api/orgs/org_id/users/search"
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        vmc_org_users.search(
+            hostname="hostname",
+            refresh_key="refresh_key",
+            org_id="org_id",
+            user_search_term="us",
+            verify_ssl=False,
+        )
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["url"] == expected_url
+    assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
