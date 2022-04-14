@@ -148,6 +148,8 @@ autodoc_mock_imports = ["salt"]
 # <---- Autodoc Config -----------------------------------------------------------------------------------------------
 
 linkcheck_timeout = 10
+if not os.environ.get("SKIP_LINKCHECK_IGNORE"):
+    linkcheck_ignore = ["https://docs.github.com/en/authentication/connecting-to-github-with-ssh"]
 
 
 def setup(app):

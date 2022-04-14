@@ -145,3 +145,4 @@ local/
 src/.DS_Store
 src/saltext/.DS_Store
 .vscode/
+*.sw[a-p]
