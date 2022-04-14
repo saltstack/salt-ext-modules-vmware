@@ -28,7 +28,7 @@ def list_(hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl
 
     .. code-block:: bash
 
-    salt <minion-key-id> vmc_sddc_cluster.get hostname=vmc.vmware.com ...
+    salt <minion id> vmc_sddc_cluster.get hostname=vmc.vmware.com ...
 
     hostname
         The host name of VMC
@@ -94,7 +94,7 @@ def create(
 
     .. code-block:: bash
 
-        salt <minion-key-id> vmc_sddc_cluster.create hostname=vmc.vmware.com ...
+        salt <minion id> vmc_sddc_cluster.create hostname=vmc.vmware.com ...
 
     hostname
         The host name of VMC
@@ -207,7 +207,7 @@ def get_primary(
 
     .. code-block:: bash
 
-        salt <minion-key-id> vmc_sddc_cluster.get_primary_cluster hostname=vmc.vmware.com ...
+        salt <minion id> vmc_sddc_cluster.get_primary_cluster hostname=vmc.vmware.com ...
 
     hostname
         The host name of VMC
@@ -274,7 +274,7 @@ def delete(
 
             .. code-block:: bash
 
-                salt <minion-key-id> vmc_sddc_cluster.create hostname=vmc.vmware.com ...
+                salt <minion id> vmc_sddc_cluster.create hostname=vmc.vmware.com ...
 
             hostname
                 The host name of VMC
