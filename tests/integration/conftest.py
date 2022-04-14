@@ -311,17 +311,7 @@ def vmc_nsx_connect(vmc_config):
 
 @pytest.fixture(scope="session")
 def vmc_connect(vmc_config):
-    vmc_config = vmc_config["vmc_connect"]
-    return (
-        vmc_config["hostname"],
-        vmc_config["refresh_key"],
-        vmc_config["authorization_host"],
-        vmc_config["org_id"],
-        vmc_config["sddc_id"],
-        vmc_config["verify_ssl"],
-        vmc_config["cert"],
-        vmc_config["vcenter_hostname"],
-    )
+    return vmc_config["vmc_connect"]
 
 
 @pytest.fixture(scope="session")
