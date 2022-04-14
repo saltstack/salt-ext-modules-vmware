@@ -201,5 +201,5 @@ def list_(hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl
     esx_hosts_details = []
     for cluster in cluster_list:
         esx_hosts_details += cluster["esx_host_list"]
-    result = {"description": "vmc_sddc_host.get", "esx_hosts_details": esx_hosts_details}
+    result = {"description": "vmc_sddc_host.list_", "esx_hosts": esx_hosts_details}
     return result

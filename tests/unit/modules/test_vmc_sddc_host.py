@@ -55,7 +55,7 @@ def host_data():
 
 @pytest.fixture
 def hosts_data(host_data):
-    data = {"description": "vmc_sddc_host.get", "esx_hosts": host_data}
+    data = {"description": "vmc_sddc_host.list_", "esx_hosts": host_data}
     yield data
 
 
