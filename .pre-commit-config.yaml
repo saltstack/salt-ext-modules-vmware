@@ -80,6 +80,8 @@ repos:
       - id: black
         args: [-l 100]
         exclude: src/saltext/vcenter/version.py
+        additional_dependencies:
+          - click<8.1.0
 
   - repo: https://github.com/asottile/blacken-docs
     rev: v1.7.0
