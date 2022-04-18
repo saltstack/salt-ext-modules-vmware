@@ -221,7 +221,7 @@ create_vm_disks = {
 
 add_org_users = {
     "skipNotify": False,
-    "userNames": ["test@vmware.com"],
+    "usernames": ["test@vmware.com"],
     "organizationRoles": [{"name": "org_member", "expiresAt": None}],
     "serviceRolesDtos": None,
     "customRoles": None,
@@ -229,3 +229,5 @@ add_org_users = {
     "invitedBy": None,
     "customGroupsIds": None,
 }
+
+remove_org_users = {"user_ids": None, "notify_users": False}

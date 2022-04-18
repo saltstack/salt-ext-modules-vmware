@@ -223,7 +223,7 @@ def test_add_org_user_called_with_url(organization_roles):
         (
             {},
             {
-                "userNames": ["test1@vmware.com"],
+                "usernames": ["test1@vmware.com"],
                 "organizationRoles": [
                     {"name": "org_member", "expiresAt": None},
                     {"name": "developer", "expiresAt": None},
@@ -254,7 +254,7 @@ def test_add_org_user_called_with_url(organization_roles):
                 "custom_groups_ids": ["abc@vmware.com"],
             },
             {
-                "userNames": ["test1@vmware.com"],
+                "usernames": ["test1@vmware.com"],
                 "organizationRoles": [
                     {"name": "org_member", "expiresAt": None},
                     {"name": "developer", "expiresAt": None},
