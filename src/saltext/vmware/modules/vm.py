@@ -29,7 +29,8 @@ def __virtual__():
 def list_(
         service_instance=None,
         datacenter_name=None,
-        cluster_name=None
+        cluster_name=None,
+        host_name=None
 ):
     """
     Returns virtual machines.
@@ -40,6 +41,9 @@ def list_(
     cluster_name
         Filter by this cluster name (optional)
 
+    host_name
+        Filter by this host name (optional)
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -48,6 +52,7 @@ def list_(
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
     return utils_vm.list_vms(
         service_instance=service_instance,
+        host_name=host_name,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name
     )

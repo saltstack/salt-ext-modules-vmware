@@ -319,7 +319,8 @@ def unregister_vm(vm_ref):
 def list_vms(
         service_instance,
         datacenter_name=None,
-        cluster_name=None
+        cluster_name=None,
+        host_name=None,
 ):
     """
     Returns a list of VMs associated with a given service instance.
@@ -333,6 +334,9 @@ def list_vms(
     cluster_name
         The cluster name - used to restrict the VMs retrieved. Only used if
         the datacenter is set.  This argument is optional.
+
+    host_name
+        The host_name to be retrieved. Default is None.
     """
     properties = ["name", "config"]
 
@@ -351,6 +355,15 @@ def list_vms(
             # sense if the datacenter has been specified
             properties.append("parent")
 
+    if host_name:
+        host = utils_common.get_mor_by_property(
+            service_instance,
+            vim.HostSystem,
+            host_name
+        )
+        properties.append("runtime.host")
+        log.trace("Retrieved host: %s", host)
+
     # Search for the objects
     vms = utils_common.get_mors_with_properties(
             service_instance,
@@ -361,6 +374,11 @@ def list_vms(
 
     items = []
     for vm in vms:
+        if host_name:
+            if host == vm["runtime.host"]:
+                items.append(vm["name"])
+            else:
+                break
         if not vm["config"].template:
             items.append(vm["name"])
     return items
