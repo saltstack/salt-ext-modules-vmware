@@ -363,6 +363,8 @@ def list_vms(
         )
         properties.append("runtime.host")
         log.trace("Retrieved host: %s", host)
+    else:
+        host = None
 
     # Search for the objects
     vms = utils_common.get_mors_with_properties(
@@ -374,13 +376,11 @@ def list_vms(
 
     items = []
     for vm in vms:
-        if host_name:
-            if host == vm["runtime.host"]:
+        if not vm["config"].template:
+            if host_name and host == vm["runtime.host"]:
                 items.append(vm["name"])
             else:
-                break
-        if not vm["config"].template:
-            items.append(vm["name"])
+                items.append(vm["name"])
     return items
 
 
