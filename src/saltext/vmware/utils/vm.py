@@ -334,7 +334,7 @@ def list_vms(
         The cluster name - used to restrict the VMs retrieved. Only used if
         the datacenter is set.  This argument is optional.
     """
-    properties = ["name"]
+    properties = ["name", "config"]
 
     if cluster_name and not datacenter_name:
         raise salt.exceptions.ArgumentValueError(
