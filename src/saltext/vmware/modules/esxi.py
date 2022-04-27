@@ -8,8 +8,8 @@ import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
+from saltext.vmware.utils.connect import get_config
 from saltext.vmware.utils.connect import get_service_instance
-from saltext.vmware.utils.connect import get_username_password
 
 log = logging.getLogger(__name__)
 
@@ -833,8 +833,8 @@ def restore_config(
             else:
                 with open(source_file, "rb") as fp:
                     data = fp.read()
-            username, password = get_username_password(
-                esxi_host=h.name, opts=__opts__, pillar=__pillar__
+            host, username, password = get_config(
+                esxi_host=h.name, salt_config=((__pillar__ or {}) or (__opts__ or {}))
             )
             resp = __salt__["http.query"](
                 url, data=data, method="PUT", username=username, password=password, **http_opts

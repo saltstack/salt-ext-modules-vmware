@@ -23,25 +23,24 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def get_username_password(esxi_host, opts=None, pillar=None):
-    password = (
-        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
-        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
-        or os.environ.get("VMWARE_CONFIG_PASSWORD")
-        or opts.get("vmware_config", {}).get("password")
-        or pillar.get("vmware_config", {}).get("password")
-    )
-    user = (
-        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
-        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
-        or os.environ.get("VMWARE_CONFIG_USER")
-        or opts.get("vmware_config", {}).get("user")
-        or pillar.get("vmware_config", {}).get("user")
-    )
-    return user, password
+def get_config(salt_config, profile=None, esxi_host=None):
+    if profile:
+        credentials = salt_config.get("vmware_config", {})[profile]
+    else:
+        credentials = salt_config.get("vmware_config", {})
+
+    if esxi_host:
+        host = os.environ.get("VMWARE_CONFIG_HOST") or credentials.get("esxi_host", {})["host"]
+    else:
+        host = os.environ.get("VMWARE_CONFIG_HOST") or credentials.get("host")
+
+    password = os.environ.get("VMWARE_CONFIG_PASSWORD") or credentials.get("password")
+    user = os.environ.get("VMWARE_CONFIG_USER") or credentials.get("user")
+
+    return host, user, password
 
 
-def get_service_instance(opts=None, pillar=None, esxi_host=None):
+def get_service_instance(salt_config=None, opts=None, pillar=None, esxi_host=None, profile=None):
     """
     Connect to VMware service instance
 
@@ -78,26 +77,40 @@ def get_service_instance(opts=None, pillar=None, esxi_host=None):
                     user: admin
                     password: ***
 
+    If configuration for multiple VMWare services instances is required, they can be
+    set up as different configuration profiles:
+    For example:
+    .. code-block:: yaml
+
+        vmware_config:
+            profile1:
+                host: 198.51.100.100
+                password: ****
+                user: @example.com
+            profile2:
+                host: 198.51.100.100
+                password: ****
+                user: @example.com
+                esxi_host:
+                    198.52.100.105:
+                        user: admin
+                        password: ***
+                    198.52.100.106:
+                        user: admin
+                        password: ***
+
     """
     ctx = ssl._create_unverified_context()
     opts = opts or {}
     pillar = pillar or {}
-    host = (
-        esxi_host
-        or os.environ.get("VMWARE_CONFIG_HOST")
-        or opts.get("vmware_config", {}).get("host")
-        or pillar.get("vmware_config", {}).get("host")
-    )
-    user, password = get_username_password(esxi_host=host, opts=opts, pillar=pillar)
-    config = {
-        "host": host,
-        "password": password,
-        "user": user,
-    }
+    salt_config = salt_config or {}
+
+    config = get_config((salt_config or pillar or opts), profile=profile, esxi_host=esxi_host)
+
     service_instance = connect.SmartConnect(
-        host=config["host"],
-        user=config["user"],
-        pwd=config["password"],
+        host=config[0],
+        user=config[1],
+        pwd=config[2],
         sslContext=ctx,
     )
     return service_instance
