@@ -43,13 +43,19 @@ def __virtual__():
     return __virtualname__
 
 
-def get_lun_ids(service_instance=None):
+def get_lun_ids(service_instance=None, profile=None):
     """
     Return a list of LUN (Logical Unit Number) NAA (Network Addressing Authority) IDs.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
 
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
 
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     ids = set()
@@ -73,12 +79,18 @@ def _get_capability_attribs(host):
     return ret
 
 
-def get_capabilities(service_instance=None):
+def get_capabilities(service_instance=None, profile=None):
     """
     Return ESXi host's capability information.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     capabilities = {}
     for host in hosts:
@@ -87,7 +99,13 @@ def get_capabilities(service_instance=None):
 
 
 def power_state(
-    datacenter_name=None, cluster_name=None, host_name=None, state=None, timeout=600, force=True
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    state=None,
+    timeout=600,
+    force=True,
+    profile=None,
 ):
     """
     Manage the power state of the ESXi host.
@@ -110,6 +128,8 @@ def power_state(
     force
         Force power state transition. Default: True
 
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -117,7 +137,7 @@ def power_state(
     """
     ret = None
     task = None
-    service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -152,6 +172,7 @@ def manage_service(
     state=None,
     startup_policy=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Manage the state of the service running on the EXSI host.
@@ -178,7 +199,10 @@ def manage_service(
         - automatic: Start automatically if any ports are open, and stop when all ports are closed
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional)
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -188,7 +212,7 @@ def manage_service(
     ret = None
     task = None
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -231,6 +255,7 @@ def list_services(
     state=None,
     startup_policy=None,
     service_instance=None,
+    profile=None,
 ):
     """
     List the state of services running on matching EXSI hosts.
@@ -256,6 +281,9 @@ def list_services(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.list_services
@@ -263,7 +291,7 @@ def list_services(
     log.debug("Running vmware_esxi.list_services")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -309,6 +337,7 @@ def get_acceptance_level(
     host_name=None,
     acceptance_level=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Get acceptance level on matching EXSI hosts.
@@ -328,6 +357,9 @@ def get_acceptance_level(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_acceptance_level
@@ -346,7 +378,7 @@ def get_acceptance_level(
     log.debug("Running vmware_esxi.get_acceptance_level")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -375,6 +407,7 @@ def set_acceptance_level(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Set acceptance level on matching EXSI hosts.
@@ -394,6 +427,9 @@ def set_acceptance_level(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_acceptance_level
@@ -412,7 +448,7 @@ def set_acceptance_level(
     log.debug("Running vmware_esxi.set_acceptance_level")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -439,6 +475,7 @@ def get_advanced_config(
     host_name=None,
     config_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Get advanced config on matching EXSI hosts.
@@ -458,6 +495,9 @@ def get_advanced_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_advanced_config
@@ -465,7 +505,7 @@ def get_advanced_config(
     log.debug("Running vmware_esxi.get_advanced_config")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -494,6 +534,7 @@ def set_advanced_configs(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Set multiple advanced configurations on matching EXSI hosts.
@@ -513,6 +554,9 @@ def set_advanced_configs(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_advanced_config config_name=Annotations.WelcomeMessage config_value=Hello
@@ -531,7 +575,7 @@ def set_advanced_configs(
     log.debug("Running vmware_esxi.set_advanced_configs")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -578,6 +622,7 @@ def set_advanced_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Set a single advanced configuration on matching EXSI hosts.
@@ -599,6 +644,9 @@ def set_advanced_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -622,14 +670,12 @@ def set_advanced_config(
         cluster_name=cluster_name,
         host_name=host_name,
         service_instance=service_instance,
+        profile=profile,
     )
 
 
 def get_firewall_config(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
+    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     Get Firewall configuration on matching EXSI hosts.
@@ -646,6 +692,9 @@ def get_firewall_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_firewall_config
@@ -653,7 +702,7 @@ def get_firewall_config(
     log.debug("Running vmware_esxi.get_firewall_config")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -705,6 +754,7 @@ def backup_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Backup configuration for matching EXSI hosts.
@@ -729,6 +779,9 @@ def backup_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt * vmware_esxi.backup_config host_name=10.225.0.53 http_opts='{"verify_ssl": False}'
@@ -737,7 +790,7 @@ def backup_config(
     ret = {}
     http_opts = http_opts or {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -774,6 +827,7 @@ def restore_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Restore configuration for matching EXSI hosts.
@@ -803,6 +857,9 @@ def restore_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.backup_config datacenter_name=dc1 host_name=host1
@@ -811,7 +868,7 @@ def restore_config(
     ret = {}
     http_opts = http_opts or {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -833,9 +890,7 @@ def restore_config(
             else:
                 with open(source_file, "rb") as fp:
                     data = fp.read()
-            host, username, password = get_config(
-                esxi_host=h.name, salt_config=((__pillar__ or {}) or (__opts__ or {}))
-            )
+            host, username, password = get_config(esxi_host=h.name, config=__salt__)
             resp = __salt__["http.query"](
                 url, data=data, method="PUT", username=username, password=password, **http_opts
             )
@@ -863,10 +918,7 @@ def restore_config(
 
 
 def reset_config(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
+    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     Reset configuration for matching EXSI hosts.
@@ -883,6 +935,9 @@ def reset_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.reset_config
@@ -890,7 +945,7 @@ def reset_config(
     log.debug("Running vmware_esxi.reset_config")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -924,10 +979,7 @@ def reset_config(
 
 
 def get_dns_config(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
+    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     Get DNS configuration on matching EXSI hosts.
@@ -944,6 +996,9 @@ def get_dns_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_dns_config
@@ -951,7 +1006,7 @@ def get_dns_config(
     log.debug("Running vmware_esxi.get_dns_config")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -977,10 +1032,7 @@ def get_dns_config(
 
 
 def get_ntp_config(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
+    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     Get NTP configuration on matching EXSI hosts.
@@ -997,6 +1049,9 @@ def get_ntp_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_ntp_config
@@ -1004,7 +1059,7 @@ def get_ntp_config(
     log.debug("Running vmware_esxi.get_ntp_config")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1033,10 +1088,7 @@ def get_ntp_config(
 
 
 def list_hosts(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
+    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     List ESXi hosts.
@@ -1053,6 +1105,9 @@ def list_hosts(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.list_hosts
@@ -1060,7 +1115,7 @@ def list_hosts(
     log.debug("Running vmware_esxi.list_hosts")
     ret = []
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1085,6 +1140,7 @@ def add_user(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Add local user on matching ESXi hosts.
@@ -1110,6 +1166,9 @@ def add_user(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.add_user user_name=foo password=bar@123 descripton="new user"
@@ -1117,7 +1176,7 @@ def add_user(
     log.debug("Running vmware_esxi.add_user")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1147,6 +1206,7 @@ def update_user(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Update local user on matching ESXi hosts.
@@ -1172,6 +1232,9 @@ def update_user(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.update_user user_name=foo password=bar@123 descripton="existing user"
@@ -1179,7 +1242,7 @@ def update_user(
     log.debug("Running vmware_esxi.update_user")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1207,6 +1270,7 @@ def remove_user(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Remove local user on matching ESXi hosts.
@@ -1226,6 +1290,9 @@ def remove_user(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.remove_user user_name=foo
@@ -1233,7 +1300,7 @@ def remove_user(
     log.debug("Running vmware_esxi.remove_user")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1283,6 +1350,7 @@ def create_vmkernel_adapter(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Create VMKernel Adapter on matching ESXi hosts.
@@ -1349,6 +1417,9 @@ def create_vmkernel_adapter(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.create_vmkernel_adapter port_group_name=portgroup1 dvswitch_name=dvs1
@@ -1356,7 +1427,7 @@ def create_vmkernel_adapter(
     log.debug("Running vmware_esxi.create_vmkernel_adapter")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1495,6 +1566,7 @@ def get_vmkernel_adapters(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Update VMKernel Adapter on matching ESXi hosts.
@@ -1514,6 +1586,9 @@ def get_vmkernel_adapters(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_vmkernel_adapter port_group_name=portgroup1
@@ -1521,7 +1596,7 @@ def get_vmkernel_adapters(
     log.debug("Running vmware_esxi.get_vmkernel_adapter")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1565,6 +1640,7 @@ def update_vmkernel_adapter(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Update VMKernel Adapter on matching ESXi hosts.
@@ -1632,6 +1708,9 @@ def update_vmkernel_adapter(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.update_vmkernel_adapter dvswitch_name=dvs1 mtu=2000
@@ -1639,7 +1718,7 @@ def update_vmkernel_adapter(
     log.debug("Running vmware_esxi.update_vmkernel_adapter")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1683,6 +1762,7 @@ def delete_vmkernel_adapter(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Delete VMKernel Adapter on matching ESXi hosts.
@@ -1702,6 +1782,9 @@ def delete_vmkernel_adapter(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.delete_vmkernel_adapter name=vmk1
@@ -1709,7 +1792,7 @@ def delete_vmkernel_adapter(
     log.debug("Running vmware_esxi.delete_vmkernel_adapter")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1736,6 +1819,7 @@ def get_user(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Get local user on matching ESXi hosts.
@@ -1755,6 +1839,9 @@ def get_user(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_user user_name=foo
@@ -1762,7 +1849,7 @@ def get_user(
     log.debug("Running vmware_esxi.get_user")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1931,11 +2018,7 @@ def remove_role(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def get_role(
-    role_name,
-    esxi_host_name=None,
-    service_instance=None,
-):
+def get_role(role_name, esxi_host_name=None, service_instance=None, profile=None):
     """
     Get local role on service instance, which may be an ESXi host or vCenter instance.
 
@@ -1948,6 +2031,9 @@ def get_role(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_role role_name=foo
@@ -1955,13 +2041,7 @@ def get_role(
     log.debug("Running vmware_esxi.get_role")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_user=esxi_user_name,
-            esxi_host=esxi_host_name,
-            esxi_password=esxi_user_password,
-        )
+        service_instance = get_service_instance(config=__salt__, esxi_host=esxi_host_name)
     try:
         for role in service_instance.content.authorizationManager.roleList:
             if role.name == role_name:
@@ -1973,7 +2053,7 @@ def get_role(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def connect(host, service_instance=None):
+def connect(host, service_instance=None, profile=None):
     """
     Connect an ESXi instance to a vCenter instance.
 
@@ -1981,17 +2061,20 @@ def connect(host, service_instance=None):
         Name of ESXi instance in vCenter.
 
     service_instance
-        The Service Instance from which to obtain managed object references. (Optional)
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     log.debug(f"Connect ESXi instance {host}.")
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
 
     state = utils_esxi.reconnect_host(host, service_instance)
     return {"state": state}
 
 
-def disconnect(host, service_instance=None):
+def disconnect(host, service_instance=None, profile=None):
     """
     Disconnect an ESXi instance.
 
@@ -1999,17 +2082,20 @@ def disconnect(host, service_instance=None):
         Name of ESXi instance in vCenter.
 
     service_instance
-        The Service Instance from which to obtain managed object references. (Optional)
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     log.debug(f"Disconnect ESXi instance {host}.")
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
 
     state = utils_esxi.disconnect_host(host, service_instance)
     return {"state": state}
 
 
-def remove(host, service_instance=None):
+def remove(host, service_instance=None, profile=None):
     """
     Remove an ESXi instance from a vCenter instance.
 
@@ -2017,17 +2103,20 @@ def remove(host, service_instance=None):
         Name of ESXi instance in vCenter.
 
     service_instance
-        The Service Instance from which to obtain managed object references. (Optional)
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     log.debug(f"Remove ESXi instance {host}.")
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
 
     state = utils_esxi.remove_host(host, service_instance)
     return {"state": state}
 
 
-def move(host, cluster_name, service_instance=None):
+def move(host, cluster_name, service_instance=None, profile=None):
     """
     Move an ESXi instance to a different cluster.
 
@@ -2038,11 +2127,14 @@ def move(host, cluster_name, service_instance=None):
         Name of cluster to move host to.
 
     service_instance
-        The Service Instance from which to obtain managed object references. (Optional)
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     log.debug(f"Move ESXi instance {host}.")
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
 
     state = utils_esxi.move_host(host, cluster_name, service_instance)
     return {"state": state}
@@ -2057,6 +2149,7 @@ def add(
     verify_host_cert=True,
     connect=True,
     service_instance=None,
+    profile=None,
 ):
     """
     Add an ESXi instance to a vCenter instance.
@@ -2083,11 +2176,14 @@ def add(
         Specifies whether host should be connected after being added. Defaults to True.
 
     service_instance
-        The Service Instance from which to obtain managed object references. (Optional)
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     log.debug(f"Adding ESXi instance {host}.")
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     state = utils_esxi.add_host(
         host,
         root_user,
@@ -2107,6 +2203,7 @@ def list_pkgs(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     List the packages installed on matching EXSi hosts.
@@ -2127,6 +2224,9 @@ def list_pkgs(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.list_pkgs
@@ -2134,7 +2234,7 @@ def list_pkgs(
     log.debug("Running vmware_esxi.list_pkgs")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2175,6 +2275,7 @@ def get(
     default="",
     delimiter=DEFAULT_TARGET_DELIM,
     service_instance=None,
+    profile=None,
 ):
     """
     Get configuration information for matching EXSI hosts.
@@ -2211,6 +2312,9 @@ def get(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get dc1 cl1
@@ -2218,7 +2322,7 @@ def get(
     log.debug("Running vmware_esxi.get")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2290,7 +2394,7 @@ def get(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def in_maintenance_mode(host, service_instance=None):
+def in_maintenance_mode(host, service_instance=None, profile=None):
     """
     Check if host is in maintenance mode.
 
@@ -2298,7 +2402,10 @@ def in_maintenance_mode(host, service_instance=None):
         Host IP or HostSystem/ManagedObjectReference (required).
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -2308,7 +2415,7 @@ def in_maintenance_mode(host, service_instance=None):
         host_ref = host
     else:
         if service_instance is None:
-            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+            service_instance = get_service_instance(config=__salt__, profile=profile)
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = "normal"
     if host_ref.runtime.inMaintenanceMode:
@@ -2323,6 +2430,7 @@ def maintenance_mode(
     maintenance_spec=None,
     catch_task_error=True,
     service_instance=None,
+    profile=None,
 ):
     """
     Put host into maintenance mode.
@@ -2345,7 +2453,10 @@ def maintenance_mode(
         If False and task failed then a salt exception will be thrown (optional).
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -2355,7 +2466,7 @@ def maintenance_mode(
         host_ref = host
     else:
         if service_instance is None:
-            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+            service_instance = get_service_instance(config=__salt__, profile=profile)
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_maintenance_mode(host_ref, service_instance)
     if mode["maintenanceMode"] == "inMaintenance":
@@ -2374,7 +2485,9 @@ def maintenance_mode(
     return mode
 
 
-def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instance=None):
+def exit_maintenance_mode(
+    host, timeout=0, catch_task_error=True, service_instance=None, profile=None
+):
     """
     Put host out of maintenance mode.
 
@@ -2388,7 +2501,10 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
         If False and task failed then a salt exception will be thrown (optional).
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -2398,7 +2514,7 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
         host_ref = host
     else:
         if service_instance is None:
-            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+            service_instance = get_service_instance(config=__salt__, profile=profile)
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_maintenance_mode(host_ref, service_instance)
     if mode["maintenanceMode"] == "normal":
@@ -2415,7 +2531,7 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
     return mode
 
 
-def in_lockdown_mode(host, service_instance=None):
+def in_lockdown_mode(host, service_instance=None, profile=None):
     """
     Check if host is in lockdown mode.
 
@@ -2423,7 +2539,10 @@ def in_lockdown_mode(host, service_instance=None):
         Host IP or HostSystem/ManagedObjectReference (required).
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -2433,7 +2552,7 @@ def in_lockdown_mode(host, service_instance=None):
         host_ref = host
     else:
         if service_instance is None:
-            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+            service_instance = get_service_instance(config=__salt__, profile=profile)
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = "normal"
     if host_ref.config.adminDisabled:
@@ -2441,7 +2560,7 @@ def in_lockdown_mode(host, service_instance=None):
     return {"lockdownMode": mode}
 
 
-def lockdown_mode(host, catch_task_error=True, service_instance=None):
+def lockdown_mode(host, catch_task_error=True, service_instance=None, profile=None):
     """
     Put host into lockdown mode.
 
@@ -2452,7 +2571,10 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
         If False and task failed then a salt exception will be thrown (optional).
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -2462,7 +2584,7 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
         host_ref = host
     else:
         if service_instance is None:
-            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+            service_instance = get_service_instance(config=__salt__, profile=profile)
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_lockdown_mode(host_ref)
     if mode["lockdownMode"] == "inLockdown":
@@ -2478,7 +2600,7 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
     return mode
 
 
-def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
+def exit_lockdown_mode(host, catch_task_error=True, service_instance=None, profile=None):
     """
     Put host out of lockdown mode.
 
@@ -2489,7 +2611,10 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
         If False and task failed then a salt exception will be thrown (optional).
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -2499,7 +2624,7 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
         host_ref = host
     else:
         if service_instance is None:
-            service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+            service_instance = get_service_instance(config=__salt__, profile=profile)
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_lockdown_mode(host_ref)
     if mode["lockdownMode"] == "normal":

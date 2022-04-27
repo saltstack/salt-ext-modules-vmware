@@ -26,31 +26,37 @@ def __virtual__():
     return __virtualname__
 
 
-def list_(service_instance=None):
+def list_(service_instance=None, profile=None):
     """
     Returns virtual machines.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
     return utils_vm.list_vms(service_instance)
 
 
-def list_templates(service_instance=None):
+def list_templates(service_instance=None, profile=None):
     """
     Returns virtual machines tempates.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
     return utils_vm.list_vm_templates(service_instance)
 
 
-def path(vm_name, service_instance=None):
+def path(vm_name, service_instance=None, profile=None):
     """
     Returns specified virtual machine path.
 
@@ -58,10 +64,13 @@ def path(vm_name, service_instance=None):
         The name of the virtual machine.
 
     service_instance
-        The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
     vm_ref = utils_common.get_mor_by_property(
         service_instance,
         vim.VirtualMachine,
@@ -70,7 +79,7 @@ def path(vm_name, service_instance=None):
     return utils_common.get_path(vm_ref, service_instance)
 
 
-def _deploy_ovf(name, host_name, ovf, service_instance=None):
+def _deploy_ovf(name, host_name, ovf, service_instance=None, profile=None):
     """
     Helper fuctions that takes in a OVF file to create a virtual machine.
 
@@ -86,10 +95,13 @@ def _deploy_ovf(name, host_name, ovf, service_instance=None):
         The path to the Open Virtualization Format that contains a configuration of a virtual machine.
 
     service_instance
-        The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
 
     vms = list_(service_instance)
     if name in vms:
@@ -160,7 +172,7 @@ def deploy_ova(vm_name, host_name, ova_path, service_instance=None):
     return {"deployed": True}
 
 
-def deploy_template(vm_name, template_name, host_name, service_instance=None):
+def deploy_template(vm_name, template_name, host_name, service_instance=None, profile=None):
     """
     Deploy a virtual machine from a template virtual machine.
 
@@ -174,10 +186,13 @@ def deploy_template(vm_name, template_name, host_name, service_instance=None):
         The name of the esxi host to create the vitual machine on.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
 
     vms = list_(service_instance)
     if vm_name in vms:
@@ -200,7 +215,7 @@ def deploy_template(vm_name, template_name, host_name, service_instance=None):
     return {"deployed": True}
 
 
-def info(vm_name=None, service_instance=None):
+def info(vm_name=None, service_instance=None, profile=None):
     """
     Return basic info about a vSphere VM guest
 
@@ -208,12 +223,15 @@ def info(vm_name=None, service_instance=None):
         (optional) The name of the virtual machine to get info on.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     vms = []
     info = {}
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
 
     if vm_name:
         vms.append(
@@ -256,7 +274,7 @@ def info(vm_name=None, service_instance=None):
     return info
 
 
-def power_state(vm_name, state, datacenter_name=None, service_instance=None):
+def power_state(vm_name, state, datacenter_name=None, service_instance=None, profile=None):
     """
     Manages the power state of a virtual machine.
 
@@ -270,11 +288,14 @@ def power_state(vm_name, state, datacenter_name=None, service_instance=None):
         (optional) The name of the datacenter containing the virtual machine you want to manage.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     log.trace(f"Managing power state of virtual machine {vm_name} to {state}")
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -317,6 +338,7 @@ def boot_manager(
     retry_delay=0,
     efi_secure_boot_enabled=False,
     service_instance=None,
+    profile=None,
 ):
     """
     Manage boot option for a virtual machine
@@ -340,10 +362,13 @@ def boot_manager(
         (boolean, optional) Defaults to False.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
 
     vm = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
 
@@ -374,6 +399,7 @@ def create_snapshot(
     quiesce=False,
     datacenter_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Create snapshot of given vm.
@@ -397,11 +423,14 @@ def create_snapshot(
         (optional) The name of the datacenter containing the virtual machine.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
 
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -426,6 +455,7 @@ def destroy_snapshot(
     remove_children=False,
     datacenter_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Destroy snapshot of given vm.
@@ -446,10 +476,13 @@ def destroy_snapshot(
         (optional) The name of the datacenter containing the virtual machine.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -464,7 +497,7 @@ def destroy_snapshot(
     return {"snapshot": "destroyed"}
 
 
-def snapshot(vm_name, datacenter_name=None, service_instance=None):
+def snapshot(vm_name, datacenter_name=None, service_instance=None, profile=None):
     """
     Return info about a virtual machine snapshots
 
@@ -472,10 +505,13 @@ def snapshot(vm_name, datacenter_name=None, service_instance=None):
         (optional) The name of the virtual machine to get info on.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -490,7 +526,14 @@ def snapshot(vm_name, datacenter_name=None, service_instance=None):
     return {"snapshots": snapshots}
 
 
-def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
+def relocate(
+    vm_name,
+    new_host_name,
+    datastore_name,
+    datacenter_name=None,
+    service_instance=None,
+    profile=None,
+):
     """
     Relocates a virtual machine to the location specified.
 
@@ -503,11 +546,17 @@ def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
     datastore_name
         The name of the datastore you want to move the virtual machine to.
 
+    datacenter_name
+        The name of the datacenter containing the datastore.
+
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
     resources = utils_common.deployment_resources(new_host_name, service_instance)
     assert isinstance(datastore_name, str)

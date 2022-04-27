@@ -35,6 +35,7 @@ def set_boot_manager(
     retry_delay=10000,
     efi_secure_boot_enabled=False,
     service_instance=None,
+    profile=None,
 ):
     """
     Manage boot option for a virtual machine
@@ -61,10 +62,13 @@ def set_boot_manager(
         (boolean, optional) Defaults to False.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     vm = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
     boot_order_list = utils_vm.options_order_list(vm, boot_order)
@@ -99,6 +103,7 @@ def snapshot_present(
     quiesce=False,
     datacenter_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Create virtual machine snapshot.
@@ -122,10 +127,13 @@ def snapshot_present(
         (optional) The name of the datacenter containing the virtual machine.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -163,6 +171,7 @@ def snapshot_absent(
     remove_children=False,
     datacenter_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Create virtual machine snapshot.
@@ -183,10 +192,13 @@ def snapshot_absent(
         (optional) The name of the datacenter containing the virtual machine.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -217,7 +229,7 @@ def snapshot_absent(
         return ret
 
 
-def relocate(name, new_host_name, datastore_name, service_instance=None):
+def relocate(name, new_host_name, datastore_name, service_instance=None, profile=None):
     """
     Relocates a virtual machine to the location specified.
 
@@ -231,10 +243,13 @@ def relocate(name, new_host_name, datastore_name, service_instance=None):
         The name of the datastore you want to move the virtual machine to.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
     datastore_match = False

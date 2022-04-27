@@ -23,11 +23,11 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def get_config(salt_config, profile=None, esxi_host=None):
+def get_config(config, profile=None, esxi_host=None):
     if profile:
-        credentials = salt_config.get("vmware_config", {})[profile]
+        credentials = config.get("vmware_config", {})[profile]
     else:
-        credentials = salt_config.get("vmware_config", {})
+        credentials = config.get("vmware_config", {})
 
     if esxi_host:
         host = os.environ.get("VMWARE_CONFIG_HOST") or credentials.get("esxi_host", {})["host"]
@@ -40,21 +40,21 @@ def get_config(salt_config, profile=None, esxi_host=None):
     return host, user, password
 
 
-def get_service_instance(salt_config=None, opts=None, pillar=None, esxi_host=None, profile=None):
+def get_service_instance(config=None, esxi_host=None, profile=None):
     """
     Connect to VMware service instance
 
-    opts
-        (optional) Any additional options.
-
-    pillar
-        (optional) If specified, allows for a dictionary of pillar data to be made
-        available to pillar and ext_pillar rendering. These pillar variables
+    config
+        (optional) If specified, allows for a dictionary of data to be made
+        available to pillar and ext_pillar rendering. These variables
         will also override any variables of the same name in pillar or
         ext_pillar.
 
     esxi_host
         (optional) If specified, retrieves the configured username and password for this host.
+
+    profile
+        Profile to use (optional)
 
     Pillar Example:
 
@@ -101,11 +101,9 @@ def get_service_instance(salt_config=None, opts=None, pillar=None, esxi_host=Non
 
     """
     ctx = ssl._create_unverified_context()
-    opts = opts or {}
-    pillar = pillar or {}
-    salt_config = salt_config or {}
+    config = config or {}
 
-    config = get_config((salt_config or pillar or opts), profile=profile, esxi_host=esxi_host)
+    config = get_config(config=config, profile=profile, esxi_host=esxi_host)
 
     service_instance = connect.SmartConnect(
         host=config[0],

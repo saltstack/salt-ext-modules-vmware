@@ -26,7 +26,7 @@ def __virtual__():
     return __virtualname__
 
 
-def create(folder_name, dc_name, type, service_instance=None):
+def create(folder_name, dc_name, type, service_instance=None, profile=None):
     """
     Creates a folder on a given datacenter.
 
@@ -40,10 +40,13 @@ def create(folder_name, dc_name, type, service_instance=None):
         (vm, host, datastore, network) Type of folder to be created.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     folder = utils_common.get_mor_by_property(
         service_instance, vim.Folder, folder_name, "name", dc_ref
@@ -61,7 +64,7 @@ def create(folder_name, dc_name, type, service_instance=None):
     return {"status": "created"}
 
 
-def destroy(folder_name, dc_name, type, service_instance=None):
+def destroy(folder_name, dc_name, type, service_instance=None, profile=None):
     """
     Destroy a folder on a given datacenter.
 
@@ -75,10 +78,13 @@ def destroy(folder_name, dc_name, type, service_instance=None):
         (vm, host, datastore, network) Type of folder to be destroyed.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
         folder = utils_common.get_mor_by_property(
@@ -102,7 +108,7 @@ def destroy(folder_name, dc_name, type, service_instance=None):
     return {"status": "destroyed"}
 
 
-def rename(folder_name, new_folder_name, dc_name, type, service_instance=None):
+def rename(folder_name, new_folder_name, dc_name, type, service_instance=None, profile=None):
     """
     Rename a folder on a given datacenter.
 
@@ -119,10 +125,13 @@ def rename(folder_name, new_folder_name, dc_name, type, service_instance=None):
         (vm, host, datastore, network) Type of folder to be renamed.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
         folder = utils_common.get_mor_by_property(
@@ -146,7 +155,7 @@ def rename(folder_name, new_folder_name, dc_name, type, service_instance=None):
     return {"status": "renamed"}
 
 
-def move(folder_name, destination_folder_name, dc_name, type, service_instance=None):
+def move(folder_name, destination_folder_name, dc_name, type, service_instance=None, profile=None):
     """
     Move a folder on a given datacenter.
 
@@ -163,10 +172,13 @@ def move(folder_name, destination_folder_name, dc_name, type, service_instance=N
         (vm, host, datastore, network) Type of folder to be moved.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
         folder = utils_common.get_mor_by_property(

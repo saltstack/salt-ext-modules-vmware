@@ -70,6 +70,7 @@ def configure(
     health_vlan_mtu=None,
     health_vlan_mtu_interval=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Creates a new distributed vSwitch or updates an existing vSwitch.
@@ -129,14 +130,17 @@ def configure(
         VLAN and MTU health check interval in minutes. Optional.
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. Optional.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
         salt '*' vmware_dvswitch.configure dvs1
     """
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     try:
         health_spec = product_spec = spec = None
         dc_ref, switch_ref, config_spec = _get_switch_config_spec(
@@ -290,6 +294,7 @@ def remove_hosts(
     datacenter_name=None,
     cluster_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Remove ESXi host(s) from a distributed vSwitch.
@@ -309,6 +314,9 @@ def remove_hosts(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_dvswitch.remove_hosts switch_name=dvs1 hostname=host1
@@ -317,7 +325,7 @@ def remove_hosts(
     log.debug("Running vmware_dvswitch.remove_hosts")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -350,6 +358,7 @@ def add_hosts(
     cluster_name=None,
     nics=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Add ESXi host(s) to a distributed vSwitch.
@@ -372,6 +381,9 @@ def add_hosts(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.add_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
@@ -380,7 +392,7 @@ def add_hosts(
     log.debug("Running vmware_dvswitch.add_hosts")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     _, switch_ref, _ = _get_switch_config_spec(
         service_instance=service_instance,
         datacenter_name=datacenter_name,
@@ -429,6 +441,7 @@ def update_hosts(
     num_ports=None,
     mtu=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Update ESXi host(s) on a distributed vSwitch.
@@ -457,6 +470,9 @@ def update_hosts(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.update_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
@@ -465,7 +481,7 @@ def update_hosts(
     log.debug("Running vmware_dvswitch.update_hosts")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     _, switch_ref, _ = _get_switch_config_spec(
         service_instance=service_instance,
         datacenter_name=datacenter_name,
