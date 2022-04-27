@@ -890,7 +890,7 @@ def restore_config(
             else:
                 with open(source_file, "rb") as fp:
                     data = fp.read()
-            host, username, password = get_config(esxi_host=h.name, config=__salt__)
+            _, username, password = get_config(esxi_host=h.name, config=__salt__, profile=profile)
             resp = __salt__["http.query"](
                 url, data=data, method="PUT", username=username, password=password, **http_opts
             )

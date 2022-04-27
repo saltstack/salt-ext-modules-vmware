@@ -30,7 +30,7 @@ def get_config(config, profile=None, esxi_host=None):
         credentials = config.get("vmware_config", {})
 
     if esxi_host:
-        host = os.environ.get("VMWARE_CONFIG_HOST") or credentials.get("esxi_host", {})["host"]
+        host = os.environ.get("VMWARE_CONFIG_HOST") or credentials.get("esxi_host", {}).get("host")
     else:
         host = os.environ.get("VMWARE_CONFIG_HOST") or credentials.get("host")
 
