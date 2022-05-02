@@ -18,7 +18,6 @@ def vmc_common_data(vmc_connect):
 @pytest.fixture
 def vmc_vcenter_common_data(vmc_vcenter_connect):
     data = vmc_vcenter_connect.copy()
-    data.pop("vcenter_hostname")
     return data
 
 
@@ -69,7 +68,7 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
     # create a new sddc
     ret = salt_call_cli.run(
         "vmc_sddc.create",
-        sddc_name="",
+        sddc_name="sddc-it-test-1",
         num_hosts=1,
         provider="ZEROCLOUD",
         region="us-west-2",
@@ -90,22 +89,21 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
         # update the sddc name
         sddc_new_name = "sddc-test-new"
         ret = salt_call_cli.run(
-            "vmc_sddc.update_name", sddc_new_name=sddc_new_name, **vmc_common_data
+            "vmc_sddc.update_name", sddc_new_name=sddc_new_name, sddc_id=sddc_id, **vmc_common_data
         )
         result_as_json = ret.json
         assert "error" not in result_as_json
         assert result_as_json["name"] == sddc_new_name
 
         # delete the  SDDC
-        ret = salt_call_cli.run("vmc_sddc.delete", sddc_id, **vmc_common_data)
+        ret = salt_call_cli.run("vmc_sddc.delete", sddc_id=sddc_id, **vmc_common_data)
         result_as_json = ret.json
         if "error" not in result_as_json:
             assert result_as_json["task_type"] == "SDDC-DELETE"
 
         else:
-            assert (
+            assert [
                 f"Sddc is currently not in a state where it can be deleted. Please try once the status is READY or FAILED."
-                == result_as_json["error"]
-            )
+            ] == result_as_json["error"]
     else:
         assert "not available for this organization.”" in result_as_json["error"][0]
