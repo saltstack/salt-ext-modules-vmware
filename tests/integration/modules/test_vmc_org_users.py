@@ -1,28 +1,31 @@
 """
-    Integration Tests for vmc_sddc execution module
+    Integration Tests for vmc_org_users execution module
 """
 import json
 
 import pytest
-import requests
 from saltext.vmware.utils import vmc_request
 
 
 @pytest.fixture
 def vmc_common_data(vmc_connect):
     data = vmc_connect.copy()
+    data.pop("hostname")
+    data.pop("sddc_id")
     data.pop("vcenter_hostname")
+    data["hostname"] = vmc_connect["authorization_host"]
     return data
 
 
 @pytest.fixture
-def vmc_vcenter_common_data(vmc_vcenter_connect):
-    data = vmc_vcenter_connect.copy()
-    return data
+def request_headers(vmc_common_data):
+    return vmc_request.get_headers(
+        vmc_common_data["refresh_key"], vmc_common_data["authorization_host"]
+    )
 
 
-def test_get_sddc_by_id(salt_call_cli, vmc_common_data):
-    ret = salt_call_cli.run("vmc_sddc.get_by_id", **vmc_common_data)
+def test_get_org(salt_call_cli, vmc_common_data):
+    ret = salt_call_cli.run("vmc_sddc.sddc", **vmc_common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
     assert result_as_json["id"] == vmc_common_data["sddc_id"]
@@ -48,17 +51,14 @@ def test_get_vm_list_by_vcenter_smoke_test(salt_call_cli, vmc_vcenter_connect):
 
 
 def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
-    # as we are creating new sddc here, remove the sddc_id from vmc_common_data
-    vmc_common_data.pop("sddc_id")
-
-    # get the list of SDDC
-    ret = salt_call_cli.run("vmc_sddc.list", **vmc_common_data)
+    # get org users list
+    ret = salt_call_cli.run("vmc_org_users.list", **vmc_common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
-    existing_sddcs = len(result_as_json)
-    assert existing_sddcs >= 1
+    existing_org_users = len(result_as_json["results"])
+    assert existing_org_users >= 1
 
-    # create a new sddc
+    # Add a new user to the org
     ret = salt_call_cli.run(
         "vmc_sddc.create",
         sddc_name="sddc-it-test-1",
@@ -72,12 +72,12 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
         # get the SDDC id of newly created SDDC
         sddc_id = result_as_json["resource_id"]
 
-        # get the list of SDDC again, count of sddc should increased by one now
+        # get the list of SDDC again, count of cluster should increased by one now
         ret = salt_call_cli.run("vmc_sddc.list", **vmc_common_data)
         result_as_json = ret.json
         assert "error" not in result_as_json
-        assert len(result_as_json) == existing_sddcs + 1
-        existing_sddcs += 1
+        assert len(result_as_json["results"]) == existing_org_users + 1
+        existing_org_users += 1
 
         # update the name of sddc
         sddc_new_name = "sddc-test-new"
@@ -88,7 +88,7 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
         assert "error" not in result_as_json
         assert result_as_json["name"] == sddc_new_name
 
-        # delete the  SDDC
+        # remove the user from org
         ret = salt_call_cli.run("vmc_sddc.delete", sddc_id=sddc_id, **vmc_common_data)
         result_as_json = ret.json
         if "error" not in result_as_json:
