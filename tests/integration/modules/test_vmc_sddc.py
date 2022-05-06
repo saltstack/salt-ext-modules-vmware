@@ -86,7 +86,7 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
         assert len(result_as_json) == existing_sddcs + 1
         existing_sddcs += 1
 
-        # update the sddc name
+        # update the name of sddc
         sddc_new_name = "sddc-test-new"
         ret = salt_call_cli.run(
             "vmc_sddc.update_name", sddc_new_name=sddc_new_name, sddc_id=sddc_id, **vmc_common_data
