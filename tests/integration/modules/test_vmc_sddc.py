@@ -21,15 +21,8 @@ def vmc_vcenter_common_data(vmc_vcenter_connect):
     return data
 
 
-@pytest.fixture
-def request_headers(vmc_common_data):
-    return vmc_request.get_headers(
-        vmc_common_data["refresh_key"], vmc_common_data["authorization_host"]
-    )
-
-
-def _get_sddc(salt_call_cli, vmc_common_data):
-    ret = salt_call_cli.run("vmc_sddc.sddc", **vmc_common_data)
+def test_get_sddc_by_id(salt_call_cli, vmc_common_data):
+    ret = salt_call_cli.run("vmc_sddc.get_by_id", **vmc_common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
     assert result_as_json["id"] == vmc_common_data["sddc_id"]
@@ -79,7 +72,7 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
         # get the SDDC id of newly created SDDC
         sddc_id = result_as_json["resource_id"]
 
-        # get the list of SDDC again, count of cluster should increased by one now
+        # get the list of SDDC again, count of sddc should increased by one now
         ret = salt_call_cli.run("vmc_sddc.list", **vmc_common_data)
         result_as_json = ret.json
         assert "error" not in result_as_json
