@@ -2004,7 +2004,7 @@ def disconnect(host, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
-    
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.disconnect host=host01
@@ -2026,7 +2026,7 @@ def remove(host, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
-    
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.remove host=host01
@@ -2051,7 +2051,7 @@ def move(host, cluster_name, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
-    
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.move host=host01 cluster=cl1
