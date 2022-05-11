@@ -46,7 +46,7 @@ def absent(license_key, **kwargs):
 
       # Remove license from License Manager:
       vmware_license_mgr.absent:
-        - license: license_key
+        - license_key: license_key
         - datacenter_name: dc1
 
     """
