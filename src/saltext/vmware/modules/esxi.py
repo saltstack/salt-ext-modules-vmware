@@ -2103,7 +2103,7 @@ def add(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.add host=host01 root_user=root password=CorrectHorseBatteryStable cluster_name=cl1 datacenter_name=dc1 verify_host_cert=False connect=True
+        salt '*' vmware_esxi.add host=host01 root_user=root password=CorrectHorseBatteryStaple cluster_name=cl1 datacenter_name=dc1 verify_host_cert=False connect=True
     """
     log.debug(f"Adding ESXi instance {host}.")
     if service_instance is None:
