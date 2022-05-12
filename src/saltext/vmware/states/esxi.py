@@ -221,7 +221,7 @@ def vmkernel_adapter_present(
     network_subnet_mask
         Static netmask required. Required if type = 'static'.
 
-    network_tcpip_stack
+    network_tcp_ip_stack
         The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
 
     datacenter_name
@@ -689,12 +689,12 @@ def maintenance_mode(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.maintenance_mode '2001:db8:6::117'
+        salt '*' vmware_esxi.maintenance_mode '192.0.2.117'
     .. code-block:: yaml
 
         Maintenance Mode:
           vmware_esxi.maintenance_mode:
-            - host: '2001:db8:6::117'
+            - host: '192.0.2.117'
             - enter_maintenance_mode: true
     """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
@@ -778,12 +778,12 @@ def lockdown_mode(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.lockdown_mode '2001:db8:6::117'
+        salt '*' vmware_esxi.lockdown_mode '192.0.2.117'
     .. code-block:: yaml
 
         Lockdown Mode:
           vmware_esxi.lockdown_mode:
-            - host: '2001:db8:6::117'
+            - host: '192.0.2.117'
             - enter_lockdown_mode: true
     """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
