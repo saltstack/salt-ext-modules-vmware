@@ -44,10 +44,10 @@ def absent(license_key, **kwargs):
 
     .. code-block:: yaml
 
-      # Remove license from License Manager:
-      vmware_license_mgr.absent:
-        - license_key: license_key
-        - datacenter_name: dc1
+        Remove license from License Manager:
+          vmware_license_mgr.absent:
+            - license_key: license_key
+            - datacenter_name: dc1
 
     """
     ret = __salt__["vmware_license_mgr.remove"](license_key, **kwargs)
@@ -75,10 +75,10 @@ def present(license_key, **kwargs):
 
     .. code-block:: yaml
 
-      # Add license to License Manager:
-      vmware_license_mgr.present:
-        - license_key: license_key
-        - datacenter_name: dc1
+        Add license to License Manager:
+          vmware_license_mgr.present:
+            - license_key: license_key
+            - datacenter_name: dc1
     """
     ret = __salt__["vmware_license_mgr.add"](license_key, **kwargs)
     return ret
