@@ -238,11 +238,11 @@ def vmkernel_adapter_present(
 
     .. code-block:: yaml
 
-      # Save Adapter:
-      vmware_esxi.vmkernel_adapter_present:
-        - name: vmk1
-        - port_group_name: portgroup1
-        - dvsswitch_name: vswitch1
+        Save Adapter:
+          vmware_esxi.vmkernel_adapter_present:
+            - name: vmk1
+            - port_group_name: portgroup1
+            - dvsswitch_name: vswitch1
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
@@ -359,9 +359,9 @@ def vmkernel_adapter_absent(
 
     .. code-block:: yaml
 
-      # Delete Adapter:
-      vmware_esxi.vmkernel_adapter_absent:
-        - name: vmk1
+        Delete Adapter:
+          vmware_esxi.vmkernel_adapter_absent:
+            - name: vmk1
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
@@ -453,10 +453,10 @@ def user_present(
 
     .. code-block:: yaml
 
-      # Create User:
-      vmware_esxi.user_present:
-        - name: local_user
-        - password: secret
+        Create User:
+          vmware_esxi.user_present:
+            - name: local_user
+            - password: secret
 
     """
     log.debug("Running vmware_esxi.user_present")
@@ -585,9 +585,9 @@ def user_absent(
 
     .. code-block:: yaml
 
-      # Remove User:
-      vmware_esxi.user_absent:
-        - name: local_user
+        Remove User:
+          vmware_esxi.user_absent:
+            - name: local_user
 
     """
     log.debug("Running vmware_esxi.user_absent")
@@ -689,12 +689,12 @@ def maintenance_mode(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.maintenance_mode '10.288.6.117'
+        salt '*' vmware_esxi.maintenance_mode '2001:db8:6::117'
     .. code-block:: yaml
 
-          # Maintenance Mode:
+        Maintenance Mode:
           vmware_esxi.maintenance_mode:
-            - host: '10.288.6.117'
+            - host: '2001:db8:6::117'
             - enter_maintenance_mode: true
     """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
@@ -778,12 +778,12 @@ def lockdown_mode(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
+        salt '*' vmware_esxi.lockdown_mode '2001:db8:6::117'
     .. code-block:: yaml
 
-          # Lockdown Mode:
+        Lockdown Mode:
           vmware_esxi.lockdown_mode:
-            - host: '10.288.6.117'
+            - host: '2001:db8:6::117'
             - enter_lockdown_mode: true
     """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
