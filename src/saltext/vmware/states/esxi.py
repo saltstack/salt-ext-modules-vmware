@@ -238,7 +238,7 @@ def vmkernel_adapter_present(
 
     .. code-block:: yaml
 
-    Save Adapter:
+      # Save Adapter:
       vmware_esxi.vmkernel_adapter_present:
         - name: vmk1
         - port_group_name: portgroup1
@@ -359,7 +359,7 @@ def vmkernel_adapter_absent(
 
     .. code-block:: yaml
 
-    Delete Adapter:
+      # Delete Adapter:
       vmware_esxi.vmkernel_adapter_absent:
         - name: vmk1
     """
@@ -453,7 +453,7 @@ def user_present(
 
     .. code-block:: yaml
 
-    Create User:
+      # Create User:
       vmware_esxi.user_present:
         - name: local_user
         - password: secret
@@ -585,7 +585,7 @@ def user_absent(
 
     .. code-block:: yaml
 
-    Remove User:
+      # Remove User:
       vmware_esxi.user_absent:
         - name: local_user
 
@@ -692,7 +692,7 @@ def maintenance_mode(
         salt '*' vmware_esxi.maintenance_mode '10.288.6.117'
     .. code-block:: yaml
 
-        Maintenance Mode:
+          # Maintenance Mode:
           vmware_esxi.maintenance_mode:
             - host: '10.288.6.117'
             - enter_maintenance_mode: true
@@ -781,7 +781,7 @@ def lockdown_mode(
         salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
     .. code-block:: yaml
 
-        Lockdown Mode:
+          # Lockdown Mode:
           vmware_esxi.lockdown_mode:
             - host: '10.288.6.117'
             - enter_lockdown_mode: true
