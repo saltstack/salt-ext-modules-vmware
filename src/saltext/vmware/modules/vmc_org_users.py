@@ -190,98 +190,95 @@ def add(
     cert=None,
 ):
     """
-
     Add users on a given org
 
     Please refer the `Organization User Invitation documentation <https://developer.vmware.com/apis/csp/csp-iam/latest/csp/gateway/am/api/orgs/orgId/invitations/post/>`_ to get insight of functionality and input parameters
 
-
-      CLI Example:
+    CLI Example:
 
       .. code-block:: bash
 
           salt <minion id> vmc_org_users.add hostname=console.cloud.vmware.com org_id=org_id  ...
 
-      hostname
+    hostname
           The host name of CSP
 
-      refresh_key
+    refresh_key
           API Token of the user which is used to get the Access Token required for VMC operations
 
-      org_id
+    org_id
           The Id of organization for which user list is retrieved
 
-      skip_notify:boolean
-          (Optional) This will decide to skip the notification to user
+    skip_notify:boolean
+        (Optional) This will decide to skip the notification to user
 
-      user_names: Array list of String
-              (Required) Usernames
+    user_names: Array list of String
+        (Required) Usernames
 
-      organization_roles: Array of BaseRoleBindingDto
-          (Required) Organization roles assigned to user, uniqueItems: true
-          Its mandatory while sending invitation to user
+    organization_roles: Array of BaseRoleBindingDto
+        (Required) Organization roles assigned to user, uniqueItems: true
+        Its mandatory while sending invitation to user
 
-          BaseRoleBindingDto
-              The organization roles that will be assigned to the member
+        BaseRoleBindingDto
+            The organization roles that will be assigned to the member
 
-              name*: String
+            name: String
                   The role name
 
-              resource: String
+            resource: String
                   maxLength: 200
                   minLength: 0
                   The resource in which the role is scoped to.
                   The resource will be embedded in the Access Token "perms" claim, as part of the role
 
-              expiresAt: integer($int64)
+            expiresAt: integer(int64)
                   The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC) example:3609941597
 
-      custom_roles: Array of CustomRoleBindingDto
-          (Optional) custom roles assign to a user
-          CustomRoleBindingDto
-                  name: String
-                      The role name
+    custom_roles: Array of CustomRoleBindingDto
+       (Optional) custom roles assign to a user
+        CustomRoleBindingDto
+            name: String
+                  The role name
 
-                  resource: String
-                      maxLength: 200
-                      minLength: 0
-                      The resource in which the role is scoped to.
-                      The resource will be embedded in the Access Token "perms" claim, as part of the role
+            resource: String
+                  maxLength: 200
+                  minLength: 0
+                  The resource in which the role is scoped to.
+                  The resource will be embedded in the Access Token "perms" claim, as part of the role
 
-                  expiresAt: integer($int64)
-                      example: 3609941597
-                      The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC)
+            expiresAt: integer($int64)
+                  example: 3609941597
+                  The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC)
 
+    service_roles: Array list of ServiceRolesDto
+        (Optional) service roles
+         ServiceRolesDto
+            serviceDefinitionLink: String
 
-      service_roles:Array list of ServiceRolesDto
-         (Optional) service roles
-          ServiceRolesDto
-                  serviceDefinitionLink: String
-
-                  serviceRoles: Array list of ServiceRoleBindingDto
+            serviceRoles: Array list of ServiceRoleBindingDto
                   The service roles
 
-      skip_notify_registration: boolean
-          (Optional) Prevent sending mails to users that do not yet have a CSP profile
+    skip_notify_registration: boolean
+        (Optional) Prevent sending mails to users that do not yet have a CSP profile
 
-      invited_by:String
-          (Optional) Invited By, specify the actual user who is inviting
+    invited_by:String
+        (Optional) Invited By, specify the actual user who is inviting
 
-      custom_groups_ids: array list of String
-          (Optional) Custom Groups Ids
-          uniqueItems: true
-          maxItems: 15
-          minItems: 0
+    custom_groups_ids: array list of String
+        (Optional) Custom Groups Ids
+        uniqueItems: true
+        maxItems: 15
+        minItems: 0
 
-      verify_ssl
-          (Optional) Option to enable/disable SSL verification. Enabled by default.
-          If set to False, the certificate validation is skipped.
+    verify_ssl
+       (Optional) Option to enable/disable SSL verification. Enabled by default.
+       If set to False, the certificate validation is skipped.
 
-      cert
-          (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
-          The certificate can be retrieved from browser.
+    cert
+       (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
+       The certificate can be retrieved from browser.
 
-       For example:
+    For example:
 
               .. code::
 
