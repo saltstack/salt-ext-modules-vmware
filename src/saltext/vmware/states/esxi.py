@@ -165,6 +165,10 @@ def vmkernel_adapter_present(
     network_subnet_mask=None,
     network_tcp_ip_stack="default",
     network_type="static",
+    network_ipv6_autoconfig=None,
+    network_ipv6_dhcpv6=None,
+    network_ipv6_addresses=None,
+    network_ipv6_default_gateway=None,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -220,6 +224,21 @@ def vmkernel_adapter_present(
 
     network_subnet_mask
         Static netmask required. Required if type = 'static'.
+
+    network_ipv6_autoconfig
+        Obtain IPv6 address automatically through Router Advertisement. Valid values: True, False.
+
+    network_ipv6_dhcpv6
+        Obtain IPv6 address automatically through DHCP. Valid values: True, False.
+
+    network_ipv6_default_gateway
+        Default IPv6 gateway (Override default gateway for this adapter).
+
+    network_ipv6_addresses
+        List of dictionaries of static IPv6 addresses. Dictionary format:
+
+        address: IPv6 address
+        prefix_length: Prefix length of the IPv6 address. Valid values: 1-128
 
     network_tcpip_stack
         The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
@@ -313,6 +332,10 @@ def vmkernel_adapter_present(
                         network_subnet_mask=network_subnet_mask,
                         network_tcp_ip_stack=network_tcp_ip_stack,
                         network_type=network_type,
+                        network_ipv6_autoconfig=network_ipv6_autoconfig,
+                        network_ipv6_dhcpv6=network_ipv6_dhcpv6,
+                        network_ipv6_default_gateway=network_ipv6_default_gateway,
+                        network_ipv6_addresses=network_ipv6_addresses,
                         datacenter_name=datacenter_name,
                         cluster_name=cluster_name,
                         host_name=host,
