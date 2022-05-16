@@ -1492,6 +1492,7 @@ def _save_vmkernel_adapter(
                 vmk_device = vnic.device
                 # Get a list of already-configure IPv6 addresses
                 existing_ipv6_addresses = vnic.spec.ip.ipV6Config.ipV6Address
+                # Use a shadow list of dicts so we can compare only ipAddress and prefixLength
                 final_ipv6_addresses_keys = []
                 final_ipv6_addresses = []
                 # Loop through already-configured addresses
@@ -1508,6 +1509,7 @@ def _save_vmkernel_adapter(
                         z.operation = "remove"
                         final_ipv6_addresses_keys.append(y)
                         final_ipv6_addresses.append(z)
+                # Loop through desired-state addresses
                 for x in desired_ipv6_addresses:
                     y = {
                         "ipAddress": x.ipAddress,

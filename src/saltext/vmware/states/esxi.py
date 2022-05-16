@@ -217,13 +217,13 @@ def vmkernel_adapter_present(
         Default gateway (Override default gateway for this adapter).
 
     network_type
-        Type of IP assignment. Valid values: "static", "dhcp".
+        Type of IPv4 assignment. Valid values: "static", "dhcp".
 
     network_ip_address
-        Static IP address. Required if type = 'static'.
+        Static IPv4 address. Required if type = 'static'.
 
     network_subnet_mask
-        Static netmask required. Required if type = 'static'.
+        Static IPv4 netmask required. Required if type = 'static'.
 
     network_ipv6_autoconfig
         Obtain IPv6 address automatically through Router Advertisement. Valid values: True, False.
@@ -262,6 +262,22 @@ def vmkernel_adapter_present(
         - name: vmk1
         - port_group_name: portgroup1
         - dvsswitch_name: vswitch1
+        - mtu: 1500
+        - network_type: static
+        - network_ip_address: 192.0.2.51
+        - network_subnet_mask: 255.255.255.0
+        - network_ipv6_autoconfig: False
+        - network_ipv6_dhcpv6: False
+        - network_ipv6_addresses:
+            - address: 2001:db8:1234::51
+              prefix_length: 64
+            - address: 2001:db8:1234::52
+              prefix_length: 64
+            - address: 2001:db8:1234::53
+              prefix_length: 64
+        - datacenter_name: dc1
+        - cluster_name: cl1
+        - host_name: host1
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
