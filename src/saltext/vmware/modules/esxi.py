@@ -1466,8 +1466,8 @@ def _save_vmkernel_adapter(
         desired_ipv6_addresses = []
         for address in network_ipv6_addresses:
             ipv6_address = vim.host.IpConfig.IpV6Address()
-            ipv6_address.ipAddress = address['address']
-            ipv6_address.prefixLength = address['prefix_length']
+            ipv6_address.ipAddress = address["address"]
+            ipv6_address.prefixLength = address["prefix_length"]
             ipv6_address.origin = vim.host.IpConfig.IpV6AddressConfigType("manual")
             ipv6_address.operation = vim.host.ConfigChange.Operation("add")
             desired_ipv6_addresses.append(ipv6_address)
