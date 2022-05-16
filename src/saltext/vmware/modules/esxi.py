@@ -1490,7 +1490,7 @@ def _save_vmkernel_adapter(
             if v.device == adapter_name:
                 vnic = v
                 vmk_device = vnic.device
-                # Get a list of already-configure IPv6 addresses
+                # Get a list of already-configured IPv6 addresses
                 existing_ipv6_addresses = vnic.spec.ip.ipV6Config.ipV6Address
                 # Use a shadow list of dicts so we can compare only ipAddress and prefixLength
                 final_ipv6_addresses_keys = []
