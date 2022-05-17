@@ -1490,40 +1490,41 @@ def _save_vmkernel_adapter(
             if v.device == adapter_name:
                 vnic = v
                 vmk_device = vnic.device
-                # Get a list of already-configured IPv6 addresses
-                existing_ipv6_addresses = vnic.spec.ip.ipV6Config.ipV6Address
-                # Use a shadow list of dicts so we can compare only ipAddress and prefixLength
-                final_ipv6_addresses_keys = []
-                final_ipv6_addresses = []
-                # Loop through already-configured addresses
-                for index, x in enumerate(existing_ipv6_addresses):
-                    # We only operate on addresses that are manually configured
-                    if x.origin == "manual":
+                if network_ipv6_addresses:
+                    # Get a list of already-configured IPv6 addresses
+                    existing_ipv6_addresses = vnic.spec.ip.ipV6Config.ipV6Address
+                    # Use a shadow list of dicts so we can compare only ipAddress and prefixLength
+                    final_ipv6_addresses_keys = []
+                    final_ipv6_addresses = []
+                    # Loop through already-configured addresses
+                    for index, x in enumerate(existing_ipv6_addresses):
+                        # We only operate on addresses that are manually configured
+                        if x.origin == "manual":
+                            y = {
+                                "ipAddress": x.ipAddress,
+                                "prefixLength": x.prefixLength,
+                            }
+                            z = existing_ipv6_addresses[index]
+                            # By default we set all existing addresses to be removed.
+                            # We'll delete them from the list (noop) later if we need to keep them
+                            z.operation = "remove"
+                            final_ipv6_addresses_keys.append(y)
+                            final_ipv6_addresses.append(z)
+                    # Loop through desired-state addresses
+                    for x in desired_ipv6_addresses:
                         y = {
                             "ipAddress": x.ipAddress,
                             "prefixLength": x.prefixLength,
                         }
-                        z = existing_ipv6_addresses[index]
-                        # By default we set all existing addresses to be removed.
-                        # We'll delete them from the list (noop) later if we need to keep them
-                        z.operation = "remove"
-                        final_ipv6_addresses_keys.append(y)
-                        final_ipv6_addresses.append(z)
-                # Loop through desired-state addresses
-                for x in desired_ipv6_addresses:
-                    y = {
-                        "ipAddress": x.ipAddress,
-                        "prefixLength": x.prefixLength,
-                    }
-                    if y not in final_ipv6_addresses_keys:
-                        # Add any addresses that are not already configured
-                        final_ipv6_addresses_keys.append(y)
-                        final_ipv6_addresses.append(x)
-                    else:
-                        index = final_ipv6_addresses_keys.index(y)
-                        # Remove any addresses that are already configured (noop)
-                        del final_ipv6_addresses[index]
-                vnic_config.ip.ipV6Config.ipV6Address = final_ipv6_addresses
+                        if y not in final_ipv6_addresses_keys:
+                            # Add any addresses that are not already configured
+                            final_ipv6_addresses_keys.append(y)
+                            final_ipv6_addresses.append(x)
+                        else:
+                            index = final_ipv6_addresses_keys.index(y)
+                            # Remove any addresses that are already configured (noop)
+                            del final_ipv6_addresses[index]
+                    vnic_config.ip.ipV6Config.ipV6Address = final_ipv6_addresses
                 break
         host.configManager.networkSystem.UpdateVirtualNic(vmk_device, vnic_config)
     else:
