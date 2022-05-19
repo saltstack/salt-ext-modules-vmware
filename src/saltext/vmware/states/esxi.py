@@ -240,7 +240,7 @@ def vmkernel_adapter_present(
         address: IPv6 address
         prefix_length: Prefix length of the IPv6 address. Valid values: 1-128
 
-    network_tcpip_stack
+    network_tcp_ip_stack
         The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
 
     datacenter_name
@@ -257,27 +257,27 @@ def vmkernel_adapter_present(
 
     .. code-block:: yaml
 
-    Save Adapter:
-      vmware_esxi.vmkernel_adapter_present:
-        - name: vmk1
-        - port_group_name: portgroup1
-        - dvsswitch_name: vswitch1
-        - mtu: 1500
-        - network_type: static
-        - network_ip_address: 192.0.2.51
-        - network_subnet_mask: 255.255.255.0
-        - network_ipv6_autoconfig: False
-        - network_ipv6_dhcpv6: False
-        - network_ipv6_addresses:
-            - address: 2001:db8:1234::51
-              prefix_length: 64
-            - address: 2001:db8:1234::52
-              prefix_length: 64
-            - address: 2001:db8:1234::53
-              prefix_length: 64
-        - datacenter_name: dc1
-        - cluster_name: cl1
-        - host_name: host1
+        Save Adapter:
+          vmware_esxi.vmkernel_adapter_present:
+            - name: vmk1
+            - port_group_name: portgroup1
+            - dvsswitch_name: vswitch1
+            - mtu: 1500
+            - network_type: static
+            - network_ip_address: 192.0.2.51
+            - network_subnet_mask: 255.255.255.0
+            - network_ipv6_autoconfig: False
+            - network_ipv6_dhcpv6: False
+            - network_ipv6_addresses:
+                - address: 2001:db8:1234::51
+                  prefix_length: 64
+                - address: 2001:db8:1234::52
+                  prefix_length: 64
+                - address: 2001:db8:1234::53
+                  prefix_length: 64
+            - datacenter_name: dc1
+            - cluster_name: cl1
+            - host_name: host1
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
@@ -398,9 +398,9 @@ def vmkernel_adapter_absent(
 
     .. code-block:: yaml
 
-    Delete Adapter:
-      vmware_esxi.vmkernel_adapter_absent:
-        - name: vmk1
+        Delete Adapter:
+          vmware_esxi.vmkernel_adapter_absent:
+            - name: vmk1
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
@@ -492,10 +492,10 @@ def user_present(
 
     .. code-block:: yaml
 
-    Create User:
-      vmware_esxi.user_present:
-        - name: local_user
-        - password: secret
+        Create User:
+          vmware_esxi.user_present:
+            - name: local_user
+            - password: secret
 
     """
     log.debug("Running vmware_esxi.user_present")
@@ -624,9 +624,9 @@ def user_absent(
 
     .. code-block:: yaml
 
-    Remove User:
-      vmware_esxi.user_absent:
-        - name: local_user
+        Remove User:
+          vmware_esxi.user_absent:
+            - name: local_user
 
     """
     log.debug("Running vmware_esxi.user_absent")
@@ -728,12 +728,12 @@ def maintenance_mode(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.maintenance_mode '10.288.6.117'
+        salt '*' vmware_esxi.maintenance_mode '192.0.2.117'
     .. code-block:: yaml
 
         Maintenance Mode:
           vmware_esxi.maintenance_mode:
-            - host: '10.288.6.117'
+            - host: '192.0.2.117'
             - enter_maintenance_mode: true
     """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
@@ -817,12 +817,12 @@ def lockdown_mode(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
+        salt '*' vmware_esxi.lockdown_mode '192.0.2.117'
     .. code-block:: yaml
 
         Lockdown Mode:
           vmware_esxi.lockdown_mode:
-            - host: '10.288.6.117'
+            - host: '192.0.2.117'
             - enter_lockdown_mode: true
     """
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}

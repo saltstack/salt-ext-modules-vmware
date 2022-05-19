@@ -145,7 +145,7 @@ def get_by_display_name(
 
     .. code-block:: bash
 
-        salt vm_minion compute_manager.get_by_display_name hostname=nsxt-manager.local username=admin ...
+        salt vm_minion nsxt_compute_manager.get_by_display_name hostname=nsxt-manager.local username=admin ...
 
     hostname
         The host name of NSX-T manager
@@ -243,7 +243,7 @@ def register(
 
     .. code-block:: bash
 
-        salt vm_minion compute_manager.register hostname=nsxt-manager.local username=admin ...
+        salt vm_minion nsxt_compute_manager.register hostname=nsxt-manager.local username=admin ...
 
     hostname
         The host name of NSX-T manager
@@ -358,7 +358,7 @@ def update(
 
     .. code-block:: bash
 
-        salt vm_minion compute_manager.update hostname=nsxt-manager.local username=admin ...
+        salt vm_minion nsxt_compute_manager.update hostname=nsxt-manager.local username=admin ...
 
     hostname
         The host name of NSX-T manager
@@ -479,7 +479,7 @@ def remove(
 
     .. code-block:: bash
 
-        salt vm_minion compute_manager.remove hostname=nsxt-manager.local username=admin ...
+        salt vm_minion nsxt_compute_manager.remove hostname=nsxt-manager.local username=admin ...
 
     hostname
         The host name of NSX-T manager

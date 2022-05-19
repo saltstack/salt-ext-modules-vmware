@@ -2085,6 +2085,10 @@ def connect(host, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.connect host=host01
     """
     log.debug(f"Connect ESXi instance {host}.")
     if service_instance is None:
@@ -2103,6 +2107,10 @@ def disconnect(host, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.disconnect host=host01
     """
     log.debug(f"Disconnect ESXi instance {host}.")
     if service_instance is None:
@@ -2121,6 +2129,10 @@ def remove(host, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.remove host=host01
     """
     log.debug(f"Remove ESXi instance {host}.")
     if service_instance is None:
@@ -2142,6 +2154,10 @@ def move(host, cluster_name, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.move host=host01 cluster=cl1
     """
     log.debug(f"Move ESXi instance {host}.")
     if service_instance is None:
@@ -2176,7 +2192,7 @@ def add(
     cluster_name
         Name of cluster ESXi host is being added to.
 
-    datacenter
+    datacenter_name
         Datacenter that contains cluster that ESXi instance is being added to.
 
     verify_host_cert
@@ -2187,6 +2203,10 @@ def add(
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.add host=host01 root_user=root password=CorrectHorseBatteryStaple cluster_name=cl1 datacenter_name=dc1 verify_host_cert=False connect=True
     """
     log.debug(f"Adding ESXi instance {host}.")
     if service_instance is None:
@@ -2405,7 +2425,7 @@ def in_maintenance_mode(host, service_instance=None):
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.in_maintenance_mode '10.288.6.117'
+        salt '*' vmware_esxi.in_maintenance_mode '192.0.2.117'
     """
     if isinstance(host, vim.HostSystem):
         host_ref = host
@@ -2452,7 +2472,7 @@ def maintenance_mode(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.maintenance_mode '10.288.6.117'
+        salt '*' vmware_esxi.maintenance_mode '192.0.2.117'
     """
     if isinstance(host, vim.HostSystem):
         host_ref = host
@@ -2495,7 +2515,7 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.exit_maintenance_mode '10.288.6.117'
+        salt '*' vmware_esxi.exit_maintenance_mode '192.0.2.117'
     """
     if isinstance(host, vim.HostSystem):
         host_ref = host
@@ -2530,7 +2550,7 @@ def in_lockdown_mode(host, service_instance=None):
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.in_lockdown_mode '10.288.6.117'
+        salt '*' vmware_esxi.in_lockdown_mode '192.0.2.117'
     """
     if isinstance(host, vim.HostSystem):
         host_ref = host
@@ -2559,7 +2579,7 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.lockdown_mode '10.288.6.117'
+        salt '*' vmware_esxi.lockdown_mode '192.0.2.117'
     """
     if isinstance(host, vim.HostSystem):
         host_ref = host
@@ -2596,7 +2616,7 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.exit_lockdown_mode '10.288.6.117'
+        salt '*' vmware_esxi.exit_lockdown_mode '192.0.2.117'
     """
     if isinstance(host, vim.HostSystem):
         host_ref = host
