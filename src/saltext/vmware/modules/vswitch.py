@@ -68,6 +68,10 @@ def get(hostname, switch_name=None, service_instance=None):
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_vswitch.get host1 switch_name=vSwitch1
     """
     ret = []
     for vswitch in _get(
@@ -111,6 +115,10 @@ def add(switch_name, hostname, mtu=1500, nics=[], num_ports=128, service_instanc
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
+    
+    .. code-block:: bash
+
+        salt '*' vmware_vswitch.add vSwitch0 host1 mtu=1500, nics='["vmnic0", "vmnic1"]', num_ports=256
     """
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -140,6 +148,10 @@ def remove(switch_name, hostname, service_instance=None):
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_vswitch.remove vSwitch0 host1
     """
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
