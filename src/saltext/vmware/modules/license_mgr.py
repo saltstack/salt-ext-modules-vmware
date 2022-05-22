@@ -51,7 +51,7 @@ def add(license_key, **kwargs):
 
     CLI Example:
 
-    .. code-block: bash
+    .. code-block:: bash
 
         salt '*' vmware_license_mgr.add license_key datacenter_name=dc1
     """
@@ -139,7 +139,7 @@ def remove(license_key, **kwargs):
 
     CLI Example:
 
-    .. code-block: bash
+    .. code-block:: bash
 
         salt '*' vmware_license_mgr.remove license_key
     """
