@@ -115,7 +115,7 @@ def add(switch_name, hostname, mtu=1500, nics=[], num_ports=128, service_instanc
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
-    
+
     .. code-block:: bash
 
         salt '*' vmware_vswitch.add vSwitch0 host1 mtu=1500, nics='["vmnic0", "vmnic1"]', num_ports=256
