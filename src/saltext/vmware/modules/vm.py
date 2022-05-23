@@ -519,9 +519,7 @@ def relocate(vm_name, new_host_name, datastore_name, datacenter_name=None, servi
             service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
         )
     else:
-        datastores = utils_datastore.get_datastores(
-            service_instance, datastore_name=datastore_name
-        )
+        datastores = utils_datastore.get_datastores(service_instance, datastore_name=datastore_name)
     datastore_ref = datastores[0] if datastores else None
     ret = utils_vm.relocate(
         vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"]
