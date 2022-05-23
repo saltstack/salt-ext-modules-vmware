@@ -490,7 +490,7 @@ def destroy_snapshot(
 
     .. code-block:: bash
 
-        salt '*' vmware_vm.destroy_snapshot vm01 backup_snapshot_1 id=1 remove_children=False datacenter_name=dc1
+        salt '*' vmware_vm.destroy_snapshot vm01 backup_snapshot_1 snapshot_id=1 remove_children=False datacenter_name=dc1
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
