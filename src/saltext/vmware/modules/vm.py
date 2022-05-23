@@ -490,7 +490,7 @@ def snapshot(vm_name, datacenter_name=None, service_instance=None):
     return {"snapshots": snapshots}
 
 
-def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
+def relocate(vm_name, new_host_name, datastore_name, datacenter_name=None, service_instance=None):
     """
     Relocates a virtual machine to the location specified.
 
@@ -503,6 +503,9 @@ def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
     datastore_name
         The name of the datastore you want to move the virtual machine to.
 
+    datacenter_name
+        (optional) The name of the datacenter containing the virtual machine.
+
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
     """
@@ -511,9 +514,14 @@ def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
     resources = utils_common.deployment_resources(new_host_name, service_instance)
     assert isinstance(datastore_name, str)
-    datastores = utils_datastore.get_datastores(
-        service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
-    )
+    if datacenter_name:
+        datastores = utils_datastore.get_datastores(
+            service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
+        )
+    else:
+        datastores = utils_datastore.get_datastores(
+            service_instance, datastore_name=datastore_name
+        )
     datastore_ref = datastores[0] if datastores else None
     ret = utils_vm.relocate(
         vm_ref, resources["destination_host"], datastore_ref, resources["resource_pool"]
