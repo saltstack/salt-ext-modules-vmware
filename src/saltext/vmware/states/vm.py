@@ -62,6 +62,21 @@ def set_boot_manager(
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    .. code-block:: yaml
+
+        Set Boot Manager:
+          vmware_vm.set_boot_manager:
+            - name: vm01
+            - boot_order:
+                - cdrom
+                - disk
+                - ethernet
+            - delay: 5000
+            - enter_bios_setup: False
+            - retry_enabled: True
+            - retry_delay: 5000
+            - efi_secure_boot_enabled: False
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -123,6 +138,17 @@ def snapshot_present(
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    .. code-block:: yaml
+
+        Create Snapshot:
+          vmware_vm.snapshot_present:
+            - name: vm01
+            - snapshot_name: backup_snapshot_1
+            - description: This snapshot is a backup of vm01
+            - include_memory: False
+            - quiesce: True
+            - datacenter_name: dc1
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -184,6 +210,16 @@ def snapshot_absent(
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    .. code-block:: yaml
+
+        Remove Snapshot:
+          vmware_vm.snapshot_present:
+            - name: vm01
+            - snapshot_name: backup_snapshot_1
+            - snapshot_id: 1
+            - remove_children: False
+            - datacenter_name: dc1
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -232,6 +268,14 @@ def relocate(name, new_host_name, datastore_name, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+    
+    .. code-block:: yaml
+
+        Relocate Virtual Machine:
+          vmware_vm.relocate:
+            - name: vm01
+            - new_host_name: host1
+            - datastore_name: ds01
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
