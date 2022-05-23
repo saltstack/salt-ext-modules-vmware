@@ -110,6 +110,7 @@ def power_state(
     force
         Force power state transition. Default: True
 
+    CLI Example:
 
     .. code-block:: bash
 
@@ -179,6 +180,8 @@ def manage_service(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional)
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -256,6 +259,8 @@ def list_services(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.list_services
@@ -328,6 +333,8 @@ def get_acceptance_level(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_acceptance_level
@@ -394,6 +401,8 @@ def set_acceptance_level(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_acceptance_level
@@ -458,6 +467,8 @@ def get_advanced_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_advanced_config
@@ -512,6 +523,8 @@ def set_advanced_configs(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -600,6 +613,8 @@ def set_advanced_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_advanced_config config_name=Annotations.WelcomeMessage config_value=Hello
@@ -645,6 +660,8 @@ def get_firewall_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -729,6 +746,8 @@ def backup_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt * vmware_esxi.backup_config host_name=10.225.0.53 http_opts='{"verify_ssl": False}'
@@ -802,6 +821,8 @@ def restore_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -883,6 +904,8 @@ def reset_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.reset_config
@@ -944,6 +967,8 @@ def get_dns_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_dns_config
@@ -996,6 +1021,8 @@ def get_ntp_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1053,6 +1080,8 @@ def list_hosts(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.list_hosts
@@ -1109,6 +1138,8 @@ def add_user(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1172,6 +1203,8 @@ def update_user(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.update_user user_name=foo password=bar@123 descripton="existing user"
@@ -1225,6 +1258,8 @@ def remove_user(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1367,6 +1402,8 @@ def create_vmkernel_adapter(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1594,6 +1631,8 @@ def get_vmkernel_adapters(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_vmkernel_adapters adapter_name=vmk0 datacenter_name=dc1 cluster_name=cl1 host_name=host1
@@ -1731,6 +1770,8 @@ def update_vmkernel_adapter(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.update_vmkernel_adapter dvswitch_name=dvs1 mtu=2000
@@ -1805,6 +1846,8 @@ def delete_vmkernel_adapter(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.delete_vmkernel_adapter name=vmk1
@@ -1857,6 +1900,8 @@ def get_user(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1923,6 +1968,8 @@ def add_role(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.add_role role_name=foo privileges=['Folder.Create']
@@ -1966,6 +2013,8 @@ def update_role(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2011,6 +2060,8 @@ def remove_role(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.remove_role role_name=foo
@@ -2051,6 +2102,8 @@ def get_role(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_role role_name=foo
@@ -2086,6 +2139,8 @@ def connect(host, service_instance=None):
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.connect host=host01
@@ -2108,6 +2163,8 @@ def disconnect(host, service_instance=None):
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.disconnect host=host01
@@ -2129,6 +2186,8 @@ def remove(host, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2154,6 +2213,8 @@ def move(host, cluster_name, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2204,6 +2265,8 @@ def add(
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.add host=host01 root_user=root password=CorrectHorseBatteryStaple cluster_name=cl1 datacenter_name=dc1 verify_host_cert=False connect=True
@@ -2249,6 +2312,8 @@ def list_pkgs(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2333,6 +2398,8 @@ def get(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2423,6 +2490,8 @@ def in_maintenance_mode(host, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.in_maintenance_mode '192.0.2.117'
@@ -2470,6 +2539,8 @@ def maintenance_mode(
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.maintenance_mode '192.0.2.117'
@@ -2513,6 +2584,8 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.exit_maintenance_mode '192.0.2.117'
@@ -2548,6 +2621,8 @@ def in_lockdown_mode(host, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.in_lockdown_mode '192.0.2.117'
@@ -2576,6 +2651,8 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2613,6 +2690,8 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
