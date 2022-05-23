@@ -257,6 +257,8 @@ def configure(
     advanced_settings
         Advanced options for the cluster, to be passed in as a dictionary.
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_cluster_ha.configure cluster1 dc1 enable=True
@@ -328,6 +330,8 @@ def get(cluster_name, datacenter_name, service_instance=None):
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
