@@ -376,7 +376,7 @@ def boot_manager(
 
     .. code-block:: bash
 
-        salt '*' vmware_vm.boot_manager vm01 order='["cdrom", "disk", "ethernet"]' delay=10 enter_bios_setup=False retry_delay=5000 efi_secure_boot_enabled=False
+        salt '*' vmware_vm.boot_manager vm01 order='["cdrom", "disk", "ethernet"]' delay=5000 enter_bios_setup=False retry_delay=5000 efi_secure_boot_enabled=False
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
