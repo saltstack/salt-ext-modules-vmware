@@ -33,6 +33,8 @@ def list_(service_instance=None):
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_vm.list
@@ -48,6 +50,8 @@ def list_templates(service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -67,6 +71,8 @@ def path(vm_name, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references.
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -146,6 +152,8 @@ def deploy_ovf(vm_name, host_name, ovf_path, service_instance=None):
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_vm.deploy_ovf vm_name=vm01 host_name=host1 ovf_path=/tmp/appliance.ovf
@@ -171,6 +179,8 @@ def deploy_ova(vm_name, host_name, ova_path, service_instance=None):
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_vm.deploy_ova vm_name=vm01 host_name=host1 ova_path=/tmp/appliance.ova
@@ -195,6 +205,8 @@ def deploy_template(vm_name, template_name, host_name, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -233,6 +245,8 @@ def info(vm_name=None, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -299,6 +313,8 @@ def power_state(vm_name, state, datacenter_name=None, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -374,6 +390,8 @@ def boot_manager(
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_vm.boot_manager vm_name=vm01 order='["cdrom", "disk", "ethernet"]' delay=5000 enter_bios_setup=False retry_delay=5000 efi_secure_boot_enabled=False
@@ -435,6 +453,8 @@ def create_snapshot(
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_vm.create_snapshot vm_name=vm01 snapshot_name=backup_snapshot_1 description="This snapshot is a backup of vm01" include_memory=False quiesce=True datacenter_name=dc1
@@ -488,6 +508,8 @@ def destroy_snapshot(
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_vm.destroy_snapshot vm_name=vm01 snapshot_name=backup_snapshot_1 snapshot_id=1 remove_children=False datacenter_name=dc1
@@ -517,6 +539,8 @@ def snapshot(vm_name, datacenter_name=None, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -553,6 +577,8 @@ def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
 
     .. code-block:: bash
 
