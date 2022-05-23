@@ -268,7 +268,7 @@ def relocate(name, new_host_name, datastore_name, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
-    
+
     .. code-block:: yaml
 
         Relocate Virtual Machine:
