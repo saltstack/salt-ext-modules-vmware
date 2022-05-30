@@ -67,12 +67,12 @@ def test_sddc_clusters_smoke_test(salt_call_cli, list_sddc_clusters, common_data
         cluster_id = result_as_json["clusters"][existing_clusters - 1]["cluster_id"]
 
         # delete SDDC cluster
-        ret = salt_call_cli.run("vmc_sddc_clusters.delete", cluster_id, **common_data)
+        ret = salt_call_cli.run("vmc_sddc_clusters.delete", cluster_id=cluster_id, **common_data)
         result_as_json = ret.json
         assert "error" in result_as_json
         assert (
             f"Cluster {cluster_id} is currently not in a state where it can be deleted. Please try once the status is READY or FAILED."
-            == result_as_json["error"]
+            == result_as_json["error"][0]
         )
     else:
         assert "Another cluster creation is in progress" in result_as_json["error"][0]
