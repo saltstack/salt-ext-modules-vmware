@@ -76,12 +76,17 @@ def test_sddc_host_smoke_test(salt_call_cli, get_primary_cluster_id, common_data
         "vmc_sddc_host.manage", action="remove", cluster_id=cluster_id, num_hosts=1, **common_data
     )
     result_as_json = ret.json
-    if existing_hosts > 1:
-        assert "error" not in result_as_json
-        assert result_as_json["status"] == "STARTED"
+
+    if "error" in result_as_json:
+        if existing_hosts > 1:
+            assert (
+                f"ESX delete operation is unsupported on two node cluster {cluster_id}"
+                == result_as_json["error"][0]
+            )
+        else:
+            assert (
+                f"This cluster with id {cluster_id} must have at least 1 hosts."
+                == result_as_json["error"][0]
+            )
     else:
-        assert "error" in result_as_json
-        assert (
-            f"This cluster with id {{cluster_id}} must have at least 1 hosts."
-            == result_as_json["error"][0]
-        )
+        assert result_as_json["status"] == "STARTED"
