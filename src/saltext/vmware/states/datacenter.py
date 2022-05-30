@@ -29,10 +29,9 @@ def present(name):
 
     .. code-block:: yaml
 
-    Create Datacenter:
-      vmware_datacenter.present:
-        - name: dc1
-
+        Create Datacenter:
+          vmware_datacenter.present:
+            - name: dc1
     """
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     dcs = __salt__["vmware_datacenter.list"]()
@@ -61,9 +60,9 @@ def absent(name):
 
     .. code-block:: yaml
 
-    Delete Datacenter:
-      vmware_datacenter.absent:
-        - name: dc1
+        Delete Datacenter:
+          vmware_datacenter.absent:
+            - name: dc1
     """
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     dcs = __salt__["vmware_datacenter.list"]()
