@@ -374,7 +374,7 @@ def add_hosts(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.add_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+        salt '*' vmware_dvswitch.add_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
 
     """
     log.debug("Running vmware_dvswitch.add_hosts")
@@ -459,7 +459,7 @@ def update_hosts(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.update_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
+        salt '*' vmware_dvswitch.update_hosts switch_name=dvs1 host_name=host1 num_ports=256 mtu=1800
 
     """
     log.debug("Running vmware_dvswitch.update_hosts")
