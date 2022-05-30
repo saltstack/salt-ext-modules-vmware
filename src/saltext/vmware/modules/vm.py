@@ -32,6 +32,12 @@ def list_(service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.list
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -44,6 +50,12 @@ def list_templates(service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.list_templates
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -59,6 +71,12 @@ def path(vm_name, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.path vm_name=vm01
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -133,6 +151,12 @@ def deploy_ovf(vm_name, host_name, ovf_path, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.deploy_ovf vm_name=vm01 host_name=host1 ovf_path=/tmp/appliance.ovf
     """
     ovf = utils_vm.read_ovf_file(ovf_path)
     _deploy_ovf(vm_name, host_name, ovf, service_instance)
@@ -154,6 +178,12 @@ def deploy_ova(vm_name, host_name, ova_path, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.deploy_ova vm_name=vm01 host_name=host1 ova_path=/tmp/appliance.ova
     """
     ovf = utils_vm.read_ovf_from_ova(ova_path)
     _deploy_ovf(vm_name, host_name, ovf, service_instance)
@@ -175,6 +205,12 @@ def deploy_template(vm_name, template_name, host_name, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.deploy_template vm_name=vm01 template_name=template1 host_name=host1
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -209,6 +245,12 @@ def info(vm_name=None, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.info vm_name=vm01
     """
     vms = []
     info = {}
@@ -271,6 +313,12 @@ def power_state(vm_name, state, datacenter_name=None, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.power_state vm_name=vm01 state=powered-on datacenter_name=dc1
     """
     log.trace(f"Managing power state of virtual machine {vm_name} to {state}")
     if service_instance is None:
@@ -334,13 +382,19 @@ def boot_manager(
         (boolean, optional) During the next boot, force entry into the BIOS setup screen. Defaults to False.
 
     retry_delay
-        (integer, optional) If the VM fails to find boot device, automatically retry after given milliseconds. Defaults to None, has no effect unless retry_enabled is True.
+        (integer, optional) If the VM fails to find boot device, automatically retry after given milliseconds. Defaults to 0 (do not retry).
 
     efi_secure_boot_enabled
         (boolean, optional) Defaults to False.
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.boot_manager vm_name=vm01 order='["cdrom", "disk", "ethernet"]' delay=5000 enter_bios_setup=False retry_delay=5000 efi_secure_boot_enabled=False
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -398,6 +452,12 @@ def create_snapshot(
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.create_snapshot vm_name=vm01 snapshot_name=backup_snapshot_1 description="This snapshot is a backup of vm01" include_memory=False quiesce=True datacenter_name=dc1
     """
 
     if service_instance is None:
@@ -447,6 +507,12 @@ def destroy_snapshot(
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.destroy_snapshot vm_name=vm01 snapshot_name=backup_snapshot_1 snapshot_id=1 remove_children=False datacenter_name=dc1
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -473,6 +539,12 @@ def snapshot(vm_name, datacenter_name=None, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.snapshot vm_name=vm01 datacenter_name=dc1
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -505,6 +577,12 @@ def relocate(vm_name, new_host_name, datastore_name, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.relocate vm_name=vm01 new_host_name=host1 datastore_name=ds01
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
