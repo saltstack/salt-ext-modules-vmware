@@ -9,10 +9,10 @@ import pytest
 @pytest.fixture
 def vmc_common_data(vmc_connect):
     data = vmc_connect.copy()
-    data.pop("hostname")
     data.pop("sddc_id")
     data.pop("vcenter_hostname")
     data["hostname"] = vmc_connect["authorization_host"]
+    data.pop("authorization_host")
     return data
 
 
@@ -26,8 +26,8 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
     # Add a new user to the org
     user_names = ["test@vmware.com"]
     organization_roles = [
-        {"name": "org_member", "expiresAt": None},
-        {"name": "developer", "expiresAt": None},
+        {"name": "org_member"},
+        {"name": "developer"},
     ]
     ret = salt_call_cli.run(
         "vmc_org_users.add",
