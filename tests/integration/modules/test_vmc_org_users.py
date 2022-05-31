@@ -21,7 +21,6 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
     ret = salt_call_cli.run("vmc_org_users.list", **vmc_common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
-    existing_org_users = len(result_as_json["results"])
 
     # Add a new user to the org
     user_names = ["test@vmware.com"]
@@ -38,9 +37,18 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
     result_as_json = ret.json
     assert "error" not in result_as_json
 
+    # search the user
+    ret = salt_call_cli.run(
+        "vmc_org_users.search", user_search_term="test@vmware.com", **vmc_common_data
+    )
+    result_as_json = ret.json
+    assert "error" not in result_as_json
+    assert result_as_json["results"] == []
+
     # remove the user from org
-    user_ids = ["test@vmware.com"]
+    user_ids = ["vmware.com:test-123"]
     ret = salt_call_cli.run("vmc_org_users.remove", user_ids=user_ids, **vmc_common_data)
     result_as_json = ret.json
-    assert "error" in result_as_json
-    assert "Failed to get user" in result_as_json["message"]
+    assert "error" not in result_as_json
+    assert result_as_json["succeeded"] == []
+    assert result_as_json["failed"] == user_ids

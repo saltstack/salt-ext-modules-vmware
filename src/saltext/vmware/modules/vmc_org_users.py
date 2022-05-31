@@ -100,7 +100,7 @@ def list_(
         url=api_url,
         refresh_key=refresh_key,
         authorization_host=hostname,
-        description="vmc_org_users.get",
+        description="vmc_org_users.list",
         params=params,
         verify_ssl=verify_ssl,
         cert=cert,
