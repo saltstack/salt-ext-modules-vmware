@@ -23,6 +23,13 @@ create_sddc = {
     "region": "us-west-2",
 }
 
+create_sddc_cluster = {
+    "host_cpu_cores_count": None,
+    "host_instance_type": None,
+    "msft_license_config": None,
+    "num_hosts": 1,
+    "storage_capacity": None,
+}
 
 manage_sddc_host = {
     "availability_zone": None,
