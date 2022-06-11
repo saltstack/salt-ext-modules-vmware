@@ -51,7 +51,6 @@ def present(
     refresh_key,
     authorization_host,
     org_id,
-    sddc_name,
     num_hosts,
     provider,
     region,
@@ -80,13 +79,13 @@ def present(
         The host name of VMC
 
     refresh_key
-        refresh_key to get access token
+         API Token of the user which is used to get the Access Token required for VMC operations
 
     authorization_host
-        hostname to get access token
+        Hostname of the VMC cloud console
 
     org_id
-        org_id of the SDDC
+        The Id of organization to which the SDDC belongs to
 
     sddc_name: String
         (Required) The name of SDDC that will be assigned to new created SDDC
@@ -173,7 +172,8 @@ def present(
 
     """
 
-    sddc_list = __salt__["vmc_sddc.list"](
+    sddc_name = name
+    sddc_list = __salt__["vmc_sddc.list_"](
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -199,7 +199,7 @@ def present(
         log.info("vmc_sddc present is called with test option")
         return vmc_state._create_state_response(
             name=name,
-            comment="SDDC {} would have been {}".format(sddc_name, "created"),
+            comment="SDDC {} would have been created".format(sddc_name),
         )
 
     created_sddc = __salt__["vmc_sddc.create"](
@@ -237,7 +237,7 @@ def present(
 
     return vmc_state._create_state_response(
         name=name,
-        comment="Created SDDC {}".format(sddc_nanme),
+        comment="Created SDDC {}".format(sddc_name),
         new_state=created_sddc,
         result=True,
     )
