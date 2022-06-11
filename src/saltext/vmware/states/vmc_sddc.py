@@ -31,20 +31,6 @@ from saltext.vmware.utils import vmc_state
 log = logging.getLogger(__name__)
 
 
-try:
-    from saltext.vmware.modules import vmc_sddc
-
-    HAS_SDDC = True
-except ImportError:
-    HAS_SDDC = False
-
-
-def __virtual__():
-    if not HAS_SDDC:
-        return False, "'vmc_sddc' binary not found on system"
-    return "vmc_sddc"
-
-
 def present(
     name,
     hostname,
@@ -104,18 +90,21 @@ def present(
         (Optional) The account linking configuration, we will keep this one and remove accountLinkSddcConfig finally.
 
         account_link_config expects to be passed as a dict having delay_account_link parameter
-        delay_account_link: Boolean
+            delay_account_link: Boolean
             (Optional) Boolean flag identifying whether account linking should be delayed or not for the SDDC.
-            {
-                "delay_account_link": false
-            }
+
+            .. code::
+
+                {
+                    "delay_account_link": false
+                }
 
     account_link_sddc_config : List Of AccountLinkSddcConfig
         (Optional) A list of the SDDC linking configurations to use.
 
          AccountLinkSddcConfig has two parameters connected_account_id  and customer_subnet_ids
             connected_account_id:String
-            (Optional)The ID of the customer connected account to work with.
+            (Optional) The ID of the customer connected account to work with.
 
             customer_subnet_ids: Array of String
             (Optional) List of subnet Ids
@@ -140,11 +129,8 @@ def present(
     sddc_type: String
         (Optional)Denotes the sddc type , if the value is null or empty, the type is considered as default.
 
-    size:String
-        (Optional)The size of the vCenter and NSX appliances.
-         “large” sddcSize corresponds to a ‘large’ vCenter appliance and ‘large’ NSX appliance.
-          ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and ‘medium’ NSX appliance.
-          Value defaults to ‘medium’.
+    size: String
+        (Optional) The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter appliance and ‘large’ NSX appliance. ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and ‘medium’ NSX appliance. Value defaults to ‘medium’.
         Possible values are: nsx_small , medium , large , nsx_large
 
     skip_creating_vxlan : Boolean
