@@ -16,20 +16,20 @@ def vmc_common_data(vmc_connect):
     return data
 
 
-def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
+def test_org_users_smoke_test(salt_call_cli, vmc_common_data):
     # get the org users list
     ret = salt_call_cli.run("vmc_org_users.list", **vmc_common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
 
-    # Add a new user to the org
+    # Invite a new user to the org
     user_names = ["test@vmware.com"]
     organization_roles = [
         {"name": "org_member"},
         {"name": "developer"},
     ]
     ret = salt_call_cli.run(
-        "vmc_org_users.add",
+        "vmc_org_users.invite",
         user_names=user_names,
         organization_roles=organization_roles,
         **vmc_common_data,

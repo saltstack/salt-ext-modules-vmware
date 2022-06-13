@@ -183,11 +183,11 @@ def test_assert_list_org_users_should_correctly_filter_args(actual_args, expecte
     assert call_kwargs["params"] == expected_params
 
 
-def test_add_org_user_should_return_api_response(mock_vmc_request_call_api, organization_roles):
-    data = {"message": "User has been added successfully"}
+def test_invite_org_user_should_return_api_response(mock_vmc_request_call_api, organization_roles):
+    data = {"message": "User has been invited successfully"}
     mock_vmc_request_call_api.return_value = data
     assert (
-        vmc_org_users.add(
+        vmc_org_users.invite(
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
@@ -199,10 +199,10 @@ def test_add_org_user_should_return_api_response(mock_vmc_request_call_api, orga
     )
 
 
-def test_add_org_user_called_with_url(organization_roles):
+def test_invite_org_user_called_with_url(organization_roles):
     expected_url = "https://hostname/csp/gateway/am/api/orgs/org_id/invitations"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_org_users.add(
+        vmc_org_users.invite(
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
@@ -271,7 +271,7 @@ def test_add_org_user_called_with_url(organization_roles):
         ),
     ],
 )
-def test_assert_add_org_users_should_correctly_filter_args(
+def test_assert_invite_org_users_should_correctly_filter_args(
     actual_args, expected_payload, organization_roles
 ):
     common_actual_args = {
@@ -284,7 +284,7 @@ def test_assert_add_org_users_should_correctly_filter_args(
     }
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         actual_args.update(common_actual_args)
-        vmc_org_users.add(**actual_args)
+        vmc_org_users.invite(**actual_args)
 
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["data"] == expected_payload
@@ -307,7 +307,7 @@ def test_remove_org_user_should_return_api_response(
     )
 
 
-def test_remove_sddc_called_with_url():
+def test_remove_org_user_called_with_url():
     expected_url = "https://hostname/csp/gateway/am/api/v2/orgs/org_id/users"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         vmc_org_users.remove(
@@ -339,7 +339,7 @@ def test_search_org_user_should_return_api_response(
     )
 
 
-def test_search_sddc_called_with_url():
+def test_search_org_user_called_with_url():
     expected_url = "https://hostname/csp/gateway/am/api/orgs/org_id/users/search"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         vmc_org_users.search(
