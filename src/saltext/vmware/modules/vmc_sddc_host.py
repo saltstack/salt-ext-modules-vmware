@@ -13,6 +13,7 @@ from saltext.vmware.utils import vmc_templates
 log = logging.getLogger(__name__)
 
 __virtualname__ = "vmc_sddc_host"
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -147,9 +148,9 @@ def manage(
     )
 
 
-def get(hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl=True, cert=None):
+def list_(hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl=True, cert=None):
     """
-    Retrieves ESX hosts for the given SDDC
+    Retrieves ESX hosts list for the given SDDC
 
     Please refer the `VMC Get SDDC documentation <https://developer.vmware.com/docs/vmc/latest/vmc/api/orgs/org/sddcs/sddc/get/>`_ to get insight of functionality and input parameters
 
@@ -196,6 +197,9 @@ def get(hostname, refresh_key, authorization_host, org_id, sddc_id, verify_ssl=T
     )
     if "error" in sddc_detail:
         return sddc_detail
-    esx_hosts_details = sddc_detail["resource_config"]["esx_hosts"]
-    result = {"description": "vmc_sddc_host.get", "esx_hosts_details": esx_hosts_details}
+    cluster_list = sddc_detail["resource_config"]["clusters"]
+    esx_hosts_details = []
+    for cluster in cluster_list:
+        esx_hosts_details += cluster["esx_host_list"]
+    result = {"description": "vmc_sddc_host.list_", "esx_hosts": esx_hosts_details}
     return result

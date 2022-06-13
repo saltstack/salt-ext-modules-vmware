@@ -55,7 +55,7 @@ def host_data():
 
 @pytest.fixture
 def hosts_data(host_data):
-    data = {"description": "vmc_sddc_host.get", "esx_hosts_details": host_data}
+    data = {"description": "vmc_sddc_host.list_", "esx_hosts": host_data}
     yield data
 
 
@@ -70,7 +70,41 @@ def sddc_data_by_id(mock_vmc_request_call_api, host_data):
             "vc_url": "https://vcenter.sddc-10-182-155-238.vmwarevmc.com/",
             "cloud_username": "cloudadmin@vmc.local",
             "cloud_password": "Z8OYrQhD-T3v-cw",
-            "esx_hosts": host_data,
+            "clusters": [
+                {
+                    "cluster_id": "e97920ae-1410-4269-9caa-29584eb8cf6d",
+                    "cluster_name": "Cluster-757-1",
+                    "cluster_state": "READY",
+                    "esx_host_list": host_data,
+                    "vsan_witness": None,
+                    "volume_list": None,
+                    "diskgroup_list": None,
+                    "aws_kms_info": None,
+                    "host_cpu_cores_count": 0,
+                    "hyper_threading_enabled": False,
+                    "esx_host_info": {"instance_type": "i3.metal"},
+                    "cluster_capacity": {
+                        "number_of_sockets": 8,
+                        "total_number_of_cores": 144,
+                        "cpu_capacity_ghz": 331.2,
+                        "memory_capacity_gib": 2048,
+                        "number_of_ssds": 32,
+                        "storage_capacity_gib": 42468,
+                    },
+                    "partition_placement_group_info": [
+                        {
+                            "availability_zone": "us-west-2",
+                            "partition_group_names": [
+                                "partition-pg-0-e97920ae-1410-4269-9caa-29584eb8cf6d"
+                            ],
+                        }
+                    ],
+                    "msft_license_config": None,
+                    "wcp_details": None,
+                    "storage_capacity": 42468,
+                }
+            ],
+            "esx_hosts": host_data[0],
         },
         "updated_by_user_id": "e05378ed-7c3d-3bfb-8129-9b5a554b8e50",
         "updated_by_user_name": "Internal-Operator",
@@ -82,7 +116,7 @@ def sddc_data_by_id(mock_vmc_request_call_api, host_data):
 
 
 def test_get_sddc_hosts_should_return_api_response(sddc_data_by_id, hosts_data):
-    result = vmc_sddc_host.get(
+    result = vmc_sddc_host.list_(
         hostname="hostname",
         refresh_key="refresh_key",
         authorization_host="authorization_host",
@@ -96,7 +130,7 @@ def test_get_sddc_hosts_should_return_api_response(sddc_data_by_id, hosts_data):
 def test_get_sddc_hosts_fail_with_error(mock_vmc_request_call_api):
     expected_response = {"error": "Given SDDC does not exist"}
     mock_vmc_request_call_api.return_value = expected_response
-    result = vmc_sddc_host.get(
+    result = vmc_sddc_host.list_(
         hostname="hostname",
         refresh_key="refresh_key",
         authorization_host="authorization_host",
@@ -110,7 +144,7 @@ def test_get_sddc_hosts_fail_with_error(mock_vmc_request_call_api):
 def test_get_sddc_called_with_url():
     expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs/sddc_id"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_sddc_host.get(
+        vmc_sddc_host.list_(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",
