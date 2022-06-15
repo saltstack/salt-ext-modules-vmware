@@ -59,32 +59,32 @@ def present(
     cert=None,
 ):
     """
-    Ensure a given SDDC exists for given org
+    Ensure a given SDDC exists for given organization.
+
+    name
+        The name of SDDC that will be assigned to new created SDDC.
 
     hostname
-        The host name of VMC
+        The host name of VMC.
 
     refresh_key
-         API Token of the user which is used to get the Access Token required for VMC operations
+        API Token of the user which is used to get the Access Token required for VMC operations
 
     authorization_host
-        Hostname of the VMC cloud console
+        Hostname of the VMC cloud console.
 
     org_id
-        The Id of organization to which the SDDC belongs to
+        The ID of organization to which the SDDC belongs to.
 
-    sddc_name: String
-        (Required) The name of SDDC that will be assigned to new created SDDC
-
-    num_hosts: Integer As Int32
-        (Required) Number of hosts in a SDDC
+    num_hosts
+        An integer value to indicate number of hosts in a SDDC.
 
     provider: String
-        (Required) Determines what additional properties are available based on cloud provider.
-        Possible values are: AWS , ZEROCLOUD
+        Determines what additional properties are available based on cloud provider.
+        Possible values are: AWS, ZEROCLOUD
 
     region: String
-        (Required) Aws region where SDDC will be deployed
+        Aws region on which SDDC will be deployed.
 
     account_link_config
         (Optional) The account linking configuration, we will keep this one and remove accountLinkSddcConfig finally.
@@ -99,14 +99,15 @@ def present(
                     "delay_account_link": false
                 }
 
-    account_link_sddc_config : List Of AccountLinkSddcConfig
-        (Optional) A list of the SDDC linking configurations to use.
+    account_link_sddc_config
+        (Optional) A list of the AccountLinkSddcConfig which indicates SDDC linking configurations to use.
 
-         AccountLinkSddcConfig has two parameters connected_account_id  and customer_subnet_ids
-            connected_account_id:String
+        AccountLinkSddcConfig has two parameters connected_account_id  and customer_subnet_ids
+
+        'connected_account_id': String
             (Optional) The ID of the customer connected account to work with.
 
-            customer_subnet_ids: Array of String
+        'customer_subnet_ids': Array of String
             (Optional) List of subnet Ids
 
     deployment_type: String
@@ -130,7 +131,9 @@ def present(
         (Optional)Denotes the sddc type , if the value is null or empty, the type is considered as default.
 
     size: String
-        (Optional) The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter appliance and ‘large’ NSX appliance. ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and ‘medium’ NSX appliance. Value defaults to ‘medium’.
+        (Optional) The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter
+        appliance and ‘large’ NSX appliance. ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and
+        ‘medium’ NSX appliance. Value defaults to ‘medium’.
         Possible values are: nsx_small , medium , large , nsx_large
 
     skip_creating_vxlan : Boolean
@@ -140,7 +143,8 @@ def present(
         (Optional) The SSO domain name to use for vSphere users. If not specified, vmc.local will be used.
 
     storage_capacity:  Integer As Int64
-        (Optional) The storage capacity value to be requested for the sddc primary cluster, in GiBs. If provided, instead of using the direct-attached storage, a capacity value amount of seperable storage will be used.
+        (Optional) The storage capacity value to be requested for the sddc primary cluster, in GiBs. If provided,
+        instead of using the direct-attached storage, a capacity value amount of seperable storage will be used.
 
     vpc_cidr
         (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported.
@@ -156,10 +160,46 @@ def present(
         (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
 
+    For example:
+
+        .. code::
+
+            {
+                "account_link_config": {
+                    "delay_account_link": false
+                },
+                "account_link_sddc_config": [
+                    {
+                        "connected_account_id": "string",
+                        "customer_subnet_ids": [
+                            "string"
+                        ]
+                    }
+                ],
+                "deployment_type": "SingleAZ",
+                "host_instance_type": "i3.metal",
+                "msft_license_config": {
+                    "mssql_licensing": "string",
+                    "windows_licensing": "string"
+                },
+                "sddc_name": "Salt-SDDC-1",
+                "num_hosts": 0,
+                "provider": "ZEROCLOUD",
+                "sddc_id": "string-UUID",
+                "sddc_template_id": "string",
+                "sddc_type": "OneNode",
+                "size": "medium",
+                "skip_creating_vxlan": false,
+                "sso_domain": "string",
+                "storage_capacity": 1,
+                "vpc_cidr": "string",
+                "vxlan_subnet": "string",
+                "region": "us-west-2"
+            }
     """
 
     sddc_name = name
-    sddc_list = __salt__["vmc_sddc.list_"](
+    sddc_list = __salt__["vmc_sddc.list"](
         hostname=hostname,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
@@ -171,7 +211,7 @@ def present(
     if "error" in sddc_list:
         return vmc_state._create_state_response(
             name=name,
-            comment="Failed to get SDDC for given org : {}".format(sddc_list["error"]),
+            comment="Failed to get SDDCs for given org : {}".format(sddc_list["error"]),
             result=False,
         )
 
@@ -243,26 +283,27 @@ def absent(
 ):
 
     """
-    Ensure a given SDDC does not exist for the given org
+    Ensure a given SDDC does not exist for the given organization.
 
     name
-        Indicates the SDDC id, UUID identifying the SDDC.
+        Indicates the SDDC ID, UUID identifying the SDDC.
 
     hostname
-        The host name of VMC
+        The host name of VMC.
 
     refresh_key
-        API Token of the user which is used to get the Access Token required for VMC operations
+        API Token of the user which is used to get the Access Token required for VMC operations.
 
     authorization_host
-        Hostname of the VMC cloud console
+        Hostname of the VMC cloud console.
 
     org_id
-        The Id of organization to which the SDDC belongs to
+        The ID of organization to which the SDDC belongs to.
 
     force_delete: Boolean
         (Optional) If = true, will delete forcefully.
-        Beware: do not use the force flag if there is a chance an active provisioning or deleting task is running against this SDDC. This option is restricted.
+        Beware: do not use the force flag if there is a chance an active provisioning or deleting task is running
+        against this SDDC. This option is restricted.
 
     retain_configuration: Boolean
         (Optional) If = 'true', the SDDC's configuration is retained as a template for later use.
@@ -298,6 +339,9 @@ def absent(
                 name=name, comment=vmc_sddc["error"], result=False
             )
 
+    if vmc_sddc.get("sddc_state") in ("DELETED", "DELETION_IN_PROGRESS"):
+        vmc_sddc = None
+
     if __opts__.get("test"):
         log.info("vmc_sddc.absent is called with test option")
         if vmc_sddc:
@@ -308,7 +352,9 @@ def absent(
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will do nothing as no SDDC found with ID {}".format(sddc_id),
+                comment="State absent will do nothing as no SDDC found with ID {} or deletion is already in progress".format(
+                    sddc_id
+                ),
             )
 
     if vmc_sddc:
@@ -338,9 +384,9 @@ def absent(
             result=True,
         )
     else:
-        log.info("No SDDC found with ID %s", sddc_id)
+        log.info("No SDDC found with ID %s or deletion is already in progress.", sddc_id)
         return vmc_state._create_state_response(
             name=name,
-            comment="No SDDC found with ID {}".format(sddc_id),
+            comment="No SDDC found with ID {} or deletion is already in progress".format(sddc_id),
             result=True,
         )
