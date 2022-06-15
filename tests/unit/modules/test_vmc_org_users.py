@@ -138,29 +138,42 @@ def test_list_org_users_called_with_url():
             {},
             {},
         ),
-        # all actual args have few param values
+        # all actual args have few param values with expand_profile as True and include_group_ids_in_roles as False
         (
             {
-                "expand_profile": "00012",
+                "expand_profile": True,
+                "include_group_ids_in_roles": False,
                 "page_limit": 30,
             },
             {
-                "expandProfile": "00012",
+                "expandProfile": True,
+                "pageLimit": 30,
+            },
+        ),
+        # all actual args have few param values with expand_profile as False and include_group_ids_in_roles as True
+        (
+            {
+                "expand_profile": False,
+                "include_group_ids_in_roles": True,
+                "page_limit": 30,
+            },
+            {
+                "includeGroupIdsInRoles": True,
                 "pageLimit": 30,
             },
         ),
         # all actual args have all possible params
         (
             {
-                "expand_profile": "00012",
-                "include_group_ids_in_roles": "group_id",
+                "expand_profile": True,
+                "include_group_ids_in_roles": True,
                 "page_limit": 30,
                 "page_start": 1,
                 "service_definition_id": "service_definition_id",
             },
             {
-                "expandProfile": "00012",
-                "includeGroupIdsInRoles": "group_id",
+                "expandProfile": True,
+                "includeGroupIdsInRoles": True,
                 "pageLimit": 30,
                 "pageStart": 1,
                 "serviceDefinitionId": "service_definition_id",
@@ -352,3 +365,63 @@ def test_search_org_user_called_with_url():
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["url"] == expected_url
     assert call_kwargs["method"] == vmc_constants.GET_REQUEST_METHOD
+
+
+@pytest.mark.parametrize(
+    "actual_args, expected_params",
+    [
+        # all actual args are None
+        (
+            {},
+            {"userSearchTerm": "us"},
+        ),
+        # args having expand_profile as True and include_group_ids_in_roles as False
+        (
+            {
+                "expand_profile": True,
+                "include_group_ids_in_roles": False,
+            },
+            {
+                "expandProfile": True,
+                "userSearchTerm": "us",
+            },
+        ),
+        # args having expand_profile as False and include_group_ids_in_roles as True
+        (
+            {
+                "expand_profile": False,
+                "include_group_ids_in_roles": True,
+            },
+            {
+                "includeGroupIdsInRoles": True,
+                "userSearchTerm": "us",
+            },
+        ),
+        # args having both expand_profile and include_group_ids_in_roles as True
+        (
+            {
+                "expand_profile": True,
+                "include_group_ids_in_roles": True,
+            },
+            {
+                "expandProfile": True,
+                "includeGroupIdsInRoles": True,
+                "userSearchTerm": "us",
+            },
+        ),
+    ],
+)
+def test_assert_search_org_users_should_correctly_filter_args(actual_args, expected_params):
+    common_actual_args = {
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "org_id": "org_id",
+        "user_search_term": "us",
+        "verify_ssl": False,
+    }
+    with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
+        actual_args.update(common_actual_args)
+        vmc_org_users.search(**actual_args)
+
+    call_kwargs = vmc_call_api.mock_calls[0][-1]
+    assert call_kwargs["params"] == expected_params

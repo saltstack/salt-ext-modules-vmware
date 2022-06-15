@@ -22,8 +22,8 @@ def list_(
     hostname,
     refresh_key,
     org_id,
-    expand_profile=None,
-    include_group_ids_in_roles=None,
+    expand_profile=False,
+    include_group_ids_in_roles=False,
     page_limit=None,
     page_start=None,
     service_definition_id=None,
@@ -50,13 +50,11 @@ def list_(
     org_id
         The ID of organization for which user list is retrieved.
 
-    expand_profile: String
-        (Optional) Indicates if the response should be expanded with the user profile, the value is ignored,
-        only the existence of parameter is checked.
+    expand_profile
+        (Optional) A boolean value to indicate if the response should be expanded with the user profile.
 
-    include_group_ids_in_roles: String
-        (Optional) Indicates if the inherited roles in the response should indicate group information, the value is
-        ignored, only the existence of parameter is checked.
+    include_group_ids_in_roles
+        (Optional) A boolean value to indicate if the inherited roles in the response should indicate group information.
 
     page_limit: Integer
         (Optional) Maximum number of users to return in response.
@@ -83,14 +81,14 @@ def list_(
         base_url=api_base_url, org_id=org_id
     )
 
+    allowed_kwargs = ["serviceDefinitionId", "pageStart", "pageLimit"]
+    if expand_profile == True:
+        allowed_kwargs.append("expandProfile")
+    if include_group_ids_in_roles == True:
+        allowed_kwargs.append("includeGroupIdsInRoles")
+
     params = vmc_request._filter_kwargs(
-        allowed_kwargs=[
-            "expandProfile",
-            "includeGroupIdsInRoles",
-            "serviceDefinitionId",
-            "pageStart",
-            "pageLimit",
-        ],
+        allowed_kwargs=allowed_kwargs,
         expandProfile=expand_profile,
         includeGroupIdsInRoles=include_group_ids_in_roles,
         serviceDefinitionId=service_definition_id,
@@ -110,7 +108,14 @@ def list_(
 
 
 def search(
-    hostname, refresh_key, org_id, user_search_term, expand_profile=None, verify_ssl=True, cert=None
+    hostname,
+    refresh_key,
+    org_id,
+    user_search_term,
+    expand_profile=False,
+    include_group_ids_in_roles=False,
+    verify_ssl=True,
+    cert=None,
 ):
     """
     Search users in organization having username, firstName, lastName or email which "contains" search term.
@@ -140,9 +145,11 @@ def search(
     user_search_term
         The string to be searched within email or firstName or lastName or username.
 
-    expand_profile: String
-        (Optional) Indicates if the response should be expanded with the user profile, the value is ignored,
-        only the existence of parameter is checked.
+    expand_profile
+        (Optional) A boolean value to indicate if the response should be expanded with the user profile.
+
+    include_group_ids_in_roles
+        (Optional) A boolean value to indicate if the inherited roles in the response should indicate group information.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -160,10 +167,17 @@ def search(
         base_url=api_base_url, org_id=org_id
     )
 
+    allowed_kwargs = ["userSearchTerm"]
+    if expand_profile == True:
+        allowed_kwargs.append("expandProfile")
+    if include_group_ids_in_roles == True:
+        allowed_kwargs.append("includeGroupIdsInRoles")
+
     params = vmc_request._filter_kwargs(
-        allowed_kwargs=["userSearchTerm", "expandProfile"],
+        allowed_kwargs=allowed_kwargs,
         userSearchTerm=user_search_term,
         expandProfile=expand_profile,
+        includeGroupIdsInRoles=include_group_ids_in_roles,
     )
 
     return vmc_request.call_api(
@@ -392,6 +406,13 @@ def invite(
                     "string"
                 ]
             }
+
+        CLI Example:
+
+          .. code-block:: bash
+
+              salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id="1234" refresh_key="J05AftDxW" user_names='["abc@example.com"]' organization_roles='[{"name": "org_member"},{"name": "developer"}]' service_roles='[{"serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_", "serviceRoles": [{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}]}]' verify_ssl=false
+
     """
 
     log.info("Adding a user in the org %s", org_id)
