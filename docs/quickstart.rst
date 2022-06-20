@@ -58,8 +58,8 @@ with your vSphere. You'll need to set the config values in one of the following 
 * pillar file (default: ``/srv/pillar``)
 * environment variables - this is more for one-off ``salt-call --local``
   statements, and not recommended for general use. But if you really want to,
-  ``VMWARE_CONFIG_HOST``, ``VMWARE_CONFIG_PASSWORD``, and
-  ``VMWARE_CONFIG_USER`` are the names.
+  ``SALTEXT_VMWARE_HOST``, ``SALTEXT_VMWARE_PASSWORD``, and
+  ``SALTEXT_VMWARE_USER`` are the names.
 
 .. note::
 
@@ -129,7 +129,7 @@ Setting the minion ID will allow for easier targeting in the pillar top file.
 .. code:: yaml
 
     # srv/pillar/my_vsphere_conf.sls
-    vmware_config:
+    saltext.vmware:
       host: 203.0.113.42
       password: VMware1!
       user: adminstrator@vsphere.local
@@ -141,7 +141,7 @@ Verify that your config is correct by running
     $ salt-call pillar.items
     local:
         ----------
-        vmware_config:
+        saltext.vmware:
             ----------
             host:
                 203.0.113.42

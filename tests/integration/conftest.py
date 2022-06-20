@@ -75,7 +75,7 @@ def integration_test_config():
 def service_instance(integration_test_config):
     config = integration_test_config
     try:
-        si = get_service_instance(config={"vmware_config": config.copy()} if config else None)
+        si = get_service_instance(config={"saltext.vmware": config.copy()} if config else None)
         return si
     except Exception as e:  # pylint: disable=broad-except
         pytest.skip(f"Unable to create service instance from config. Error = {e}")
@@ -352,7 +352,7 @@ def nsxt_config():
 def vmware_conf(integration_test_config):
     config = integration_test_config
     return {
-        "vmware_config": {
+        "saltext.vmware": {
             "host": config["host"],
             "password": config["password"],
             "user": config["user"],
