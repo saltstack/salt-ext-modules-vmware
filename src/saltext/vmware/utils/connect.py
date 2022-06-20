@@ -25,9 +25,9 @@ log = logging.getLogger(__name__)
 
 def get_config(config, profile=None, esxi_host=None):
     if profile:
-        credentials = config.get("vmware_config", {})[profile]
+        credentials = (config.get("saltext.vmware", {}) or config.get("vmware_config"))[profile]
     else:
-        credentials = config.get("vmware_config", {})
+        credentials = config.get("saltext.vmware") or config.get("vmware_config", {})
 
     if esxi_host:
         host = os.environ.get("VMWARE_CONFIG_HOST") or credentials.get("esxi_host", {}).get("host")
