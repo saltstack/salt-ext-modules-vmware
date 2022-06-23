@@ -88,6 +88,8 @@ def configure(
     profile
         Profile to use (optional)
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_cluster_drs.configure cluster1 dc1 enable=True
@@ -132,8 +134,11 @@ def get(cluster_name, datacenter_name, service_instance=None, profile=None):
 
     .. code-block:: bash
 
-    salt '*' vmware_cluster_drs.get cluster_name=cl1 datacenter_name=dc1
+    CLI Example:
 
+    .. code-block:: bash
+
+        salt '*' vmware_cluster_drs.get cluster_name=cl1 datacenter_name=dc1
     """
     ret = {}
     if service_instance is None:
@@ -191,10 +196,16 @@ def vm_affinity_rule(
         (optional, boolean) Sets whether the rule being created is mandatory. Defaults to False.
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        (optional) The Service Instance from which to obtain managed object references.
 
     profile
         Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_cluster_drs.vm_affinity_rule name="Example Anti-Affinity Rule" affinity=False vm_names='["vm1", "vm2"]' cluster_name=cl1 datacenter_name=dc1 mandatory=True
     """
     log.debug(f"Configuring a vm to vm DRS rule {name} on cluster {cluster_name}.")
     if service_instance is None:
@@ -254,10 +265,16 @@ def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=No
         (optional) Return only the rule with rule_name
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        (optional) The Service Instance from which to obtain managed object references.
 
     profile
         Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_cluster_drs.rule_info cluster_name=cl1 datacenter_name=dc1
     """
     log.debug(f"Getting rules info on cluster {cluster_name}.")
     if service_instance is None:

@@ -70,10 +70,16 @@ def get(hostname, switch_name=None, service_instance=None, profile=None):
         The vswitch name (optional).
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        Use this vCenter service connection instance instead of creating a new one (optional).
 
     profile
         Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vswitch.get hostname=host1 switch_name=vSwitch1
     """
     ret = []
     for vswitch in _get(
@@ -121,10 +127,16 @@ def add(
         Number of ports to allocate on the virtual switch.
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        Use this vCenter service connection instance instead of creating a new one (optional).
 
     profile
         Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vswitch.add switch_name=vSwitch0 hostname=host1 mtu=1500, nics='["vmnic0", "vmnic1"]', num_ports=256
     """
     if not service_instance:
         service_instance = get_service_instance(config=__salt__, profile=profile)
@@ -153,10 +165,16 @@ def remove(switch_name, hostname, service_instance=None, profile=None):
         The hostname where the switch exists.
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        Use this vCenter service connection instance instead of creating a new one (optional).
 
     profile
         Profile to use (optional)
+        
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vswitch.remove switch_name=vSwitch0 host_name=host1
     """
     if not service_instance:
         service_instance = get_service_instance(config=__salt__, profile=profile)

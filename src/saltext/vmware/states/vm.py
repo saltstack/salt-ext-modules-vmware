@@ -62,10 +62,25 @@ def set_boot_manager(
         (boolean, optional) Defaults to False.
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        (optional) The Service Instance from which to obtain managed object references.
 
     profile
         Profile to use (optional)
+        
+    .. code-block:: yaml
+
+        Set Boot Manager:
+          vmware_vm.set_boot_manager:
+            - name: vm01
+            - boot_order:
+                - cdrom
+                - disk
+                - ethernet
+            - delay: 5000
+            - enter_bios_setup: False
+            - retry_enabled: True
+            - retry_delay: 5000
+            - efi_secure_boot_enabled: False
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(config=__salt__, profile=profile)
@@ -127,10 +142,22 @@ def snapshot_present(
         (optional) The name of the datacenter containing the virtual machine.
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        (optional) The Service Instance from which to obtain managed object references.
 
-    profile
+     profile
         Profile to use (optional)
+        
+
+    .. code-block:: yaml
+
+        Create Snapshot:
+          vmware_vm.snapshot_present:
+            - name: vm01
+            - snapshot_name: backup_snapshot_1
+            - description: This snapshot is a backup of vm01
+            - include_memory: False
+            - quiesce: True
+            - datacenter_name: dc1
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(config=__salt__, profile=profile)
@@ -192,10 +219,20 @@ def snapshot_absent(
         (optional) The name of the datacenter containing the virtual machine.
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        (optional) The Service Instance from which to obtain managed object references.
 
     profile
         Profile to use (optional)
+
+    .. code-block:: yaml
+
+        Remove Snapshot:
+          vmware_vm.snapshot_present:
+            - name: vm01
+            - snapshot_name: backup_snapshot_1
+            - snapshot_id: 1
+            - remove_children: False
+            - datacenter_name: dc1
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(config=__salt__, profile=profile)
@@ -243,10 +280,18 @@ def relocate(name, new_host_name, datastore_name, service_instance=None, profile
         The name of the datastore you want to move the virtual machine to.
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one. (optional).
+        (optional) The Service Instance from which to obtain managed object references.
 
     profile
         Profile to use (optional)
+
+    .. code-block:: yaml
+
+        Relocate Virtual Machine:
+          vmware_vm.relocate:
+            - name: vm01
+            - new_host_name: host1
+            - datastore_name: ds01
     """
     if service_instance is None:
         service_instance = connect.get_service_instance(config=__salt__, profile=profile)

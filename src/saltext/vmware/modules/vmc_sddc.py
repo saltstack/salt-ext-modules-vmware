@@ -11,13 +11,14 @@ from saltext.vmware.utils import vmc_vcenter_request
 log = logging.getLogger(__name__)
 
 __virtualname__ = "vmc_sddc"
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
     return __virtualname__
 
 
-def get(
+def list_(
     hostname,
     refresh_key,
     authorization_host,
@@ -35,7 +36,7 @@ def get(
 
     .. code-block:: bash
 
-        salt minion-key-id vmc_sddc.get hostname=vmc.vmware.com  ...
+        salt <minion id> vmc_sddc.get hostname=vmc.vmware.com  ...
 
     hostname
         The host name of VMC
@@ -75,7 +76,7 @@ def get(
         url=api_url,
         refresh_key=refresh_key,
         authorization_host=authorization_host,
-        description="vmc_sddc.get",
+        description="vmc_sddc.list_",
         params=params,
         verify_ssl=verify_ssl,
         cert=cert,
@@ -94,7 +95,7 @@ def get_by_id(
 
     .. code-block:: bash
 
-        salt minion-key-id vmc_sddc.get_by_id hostname=vmc.vmware.com sddc_id=sddc_id...
+        salt <minion id> vmc_sddc.get_by_id hostname=vmc.vmware.com sddc_id=sddc_id...
 
     hostname
         The host name of VMC
@@ -172,7 +173,7 @@ def create(
 
     .. code-block:: bash
 
-        salt minion-key-id vmc_sddc.create hostname=vmc.vmware.com ...
+        salt <minion id> vmc_sddc.create hostname=vmc.vmware.com ...
 
     hostname
         The host name of VMC
@@ -370,7 +371,7 @@ def delete(
 
     .. code-block:: bash
 
-        salt minion-key-id vmc_sddc.delete hostname=vmc.vmware.com sddc_id=sddc_id ...
+        salt <minion id> vmc_sddc.delete hostname=vmc.vmware.com sddc_id=sddc_id ...
 
     hostname
         The host name of VMC
@@ -451,7 +452,7 @@ def update_name(
 
     .. code-block:: bash
 
-        salt minion-key-id vmc_sddc.update_name hostname=vmc.vmware.com sddc_id ...
+        salt <minion id> vmc_sddc.update_name hostname=vmc.vmware.com sddc_id ...
 
     hostname
         The host name of VMC
@@ -511,7 +512,7 @@ def get_vcenter_detail(
 
     .. code-block:: bash
 
-        salt minion-key-id vmc_sddc.get_vcenter_detail hostname=vmc.vmware.com sddc_id ...
+        salt <minion id> vmc_sddc.get_vcenter_detail hostname=vmc.vmware.com sddc_id ...
 
     hostname
         The host name of VMC
@@ -579,7 +580,7 @@ def get_vms(
 
     .. code-block:: bash
 
-        salt <minion-key-id> vmc_sddc.get_vms hostname=vmc.vmware.com ...
+        salt <minion id> vmc_sddc.get_vms hostname=vmc.vmware.com ...
 
     hostname
         The host name of vCenter console
@@ -687,7 +688,7 @@ def get_vms_by_sddc_id(
 
     .. code-block:: bash
 
-        salt minion-key-id vm_minion vmc_sddc.get_vms_by_sddc_id hostname=vmc.vmware.com sddc_id ...
+        salt <minion id> vm_minion vmc_sddc.get_vms_by_sddc_id hostname=vmc.vmware.com sddc_id ...
 
     hostname
         The host name of VMC
@@ -725,8 +726,6 @@ def get_vms_by_sddc_id(
     username = vcenter_detail["username"]
     password = vcenter_detail["password"]
 
-    api_url = "{base_url}api/vcenter/vm"
-    api_url = api_url.format(base_url=vcenter_url)
     vcenter_hostname = vcenter_url[8 : len(vcenter_url) - 1]
     return get_vms(
         hostname=vcenter_hostname,
