@@ -339,7 +339,7 @@ def absent(
                 name=name, comment=vmc_sddc["error"], result=False
             )
 
-    if vmc_sddc.get("sddc_state") in ("DELETED", "DELETION_IN_PROGRESS"):
+    if vmc_sddc.get("sddc_state") in ("DEPLOYING", "DELETED", "DELETION_IN_PROGRESS"):
         vmc_sddc = None
 
     if __opts__.get("test"):
@@ -352,7 +352,7 @@ def absent(
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will do nothing as no SDDC found with ID {} or deletion is already in progress".format(
+                comment="State absent will do nothing as no SDDC found with ID {} or deletion is already in progress or SDDC is still deploying".format(
                     sddc_id
                 ),
             )
