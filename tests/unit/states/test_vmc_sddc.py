@@ -432,7 +432,9 @@ def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
     assert result["changes"] == {}
     assert result[
         "comment"
-    ] == "No SDDC found with ID {} or deletion is already in progress".format(sddc_id)
+    ] == "No SDDC found with ID {} or deletion is already in progress or SDDC is still deploying".format(
+        sddc_id
+    )
     assert result["result"]
 
 
@@ -491,7 +493,7 @@ def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_i
     assert len(result["changes"]) == 0
     assert result[
         "comment"
-    ] == "State absent will do nothing as no SDDC found with ID {} or deletion is already in progress".format(
+    ] == "State absent will do nothing as no SDDC found with ID {} or deletion is already in progress or SDDC is still deploying".format(
         sddc_id
     )
     assert result["result"] is None

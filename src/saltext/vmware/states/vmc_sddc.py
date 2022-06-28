@@ -384,9 +384,14 @@ def absent(
             result=True,
         )
     else:
-        log.info("No SDDC found with ID %s or deletion is already in progress.", sddc_id)
+        log.info(
+            "No SDDC found with ID %s or deletion is already in progress or SDDC is still deploying.",
+            sddc_id,
+        )
         return vmc_state._create_state_response(
             name=name,
-            comment="No SDDC found with ID {} or deletion is already in progress".format(sddc_id),
+            comment="No SDDC found with ID {} or deletion is already in progress or SDDC is still deploying".format(
+                sddc_id
+            ),
             result=True,
         )
