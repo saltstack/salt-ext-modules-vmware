@@ -349,7 +349,7 @@ def mocked_ok_response():
             "vswitch_name": "vSwitch0",
             "sddc_desired_state": True,
         },
-        "sddc_state": "DELETED",
+        "sddc_state": "ACTIVE",
         "sddc_access_state": "ENABLED",
         "account_link_state": None,
         "sddc_type": "1NODE",
@@ -372,65 +372,6 @@ def mocked_error_response():
 @pytest.fixture
 def configure_loader_modules():
     return {vmc_sddc: {}}
-
-
-# def test_present_test_mode():
-#     """
-#     Test to create SDDC
-#     """
-#     ret = {"name": "create-sddc", "result": None, "comment": "", "changes": {}}
-#     mock_get_sddc_list = MagicMock(return_value=_sddcs_data)
-#     with patch.dict(
-#             vmc_sddc_exec.__salt__,
-#             {
-#                 "vmc_sddc.get": mock_get_sddc_list
-#             }):
-#         with patch.dict(vmc_sddc.__opts__, {"test": True}):
-#             ret["comment"] = "SDDC would be created"
-#             assert vmc_sddc.present("create-sddc", "hostname", "ABCD", "authorization_host",
-#                                               "org_id", "sddc_name",) == ret
-#
-#
-# def test_present_sddc_already_exists():
-#     """
-#     Test when SDDC already exists
-#     """
-#     ret = {"name": "ensure-sddc", "result": None, "comment": "", "changes": {}}
-#     mock_get_sddc_list = MagicMock(return_value=_sddcs_data)
-#     with patch.dict(
-#             vmc_sddc_exec.__salt__,
-#             {
-#                 "vmc_sddc.get": mock_get_sddc_list
-#             }):
-#         ret["result"] = True
-#         ret["comment"] = "SDDC is already present"
-#         assert vmc_sddc.present("ensure-sddc", "hostname", "ABCD", "authorization_host",
-#                                               "org_id", "sddc-123") == ret
-#
-#
-# def test_present_create_new_sddc():
-#     """
-#     Test to create new SDDC on VMC when SDDC is not present already
-#     """
-#     ret = {"name": "create-sddc", "result": None, "comment": "", "changes": {}}
-#     # notice the sddc name value in data, it is different from what is being passed
-#     mock_get_sddc_list = MagicMock(side_effect=[_sddc_data, _sddcs_data])
-#     create_sddc_data = {'message': 'SDDC created successfully'}
-#     mock_create_sddc = MagicMock(return_value=create_sddc_data)
-#     with patch.dict(
-#             vmc_sddc_exec.__salt__,
-#             {
-#                 "vmc_sddc.get": mock_get_sddc_list,
-#                 "vmc_sddc.create": mock_create_sddc
-#             }):
-#         ret["result"] = True
-#         ret["comment"] = "SDDC added successfully"
-#         ret["changes"]["old"] = _sddc_data
-#         ret["changes"]["new"] = _sddcs_data
-#         with patch.dict(vmc_sddc.__opts__, {"test": False}):
-#             assert vmc_sddc.present("create-sddc", "hostname", "refresh_key", "authorization_host",
-#                                               "org_id", "sddc-098") == ret
-#
 
 
 def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_response):
@@ -489,7 +430,9 @@ def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
 
     assert result is not None
     assert result["changes"] == {}
-    assert result["comment"] == "No SDDC found with ID {}".format(sddc_id)
+    assert result[
+        "comment"
+    ] == "No SDDC found with ID {} or deletion is already in progress".format(sddc_id)
     assert result["result"]
 
 
@@ -546,7 +489,9 @@ def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_i
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State absent will do nothing as no SDDC found with ID {}".format(
+    assert result[
+        "comment"
+    ] == "State absent will do nothing as no SDDC found with ID {} or deletion is already in progress".format(
         sddc_id
     )
     assert result["result"] is None
@@ -618,7 +563,7 @@ def test_present_state_when_error_from_getting_sddc_list(mocked_ok_response, moc
 
     with patch.dict(
         vmc_sddc.__salt__,
-        {"vmc_sddc.list_": mock_sddc_list},
+        {"vmc_sddc.list": mock_sddc_list},
     ):
         result = vmc_sddc.present(
             name="sddc_name",
@@ -635,7 +580,7 @@ def test_present_state_when_error_from_getting_sddc_list(mocked_ok_response, moc
     assert result["changes"] == {}
     assert (
         result["comment"]
-        == "Failed to get SDDC for given org : The credentials were incorrect or the account specified has been locked."
+        == "Failed to get SDDCs for given org : The credentials were incorrect or the account specified has been locked."
     )
     assert not result["result"]
 
@@ -647,7 +592,7 @@ def test_present_state_when_error_from_create(mocked_error_response):
     with patch.dict(
         vmc_sddc.__salt__,
         {
-            "vmc_sddc.list_": mock_sddc_list,
+            "vmc_sddc.list": mock_sddc_list,
             "vmc_sddc.create": mock_create,
         },
     ):
@@ -679,7 +624,7 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
     with patch.dict(
         vmc_sddc.__salt__,
         {
-            "vmc_sddc.list_": mock_sddc_list,
+            "vmc_sddc.list": mock_sddc_list,
             "vmc_sddc.create": mock_create_response,
         },
     ):
@@ -707,7 +652,7 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
 
     with patch.dict(
         vmc_sddc.__salt__,
-        {"vmc_sddc.list_": mock_sddc_list},
+        {"vmc_sddc.list": mock_sddc_list},
     ):
         with patch.dict(vmc_sddc.__opts__, {"test": True}):
             result = vmc_sddc.present(
@@ -727,75 +672,70 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
     assert result["result"] is None
 
 
-# @pytest.mark.parametrize(
-#     "actual_args",
-#     [
-#         # all actual args are None
-#         ({}),
-#         # allow none have values
-#         ({"tags": [{"tag": "tag1", "scope": "scope1"}]}),
-#         # all args have values
-#         (
-#             {
-#                 "source_groups": ["ANY"],
-#                 "destination_groups": ["ANY"],
-#                 "services": ["HTTPS"],
-#                 "scope": ["ANY"],
-#                 "action": "DROP",
-#                 "sequence_number": 0,
-#                 "disabled": False,
-#                 "logged": False,
-#                 "description": "description",
-#                 "direction": "IN_OUT",
-#                 "notes": "notes",
-#                 "tag": "tag",
-#                 "tags": [{"tag": "tag1", "scope": "scope1"}],
-#             }
-#         ),
-#     ],
-# )
-#
-# # def test_present_state_during_create_should_correctly_pass_args(mocked_ok_response, actual_args):
-#     mock_sddc_list = create_autospec(
-#         vmc_sddc_exec.list_, return_value={}
-#     )
-#     mock_create_response = create_autospec(
-#         vmc_sddc_exec.create, return_value=mocked_ok_response
-#     )
-#
-#     common_actual_args = {
-#         "hostname": "hostname",
-#         "refresh_key": "refresh_key",
-#         "authorization_host": "authorization_host",
-#         "org_id": "org_id",
-#         "sddc_id": "sddc_id",
-#         "verify_ssl": False,
-#     }
-#
-#     mock_create_response.update(actual_args)
-#     actual_args.update(common_actual_args)
-#     mock_create = create_autospec(
-#         vmc_sddc_exec.create, return_value=mock_create_response
-#     )
-#
-#     with patch.dict(
-#         vmc_sddc.__salt__,
-#         {
-#             "vmc_distributed_firewall_rules.get_by_id": mock_sddc_list,
-#             "vmc_distributed_firewall_rules.create": mock_create,
-#         },
-#     ):
-#         result = vmc_sddc.present(
-#             sddc_name=mocked_ok_response["name"], **actual_args
-#         )
-#
-#     call_kwargs = mock_create.mock_calls[0][-1]
-#
-#     subset = {k: v for k, v in call_kwargs.items() if k in actual_args}
-#     assert subset == actual_args
-#
-#     assert result is not None
-#     assert result["changes"]["old"] is None
-#     assert result["changes"]["new"] == mock_create_response
-#     assert result["comment"] == "Created SDDC"
-#     assert result["result"]
+@pytest.mark.parametrize(
+    "actual_args",
+    [
+        # all actual args are None
+        ({}),
+        # all args have values
+        (
+            {
+                "account_link_config": {"delay_account_link": False},
+                "account_link_sddc_config": [
+                    {"connected_account_id": "123", "customer_subnet_ids": ["awx:qee:asd"]}
+                ],
+                "deployment_type": "SingleAZ",
+                "host_instance_type": "i3.metal",
+                "msft_license_config": {"mssql_licensing": "string", "windows_licensing": "string"},
+                "sddc_id": "sddc_id",
+                "sddc_template_id": "temp-123",
+                "sddc_type": "OneNode",
+                "size": "medium",
+                "skip_creating_vxlan": False,
+                "sso_domain": "domain",
+                "storage_capacity": 1,
+                "vpc_cidr": "vpc",
+                "vxlan_subnet": "subnet",
+                "validate_only": False,
+            }
+        ),
+    ],
+)
+def test_present_state_during_create_should_correctly_pass_args(mocked_ok_response, actual_args):
+    mock_sddc_list = create_autospec(vmc_sddc_exec.list_, return_value={})
+    mock_create_response = mocked_ok_response.copy()
+
+    common_actual_args = {
+        "num_hosts": 4,
+        "provider": "ZEROCLOUD",
+        "region": "us-east-1",
+        "hostname": "hostname",
+        "refresh_key": "refresh_key",
+        "authorization_host": "authorization_host",
+        "org_id": "org_id",
+        "verify_ssl": False,
+    }
+
+    mock_create_response.update(actual_args)
+    actual_args.update(common_actual_args)
+    mock_create = create_autospec(vmc_sddc_exec.create, return_value=mock_create_response)
+
+    with patch.dict(
+        vmc_sddc.__salt__,
+        {
+            "vmc_sddc.list": mock_sddc_list,
+            "vmc_sddc.create": mock_create,
+        },
+    ):
+        result = vmc_sddc.present(name=mocked_ok_response["name"], **actual_args)
+
+    call_kwargs = mock_create.mock_calls[0][-1]
+
+    subset = {k: v for k, v in call_kwargs.items() if k in actual_args}
+    assert subset == actual_args
+
+    assert result is not None
+    assert result["changes"]["old"] is None
+    assert result["changes"]["new"] == mock_create_response
+    assert result["comment"] == "Created SDDC {}".format(mocked_ok_response["name"])
+    assert result["result"]
