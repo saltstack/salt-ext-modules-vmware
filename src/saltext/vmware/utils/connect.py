@@ -37,11 +37,7 @@ def get_config(config, profile=None, esxi_host=None):
     password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
     user = os.environ.get("SALTEXT_VMWARE_USER") or credentials.get("user")
 
-    return {
-        "host": host,
-        "user": user,
-        "password": password
-    }
+    return {"host": host, "user": user, "password": password}
 
 
 def get_service_instance(config=None, esxi_host=None, profile=None):

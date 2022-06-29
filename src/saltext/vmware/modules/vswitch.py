@@ -169,7 +169,7 @@ def remove(switch_name, hostname, service_instance=None, profile=None):
 
     profile
         Profile to use (optional)
-        
+
     CLI Example:
 
     .. code-block:: bash

@@ -66,7 +66,7 @@ def set_boot_manager(
 
     profile
         Profile to use (optional)
-        
+
     .. code-block:: yaml
 
         Set Boot Manager:
@@ -146,7 +146,7 @@ def snapshot_present(
 
      profile
         Profile to use (optional)
-        
+
 
     .. code-block:: yaml
 
