@@ -62,46 +62,41 @@ def get_service_instance(config=None, esxi_host=None, profile=None):
 
     Pillar Example:
 
-    .. code-block::
-
-        saltext.vmware:
-            host: 198.51.100.100
-            password: ****
-            user: @example.com
-
-        saltext.vmware:
-            host: 198.51.100.100
-            password: ****
-            user: @example.com
-            esxi_host:
-                198.52.100.105:
-                    user: admin
-                    password: ***
-                198.52.100.106:
-                    user: admin
-                    password: ***
-
-    If configuration for multiple VMWare services instances is required, they can be
-    set up as different configuration profiles:
-    For example:
     .. code-block:: yaml
 
         saltext.vmware:
-            profile1:
-                host: 198.51.100.100
-                password: ****
-                user: @example.com
-            profile2:
-                host: 198.51.100.100
-                password: ****
-                user: @example.com
-                esxi_host:
-                    198.52.100.105:
-                        user: admin
-                        password: ***
-                    198.52.100.106:
-                        user: admin
-                        password: ***
+            host: 198.51.100.100
+            password: CorrectHorseBatteryStaple
+            user: admin@example.com
+            esxi_host:
+                198.52.100.105:
+                    user: admin
+                    password: CorrectHorseBatteryStaple
+                198.52.100.106:
+                    user: admin
+                    password: CorrectHorseBatteryStaple
+
+    If configuration for multiple VMware services instances is required, they can be
+    set up as different configuration profiles:
+
+    .. code-block:: yaml
+
+        saltext.vmware:
+          profile1:
+            host: 198.51.100.100
+            password: CorrectHorseBatteryStaple
+            user: admin@example.com
+          profile2:
+            host: 198.51.100.100
+            password: CorrectHorseBatteryStaple
+            user: admin@example.com
+            esxi_host:
+              198.52.100.105:
+                user: admin
+                password: CorrectHorseBatteryStaple
+              198.52.100.106:
+                user: admin
+                password: CorrectHorseBatteryStaple
 
     """
     ctx = ssl._create_unverified_context()
