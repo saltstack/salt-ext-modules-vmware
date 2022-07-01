@@ -9,38 +9,6 @@ import pytest
 import requests
 from saltext.vmware.utils import vmc_request
 
-# _hostname = 'stg.skyscraper.vmware.com'
-# _refresh_key = 'bRfsZYg3vVFOZEBHDp9GFSKv76UMfc4DOnWgNk9vDxNVPfHqt73rk75x0vSUtx8w'
-# _authorization_host = 'console-stg.cloud.vmware.com'
-# _org_id = '10e1092f-51d0-473a-80f8-137652fd0c39'
-# _sddc_id = '15a579fc-7f98-4501-a4db-c8cd3eb720fd'
-# _sddc_name = 'TESTING_2' #pass the name of sddc that is not already present
-# _verify_ssl = True
-# _cert = '/tmp/test.cert'
-#
-# _data = {
-#         "type": "DEPLOY",
-#         "resource_type": "deployment",
-#         "config": {
-#             "provider_type": "ZEROCLOUD",
-#             "name": "Testing-Sddc",
-#             "sddc_type": "OneNode",
-#             "deployment_type": "SingleAZ",
-#             "type": "DeployVmcAwsSddcConfig",
-#             "host_count": 1,
-#             "sddc_size": "medium",
-#             "storage_capacity_per_host_bytes": 0,
-#             "location": {
-#                 "name": "us-west-2",
-#                 "code": "us-west-2"
-#             },
-#             "host_type": "i3.metal",
-#             "network_config": {
-#                 "cidr_block": ""
-#             }
-#         }
-#     }
-
 
 @pytest.fixture
 def vmc_common_data(vmc_connect):
@@ -169,12 +137,12 @@ def test_vmc_sddc_state_module(salt_call_cli, vmc_common_data, delete_sddc, get_
     result = list(response_json.values())[0]
     changes = result["changes"]
 
-    if get_sddc.get("sddc_state") in ("DEPLOYING", "DELETED", "DELETION_IN_PROGRESS"):
+    if created_sddc.get("sddc_state") in ("DEPLOYING", "DELETED", "DELETION_IN_PROGRESS"):
         assert changes == {}
         assert result[
             "comment"
-        ] == "No SDDC found with ID %s or deletion is already in progress.".format(
-            vmc_common_data["sddc_id"]
+        ] == "No SDDC found with ID {} or deletion is already in progress or SDDC is still deploying".format(
+            sddc_id
         )
     else:
         assert changes["new"] is None
