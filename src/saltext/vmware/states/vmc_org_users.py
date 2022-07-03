@@ -19,7 +19,6 @@ def present(
     hostname,
     refresh_key,
     org_id,
-    user_names,
     organization_roles,
     skip_notify=False,
     custom_roles=None,
@@ -34,10 +33,10 @@ def present(
     Ensure a given User exists for given organization.
 
     name
-        The name of SDDC that will be assigned to new created SDDC.
+        Indicates the email Id identifying the org user.
 
     hostname
-        The host name of VMC.
+        The host name of CSP.
 
     refresh_key
         API Token of the user which is used to get the Access Token required for VMC operations
@@ -176,7 +175,9 @@ def present(
         The certificate can be retrieved from browser.
 
     For example:
+
         .. code::
+
              {
                 "skip_notify": true,
                 "custom_roles": [
@@ -226,7 +227,7 @@ def present(
             }
     """
 
-    user = name  # user is an email id , thta is unique for every user
+    username = name  # user is an email id , thta is unique for every user
     org_users_list = __salt__["vmc_org_users.list"](
         hostname=hostname,
         refresh_key=refresh_key,
@@ -243,47 +244,58 @@ def present(
         )
 
     for org_user in org_users_list["result"]:
-        if user == org_user["user"].get("userId"):
-            return vmc_state._create_state_response(
-                name=name, comment="user is already present", result=True
-            )
+        if username == org_user["user"].get("username"):
+            break
+        else:
+            org_user = None
 
     if __opts__.get("test"):
         log.info("vmc_org_users present is called with test option")
-        return vmc_state._create_state_response(
-            name=name,
-            comment="user {} would have been invited".format(user),
+        if org_user:
+            return vmc_state._create_state_response(
+                name=name,
+                comment="user {} is already present".format(username),
+            )
+        else:
+            return vmc_state._create_state_response(
+                name=name,
+                comment="user {} would have been invited".format(username),
+            )
+
+    if not org_user:
+        invited_org_user = __salt__["vmc_org_users.invite"](
+            hostname=hostname,
+            refresh_key=refresh_key,
+            org_id=org_id,
+            user_names=username,
+            organization_roles=organization_roles,
+            skip_notify=False,
+            custom_roles=None,
+            service_roles=None,
+            skip_notify_registration=False,
+            invited_by=None,
+            custom_groups_ids=None,
+            verify_ssl=verify_ssl,
+            cert=cert,
         )
 
-    invited_org_users = __salt__["vmc_org_users.invite"](
-        hostname=hostname,
-        refresh_key=refresh_key,
-        org_id=org_id,
-        user_names=user,
-        organization_roles=organization_roles,
-        skip_notify=False,
-        custom_roles=None,
-        service_roles=None,
-        skip_notify_registration=False,
-        invited_by=None,
-        custom_groups_ids=None,
-        verify_ssl=verify_ssl,
-        cert=cert,
-    )
+        if "error" in invited_org_users:
+            return vmc_state._create_state_response(
+                name=name,
+                comment="Failed to invite user : {}".format(invited_org_users["error"]),
+                result=False,
+            )
 
-    if "error" in invited_org_users:
         return vmc_state._create_state_response(
             name=name,
-            comment="Failed to invite user : {}".format(invited_org_users["error"]),
-            result=False,
+            comment="Invited user {} successfully".format(username),
+            new_state=invited_org_users,
+            result=True,
         )
-
-    return vmc_state._create_state_response(
-        name=name,
-        comment="Invited user {} successfully".format(sddc_name),
-        new_state=invited_org_users,
-        result=True,
-    )
+    else:
+        return vmc_state._create_state_response(
+            name=name, comment="user {} is already present".format(username), result=True
+        )
 
 
 def absent(
@@ -297,26 +309,34 @@ def absent(
     verify_ssl=True,
     cert=None,
 ):
-
     """
     Ensure a given user does not exist for the given organization.
+
     name
-        Indicates the username, firstName, lastName or email identifying the org users.
+        Indicates the email Id identifying the org user.
+
     hostname
         The host name of CSP.
+
     refresh_key
         API Token of the user which is used to get the Access Token required for VMC operations.
+
     org_id
         The ID of organization from which the users should be removed.
+
     expand_profile
         (Optional) A boolean value to indicate if the response should be expanded with the user profile.
+
     include_group_ids_in_roles
         (Optional) A boolean value to indicate if the inherited roles in the response should indicate group information.
+
     notify_users
         (Optional) Indicates whether the users need to notify through email. Default value is true.
+
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
         If set to False, the certificate validation is skipped.
+
     cert
         (Optional) Path to the SSL client certificate file to connect to VMC.
         The certificate can be retrieved from browser.
@@ -324,50 +344,51 @@ def absent(
 
     # search for the users if it's found remove them from the org else say there is no users
 
-    user_search_term = name
-    log.info("Checking if User with search term %s is present", user_search_term)
-    org_users = __salt__["vmc_org_users.search"](
+    username = name
+    log.info("Checking if User with username %s is present", username)
+    org_users_list = __salt__["vmc_org_users.list"](
         hostname=hostname,
         refresh_key=refresh_key,
         org_id=org_id,
-        user_search_term=name,
-        expand_profile=False,
-        include_group_ids_in_roles=False,
         verify_ssl=verify_ssl,
         cert=cert,
     )
 
-    if "error" in org_users:
-        return vmc_state._create_state_response(name=name, comment=org_users["error"], result=False)
+    if "error" in org_users_list:
+        return vmc_state._create_state_response(
+            name=name,
+            comment="Failed to get users for given org : {}".format(org_users_list["error"]),
+            result=False,
+        )
 
-    if len(org_users["result"]) == 0:
-        org_users = None
+    for org_user in org_users_list["results"]:
+        if username == org_user["user"].get("username"):
+            user_id = []
+            user_id.append(org_user["user"].get("userId"))
+            log.info("user found with username %s", username)
+            break
+        else:
+            org_user = None
 
     if __opts__.get("test"):
         log.info("vmc_org_users.absent is called with test option")
-        if org_users:
+        if org_user:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will remove users with ID {}".format(user_search_term),
+                comment="State absent will remove user with username {}".format(username),
             )
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will do nothing as no user found with ID {}".format(
-                    user_search_term
-                ),
+                comment="State absent will do nothing as no user found with ID {}".format(username),
             )
 
-    if org_users:
-        user_ids = []
-        for org_user in org_users["result"]:
-            user_ids.append(org_user["user"].get("userId"))
-        log.info("user found with ID %s", user)
+    if org_user:
         removed_org_user = __salt__["vmc_org_users.remove"](
             hostname=hostname,
             refresh_key=refresh_key,
             org_id=org_id,
-            user_ids=user_ids,
+            user_ids=user_id,
             notify_users=False,
             verify_ssl=verify_ssl,
             cert=cert,
@@ -380,17 +401,17 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Removed user {}".format(user),
-            old_state=org_users,
+            comment="Removed user {}".format(username),
+            old_state=org_user,
             result=True,
         )
     else:
         log.info(
-            "No user found with ID %s.",
-            user_search_term,
+            "No user found with username %s.",
+            username,
         )
         return vmc_state._create_state_response(
             name=name,
-            comment="No user found with ID {}".format(user_search_term),
+            comment="No user found with username {}".format(username),
             result=True,
         )
