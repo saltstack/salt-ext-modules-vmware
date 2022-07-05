@@ -74,7 +74,7 @@ def configure_loader_modules():
 
 def test_absent_state_to_remove_user_when_module_returns_success_response(mocked_ok_response):
     mock_users_list_response = create_autospec(
-        vmc_org_users_exec.list, return_value=mocked_ok_response
+        vmc_org_users_exec.list_, return_value=mocked_ok_response
     )
     mock_delete_response = create_autospec(
         vmc_org_users_exec.remove,
@@ -95,8 +95,6 @@ def test_absent_state_to_remove_user_when_module_returns_success_response(mocked
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
-            expand_profile=False,
-            include_group_ids_in_roles=False,
             notify_users=False,
         )
 
@@ -107,7 +105,7 @@ def test_absent_state_to_remove_user_when_module_returns_success_response(mocked
 
 
 def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list, return_value={})
+    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
     user_name = mocked_ok_response["results"][0]["user"]["username"]
 
     with patch.dict(
@@ -119,8 +117,6 @@ def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
-            expand_profile=False,
-            include_group_ids_in_roles=False,
             notify_users=False,
         )
 
@@ -132,7 +128,7 @@ def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
 
 def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
     mock_users_list_response = create_autospec(
-        vmc_org_users_exec.list, return_value=mocked_ok_response
+        vmc_org_users_exec.list_, return_value=mocked_ok_response
     )
     user_name = mocked_ok_response["results"][0]["user"]["username"]
 
@@ -146,8 +142,6 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
                 hostname="hostname",
                 refresh_key="refresh_key",
                 org_id="org_id",
-                expand_profile=False,
-                include_group_ids_in_roles=False,
                 notify_users=False,
             )
 
@@ -160,7 +154,7 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
 def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_is_true(
     mocked_ok_response,
 ):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list, return_value={})
+    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
     user_name = mocked_ok_response["results"][0]["user"]["username"]
 
     with patch.dict(
@@ -173,8 +167,6 @@ def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_i
                 hostname="hostname",
                 refresh_key="refresh_key",
                 org_id="org_id",
-                expand_profile=False,
-                include_group_ids_in_roles=False,
                 notify_users=False,
             )
 
@@ -188,7 +180,7 @@ def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_i
 
 def test_absent_with_error_from_delete(mocked_ok_response, mocked_error_response):
     mock_users_list_response = create_autospec(
-        vmc_org_users_exec.list, return_value=mocked_ok_response
+        vmc_org_users_exec.list_, return_value=mocked_ok_response
     )
     mock_delete_response = create_autospec(
         vmc_org_users_exec.remove, return_value=mocked_error_response
@@ -207,8 +199,6 @@ def test_absent_with_error_from_delete(mocked_ok_response, mocked_error_response
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
-            expand_profile=False,
-            include_group_ids_in_roles=False,
             notify_users=False,
         )
 
@@ -223,7 +213,7 @@ def test_absent_with_error_from_delete(mocked_ok_response, mocked_error_response
 
 def test_absent_state_when_error_from_getting_users_list(mocked_ok_response, mocked_error_response):
     mock_users_list_response = create_autospec(
-        vmc_org_users_exec.list, return_value=mocked_error_response
+        vmc_org_users_exec.list_, return_value=mocked_error_response
     )
 
     with patch.dict(
@@ -235,8 +225,6 @@ def test_absent_state_when_error_from_getting_users_list(mocked_ok_response, moc
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
-            expand_profile=False,
-            include_group_ids_in_roles=False,
             notify_users=False,
         )
 
@@ -253,7 +241,7 @@ def test_present_state_when_error_from_getting_users_list(
     mocked_ok_response, mocked_error_response
 ):
     mock_users_list_response = create_autospec(
-        vmc_org_users_exec.list, return_value={"error": "The credentials were incorrect."}
+        vmc_org_users_exec.list_, return_value={"error": "The credentials were incorrect."}
     )
 
     with patch.dict(
@@ -284,7 +272,7 @@ def test_present_state_when_error_from_getting_users_list(
 
 
 def test_present_state_when_error_from_create(mocked_error_response):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list, return_value={})
+    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
     mock_invite = create_autospec(
         vmc_org_users_exec.invite, return_value={"error": "The credentials were incorrect."}
     )
@@ -318,7 +306,7 @@ def test_present_state_when_error_from_create(mocked_error_response):
 
 
 def test_present_to_create_when_module_returns_success_response(mocked_ok_response):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list, return_value={})
+    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
     mock_invite_response = create_autospec(
         vmc_org_users_exec.invite, return_value=mocked_ok_response
     )
@@ -354,7 +342,7 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
 
 
 def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list, return_value={})
+    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
     user_name = mocked_ok_response["results"][0]["user"]["username"]
 
     with patch.dict(
@@ -402,7 +390,9 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
     ],
 )
 def test_present_state_during_create_should_correctly_pass_args(mocked_ok_response, actual_args):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list, return_value={})
+    mock_users_list_response = create_autospec(
+        vmc_org_users_exec.list_, return_value={"results": []}
+    )
     mock_invite_response = mocked_ok_response.copy()
     user_name = mocked_ok_response["results"][0]["user"]["username"]
     common_actual_args = {
@@ -432,7 +422,7 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
             "vmc_org_users.invite": mock_invite,
         },
     ):
-        result = vmc_org_users.present(name=mocked_ok_response["name"], **actual_args)
+        result = vmc_org_users.present(**actual_args)
 
     call_kwargs = mock_invite.mock_calls[0][-1]
 

@@ -242,8 +242,8 @@ def present(
             comment="Failed to get users for given org : {}".format(org_users_list["error"]),
             result=False,
         )
-
-    for org_user in org_users_list["result"]:
+    org_user = None
+    for org_user in org_users_list.get("results"):
         if username == org_user["user"].get("username"):
             break
         else:
@@ -254,12 +254,12 @@ def present(
         if org_user:
             return vmc_state._create_state_response(
                 name=name,
-                comment="user {} is already present".format(username),
+                comment="User {} is already present".format(username),
             )
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="user {} would have been invited".format(username),
+                comment="User {} would have been invited".format(username),
             )
 
     if not org_user:
@@ -267,7 +267,7 @@ def present(
             hostname=hostname,
             refresh_key=refresh_key,
             org_id=org_id,
-            user_names=username,
+            user_names=[username],
             organization_roles=organization_roles,
             skip_notify=False,
             custom_roles=None,
@@ -279,22 +279,22 @@ def present(
             cert=cert,
         )
 
-        if "error" in invited_org_users:
+        if "error" in invited_org_user:
             return vmc_state._create_state_response(
                 name=name,
-                comment="Failed to invite user : {}".format(invited_org_users["error"]),
+                comment="Failed to invite user : {}".format(invited_org_user["error"]),
                 result=False,
             )
 
         return vmc_state._create_state_response(
             name=name,
             comment="Invited user {} successfully".format(username),
-            new_state=invited_org_users,
+            new_state=invited_org_user,
             result=True,
         )
     else:
         return vmc_state._create_state_response(
-            name=name, comment="user {} is already present".format(username), result=True
+            name=name, comment="User {} is already present".format(username), result=True
         )
 
 
@@ -303,8 +303,6 @@ def absent(
     hostname,
     refresh_key,
     org_id,
-    expand_profile=False,
-    include_group_ids_in_roles=False,
     notify_users=False,
     verify_ssl=True,
     cert=None,
@@ -323,12 +321,6 @@ def absent(
 
     org_id
         The ID of organization from which the users should be removed.
-
-    expand_profile
-        (Optional) A boolean value to indicate if the response should be expanded with the user profile.
-
-    include_group_ids_in_roles
-        (Optional) A boolean value to indicate if the inherited roles in the response should indicate group information.
 
     notify_users
         (Optional) Indicates whether the users need to notify through email. Default value is true.
@@ -380,7 +372,9 @@ def absent(
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will do nothing as no user found with ID {}".format(username),
+                comment="State absent will do nothing as no user found with username {}".format(
+                    username
+                ),
             )
 
     if org_user:
