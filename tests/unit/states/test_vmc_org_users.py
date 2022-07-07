@@ -6,14 +6,6 @@ import pytest
 import saltext.vmware.modules.vmc_org_users as vmc_org_users_exec
 import saltext.vmware.states.vmc_org_users as vmc_org_users
 
-_user_data = [{}]
-
-
-_users_data = [
-    _user_data[0],
-    {},
-]
-
 
 @pytest.fixture
 def mocked_ok_response():
@@ -105,7 +97,9 @@ def test_absent_state_to_remove_user_when_module_returns_success_response(mocked
 
 
 def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
+    mock_users_list_response = create_autospec(
+        vmc_org_users_exec.list_, return_value={"results": []}
+    )
     user_name = mocked_ok_response["results"][0]["user"]["username"]
 
     with patch.dict(
@@ -154,7 +148,9 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
 def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_is_true(
     mocked_ok_response,
 ):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
+    mock_users_list_response = create_autospec(
+        vmc_org_users_exec.list_, return_value={"results": []}
+    )
     user_name = mocked_ok_response["results"][0]["user"]["username"]
 
     with patch.dict(
@@ -172,9 +168,9 @@ def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_i
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State absent will do nothing as no user found with ID {}".format(
-        user_name
-    )
+    assert result[
+        "comment"
+    ] == "State absent will do nothing as no user found with username {}".format(user_name)
     assert result["result"] is None
 
 
@@ -232,7 +228,7 @@ def test_absent_state_when_error_from_getting_users_list(mocked_ok_response, moc
     assert result["changes"] == {}
     assert (
         result["comment"]
-        == "The credentials were incorrect or the account specified has been locked."
+        == "Failed to get users for given org : The credentials were incorrect or the account specified has been locked."
     )
     assert not result["result"]
 
@@ -272,7 +268,9 @@ def test_present_state_when_error_from_getting_users_list(
 
 
 def test_present_state_when_error_from_create(mocked_error_response):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
+    mock_users_list_response = create_autospec(
+        vmc_org_users_exec.list_, return_value={"results": []}
+    )
     mock_invite = create_autospec(
         vmc_org_users_exec.invite, return_value={"error": "The credentials were incorrect."}
     )
@@ -306,7 +304,9 @@ def test_present_state_when_error_from_create(mocked_error_response):
 
 
 def test_present_to_create_when_module_returns_success_response(mocked_ok_response):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
+    mock_users_list_response = create_autospec(
+        vmc_org_users_exec.list_, return_value={"results": []}
+    )
     mock_invite_response = create_autospec(
         vmc_org_users_exec.invite, return_value=mocked_ok_response
     )
@@ -320,7 +320,7 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
         },
     ):
         result = vmc_org_users.present(
-            name="user_name",
+            name=user_name,
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
@@ -335,14 +335,16 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
         )
 
     assert result is not None
-    assert result["changes"]["new"] == mocked_ok_response["results"][0]
+    assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
     assert result["comment"] == "Invited user {} successfully".format(user_name)
     assert result["result"]
 
 
 def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
-    mock_users_list_response = create_autospec(vmc_org_users_exec.list_, return_value={})
+    mock_users_list_response = create_autospec(
+        vmc_org_users_exec.list_, return_value={"results": []}
+    )
     user_name = mocked_ok_response["results"][0]["user"]["username"]
 
     with patch.dict(
@@ -351,7 +353,7 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
     ):
         with patch.dict(vmc_org_users.__opts__, {"test": True}):
             result = vmc_org_users.present(
-                name="user_name",
+                name=user_name,
                 hostname="hostname",
                 refresh_key="refresh_key",
                 org_id="org_id",
@@ -367,7 +369,7 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "user {} would have been invited".format(user_name)
+    assert result["comment"] == "User {} would have been invited".format(user_name)
     assert result["result"] is None
 
 
@@ -396,7 +398,6 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
     mock_invite_response = mocked_ok_response.copy()
     user_name = mocked_ok_response["results"][0]["user"]["username"]
     common_actual_args = {
-        "name": user_name,
         "hostname": "hostname",
         "refresh_key": "refresh_key",
         "org_id": "org_id",
@@ -422,7 +423,7 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
             "vmc_org_users.invite": mock_invite,
         },
     ):
-        result = vmc_org_users.present(**actual_args)
+        result = vmc_org_users.present(name=user_name, **actual_args)
 
     call_kwargs = mock_invite.mock_calls[0][-1]
 
@@ -431,6 +432,6 @@ def test_present_state_during_create_should_correctly_pass_args(mocked_ok_respon
 
     assert result is not None
     assert result["changes"]["old"] is None
-    assert result["changes"]["new"] == mock_invite_response["results"][0]
+    assert result["changes"]["new"] == mock_invite_response
     assert result["comment"] == "Invited user {} successfully".format(user_name)
     assert result["result"]

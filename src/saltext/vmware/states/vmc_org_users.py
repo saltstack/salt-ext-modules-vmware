@@ -353,6 +353,7 @@ def absent(
             result=False,
         )
 
+    org_user = None
     for org_user in org_users_list["results"]:
         if username == org_user["user"].get("username"):
             user_id = []
