@@ -1,5 +1,4 @@
 from unittest.mock import create_autospec
-from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest

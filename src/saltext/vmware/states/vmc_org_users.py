@@ -1,7 +1,7 @@
 """
 VMC Org Users state module
 
-Add new user and delete existing user.
+Add new user and delete existing user in the given org.
 
 .. warning::
     It is recommended to pass the VMC authentication details using Pillars rather than specifying as plain text in SLS
@@ -32,8 +32,14 @@ def present(
     """
     Ensure a given User exists for given organization.
 
+    CLI Example:
+
+      .. code-block:: bash
+
+           salt-call --local -c /Users/Documents/salt_Configuration/local/etc/salt/ state.single vmc_org_users.present name="test@vmware.com" hostname=console-stg.cloud.vmware.com org_id=10e1092f-51d0-473a-80f8-137652fd0c39 refresh_key=refresh_key_value organization_roles='[{"name": "org_member"}, {"name": "developer"}]' verify_ssl=False
+
     name
-        Indicates the email Id identifying the org user.
+        Indicates the email Id identifying the user to be invited to the organization.
 
     hostname
         The host name of CSP.
@@ -41,14 +47,8 @@ def present(
     refresh_key
         API Token of the user which is used to get the Access Token required for VMC operations
 
-    authorization_host
-        Hostname of the VMC cloud console.
-
     org_id
-        The ID of organization to which the SDDC belongs to.
-
-    user_names
-        List of Usernames (e-mails) of users to be invited to the organization.
+        The ID of organization to which the user belongs to.
 
     organization_roles
         List of unique organization roles assigned to user.
@@ -227,7 +227,7 @@ def present(
             }
     """
 
-    username = name  # user is an email id , thta is unique for every user
+    username = name
     org_users_list = __salt__["vmc_org_users.list"](
         hostname=hostname,
         refresh_key=refresh_key,
@@ -269,12 +269,12 @@ def present(
             org_id=org_id,
             user_names=[username],
             organization_roles=organization_roles,
-            skip_notify=False,
-            custom_roles=None,
-            service_roles=None,
-            skip_notify_registration=False,
-            invited_by=None,
-            custom_groups_ids=None,
+            skip_notify=skip_notify,
+            custom_roles=custom_roles,
+            service_roles=service_roles,
+            skip_notify_registration=skip_notify_registration,
+            invited_by=invited_by,
+            custom_groups_ids=custom_groups_ids,
             verify_ssl=verify_ssl,
             cert=cert,
         )
@@ -310,8 +310,14 @@ def absent(
     """
     Ensure a given user does not exist for the given organization.
 
+     CLI Example:
+
+      .. code-block:: bash
+
+           salt-call --local -c /Users/Documents/salt_Configuration/local/etc/salt/ state.single vmc_org_users.absent name="test@vmware.com" hostname=console-stg.cloud.vmware.com org_id=10e1092f-51d0-473a-80f8-137652fd0c39 refresh_key=refresh_key_value verify_ssl=False
+
     name
-        Indicates the email Id identifying the org user.
+        Indicates the email Id identifying the user to be removed from the organization.
 
     hostname
         The host name of CSP.
@@ -356,8 +362,7 @@ def absent(
     org_user = None
     for org_user in org_users_list["results"]:
         if username == org_user["user"].get("username"):
-            user_id = []
-            user_id.append(org_user["user"].get("userId"))
+            user_id = org_user["user"].get("userId")
             log.info("user found with username %s", username)
             break
         else:
@@ -383,8 +388,8 @@ def absent(
             hostname=hostname,
             refresh_key=refresh_key,
             org_id=org_id,
-            user_ids=user_id,
-            notify_users=False,
+            user_ids=[user_id],
+            notify_users=notify_users,
             verify_ssl=verify_ssl,
             cert=cert,
         )
