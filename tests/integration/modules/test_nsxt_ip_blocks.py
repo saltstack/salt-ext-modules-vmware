@@ -9,18 +9,18 @@ from requests.auth import HTTPBasicAuth
 from saltext.vmware.utils import common
 from saltext.vmware.utils import nsxt_request
 
-BASE_URL = "https://{}/api/v1/pools/ip-blocks"
+BASE_URL = "https://{}/api/v1/pools/ip-blocks/"
 
 
 @pytest.fixture(autouse=True)
 def setup(nsxt_config):
     hostname, username, password, cert = _get_server_info(nsxt_config)
-    ip_block_from_nsxt = _get_ip_block_by_display_name_using_nsxt_api(
+    ip_blocks_from_nsxt = _get_ip_block_by_display_name_using_nsxt_api(
         hostname, username, password, "IP_Block_Salt_FT"
     )
 
-    for ip_block in ip_block_from_nsxt:
-        url = urljoin(BASE_URL, "/{}").format(hostname, ip_block["id"])
+    for ip_block in ip_blocks_from_nsxt:
+        url = urljoin(BASE_URL, "{}").format(hostname, ip_block["id"])
         requests.delete(url=url, auth=HTTPBasicAuth(username, password), verify=cert)
 
 
@@ -41,7 +41,6 @@ def _delete_ip_block(hostname, password, salt_call_cli, updated_ip_block_json, u
         password=password,
         verify_ssl=False,
         ip_block_id=updated_ip_block_json["id"],
-        **updated_ip_block_json
     ).json
 
 
@@ -54,7 +53,10 @@ def _update_ip_block(created_ip_block_json, hostname, password, salt_call_cli, u
         revision=created_ip_block_json["_revision"],
         ip_block_id=created_ip_block_json["id"],
         verify_ssl=False,
-        **created_ip_block_json
+        display_name=created_ip_block_json.get("display_name"),
+        cidr=created_ip_block_json.get("cidr"),
+        description=created_ip_block_json.get("description"),
+        tags=created_ip_block_json.get("tags"),
     ).json
 
 
@@ -112,9 +114,8 @@ def _get_ip_block_by_display_name_using_nsxt_api(hostname, username, password, d
     return response
 
 
-@pytest.mark.xfail(reason="nsxt tests not working yet")
 def test_nsxt_ip_blocks_execution_module_crud_operations(nsxt_config, salt_call_cli):
-    hostname, username, password = _get_server_info(nsxt_config)
+    hostname, username, password, cert = _get_server_info(nsxt_config)
 
     request_data = {
         "display_name": "IP_Block_Salt_FT",
@@ -148,12 +149,10 @@ def test_nsxt_ip_blocks_execution_module_crud_operations(nsxt_config, salt_call_
     )[0]
 
     assert ip_block_from_nsxt == updated_ip_block_json
-
     assert (
         _delete_ip_block(hostname, password, salt_call_cli, updated_ip_block_json, username)
         == "IP Block deleted successfully"
     )
-
     assert (
         len(
             _get_ip_block_by_display_name_using_nsxt_api(hostname, username, password, display_name)
