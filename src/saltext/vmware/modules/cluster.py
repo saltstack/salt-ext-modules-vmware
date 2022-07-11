@@ -29,7 +29,7 @@ def __virtual__():
     return __virtualname__
 
 
-def list_(service_instance=None):
+def list_(service_instance=None, profile=None):
     """
     Returns a dictionary containing a list of clusters for each datacenter.
 
@@ -39,7 +39,7 @@ def list_(service_instance=None):
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     try:
         datacenters = utils_datacenter.get_datacenters(service_instance, get_all_datacenters=True)
         for datacenter in datacenters:
@@ -56,7 +56,7 @@ def list_(service_instance=None):
     return ret
 
 
-def create(name, datacenter, service_instance=None):
+def create(name, datacenter, service_instance=None, profile=None):
     """
     Creates a cluster.
 
@@ -68,12 +68,18 @@ def create(name, datacenter, service_instance=None):
     datacenter
         The datacenter name in which the cluster is to be created
 
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_cluster.create dc1 cluster1
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_spec = vim.cluster.ConfigSpecEx()
@@ -83,7 +89,7 @@ def create(name, datacenter, service_instance=None):
     return {name: True}
 
 
-def get(cluster_name, datacenter_name, service_instance=None):
+def get(cluster_name, datacenter_name, service_instance=None, profile=None):
     """
     Get the properties of a cluster.
 
@@ -96,13 +102,16 @@ def get(cluster_name, datacenter_name, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_cluster.get cluster_name=cl1 datacenter_name=dc1
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
@@ -133,7 +142,7 @@ def get(cluster_name, datacenter_name, service_instance=None):
     return ret
 
 
-def delete(name, datacenter, service_instance=None):
+def delete(name, datacenter, service_instance=None, profile=None):
     """
     Deletes a cluster.
 
@@ -145,12 +154,18 @@ def delete(name, datacenter, service_instance=None):
     datacenter
         The datacenter name to which the cluster belongs
 
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_cluster.delete cl1 dc1
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__salt__, profile=profile)
     try:
         utils_cluster.delete_cluster(service_instance, name, datacenter)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:

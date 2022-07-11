@@ -25,7 +25,7 @@ Examples of how we are currently doing this in vCenter modules:
 
 .. code::
 
-    vmware_config:
+    saltext.vmware:
         host: 10.225.1.101
         password: VMware!
         user: administrator
@@ -36,7 +36,7 @@ In code we can grab these values like this:
 
 .. code::
 
-    pillar.get("vmware_config", {}).get("host")
+    pillar.get("saltext.vmware", {}).get("host")
 
 We also create a hierarchy for grabbing credential so they can be over written when needed.
 
@@ -46,9 +46,9 @@ We also create a hierarchy for grabbing credential so they can be over written w
 
     host = (
         esxi_host
-        or os.environ.get("VMWARE_CONFIG_HOST")
-        or opts.get("vmware_config", {}).get("host")
-        or pillar.get("vmware_config", {}).get("host")
+        or os.environ.get("SALTEXT_VMWARE_HOST")
+        or opts.get("saltext.vmware", {}).get("host")
+        or pillar.get("saltext.vmware", {}).get("host")
     )
 
 The priority is as follows:
