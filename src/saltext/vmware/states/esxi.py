@@ -165,6 +165,10 @@ def vmkernel_adapter_present(
     network_subnet_mask=None,
     network_tcp_ip_stack="default",
     network_type="static",
+    network_ipv6_autoconfig=None,
+    network_ipv6_dhcpv6=None,
+    network_ipv6_addresses=None,
+    network_ipv6_default_gateway=None,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -213,13 +217,28 @@ def vmkernel_adapter_present(
         Default gateway (Override default gateway for this adapter).
 
     network_type
-        Type of IP assignment. Valid values: "static", "dhcp".
+        Type of IPv4 assignment. Valid values: "static", "dhcp".
 
     network_ip_address
-        Static IP address. Required if type = 'static'.
+        Static IPv4 address. Required if type = 'static'.
 
     network_subnet_mask
-        Static netmask required. Required if type = 'static'.
+        Static IPv4 netmask required. Required if type = 'static'.
+
+    network_ipv6_autoconfig
+        Obtain IPv6 address automatically through Router Advertisement. Valid values: True, False.
+
+    network_ipv6_dhcpv6
+        Obtain IPv6 address automatically through DHCP. Valid values: True, False.
+
+    network_ipv6_default_gateway
+        Default IPv6 gateway (Override default gateway for this adapter).
+
+    network_ipv6_addresses
+        List of dictionaries of static IPv6 addresses. Dictionary format:
+
+        address: IPv6 address
+        prefix_length: Prefix length of the IPv6 address. Valid values: 1-128
 
     network_tcp_ip_stack
         The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
@@ -243,6 +262,22 @@ def vmkernel_adapter_present(
             - name: vmk1
             - port_group_name: portgroup1
             - dvsswitch_name: vswitch1
+            - mtu: 1500
+            - network_type: static
+            - network_ip_address: 192.0.2.51
+            - network_subnet_mask: 255.255.255.0
+            - network_ipv6_autoconfig: False
+            - network_ipv6_dhcpv6: False
+            - network_ipv6_addresses:
+                - address: 2001:db8:1234::51
+                  prefix_length: 64
+                - address: 2001:db8:1234::52
+                  prefix_length: 64
+                - address: 2001:db8:1234::53
+                  prefix_length: 64
+            - datacenter_name: dc1
+            - cluster_name: cl1
+            - host_name: host1
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
@@ -313,6 +348,10 @@ def vmkernel_adapter_present(
                         network_subnet_mask=network_subnet_mask,
                         network_tcp_ip_stack=network_tcp_ip_stack,
                         network_type=network_type,
+                        network_ipv6_autoconfig=network_ipv6_autoconfig,
+                        network_ipv6_dhcpv6=network_ipv6_dhcpv6,
+                        network_ipv6_default_gateway=network_ipv6_default_gateway,
+                        network_ipv6_addresses=network_ipv6_addresses,
                         datacenter_name=datacenter_name,
                         cluster_name=cluster_name,
                         host_name=host,

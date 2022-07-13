@@ -110,6 +110,7 @@ def power_state(
     force
         Force power state transition. Default: True
 
+    CLI Example:
 
     .. code-block:: bash
 
@@ -179,6 +180,8 @@ def manage_service(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional)
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -256,6 +259,8 @@ def list_services(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.list_services
@@ -328,6 +333,8 @@ def get_acceptance_level(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_acceptance_level
@@ -394,6 +401,8 @@ def set_acceptance_level(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_acceptance_level
@@ -458,6 +467,8 @@ def get_advanced_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_advanced_config
@@ -512,6 +523,8 @@ def set_advanced_configs(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -600,6 +613,8 @@ def set_advanced_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_advanced_config config_name=Annotations.WelcomeMessage config_value=Hello
@@ -645,6 +660,8 @@ def get_firewall_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -729,6 +746,8 @@ def backup_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt * vmware_esxi.backup_config host_name=10.225.0.53 http_opts='{"verify_ssl": False}'
@@ -802,6 +821,8 @@ def restore_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -883,6 +904,8 @@ def reset_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.reset_config
@@ -944,6 +967,8 @@ def get_dns_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_dns_config
@@ -996,6 +1021,8 @@ def get_ntp_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1053,6 +1080,8 @@ def list_hosts(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.list_hosts
@@ -1109,6 +1138,8 @@ def add_user(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1172,6 +1203,8 @@ def update_user(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.update_user user_name=foo password=bar@123 descripton="existing user"
@@ -1226,6 +1259,8 @@ def remove_user(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.remove_user user_name=foo
@@ -1279,6 +1314,10 @@ def create_vmkernel_adapter(
     network_subnet_mask=None,
     network_tcp_ip_stack="default",
     network_type="static",
+    network_ipv6_autoconfig=None,
+    network_ipv6_dhcpv6=None,
+    network_ipv6_addresses=None,
+    network_ipv6_default_gateway=None,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -1334,6 +1373,21 @@ def create_vmkernel_adapter(
     network_subnet_mask
         Static netmask required. Required if type = 'static'.
 
+    network_ipv6_autoconfig
+        Obtain IPv6 address automatically through Router Advertisement. Valid values: True, False.
+
+    network_ipv6_dhcpv6
+        Obtain IPv6 address automatically through DHCP. Valid values: True, False.
+
+    network_ipv6_default_gateway
+        Default IPv6 gateway (Override default gateway for this adapter).
+
+    network_ipv6_addresses
+        List of dictionaries of static IPv6 addresses. Dictionary format:
+
+        address: IPv6 address
+        prefix_length: Prefix length of the IPv6 address. Valid values: 1-128
+
     network_tcpip_stack
         The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
 
@@ -1348,6 +1402,8 @@ def create_vmkernel_adapter(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1388,6 +1444,10 @@ def create_vmkernel_adapter(
                 network_subnet_mask=network_subnet_mask,
                 network_tcp_ip_stack=network_tcp_ip_stack,
                 network_type=network_type,
+                network_ipv6_autoconfig=network_ipv6_autoconfig,
+                network_ipv6_dhcpv6=network_ipv6_dhcpv6,
+                network_ipv6_default_gateway=network_ipv6_default_gateway,
+                network_ipv6_addresses=network_ipv6_addresses,
             )
             ret[h.name] = vmk_device
         return ret
@@ -1416,9 +1476,15 @@ def _save_vmkernel_adapter(
     network_subnet_mask,
     network_tcp_ip_stack,
     network_type,
+    network_ipv6_autoconfig,
+    network_ipv6_dhcpv6,
+    network_ipv6_addresses,
+    network_ipv6_default_gateway,
 ):
     vnic_config = vim.host.VirtualNic.Specification()
     ip_spec = vim.host.IpConfig()
+    vnic_config.ipRouteSpec = vim.host.VirtualNic.IpRouteSpec()
+    vnic_config.ipRouteSpec.ipRouteConfig = vim.host.IpRouteConfig()
     if network_type == "dhcp":
         ip_spec.dhcp = True
     else:
@@ -1426,9 +1492,24 @@ def _save_vmkernel_adapter(
         ip_spec.ipAddress = network_ip_address
         ip_spec.subnetMask = network_subnet_mask
         if network_default_gateway:
-            vnic_config.ipRouteSpec = vim.host.VirtualNic.IpRouteSpec()
-            vnic_config.ipRouteSpec.ipRouteConfig = vim.host.IpRouteConfig()
             vnic_config.ipRouteSpec.ipRouteConfig.defaultGateway = network_default_gateway
+    ip_spec.ipV6Config = vim.host.IpConfig.IpV6AddressConfiguration()
+    if network_ipv6_autoconfig:
+        ip_spec.ipV6Config.autoConfigurationEnabled = True
+    if network_ipv6_dhcpv6:
+        ip_spec.ipV6Config.dhcpV6Enabled.Enabled = True
+    if network_ipv6_addresses:
+        ip_spec.ipV6Config.ipV6Address = []
+        desired_ipv6_addresses = []
+        for address in network_ipv6_addresses:
+            ipv6_address = vim.host.IpConfig.IpV6Address()
+            ipv6_address.ipAddress = address["address"]
+            ipv6_address.prefixLength = address["prefix_length"]
+            ipv6_address.origin = vim.host.IpConfig.IpV6AddressConfigType("manual")
+            ipv6_address.operation = vim.host.ConfigChange.Operation("add")
+            desired_ipv6_addresses.append(ipv6_address)
+    if network_ipv6_default_gateway:
+        vnic_config.ipRouteSpec.ipRouteConfig.ipV6DefaultGateway = network_ipv6_default_gateway
     vnic_config.ip = ip_spec
     vnic_config.mtu = mtu
     vnic_config.netStackInstanceKey = _get_net_stack(network_tcp_ip_stack)
@@ -1446,9 +1527,45 @@ def _save_vmkernel_adapter(
             if v.device == adapter_name:
                 vnic = v
                 vmk_device = vnic.device
+                if network_ipv6_addresses:
+                    # Get a list of already-configured IPv6 addresses
+                    existing_ipv6_addresses = vnic.spec.ip.ipV6Config.ipV6Address
+                    # Use a shadow list of dicts so we can compare only ipAddress and prefixLength
+                    final_ipv6_addresses_keys = []
+                    final_ipv6_addresses = []
+                    # Loop through already-configured addresses
+                    for index, x in enumerate(existing_ipv6_addresses):
+                        # We only operate on addresses that are manually configured
+                        if x.origin == "manual":
+                            y = {
+                                "ipAddress": x.ipAddress,
+                                "prefixLength": x.prefixLength,
+                            }
+                            z = existing_ipv6_addresses[index]
+                            # By default we set all existing addresses to be removed.
+                            # We'll delete them from the list (noop) later if we need to keep them
+                            z.operation = "remove"
+                            final_ipv6_addresses_keys.append(y)
+                            final_ipv6_addresses.append(z)
+                    # Loop through desired-state addresses
+                    for x in desired_ipv6_addresses:
+                        y = {
+                            "ipAddress": x.ipAddress,
+                            "prefixLength": x.prefixLength,
+                        }
+                        if y not in final_ipv6_addresses_keys:
+                            # Add any addresses that are not already configured
+                            final_ipv6_addresses_keys.append(y)
+                            final_ipv6_addresses.append(x)
+                        else:
+                            index = final_ipv6_addresses_keys.index(y)
+                            # Remove any addresses that are already configured (noop)
+                            del final_ipv6_addresses[index]
+                    vnic_config.ip.ipV6Config.ipV6Address = final_ipv6_addresses
                 break
         host.configManager.networkSystem.UpdateVirtualNic(vmk_device, vnic_config)
     else:
+        vnic_config.ip.ipV6Config.ipV6Address = desired_ipv6_addresses
         vmk_device = host.configManager.networkSystem.AddVirtualNic(
             portgroup="" if dvswitch_name else port_group_name, nic=vnic_config
         )
@@ -1497,7 +1614,7 @@ def get_vmkernel_adapters(
     service_instance=None,
 ):
     """
-    Update VMKernel Adapter on matching ESXi hosts.
+    Get VMKernel Adapters on matching ESXi hosts.
 
     adapter_name
         Filter by this vmkernel adapter name.
@@ -1514,11 +1631,13 @@ def get_vmkernel_adapters(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
-        salt '*' vmware_esxi.get_vmkernel_adapter port_group_name=portgroup1
+        salt '*' vmware_esxi.get_vmkernel_adapters adapter_name=vmk0 datacenter_name=dc1 cluster_name=cl1 host_name=host1
     """
-    log.debug("Running vmware_esxi.get_vmkernel_adapter")
+    log.debug("Running vmware_esxi.get_vmkernel_adapters")
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -1561,6 +1680,10 @@ def update_vmkernel_adapter(
     network_subnet_mask=None,
     network_tcp_ip_stack="default",
     network_type="static",
+    network_ipv6_autoconfig=None,
+    network_ipv6_dhcpv6=None,
+    network_ipv6_addresses=None,
+    network_ipv6_default_gateway=None,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -1617,6 +1740,21 @@ def update_vmkernel_adapter(
     network_subnet_mask
         Static netmask required. Required if type = 'static'.
 
+    network_ipv6_autoconfig
+        Obtain IPv6 address automatically through Router Advertisement. Valid values: True, False.
+
+    network_ipv6_dhcpv6
+        Obtain IPv6 address automatically through DHCP. Valid values: True, False.
+
+    network_ipv6_default_gateway
+        Default IPv6 gateway (Override default gateway for this adapter).
+
+    network_ipv6_addresses
+        List of dictionaries of static IPv6 addresses. Dictionary format:
+
+        address: IPv6 address
+        prefix_length: Prefix length of the IPv6 address. Valid values: 1-128
+
     network_tcpip_stack
         The TCP/IP stack for the VMKernel interface. Valid values: "default", "provisioning", "vmotion", "vxlan".
 
@@ -1631,6 +1769,8 @@ def update_vmkernel_adapter(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1671,6 +1811,10 @@ def update_vmkernel_adapter(
                 network_subnet_mask=network_subnet_mask,
                 network_tcp_ip_stack=network_tcp_ip_stack,
                 network_type=network_type,
+                network_ipv6_autoconfig=network_ipv6_autoconfig,
+                network_ipv6_dhcpv6=network_ipv6_dhcpv6,
+                network_ipv6_addresses=network_ipv6_addresses,
+                network_ipv6_default_gateway=network_ipv6_default_gateway,
             )
         return ret
     except DEFAULT_EXCEPTIONS as exc:
@@ -1701,6 +1845,8 @@ def delete_vmkernel_adapter(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1754,6 +1900,8 @@ def get_user(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1820,6 +1968,8 @@ def add_role(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.add_role role_name=foo privileges=['Folder.Create']
@@ -1863,6 +2013,8 @@ def update_role(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -1908,6 +2060,8 @@ def remove_role(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.remove_role role_name=foo
@@ -1948,6 +2102,8 @@ def get_role(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_role role_name=foo
@@ -1983,6 +2139,8 @@ def connect(host, service_instance=None):
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.connect host=host01
@@ -2005,6 +2163,8 @@ def disconnect(host, service_instance=None):
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.disconnect host=host01
@@ -2026,6 +2186,8 @@ def remove(host, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2051,6 +2213,8 @@ def move(host, cluster_name, service_instance=None):
 
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2101,6 +2265,8 @@ def add(
     service_instance
         The Service Instance from which to obtain managed object references. (Optional)
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.add host=host01 root_user=root password=CorrectHorseBatteryStaple cluster_name=cl1 datacenter_name=dc1 verify_host_cert=False connect=True
@@ -2146,6 +2312,8 @@ def list_pkgs(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2230,6 +2398,8 @@ def get(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2320,6 +2490,8 @@ def in_maintenance_mode(host, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.in_maintenance_mode '192.0.2.117'
@@ -2367,6 +2539,8 @@ def maintenance_mode(
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.maintenance_mode '192.0.2.117'
@@ -2410,6 +2584,8 @@ def exit_maintenance_mode(host, timeout=0, catch_task_error=True, service_instan
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.exit_maintenance_mode '192.0.2.117'
@@ -2445,6 +2621,8 @@ def in_lockdown_mode(host, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    CLI Example:
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.in_lockdown_mode '192.0.2.117'
@@ -2473,6 +2651,8 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None):
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
@@ -2510,6 +2690,8 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None):
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
+
+    CLI Example:
 
     .. code-block:: bash
 
