@@ -352,13 +352,13 @@ def test_get_firewall_config(service_instance):
 
     ret = esxi.set_firewall_config(
         firewall_config={
-            'name':'esxupdate',
-            'enabled':True,
-            'allowed_host':{
-                'all_ip':True,
-                'ip_address':['169.199.100.11'],
-                'ip_network':['169.199.200.0/24']
-            }
+            "name": "esxupdate",
+            "enabled": True,
+            "allowed_host": {
+                "all_ip": True,
+                "ip_address": ["169.199.100.11"],
+                "ip_network": ["169.199.200.0/24"],
+            },
         },
         service_instance=service_instance,
         datacenter_name="Datacenter",
@@ -368,20 +368,18 @@ def test_get_firewall_config(service_instance):
     for host in ret:
         for rule in host:
             assert host[rule][0]["enabled"] is True
-            assert host[rule][0]["allowed_hosts"]['all_ip'] is True
-            assert host[rule][0]["allowed_hosts"]['ip_address'][0] == '169.199.100.11'
-            assert host[rule][0]["allowed_hosts"]['ip_network'][0] == '169.199.200.0/24'
-    
+            assert host[rule][0]["allowed_hosts"]["all_ip"] is True
+            assert host[rule][0]["allowed_hosts"]["ip_address"][0] == "169.199.100.11"
+            assert host[rule][0]["allowed_hosts"]["ip_network"][0] == "169.199.200.0/24"
+
     ret = esxi.set_firewall_configs(
-        firewall_configs=[{
-            'name':'esxupdate',
-            'enabled':False,
-            'allowed_host':{
-                'all_ip':False,
-                'ip_address':[],
-                'ip_network':[]
+        firewall_configs=[
+            {
+                "name": "esxupdate",
+                "enabled": False,
+                "allowed_host": {"all_ip": False, "ip_address": [], "ip_network": []},
             }
-        }],
+        ],
         service_instance=service_instance,
         datacenter_name="Datacenter",
         cluster_name="Cluster",
@@ -389,10 +387,10 @@ def test_get_firewall_config(service_instance):
     assert ret
     for host in ret[0]:
         for rule in host:
-            assert host[rule][0]["allowed_hosts"]['all_ip'] is False
+            assert host[rule][0]["allowed_hosts"]["all_ip"] is False
             assert host[rule][0]["enabled"] is False
-            assert host[rule][0]["allowed_hosts"]['ip_address'] == []
-            assert host[rule][0]["allowed_hosts"]['ip_network'] == []
+            assert host[rule][0]["allowed_hosts"]["ip_address"] == []
+            assert host[rule][0]["allowed_hosts"]["ip_network"] == []
 
 
 def test_add(integration_test_config, service_instance):

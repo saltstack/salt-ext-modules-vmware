@@ -823,25 +823,29 @@ def set_firewall_config(
                 continue
             firewall_rulespec = vim.host.Ruleset.RulesetSpec()
             firewall_rulespec.allowedHosts = vim.host.Ruleset.IpList()
-            if 'enabled' in firewall_config and firewall_config['enabled']:
-                firewall.EnableRuleset(id=firewall_config['name'])
+            if "enabled" in firewall_config and firewall_config["enabled"]:
+                firewall.EnableRuleset(id=firewall_config["name"])
             else:
-                firewall.DisableRuleset(id=firewall_config['name'])
-            if 'allowed_host' in firewall_config:
-                if 'all_ip' in firewall_config['allowed_host']:
-                    firewall_rulespec.allowedHosts.allIp = firewall_config['allowed_host']['all_ip']
-                if 'ip_address' in firewall_config['allowed_host']:
-                    firewall_rulespec.allowedHosts.ipAddress = list(firewall_config['allowed_host']['ip_address'])
+                firewall.DisableRuleset(id=firewall_config["name"])
+            if "allowed_host" in firewall_config:
+                if "all_ip" in firewall_config["allowed_host"]:
+                    firewall_rulespec.allowedHosts.allIp = firewall_config["allowed_host"]["all_ip"]
+                if "ip_address" in firewall_config["allowed_host"]:
+                    firewall_rulespec.allowedHosts.ipAddress = list(
+                        firewall_config["allowed_host"]["ip_address"]
+                    )
                 firewall_rulespec.allowedHosts.ipNetwork = []
-                if 'ip_network' in firewall_config['allowed_host']:
-                    for network in firewall_config['allowed_host']['ip_network']:
-                        address, mask = network.split('/')
+                if "ip_network" in firewall_config["allowed_host"]:
+                    for network in firewall_config["allowed_host"]["ip_network"]:
+                        address, mask = network.split("/")
                         tmp_ip_network_spec = vim.host.Ruleset.IpNetwork()
                         tmp_ip_network_spec.network = address
                         tmp_ip_network_spec.prefixLength = int(mask)
                         firewall_rulespec.allowedHosts.ipNetwork.append(tmp_ip_network_spec)
-                firewall.UpdateRuleset(id=firewall_config['name'], spec=firewall_rulespec)
-            res = get_firewall_config(firewall_config['name'],host_name=host.name,service_instance=service_instance)
+                firewall.UpdateRuleset(id=firewall_config["name"], spec=firewall_rulespec)
+            res = get_firewall_config(
+                firewall_config["name"], host_name=host.name, service_instance=service_instance
+            )
             ret.append(res)
         return ret
 
@@ -891,9 +895,12 @@ def set_firewall_configs(
     )
     for host in hosts:
         for rule_set in enumerate(list(firewall_configs)):
-            res = set_firewall_config(rule_set[1],host_name=host.name,service_instance=service_instance)
+            res = set_firewall_config(
+                rule_set[1], host_name=host.name, service_instance=service_instance
+            )
             ret.append(res)
     return ret
+
 
 def backup_config(
     push_file_to_master=False,
