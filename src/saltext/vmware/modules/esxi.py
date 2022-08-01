@@ -625,7 +625,7 @@ def set_advanced_config(
     )
 
 
-def get_firewall_configs(
+def get_all_firewall_configs(
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -648,9 +648,9 @@ def get_firewall_configs(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.get_firewall_config
+        salt '*' vmware_esxi.get_all_firewall_configs
     """
-    log.debug("Running vmware_esxi.get_firewall_configs")
+    log.debug("Running vmware_esxi.get_all_firewall_configs")
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -853,7 +853,7 @@ def set_firewall_config(
         raise salt.exceptions.SaltException(str(exc))
 
 
-def set_firewall_configs(
+def set_all_firewall_configs(
     firewall_configs,
     datacenter_name=None,
     cluster_name=None,
@@ -880,9 +880,9 @@ def set_firewall_configs(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.set_firewall_config
+        salt '*' vmware_esxi.set_all_firewall_configs
     """
-    log.debug("Running vmware_esxi.set_firewall_config")
+    log.debug("Running vmware_esxi.set_all_firewall_configs")
     ret = []
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)

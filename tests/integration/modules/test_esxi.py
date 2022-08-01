@@ -325,11 +325,11 @@ def test_get_dns_config(service_instance):
     assert not ret
 
 
-def test_get_firewall_config(service_instance):
+def test_firewall_config(service_instance):
     """
-    Test get firewall configuration on ESXi host
+    Test firewall configuration on ESXi host
     """
-    ret = esxi.get_firewall_configs(
+    ret = esxi.get_all_firewall_configs(
         service_instance=service_instance,
         datacenter_name="Datacenter",
         cluster_name="Cluster",
@@ -342,7 +342,7 @@ def test_get_firewall_config(service_instance):
         assert ret[host][0]["service"]
         assert ret[host][0]["rule"]
 
-    ret = esxi.get_firewall_configs(
+    ret = esxi.get_all_firewall_configs(
         service_instance=service_instance,
         datacenter_name="Datacenter",
         cluster_name="Cluster",
@@ -372,7 +372,7 @@ def test_get_firewall_config(service_instance):
             assert host[rule][0]["allowed_hosts"]["ip_address"][0] == "169.199.100.11"
             assert host[rule][0]["allowed_hosts"]["ip_network"][0] == "169.199.200.0/24"
 
-    ret = esxi.set_firewall_configs(
+    ret = esxi.set_all_firewall_configs(
         firewall_configs=[
             {
                 "name": "esxupdate",
