@@ -198,21 +198,47 @@ def test_when_vm_list_is_given_a_hostname_then_only_vms_with_matching_runtime_ho
     assert actual_vm_names == expected_vm_names
 
 
+def test_when_vm_list_is_given_a_cluster_name_and_datacenter_name_then_parent_should_be_added_to_filter_properties(
+    fake_vmodl, quacks_like_vms
+):
+    fake_service_instance, *_ = quacks_like_vms
+    with mock.patch(
+        "saltext.vmware.utils.common.get_datacenters", return_value=["fnord"], autospec=True
+    ):
+        vm.list_(
+            service_instance=fake_service_instance,
+            datacenter_name="fnord as well",
+            cluster_name="anything not false/empty",
+        )
+    assert (
+        "parent" in fake_vmodl.query.PropertyCollector.PropertySpec.mock_calls[0].kwargs["pathSet"]
+    )
 
-def blah(thing):
-    f = thing.fnord()
-    assert f == 42
 
-    blah = thing.fnord()
-    assert blah == 5
+def test_when_vm_list_is_given_a_datacenter_name_but_no_cluster_name_then_it_should_return_expected_vms_as_filtered_by_datacenter(
+    fake_vmodl, quacks_like_vms
+):
+    fake_datacenter = object()
+    fake_service_instance, expected_vm_names, _ = quacks_like_vms
+    with mock.patch(
+        "saltext.vmware.utils.common.get_datacenters", return_value=[fake_datacenter], autospec=True
+    ):
+        actual_vm_names = vm.list_(
+            service_instance=fake_service_instance, datacenter_name="some cool datacenter"
+        )
 
-    thing.fnord()
+    assert actual_vm_names == expected_vm_names
 
+    # Yes, these assertions are kind of gross - but we're dealing with pyvmomi and all that that entails. I don't think that there's really a great way to make these assertions.
+    assert (
+        fake_service_instance.content.viewManager.CreateContainerView.mock_calls[0].args[0]
+        is fake_datacenter
+    )
 
-def test_whee():
-    m = mock.MagicMock()
-
-    #m.fnord.return_value = 42
-    m.fnord.side_effect = [42, 5]
-
-    blah(m)
+    assert (
+        fake_vmodl.query.PropertyCollector.ObjectSpec.mock_calls[0].kwargs["obj"]
+        == fake_service_instance.content.viewManager.CreateContainerView.return_value
+    )
+    assert fake_vmodl.query.PropertyCollector.FilterSpec.mock_calls[0].kwargs["objectSet"] == [
+        fake_vmodl.query.PropertyCollector.ObjectSpec.return_value
+    ]
