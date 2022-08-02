@@ -862,7 +862,7 @@ def advanced_config(
 
     name
         Name of configuration on matching ESXi hosts. (required).
-    
+
     value
         Value for configuration on matching ESXi hosts. (required).
 
@@ -900,25 +900,20 @@ def advanced_config(
     )
     if __opts__["test"]:
         ret["result"] = None
-        ret["changes"] = {
-                "new": {}
-            }
+        ret["changes"] = {"new": {}}
         for host in esxi_config_old:
             ret["changes"]["new"][host] = f"{name} will be set to {value}"
         ret["comment"] = "These options are set to change."
         return ret
-    
+
     ret["result"] = True
-    ret["changes"] = {
-            "new": {},
-            "old": {}
-        }
+    ret["changes"] = {"new": {}, "old": {}}
     change = False
     for host in esxi_config_old:
         if esxi_config_old[host][name] != value:
             change = True
             config = __salt__["vmware_esxi.set_advanced_configs"](
-                config_dict={name:value},
+                config_dict={name: value},
                 datacenter_name=datacenter_name,
                 cluster_name=cluster_name,
                 host_name=host,
@@ -926,7 +921,7 @@ def advanced_config(
             )
             ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
             ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
-        
+
     if change:
         ret["comment"] = "Configurations have successfully been changed."
     else:
