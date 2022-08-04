@@ -154,7 +154,7 @@ def manage_service(
     service_instance=None,
 ):
     """
-    Manage the state of the service running on the EXSI host.
+    Manage the state of the service running on the ESXi host.
 
     service_name
         Service that needs to be managed.
@@ -233,7 +233,7 @@ def list_services(
     service_instance=None,
 ):
     """
-    List the state of services running on matching EXSI hosts.
+    List the state of services running on matching ESXi hosts.
 
     service_name
         Filter by this service name. (optional)
@@ -311,7 +311,7 @@ def get_acceptance_level(
     service_instance=None,
 ):
     """
-    Get acceptance level on matching EXSI hosts.
+    Get acceptance level on matching ESXi hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -377,7 +377,7 @@ def set_acceptance_level(
     service_instance=None,
 ):
     """
-    Set acceptance level on matching EXSI hosts.
+    Set acceptance level on matching ESXi hosts.
 
     acceptance_level
         Set to this acceptance level. Valid values: "community", "partner", "vmware_accepted", "vmware_certified".
@@ -441,7 +441,7 @@ def get_advanced_config(
     service_instance=None,
 ):
     """
-    Get advanced config on matching EXSI hosts.
+    Get advanced config on matching ESXi hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -496,7 +496,7 @@ def set_advanced_configs(
     service_instance=None,
 ):
     """
-    Set multiple advanced configurations on matching EXSI hosts.
+    Set multiple advanced configurations on matching ESXi hosts.
 
     config_dict
         Set the configuration key to the configuration value. Eg: {"Annotations.WelcomeMessage": "Hello"}
@@ -580,7 +580,7 @@ def set_advanced_config(
     service_instance=None,
 ):
     """
-    Set a single advanced configuration on matching EXSI hosts.
+    Set a single advanced configuration on matching ESXi hosts.
 
     config_name
         Name of the advanced configuration to be set.
@@ -625,14 +625,14 @@ def set_advanced_config(
     )
 
 
-def get_firewall_config(
+def get_all_firewall_configs(
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
     service_instance=None,
 ):
     """
-    Get Firewall configuration on matching EXSI hosts.
+    Get Firewall configurations on matching ESXi hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -648,9 +648,9 @@ def get_firewall_config(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.get_firewall_config
+        salt '*' vmware_esxi.get_all_firewall_configs
     """
-    log.debug("Running vmware_esxi.get_firewall_config")
+    log.debug("Running vmware_esxi.get_all_firewall_configs")
     ret = {}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -698,6 +698,210 @@ def get_firewall_config(
         raise salt.exceptions.SaltException(str(exc))
 
 
+def get_firewall_config(
+    ruleset_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Get Firewall a rule configuration on matching ESXi hosts.
+
+    ruleset_name
+        Name of firewall rule.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_firewall_config
+    """
+    log.debug("Running vmware_esxi.get_firewall_config")
+    ret = {}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for h in hosts:
+            firewall_config = h.configManager.firewallSystem
+            if not firewall_config:
+                continue
+            for ruleset in firewall_config.firewallInfo.ruleset:
+                if ruleset_name == ruleset.key:
+                    ret.setdefault(h.name, []).append(
+                        {
+                            "allowed_hosts": {
+                                "ip_address": list(ruleset.allowedHosts.ipAddress),
+                                "all_ip": ruleset.allowedHosts.allIp,
+                                "ip_network": [
+                                    "{}/{}".format(ip.network, ip.prefixLength)
+                                    for ip in ruleset.allowedHosts.ipNetwork
+                                ],
+                            },
+                            "key": ruleset.key,
+                            "service": ruleset.service,
+                            "enabled": ruleset.enabled,
+                            "rule": [
+                                {
+                                    "port": r.port,
+                                    "end_port": r.endPort,
+                                    "direction": r.direction,
+                                    "port_type": r.portType,
+                                    "protocol": r.protocol,
+                                }
+                                for r in ruleset.rule
+                            ],
+                        }
+                    )
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def set_firewall_config(
+    firewall_config,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set Firewall rule configuration on matching ESXi hosts.
+
+    firewall_config
+        Dict of Rule set to be used to change Firewall configuration. Eg: {"name": "CIMHttpServer"}
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.set_firewall_config
+    """
+    log.debug("Running vmware_esxi.set_firewall_config")
+    ret = []
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    try:
+        for host in hosts:
+            firewall = host.configManager.firewallSystem
+            if not firewall:
+                continue
+            firewall_rulespec = vim.host.Ruleset.RulesetSpec()
+            firewall_rulespec.allowedHosts = vim.host.Ruleset.IpList()
+            if "enabled" in firewall_config and firewall_config["enabled"]:
+                firewall.EnableRuleset(id=firewall_config["name"])
+            else:
+                firewall.DisableRuleset(id=firewall_config["name"])
+            if "allowed_host" in firewall_config:
+                if "all_ip" in firewall_config["allowed_host"]:
+                    firewall_rulespec.allowedHosts.allIp = firewall_config["allowed_host"]["all_ip"]
+                if "ip_address" in firewall_config["allowed_host"]:
+                    firewall_rulespec.allowedHosts.ipAddress = list(
+                        firewall_config["allowed_host"]["ip_address"]
+                    )
+                firewall_rulespec.allowedHosts.ipNetwork = []
+                if "ip_network" in firewall_config["allowed_host"]:
+                    for network in firewall_config["allowed_host"]["ip_network"]:
+                        address, mask = network.split("/")
+                        tmp_ip_network_spec = vim.host.Ruleset.IpNetwork()
+                        tmp_ip_network_spec.network = address
+                        tmp_ip_network_spec.prefixLength = int(mask)
+                        firewall_rulespec.allowedHosts.ipNetwork.append(tmp_ip_network_spec)
+                firewall.UpdateRuleset(id=firewall_config["name"], spec=firewall_rulespec)
+            res = get_firewall_config(
+                firewall_config["name"], host_name=host.name, service_instance=service_instance
+            )
+            ret.append(res)
+        return ret
+
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def set_all_firewall_configs(
+    firewall_configs,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set Firewall rule configurations on matching ESXi hosts.
+
+    firewall_configs
+        List of Rule sets to be used to change Firewall configuration. Eg: [{"name": "CIMHttpServer"},{"name":"DHCPv6"}]
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.set_all_firewall_configs
+    """
+    log.debug("Running vmware_esxi.set_all_firewall_configs")
+    ret = []
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    for host in hosts:
+        for rule_set in enumerate(list(firewall_configs)):
+            res = set_firewall_config(
+                rule_set[1], host_name=host.name, service_instance=service_instance
+            )
+            ret.append(res)
+    return ret
+
+
 def backup_config(
     push_file_to_master=False,
     http_opts=None,
@@ -707,7 +911,7 @@ def backup_config(
     service_instance=None,
 ):
     """
-    Backup configuration for matching EXSI hosts.
+    Backup configuration for matching ESXi hosts.
 
     push_file_to_master
         Push the downloaded configuration file to the salt master. (optional)
@@ -776,7 +980,7 @@ def restore_config(
     service_instance=None,
 ):
     """
-    Restore configuration for matching EXSI hosts.
+    Restore configuration for matching ESXi hosts.
 
     source_file
         Specify the source file from which the configuration is to be restored.
@@ -869,7 +1073,7 @@ def reset_config(
     service_instance=None,
 ):
     """
-    Reset configuration for matching EXSI hosts.
+    Reset configuration for matching ESXi hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -930,7 +1134,7 @@ def get_dns_config(
     service_instance=None,
 ):
     """
-    Get DNS configuration on matching EXSI hosts.
+    Get DNS configuration on matching ESXi hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -983,7 +1187,7 @@ def get_ntp_config(
     service_instance=None,
 ):
     """
-    Get NTP configuration on matching EXSI hosts.
+    Get NTP configuration on matching ESXi hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
@@ -2129,7 +2333,7 @@ def list_pkgs(
     service_instance=None,
 ):
     """
-    List the packages installed on matching EXSi hosts.
+    List the packages installed on matching ESXi hosts.
     Note: Appropriate filters are recommended for large installations.
 
     pkg_name
@@ -2197,7 +2401,7 @@ def get(
     service_instance=None,
 ):
     """
-    Get configuration information for matching EXSI hosts.
+    Get configuration information for matching ESXi hosts.
 
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
