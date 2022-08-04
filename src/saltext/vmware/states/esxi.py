@@ -847,3 +847,82 @@ def lockdown_mode(
     elif ret["result"] is None:
         ret["comment"] += "These options are set to change."
     return ret
+
+
+def firewall_configs(
+    name,
+    firewall_config_dict,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set firewall configuration on matching ESXi hosts.
+    name
+        Name of configuration in firewall_config_dict. (required).
+    firewall_config_dict
+        Value for configuration on matching ESXi hosts. (required).
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+    cluster_name
+        Filter by this cluster name (optional)
+    host_name
+        Filter by this ESXi hostname (optional)
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+    .. code-block:: yaml
+        Set firewall config:
+          vmware_esxi.firewall_configs:
+            - name: prod
+            - firewall_config_dict:
+                prod:
+                    - name: CIMHttpServer
+                      enabled: True
+                    - name: esxupdate
+                      enabled: True
+                      allowed_host:
+                        all_ip: True
+                        ip_address:
+                            - 169.199.100.11
+                            - 169.199.100.10
+                        ip_network:
+                        - 169.199.200.0/24
+    """
+    log.debug("Running vmware_esxi.firewall_configs")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    for i in range(len(firewall_config_dict[name])):
+        firewall_config_dict[name][i] = dict(firewall_config_dict[name][i])
+        if 'allowed_host' in firewall_config_dict[name][i]:
+            firewall_config_dict[name][i]['allowed_host'] = dict(firewall_config_dict[name][i]['allowed_host'])
+    old_configs = []
+    for firewall_conf in firewall_config_dict[name]:
+        old_configs.append(__salt__["vmware_esxi.get_firewall_config"](
+            ruleset_name=firewall_conf['name'],
+            datacenter_name=datacenter_name,
+            cluster_name=cluster_name,
+            host_name=host_name,
+            service_instance=service_instance,
+        ))
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["changes"] = {"new": {}}
+        for firewall_config in firewall_config_dict[name]:
+            breakpoint()
+            ret["changes"]["new"][firewall_config['name']] = f"{name} will be set to"
+        ret["comment"] = "These options are set to change."
+        return ret
+
+    ret["result"] = True
+    ret["changes"] = {"new": {}, "old": {}}
+    change = False
+
+
+    if change:
+        ret["comment"] = "Configurations have successfully been changed."
+    else:
+        ret["comment"] = "Configurations are already in correct state."
+    return ret
