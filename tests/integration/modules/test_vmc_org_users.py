@@ -11,8 +11,7 @@ def vmc_common_data(vmc_connect):
     data = vmc_connect.copy()
     data.pop("sddc_id")
     data.pop("vcenter_hostname")
-    data["hostname"] = vmc_connect["authorization_host"]
-    data.pop("authorization_host")
+    data["hostname"] = data.pop("authorization_host")
     return data
 
 

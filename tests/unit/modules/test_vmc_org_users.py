@@ -102,7 +102,7 @@ def org_users_data(mock_vmc_request_call_api, org_user_data):
 
 @pytest.fixture
 def organization_roles():
-    data = [{"name": "org_member", "expiresAt": None}, {"name": "developer", "expiresAt": None}]
+    data = [{"name": "org_member"}, {"name": "developer"}]
     yield data
 
 
@@ -238,8 +238,8 @@ def test_invite_org_user_called_with_url(organization_roles):
             {
                 "usernames": ["test1@vmware.com"],
                 "organizationRoles": [
-                    {"name": "org_member", "expiresAt": None},
-                    {"name": "developer", "expiresAt": None},
+                    {"name": "org_member"},
+                    {"name": "developer"},
                 ],
                 "skipNotify": False,
                 "customRoles": None,
@@ -254,14 +254,12 @@ def test_invite_org_user_called_with_url(organization_roles):
             {
                 "user_names": ["test1@vmware.com"],
                 "organization_roles": [
-                    {"name": "org_member", "expiresAt": None},
-                    {"name": "developer", "expiresAt": None},
+                    {"name": "org_member"},
+                    {"name": "developer"},
                 ],
                 "skip_notify": False,
-                "custom_roles": [
-                    {"name": "name1", "resource": "resource1", "expiresAt": 3609941597}
-                ],
-                "service_roles": [{"name": "vmc-user:full", "expiresAt": None}],
+                "custom_roles": [{"name": "name1"}],
+                "service_roles": [{"name": "vmc-user:full"}],
                 "skip_notify_registration": False,
                 "invited_by": "owner@vmware.com",
                 "custom_groups_ids": ["abc@vmware.com"],
@@ -269,14 +267,12 @@ def test_invite_org_user_called_with_url(organization_roles):
             {
                 "usernames": ["test1@vmware.com"],
                 "organizationRoles": [
-                    {"name": "org_member", "expiresAt": None},
-                    {"name": "developer", "expiresAt": None},
+                    {"name": "org_member"},
+                    {"name": "developer"},
                 ],
                 "skipNotify": False,
-                "customRoles": [
-                    {"name": "name1", "resource": "resource1", "expiresAt": 3609941597}
-                ],
-                "serviceRolesDtos": [{"name": "vmc-user:full", "expiresAt": None}],
+                "customRoles": [{"name": "name1"}],
+                "serviceRolesDtos": [{"serviceRoles": [{"name": "vmc-user:full"}]}],
                 "skipNotifyRegistration": False,
                 "invitedBy": "owner@vmware.com",
                 "customGroupsIds": ["abc@vmware.com"],

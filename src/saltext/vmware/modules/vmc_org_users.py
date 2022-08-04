@@ -232,111 +232,45 @@ def invite(
 
     organization_roles
         List of unique organization roles assigned to user.
-        Its mandatory while sending invitation to user.
+        It can be specified in the below format
 
-        BaseRoleBinding defines the base binding properties of the role.
+        .. code::
 
-        'name': String
-            The name of the role.
-
-        'createdDate': (String) (Optional)
-            The timestamp the role was created at (measured in number of seconds since 1/1/1970 UTC).
-
-        'expiresAt': (Integer As Int64) (Optional)
-            The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC). Example:3609941597
-
-        'lastUpdatedBy': (String) (Optional)
-            Last Updated time of the role.
-
-        'lastUpdatedDate': (String) (Optional)
-            The timestamp the role was updated at (measured in number of seconds since 1/1/1970 UTC).
-
-        'membershipType': (String) (Optional)
-            Membership type of the member in the organization.
-            DIRECT: if the member roles were assigned directly.
-            GROUP: if the member roles were assigned through custom or enterprise group.
-            Possible values are: DIRECT , GROUP , NESTED
-
-        'createdBy': (String) (Optional)
-            The Creator of the role.
-
-        'resource': (String) (Optional)
-            The resource in which the role is scoped to. The resource will be embedded in the Access Token
-            "perms" claim, as part of the role.
+            "organization_roles": [
+                        {
+                            "name": "org_member"
+                        }
+                    ]
+            where 'name' indicates the name of the organization role.
 
     skip_notify
         (Optional) Indicates if the notification have to be skipped.
 
     custom_roles
-        (Optional) List of custom role bindings which defines the binding properties of the custom role.
-        Custom role binding is a json object which can contain the below fields.
+        (Optional) List of custom role assigned to a user.
+        It can be specified in the below format
 
-        'name': String
-            The name of the role.
+        .. code::
 
-        'createdDate': (String) (Optional)
-            The timestamp the role was created at (measured in number of seconds since 1/1/1970 UTC).
-
-        'expiresAt': (Integer As Int64) (Optional)
-            The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC). Example:3609941597
-
-        'lastUpdatedBy': (String) (Optional)
-            Last Updated time of the role.
-
-        'lastUpdatedDate': (String) (Optional)
-            The timestamp the role was updated at (measured in number of seconds since 1/1/1970 UTC).
-
-        'membershipType': (String) (Optional)
-            Membership type of the member in the organization.
-            DIRECT: if the member roles were assigned directly.
-            GROUP: if the member roles were assigned through custom or enterprise group.
-            Possible values are: DIRECT , GROUP , NESTED
-
-        'createdBy': (String) (Optional)
-            The Creator of the role.
-
-        'resource': (String) (Optional)
-            The resource in which the role is scoped to. The resource will be embedded in the Access Token
-            "perms" claim, as part of the role.
+            "custom_roles": [
+                        {
+                            "name": "role_name"
+                        }
+                    ]
+            where 'name' indicates the name of the custom role.
 
     service_roles
         (Optional) List of service roles to attach to a user.
-        Below fields defines the properties of service roles.
+        It can be specified in the below format
 
-        'serviceDefinitionLink': (String) (Optional)
-            The link to the service definition.
+        .. code::
 
-        'serviceRoles': (Optional)
-            List of services role bindings which defines the binding properties of the service role.
-            Service role binding is a json object which can contain the below fields.
-
-            'name': (String)
-                The name of the role.
-
-            'createdDate': (String) (Optional)
-                The timestamp the role was created at (measured in number of seconds since 1/1/1970 UTC).
-
-            'expiresAt': (Integer As Int64) (Optional)
-                The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC). Example:3609941597
-
-            'lastUpdatedBy': (String) (Optional)
-                Last Updated time of the role.
-
-            'lastUpdatedDate': (String) (Optional)
-                The timestamp the role was updated at (measured in number of seconds since 1/1/1970 UTC).
-
-            'membershipType': (String) (Optional)
-                Membership type of the member in the organization.
-                DIRECT: if the member roles were assigned directly.
-                GROUP: if the member roles were assigned through custom or enterprise group.
-                Possible values are: DIRECT , GROUP , NESTED
-
-            'createdBy': (String) (Optional)
-                The Creator of the role.
-
-            'resource': (String) (Optional)
-                The resource in which the role is scoped to. The resource will be embedded in the Access Token
-                "perms" claim, as part of the role.
+            "service_roles": [
+                        {
+                            "name": "role_name"
+                        }
+                    ]
+            where 'name' indicates the name of the service role.
 
     skip_notify_registration
         (Optional) Prevent sending mails to users that do not yet have a CSP profile.
@@ -363,39 +297,24 @@ def invite(
                 "skip_notify": true,
                 "custom_roles": [
                     {
-                        "name": "string",
-                        "resource": "string",
-                        "expiresAt": 3609941597
+                        "name": "string"
                     }
                 ],
                 "service_roles": [
                     {
-                        "serviceRoles": [
-                            {
-                                "name": "vmc-user:full",
-                                "resource": None,
-                                "expiresAt":  None
-                            },
-                            {
-                                "name": "nsx:cloud_admin",
-                                "resource": None
-                                "expiresAt": None
-                            },
-                            {
-                                "name": "nsx:cloud_auditor",
-                                "resource": None
-                                "expiresAt": None
-                            }
-                        ],
-                        "serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_"
+                        "name": "vmc-user:full"
+                    },
+                    {
+                        "name": "nsx:cloud_admin"
+                    },
+                    {
+                        "name": "nsx:cloud_auditor"
                     }
                 ],
                 "skip_notify_registration": true,
                 "organization_roles": [
                     {
-                        "name": "org_member",
-                        "resource": None,
-                        "expiresAt": 3609941597
+                        "name": "org_member"
                     }
                 ],
                 "invited_by": "string",
@@ -411,7 +330,7 @@ def invite(
 
           .. code-block:: bash
 
-              salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id="1234" refresh_key="J05AftDxW" user_names='["abc@example.com"]' organization_roles='[{"name": "org_member"},{"name": "developer"}]' service_roles='[{"serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_", "serviceRoles": [{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}]}]' verify_ssl=false
+              salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id="1234" refresh_key="J05AftDxW" user_names='["abc@example.com"]' organization_roles='[{"name": "org_member"},{"name": "developer"}]' service_roles='[{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}]' verify_ssl=false
 
     """
 
@@ -426,11 +345,15 @@ def invite(
         "skipNotify": skip_notify,
         "organizationRoles": organization_roles,
         "customRoles": custom_roles,
-        "serviceRolesDtos": service_roles,
         "skipNotifyRegistration": skip_notify_registration,
         "invitedBy": invited_by,
         "customGroupsIds": custom_groups_ids,
     }
+
+    if service_roles:
+        service_roles = [{"serviceRoles": service_roles}]
+        allowed_dict["serviceRolesDtos"] = service_roles
+
     req_data = vmc_request._filter_kwargs(allowed_kwargs=allowed_dict.keys(), **allowed_dict)
 
     request_data = vmc_request.create_payload_for_request(vmc_templates.add_org_users, req_data)
