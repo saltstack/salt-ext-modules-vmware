@@ -49,5 +49,3 @@ def test_org_users_smoke_test(salt_call_cli, vmc_common_data):
     ret = salt_call_cli.run("vmc_org_users.remove", user_ids=user_ids, **vmc_common_data)
     result_as_json = ret.json
     assert "error" not in result_as_json
-    assert result_as_json["succeeded"] == []
-    assert result_as_json["failed"] == user_ids
