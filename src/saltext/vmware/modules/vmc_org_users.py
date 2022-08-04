@@ -261,16 +261,22 @@ def invite(
 
     service_roles
         (Optional) List of service roles to attach to a user.
-        It can be specified in the below format
+        Below fields defines the properties of service roles.
 
-        .. code::
+        'serviceDefinitionLink': (String) (Optional)
+            The link to the service definition.
 
-            "service_roles": [
+        'serviceRoles': list
+            It can be specified in the below format
+
+            .. code::
+
+                "serviceRoles": [
                         {
                             "name": "role_name"
                         }
                     ]
-            where 'name' indicates the name of the service role.
+                where 'name' indicates the name of the service role.
 
     skip_notify_registration
         (Optional) Prevent sending mails to users that do not yet have a CSP profile.
@@ -302,13 +308,18 @@ def invite(
                 ],
                 "service_roles": [
                     {
-                        "name": "vmc-user:full"
-                    },
-                    {
-                        "name": "nsx:cloud_admin"
-                    },
-                    {
-                        "name": "nsx:cloud_auditor"
+                        "serviceRoles": [
+                            {
+                                "name": "vmc-user:full"
+                            },
+                            {
+                                "name": "nsx:cloud_admin"
+                            },
+                            {
+                                "name": "nsx:cloud_auditor"
+                            }
+                        ],
+                        "serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_"
                     }
                 ],
                 "skip_notify_registration": true,
@@ -330,7 +341,7 @@ def invite(
 
           .. code-block:: bash
 
-              salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id="1234" refresh_key="J05AftDxW" user_names='["abc@example.com"]' organization_roles='[{"name": "org_member"},{"name": "developer"}]' service_roles='[{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}]' verify_ssl=false
+                salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id="1234" refresh_key="J05AftDxW" user_names='["abc@example.com"]' organization_roles='[{"name": "org_member"},{"name": "developer"}]' service_roles='[{"serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_", "serviceRoles": [{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}]}]' verify_ssl=false
 
     """
 
@@ -345,14 +356,11 @@ def invite(
         "skipNotify": skip_notify,
         "organizationRoles": organization_roles,
         "customRoles": custom_roles,
+        "serviceRolesDtos": service_roles,
         "skipNotifyRegistration": skip_notify_registration,
         "invitedBy": invited_by,
         "customGroupsIds": custom_groups_ids,
     }
-
-    if service_roles:
-        service_roles = [{"serviceRoles": service_roles}]
-        allowed_dict["serviceRolesDtos"] = service_roles
 
     req_data = vmc_request._filter_kwargs(allowed_kwargs=allowed_dict.keys(), **allowed_dict)
 

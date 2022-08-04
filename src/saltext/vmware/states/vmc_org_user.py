@@ -89,16 +89,22 @@ def invite(
 
     service_roles
         (Optional) List of service roles to attach to a user.
-        It can be specified in the below format
+        Below fields defines the properties of service roles.
 
-        .. code::
+        'serviceDefinitionLink': (String) (Optional)
+            The link to the service definition.
 
-            "service_roles": [
+        'serviceRoles': list
+            It can be specified in the below format
+
+            .. code::
+
+                "serviceRoles": [
                         {
                             "name": "role_name"
                         }
                     ]
-            where 'name' indicates the name of the service role.
+                where 'name' indicates the name of the service role.
 
     skip_notify_registration
         (Optional) Prevent sending mails to users that do not yet have a CSP profile.
