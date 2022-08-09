@@ -289,21 +289,6 @@ def absent(
         else:
             org_user = None
 
-    # if __opts__.get("test"):
-    #     log.info("vmc_org_user.absent is called with test option")
-    #     if org_user:
-    #         return vmc_state._create_state_response(
-    #             name=name,
-    #             comment="Would have removed user with username {}".format(username),
-    #         )
-    #     else:
-    #         return vmc_state._create_state_response(
-    #             name=name,
-    #             comment="State absent will do nothing as no user found with username {}".format(
-    #                 username
-    #             ),
-    #         )
-
     if org_user:
         if __opts__.get("test"):
             log.info("vmc_org_user.absent is called with test option")
