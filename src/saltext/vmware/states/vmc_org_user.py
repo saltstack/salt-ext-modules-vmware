@@ -289,43 +289,50 @@ def absent(
         else:
             org_user = None
 
-    if __opts__.get("test"):
-        log.info("vmc_org_user.absent is called with test option")
-        if org_user:
+    # if __opts__.get("test"):
+    #     log.info("vmc_org_user.absent is called with test option")
+    #     if org_user:
+    #         return vmc_state._create_state_response(
+    #             name=name,
+    #             comment="Would have removed user with username {}".format(username),
+    #         )
+    #     else:
+    #         return vmc_state._create_state_response(
+    #             name=name,
+    #             comment="State absent will do nothing as no user found with username {}".format(
+    #                 username
+    #             ),
+    #         )
+
+    if org_user:
+        if __opts__.get("test"):
+            log.info("vmc_org_user.absent is called with test option")
             return vmc_state._create_state_response(
                 name=name,
                 comment="Would have removed user with username {}".format(username),
             )
         else:
+            removed_org_user = __salt__["vmc_org_users.remove"](
+                hostname=hostname,
+                refresh_key=refresh_key,
+                org_id=org_id,
+                user_ids=[user_id],
+                notify_users=notify_users,
+                verify_ssl=verify_ssl,
+                cert=cert,
+            )
+
+            if "error" in removed_org_user:
+                return vmc_state._create_state_response(
+                    name=name, comment=removed_org_user["error"], result=False
+                )
+
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will do nothing as no user found with username {}".format(
-                    username
-                ),
+                comment="Removed user {}".format(username),
+                old_state=org_user,
+                result=True,
             )
-
-    if org_user:
-        removed_org_user = __salt__["vmc_org_users.remove"](
-            hostname=hostname,
-            refresh_key=refresh_key,
-            org_id=org_id,
-            user_ids=[user_id],
-            notify_users=notify_users,
-            verify_ssl=verify_ssl,
-            cert=cert,
-        )
-
-        if "error" in removed_org_user:
-            return vmc_state._create_state_response(
-                name=name, comment=removed_org_user["error"], result=False
-            )
-
-        return vmc_state._create_state_response(
-            name=name,
-            comment="Removed user {}".format(username),
-            old_state=org_user,
-            result=True,
-        )
     else:
         log.info(
             "No user found with username %s.",

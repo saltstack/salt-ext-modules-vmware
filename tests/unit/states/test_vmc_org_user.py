@@ -167,10 +167,8 @@ def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_i
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result[
-        "comment"
-    ] == "State absent will do nothing as no user found with username {}".format(user_name)
-    assert result["result"] is None
+    assert result["comment"] == "No user found with username {}".format(user_name)
+    assert result["result"]
 
 
 def test_absent_with_error_from_delete(mocked_ok_response, mocked_error_response):
