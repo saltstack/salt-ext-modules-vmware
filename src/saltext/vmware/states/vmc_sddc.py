@@ -84,7 +84,7 @@ def present(
         Possible values are: AWS, ZEROCLOUD
 
     region: String
-        Aws region on which SDDC will be deployed.
+        AWS region on which SDDC will be deployed.
 
     account_link_config
         (Optional) The account linking configuration, we will keep this one and remove accountLinkSddcConfig finally.
@@ -112,10 +112,10 @@ def present(
 
     deployment_type: String
         (Optional) Denotes if request is for a SingleAZ or a MultiAZ SDDC. Default is SingleAZ.
-        Possible values are: SingleAZ , MultiAZ
+        Possible values are: SingleAZ, MultiAZ
 
     host_instance_type: String
-        (Optional) The instance type for the esx hosts in the primary cluster of the SDDC.
+        (Optional) The instance type for the ESX hosts in the primary cluster of the SDDC.
         Possible values are: i3.metal, r5.metal, i3en.metal
 
     msft_license_config : MsftLicensingConfig
@@ -128,13 +128,13 @@ def present(
         (Optional) If provided, configuration from the template will applied to the provisioned SDDC.
 
     sddc_type: String
-        (Optional)Denotes the sddc type , if the value is null or empty, the type is considered as default.
+        (Optional)Denotes the SDDC type, if the value is null or empty, the type is considered as default.
 
     size: String
         (Optional) The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter
         appliance and ‘large’ NSX appliance. ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and
         ‘medium’ NSX appliance. Value defaults to ‘medium’.
-        Possible values are: nsx_small , medium , large , nsx_large
+        Possible values are: nsx_small, medium, large, nsx_large
 
     skip_creating_vxlan : Boolean
         (Optional) skip creating vxlan for compute gateway for SDDC provisioning
@@ -143,7 +143,7 @@ def present(
         (Optional) The SSO domain name to use for vSphere users. If not specified, vmc.local will be used.
 
     storage_capacity:  Integer As Int64
-        (Optional) The storage capacity value to be requested for the sddc primary cluster, in GiBs. If provided,
+        (Optional) The storage capacity value to be requested for the SDDC primary cluster, in GiBs. If provided,
         instead of using the direct-attached storage, a capacity value amount of seperable storage will be used.
 
     vpc_cidr

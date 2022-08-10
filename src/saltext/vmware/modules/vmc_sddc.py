@@ -195,10 +195,10 @@ def create(
 
     provider: String
         (Required) Determines what additional properties are available based on cloud provider.
-        Possible values are: AWS , ZEROCLOUD
+        Possible values are: AWS, ZEROCLOUD
 
     region: String
-        (Required) Aws region where SDDC will be deployed
+        (Required) AWS region where SDDC will be deployed
 
     account_link_config
         (Optional) The account linking configuration, we will keep this one and remove accountLinkSddcConfig finally.
@@ -225,14 +225,35 @@ def create(
 
     deployment_type: String
         (Optional) Denotes if request is for a SingleAZ or a MultiAZ SDDC. Default is SingleAZ.
-        Possible values are: SingleAZ , MultiAZ
+        Possible values are: SingleAZ, MultiAZ
 
     host_instance_type: String
-        (Optional) The instance type for the esx hosts in the primary cluster of the SDDC.
+        (Optional) The instance type for the ESX hosts in the primary cluster of the SDDC.
         Possible values are: i3.metal, r5.metal, i3en.metal
 
-    msft_license_config : MsftLicensingConfig
+    msft_license_config :
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
+        It can be specified in the below format
+
+            .. code::
+
+                "msft_license_config": [
+                            {
+                                "academic_license": false,
+                                "mssql_licensing": "DISABLED",
+                                "windows_licensing": "DISABLED"
+
+                            }
+                        ]
+
+            where,
+            'academic_license' - Flag to identify if it is Academic Standard or Commercial Standard License.
+            'mssql_licensing' - The status MSSQL licensing for this SDDC’s clusters.
+                                Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+            'windows_licensing' - The status of Windows licensing for this SDDC’s clusters. Can be enabled, disabled, or customer’s.
+                                Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+
+            Please refer the `VMC MsftLicensingConfig Doc here  <https://developer.vmware.com/apis/vmc/v1.1/data-structures/MsftLicensingConfig/>`_
 
     sddc_id: String As UUID
         (Optional) If provided, will be assigned as SDDC id of the provisioned SDDC.
@@ -241,11 +262,11 @@ def create(
         (Optional) If provided, configuration from the template will applied to the provisioned SDDC.
 
     sddc_type: String
-        (Optional) Denotes the sddc type , if the value is null or empty, the type is considered as default.
+        (Optional) Denotes the sddc type, if the value is null or empty, the type is considered as default.
 
     size:String
         (Optional) The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter appliance and ‘large’ NSX appliance. ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and ‘medium’ NSX appliance. Value defaults to ‘medium’.
-        Possible values are: nsx_small , medium , large , nsx_large
+        Possible values are: nsx_small, medium, large, nsx_large
 
     skip_creating_vxlan : Boolean
         (Optional) skip creating vxlan for compute gateway for SDDC provisioning
