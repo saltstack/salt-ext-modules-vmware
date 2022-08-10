@@ -18,6 +18,13 @@ Example usage :
             - verify_ssl: False
             - cert: /path/to/client/certificate
 
+    sddc_test-id:
+        vmc_sddc.absent
+            - hostname: stg.skyscraper.vmware.com
+            - refresh_key: bRfsZYg3vVFOZEBHDp9GFSKv76UMfc4DOnWgNk9vDxNVPfHqt73rk75x0vSUtx8w
+            - authorization_host: console-stg.cloud.vmware.com
+            - org_id: 10e1092f-51d0-473a-80f8-137652fd0c39
+
 .. warning::
 
     It is recommended to pass the VMC authentication details using Pillars rather than specifying as plain text in SLS
@@ -95,9 +102,8 @@ def present(
 
             .. code::
 
-                {
-                    "delay_account_link": false
-                }
+                account_link_config
+                    - delay_account_link: False
 
     account_link_sddc_config
         (Optional) A list of the AccountLinkSddcConfig which indicates SDDC linking configurations to use.
@@ -118,8 +124,25 @@ def present(
         (Optional) The instance type for the ESX hosts in the primary cluster of the SDDC.
         Possible values are: i3.metal, r5.metal, i3en.metal
 
-    msft_license_config : MsftLicensingConfig
+    msft_license_config :
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
+        It can be specified in the below format
+
+        .. code::
+
+            msft_license_config
+                - academic_license: False
+                - mssql_licensing: "DISABLED"
+                - windows_licensing: "DISABLED"
+
+             where,
+             academic_license - Flag to identify if it is Academic Standard or Commercial Standard License.
+             mssql_licensing - The status MSSQL licensing for this SDDC’s clusters.
+                                Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+             windows_licensing - The status of Windows licensing for this SDDC’s clusters. Can be enabled, disabled, or customer’s.
+                                Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+
+        Please refer the `VMC Doc about msft_license_config <https://developer.vmware.com/apis/vmc/v1.1/data-structures/MsftLicensingConfig/>`_
 
     sddc_id: String As UUID
         (Optional)If provided, will be assigned as SDDC id of the provisioned SDDC.
@@ -160,42 +183,6 @@ def present(
         (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
         The certificate can be retrieved from browser.
 
-    For example:
-
-        .. code::
-
-            {
-                "account_link_config": {
-                    "delay_account_link": false
-                },
-                "account_link_sddc_config": [
-                    {
-                        "connected_account_id": "string",
-                        "customer_subnet_ids": [
-                            "string"
-                        ]
-                    }
-                ],
-                "deployment_type": "SingleAZ",
-                "host_instance_type": "i3.metal",
-                "msft_license_config": {
-                    "mssql_licensing": "string",
-                    "windows_licensing": "string"
-                },
-                "sddc_name": "Salt-SDDC-1",
-                "num_hosts": 0,
-                "provider": "ZEROCLOUD",
-                "sddc_id": "string-UUID",
-                "sddc_template_id": "string",
-                "sddc_type": "OneNode",
-                "size": "medium",
-                "skip_creating_vxlan": false,
-                "sso_domain": "string",
-                "storage_capacity": 1,
-                "vpc_cidr": "string",
-                "vxlan_subnet": "string",
-                "region": "us-west-2"
-            }
     """
 
     sddc_name = name

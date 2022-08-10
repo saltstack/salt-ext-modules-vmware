@@ -235,25 +235,25 @@ def create(
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
         It can be specified in the below format
 
-            .. code::
+        .. code::
 
-                "msft_license_config": [
-                            {
-                                "academic_license": false,
-                                "mssql_licensing": "DISABLED",
-                                "windows_licensing": "DISABLED"
+            "msft_license_config": [
+                        {
+                            "academic_license": false,
+                            "mssql_licensing": "DISABLED",
+                            "windows_licensing": "DISABLED"
 
-                            }
-                        ]
+                        }
+                    ]
 
-            where,
+             where,
             'academic_license' - Flag to identify if it is Academic Standard or Commercial Standard License.
             'mssql_licensing' - The status MSSQL licensing for this SDDC’s clusters.
                                 Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
             'windows_licensing' - The status of Windows licensing for this SDDC’s clusters. Can be enabled, disabled, or customer’s.
                                 Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
 
-            Please refer the `VMC MsftLicensingConfig Doc here  <https://developer.vmware.com/apis/vmc/v1.1/data-structures/MsftLicensingConfig/>`_
+        Please refer the `VMC Doc about msft_license_config <https://developer.vmware.com/apis/vmc/v1.1/data-structures/MsftLicensingConfig/>`_
 
     sddc_id: String As UUID
         (Optional) If provided, will be assigned as SDDC id of the provisioned SDDC.
