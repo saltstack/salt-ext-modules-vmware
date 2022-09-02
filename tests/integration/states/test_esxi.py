@@ -347,3 +347,18 @@ def test_lockdown_mode_dry_run(patch_salt_globals, dry_run):
     assert ret["result"] is None
     assert ret["changes"]
     assert ret["comment"] == "These options are set to change."
+
+
+def test_firewall_configs_dry_run(patch_salt_globals, dry_run):
+    ret = esxi.firewall_configs("prod", {"prod": [{"name": "CIMHttpServer", "enabled": True}]})
+    assert ret["result"] is None
+    assert ret["changes"]
+    assert ret["comment"] == "These options are set to change."
+
+
+def test_firewall_configs(patch_salt_globals):
+    ret = esxi.firewall_configs("prod", {"prod": [{"name": "CIMHttpServer", "enabled": True}]})
+    assert ret["result"] is True
+    assert ret["changes"]
+    assert ret["comment"] == "Configurations have successfully been changed."
+    esxi.firewall_configs("prod", {"prod": [{"name": "CIMHttpServer", "enabled": False}]})
