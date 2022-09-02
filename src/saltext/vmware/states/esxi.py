@@ -873,22 +873,11 @@ def firewall_configs(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
     .. code-block:: yaml
+
         Set firewall config:
           vmware_esxi.firewall_configs:
             - name: prod
             - firewall_config_dict:
-                prod:
-                    - name: CIMHttpServer
-                      enabled: True
-                    - name: esxupdate
-                      enabled: True
-                      allowed_host:
-                        all_ip: True
-                        ip_address:
-                            - 169.199.100.11
-                            - 169.199.100.10
-                        ip_network:
-                        - 169.199.200.0/24
     """
     log.debug("Running vmware_esxi.firewall_configs")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
