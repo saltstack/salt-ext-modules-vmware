@@ -880,7 +880,7 @@ def firewall_configs(
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
     .. code-block:: yaml
-    
+
         Set firewall config:
           vmware_esxi.firewall_configs:
             - name: prod
