@@ -860,24 +860,30 @@ def firewall_configs(
 ):
     """
     Set firewall configuration on matching ESXi hosts.
+
     name
         Name of configuration in firewall_config_dict. (required).
+
     firewall_config_dict
         Value for configuration on matching ESXi hosts. (required).
+
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
+
     cluster_name
         Filter by this cluster name (optional)
+
     host_name
         Filter by this ESXi hostname (optional)
+
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
-    .. code-block:: yaml
 
+    .. code-block:: yaml
+    
         Set firewall config:
           vmware_esxi.firewall_configs:
             - name: prod
-            - firewall_config_dict:
     """
     log.debug("Running vmware_esxi.firewall_configs")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
