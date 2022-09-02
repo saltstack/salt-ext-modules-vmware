@@ -850,9 +850,9 @@ def lockdown_mode(
     return ret
 
 
-def firewall_configs(
+def firewall_config(
     name,
-    firewall_config_dict,
+    value,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -862,9 +862,9 @@ def firewall_configs(
     Set firewall configuration on matching ESXi hosts.
 
     name
-        Name of configuration in firewall_config_dict. (required).
+        Name of configuration in value. (required).
 
-    firewall_config_dict
+    value
         Value for configuration on matching ESXi hosts. (required).
 
     datacenter_name
@@ -882,10 +882,10 @@ def firewall_configs(
     .. code-block:: yaml
 
         Set firewall config:
-          vmware_esxi.firewall_configs:
+          vmware_esxi.firewall_config:
             - name: prod
     """
-    log.debug("Running vmware_esxi.firewall_configs")
+    log.debug("Running vmware_esxi.firewall_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
@@ -897,16 +897,14 @@ def firewall_configs(
         datacenter_name=datacenter_name,
         get_all_hosts=host_name is None,
     )
-    if isinstance(firewall_config_dict[name], list):
-        for i in range(len(firewall_config_dict[name])):
-            firewall_config_dict[name][i] = dict(firewall_config_dict[name][i])
-            if "allowed_host" in firewall_config_dict[name][i]:
-                firewall_config_dict[name][i]["allowed_host"] = dict(
-                    firewall_config_dict[name][i]["allowed_host"]
-                )
+    if isinstance(value[name], list):
+        for i in range(len(value[name])):
+            value[name][i] = dict(value[name][i])
+            if "allowed_host" in value[name][i]:
+                value[name][i]["allowed_host"] = dict(value[name][i]["allowed_host"])
     old_configs = {}
     for host in hosts:
-        for firewall_conf in firewall_config_dict[name]:
+        for firewall_conf in value[name]:
             if host.name in old_configs:
                 fw_config = utils_esxi.get_firewall_config(
                     ruleset_name=firewall_conf["name"],
@@ -932,7 +930,7 @@ def firewall_configs(
         ret["changes"] = {}
         for host in hosts:
             ret["changes"][host.name] = {}
-            for firewall_config in firewall_config_dict[name]:
+            for firewall_config in value[name]:
                 ret["changes"][host.name][firewall_config["name"]] = {}
                 for k in firewall_conf:
                     if k == "name":
@@ -968,7 +966,7 @@ def firewall_configs(
     for host in hosts:
         ret["changes"]["new"][host.name] = {}
         ret["changes"]["old"][host.name] = {}
-        for firewall_config in firewall_config_dict[name]:
+        for firewall_config in value[name]:
             change = False
             ret["changes"]["new"][host.name][firewall_config["name"]] = {}
             ret["changes"]["old"][host.name][firewall_config["name"]] = {}
