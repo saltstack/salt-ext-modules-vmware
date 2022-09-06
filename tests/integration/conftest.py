@@ -156,6 +156,8 @@ def patch_salt_globals(vmware_conf):
             "vmware_esxi.delete_vmkernel_adapter": esxi_mod.delete_vmkernel_adapter,
             "vmware_esxi.update_vmkernel_adapter": esxi_mod.update_vmkernel_adapter,
             "vmware_esxi.get_vmkernel_adapters": esxi_mod.get_vmkernel_adapters,
+            "vmware_esxi.get_advanced_config": esxi_mod.get_advanced_config,
+            "vmware_esxi.set_advanced_configs": esxi_mod.set_advanced_configs,
         },
     )
     setattr(
