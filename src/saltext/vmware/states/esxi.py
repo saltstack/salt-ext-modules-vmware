@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import functools
 import logging
+from bisect import bisect_right
 
 import salt
 import saltext.vmware.utils.esxi as utils_esxi
@@ -926,4 +927,162 @@ def advanced_config(
         ret["comment"] = "Configurations have successfully been changed."
     else:
         ret["comment"] = "Configurations are already in correct state."
+    return ret
+
+
+def firewall_config(
+    name,
+    value,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set firewall configuration on matching ESXi hosts.
+
+    name
+        Name of configuration in value. (required).
+
+    value
+        Value for configuration on matching ESXi hosts. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: yaml
+
+        Set firewall config:
+          vmware_esxi.firewall_config:
+            - name: prod
+    """
+    log.debug("Running vmware_esxi.firewall_config")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    if isinstance(value[name], list):
+        for i in range(len(value[name])):
+            value[name][i] = dict(value[name][i])
+            if "allowed_host" in value[name][i]:
+                value[name][i]["allowed_host"] = dict(value[name][i]["allowed_host"])
+    old_configs = {}
+    for host in hosts:
+        for firewall_conf in value[name]:
+            if host.name in old_configs:
+                fw_config = utils_esxi.get_firewall_config(
+                    ruleset_name=firewall_conf["name"],
+                    host_name=host.name,
+                    service_instance=service_instance,
+                )
+                old_configs[host.name][firewall_conf["name"]] = fw_config[host.name][
+                    firewall_conf["name"]
+                ]
+            else:
+                fw_config = utils_esxi.get_firewall_config(
+                    ruleset_name=firewall_conf["name"],
+                    host_name=host.name,
+                    service_instance=service_instance,
+                )
+                old_configs[host.name] = {}
+                old_configs[host.name][firewall_conf["name"]] = fw_config[host.name][
+                    firewall_conf["name"]
+                ]
+
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["changes"] = {}
+        for host in hosts:
+            ret["changes"][host.name] = {}
+            for firewall_config in value[name]:
+                ret["changes"][host.name][firewall_config["name"]] = {}
+                for k in firewall_conf:
+                    if k == "name":
+                        continue
+                    elif k == "allowed_host":
+                        for j in firewall_conf[k]:
+                            if (
+                                old_configs[host.name][firewall_config["name"]][k][j]
+                                == firewall_conf[k][j]
+                            ):
+                                ret["changes"][host.name][firewall_config["name"]][
+                                    j
+                                ] = f"{j} is already set to {firewall_conf[k][j]}"
+                            else:
+                                ret["changes"][host.name][firewall_config["name"]][
+                                    j
+                                ] = f"{j} will be set to {firewall_conf[k][j]}"
+                    else:
+                        if old_configs[host.name][firewall_config["name"]][k] == firewall_conf[k]:
+                            ret["changes"][host.name][firewall_config["name"]][
+                                k
+                            ] = f"{k} is already set to {firewall_conf[k]}"
+                        else:
+                            ret["changes"][host.name][firewall_config["name"]][
+                                k
+                            ] = f"{k} will be set to {firewall_conf[k]}"
+        ret["comment"] = "These options are set to change."
+        return ret
+
+    ret["result"] = True
+    ret["changes"] = {"new": {}, "old": {}}
+    ret["comment"] = "Configurations are already in correct state."
+    for host in hosts:
+        ret["changes"]["new"][host.name] = {}
+        ret["changes"]["old"][host.name] = {}
+        for firewall_config in value[name]:
+            change = False
+            ret["changes"]["new"][host.name][firewall_config["name"]] = {}
+            ret["changes"]["old"][host.name][firewall_config["name"]] = {}
+            for k in firewall_conf:
+                if k == "name":
+                    continue
+                ret["changes"]["new"][host.name][firewall_config["name"]][k] = {}
+                ret["changes"]["old"][host.name][firewall_config["name"]][k] = {}
+                if k == "allowed_host":
+                    for j in firewall_conf[k]:
+                        if (
+                            old_configs[host.name][firewall_config["name"]][k][j]
+                            != firewall_conf[k][j]
+                        ):
+                            change = True
+                            ret["changes"]["new"][host.name][firewall_config["name"]][k][
+                                j
+                            ] = firewall_conf[k][j]
+                            ret["changes"]["old"][host.name][firewall_config["name"]][k][
+                                j
+                            ] = old_configs[host.name][firewall_config["name"]][k][j]
+                else:
+                    if old_configs[host.name][firewall_config["name"]][k] != firewall_conf[k]:
+                        change = True
+                        ret["changes"]["new"][host.name][firewall_config["name"]][
+                            k
+                        ] = firewall_conf[k]
+                        ret["changes"]["old"][host.name][firewall_config["name"]][k] = old_configs[
+                            host.name
+                        ][firewall_config["name"]][k]
+            if change:
+                __salt__["vmware_esxi.set_firewall_config"](
+                    firewall_config=firewall_config,
+                    host_name=host.name,
+                    service_instance=service_instance,
+                )
+                ret["comment"] = "Configurations have successfully been changed."
+
     return ret

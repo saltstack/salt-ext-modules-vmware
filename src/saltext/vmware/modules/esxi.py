@@ -670,7 +670,7 @@ def get_all_firewall_configs(
             for ruleset in firewall_config.firewallInfo.ruleset:
                 ret.setdefault(h.name, []).append(
                     {
-                        "allowed_hosts": {
+                        "allowed_host": {
                             "ip_address": list(ruleset.allowedHosts.ipAddress),
                             "all_ip": ruleset.allowedHosts.allIp,
                             "ip_network": [
@@ -748,7 +748,7 @@ def get_firewall_config(
                 if ruleset_name == ruleset.key:
                     ret.setdefault(h.name, []).append(
                         {
-                            "allowed_hosts": {
+                            "allowed_host": {
                                 "ip_address": list(ruleset.allowedHosts.ipAddress),
                                 "all_ip": ruleset.allowedHosts.allIp,
                                 "ip_network": [
