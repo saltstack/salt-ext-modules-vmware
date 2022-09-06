@@ -930,7 +930,6 @@ def advanced_config(
     return ret
 
 
-
 def firewall_config(
     name,
     value,
