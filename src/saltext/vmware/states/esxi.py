@@ -850,6 +850,87 @@ def lockdown_mode(
     return ret
 
 
+def advanced_config(
+    name,
+    value,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set advanced configuration on matching ESXi hosts.
+
+    name
+        Name of configuration on matching ESXi hosts. (required).
+
+    value
+        Value for configuration on matching ESXi hosts. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: yaml
+
+        Remove User:
+          vmware_esxi.advanced_configs:
+            - name: Annotations.WelcomeMessage
+            - value: Hello
+
+    """
+    log.debug("Running vmware_esxi.advanced_config")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+
+    esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
+        config_name=name,
+        datacenter_name=datacenter_name,
+        cluster_name=cluster_name,
+        host_name=host_name,
+        service_instance=service_instance,
+    )
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["changes"] = {"new": {}}
+        for host in esxi_config_old:
+            ret["changes"]["new"][host] = f"{name} will be set to {value}"
+        ret["comment"] = "These options are set to change."
+        return ret
+
+    ret["result"] = True
+    ret["changes"] = {"new": {}, "old": {}}
+    change = False
+    for host in esxi_config_old:
+        if esxi_config_old[host][name] != value:
+            change = True
+            config = __salt__["vmware_esxi.set_advanced_configs"](
+                config_dict={name: value},
+                datacenter_name=datacenter_name,
+                cluster_name=cluster_name,
+                host_name=host,
+                service_instance=service_instance,
+            )
+            ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+            ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
+
+    if change:
+        ret["comment"] = "Configurations have successfully been changed."
+    else:
+        ret["comment"] = "Configurations are already in correct state."
+    return ret
+
+
+
 def firewall_config(
     name,
     value,
