@@ -336,7 +336,7 @@ def test_firewall_config(service_instance):
     )
     assert ret
     for host in ret:
-        assert ret[host][0]["allowed_hosts"]
+        assert ret[host][0]["allowed_host"]
         assert ret[host][0]["key"]
         assert ret[host][0]["service"]
         assert ret[host][0]["service"]
@@ -368,9 +368,9 @@ def test_firewall_config(service_instance):
     for host in ret:
         for rule in host:
             assert host[rule][0]["enabled"] is True
-            assert host[rule][0]["allowed_hosts"]["all_ip"] is True
-            assert host[rule][0]["allowed_hosts"]["ip_address"][0] == "169.199.100.11"
-            assert host[rule][0]["allowed_hosts"]["ip_network"][0] == "169.199.200.0/24"
+            assert host[rule][0]["allowed_host"]["all_ip"] is True
+            assert host[rule][0]["allowed_host"]["ip_address"][0] == "169.199.100.11"
+            assert host[rule][0]["allowed_host"]["ip_network"][0] == "169.199.200.0/24"
 
     ret = esxi.set_all_firewall_configs(
         firewall_configs=[
@@ -387,10 +387,10 @@ def test_firewall_config(service_instance):
     assert ret
     for host in ret[0]:
         for rule in host:
-            assert host[rule][0]["allowed_hosts"]["all_ip"] is False
+            assert host[rule][0]["allowed_host"]["all_ip"] is False
             assert host[rule][0]["enabled"] is False
-            assert host[rule][0]["allowed_hosts"]["ip_address"] == []
-            assert host[rule][0]["allowed_hosts"]["ip_network"] == []
+            assert host[rule][0]["allowed_host"]["ip_address"] == []
+            assert host[rule][0]["allowed_host"]["ip_network"] == []
 
 
 def test_add(integration_test_config, service_instance):
