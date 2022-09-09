@@ -134,7 +134,7 @@ Setting the minion ID will allow for easier targeting in the pillar top file.
 
     # srv/pillar/my_vsphere_conf.sls
     vmware_config:
-      host: 10.1.2.3
+      host: 203.0.113.42
       password: VMware1!
       user: administrator@vsphere.local
 
@@ -148,7 +148,7 @@ Verify that your config is correct by running
         vmware_config:
             ----------
             host:
-                10.1.2.3
+                203.0.113.42
             password:
                 VMware1!
             user:
