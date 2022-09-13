@@ -1259,7 +1259,7 @@ def list_hosts(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.list_hosts
+        salt '*' vmware_esxi.list_hosts hi
     """
     log.debug("Running vmware_esxi.list_hosts")
     ret = []
