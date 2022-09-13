@@ -26,6 +26,7 @@ import pathlib
 import subprocess
 import sys
 import tempfile
+import re
 
 DEBUG_FORCE = False
 
@@ -282,6 +283,11 @@ def commit_changlog_entries(*, version):
             )
 
 
+def escape_ansi(*,line):
+    ansi_escape = re.compile(r'(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]')
+    return ansi_escape.sub('', line)
+
+
 def twine_check_package(*, dist_dir, version):
     with msg_wrap("Running twine check on saltext.vmware package"):
         ret = run_and_log_cmd(
@@ -289,7 +295,8 @@ def twine_check_package(*, dist_dir, version):
             "check",
             str(dist_dir / f"saltext.vmware-{version}-py2.py3-none-any.whl"),
         )
-        if f"saltext.vmware-{version}-py2.py3-none-any.whl: PASSED" not in ret.stdout.decode():
+        ret = escape_ansi(line=ret.stdout.decode())
+        if f"saltext.vmware-{version}-py2.py3-none-any.whl: PASSED" not in ret:
             exit("Twine check failed")
 
 
