@@ -1,7 +1,7 @@
 # Salt Extension Modules for VMware
 
 This is a collection of Salt-maintained extension modules for use with VMware
-vSphere, vCenter, ESXi, and friends.
+vSphere, vCenter, ESXi, and friends and stuff.
 
 ## Security
 
