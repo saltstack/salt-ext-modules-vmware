@@ -449,10 +449,10 @@ def create(
 
             {
                 "action": "REFLEXIVE",
-                "translated_network": "10.182.171.36",
+                "translated_network": "203.0.113.36",
                 "translated_ports": null,
                 "destination_network": "",
-                "source_network": "192.168.1.23",
+                "source_network": "198.51.100.23",
                 "sequence_number": 0,
                 "service": "",
                 "logging": false,
@@ -689,10 +689,10 @@ def update(
 
             {
                 "action": "REFLEXIVE",
-                "translated_network": "10.182.171.36",
+                "translated_network": "203.0.113.36",
                 "translated_ports": null,
                 "destination_network": "",
-                "source_network": "192.168.1.23",
+                "source_network": "198.51.100.23",
                 "sequence_number": 0,
                 "service": "",
                 "logging": false,

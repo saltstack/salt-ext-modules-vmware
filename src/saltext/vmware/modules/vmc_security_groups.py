@@ -356,7 +356,7 @@ def create(
                {"member_type":"VirtualMachine","resource_type":"ExternalIDExpression",
                "external_ids":["52bf8bd0-95b1-2e58-5180-ccfa743da576"]}]
 
-            3. [{"ip_addresses" : ["10.2.23.1", "10.2.23.2"],
+            3. [{"ip_addresses" : ["203.0.113.1", "203.0.113.2"],
                   "resource_type" : "IPAddressExpression"} ]
 
             default value is []
@@ -519,7 +519,7 @@ def update(
                {"member_type":"VirtualMachine","resource_type":"ExternalIDExpression",
                "external_ids":["52bf8bd0-95b1-2e58-5180-ccfa743da576"]}]
 
-            3. [{ip_addresses" : ["10.2.23.1", "10.2.23.2"],
+            3. [{ip_addresses" : ["203.0.113.1", "203.0.113.2"],
                   "resource_type" : "IPAddressExpression"} ]
 
             default value is []

@@ -42,7 +42,7 @@ Example:
 
                resource_type: "HostNode"
                display_name: "Host_1"
-               ip_addresses: ["10.149.55.21"]
+               ip_addresses: ["203.0.113.21"]
                os_type: "ESXI"
                os_version: "6.5.0"
                host_credential:
@@ -478,7 +478,7 @@ def present(
 
                resource_type: "HostNode"
                display_name: "Host_1"
-               ip_addresses: ["10.149.55.21"]
+               ip_addresses: ["203.0.113.21"]
                os_type: "ESXI"
                os_version: "6.5.0"
                host_credential:
