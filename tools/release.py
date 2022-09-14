@@ -289,7 +289,7 @@ def twine_check_package(*, dist_dir, version):
             "check",
             str(dist_dir / f"saltext.vmware-{version}-py2.py3-none-any.whl"),
         )
-        if f"saltext.vmware-{version}-py2.py3-none-any.whl: PASSED" not in ret.stdout.decode():
+        if f"saltext.vmware-{version}-py2.py3-none-any.whl: PASSED" not in ''.join(ret.stdout.decode().split('\n')):
             exit("Twine check failed")
 
 
@@ -350,13 +350,28 @@ def push_tag_to_salt(*, version):
 #########################
 
 
+@contextlib.contextmanager
+def tempdir_and_save_log_on_error():
+    with tempfile.TemporaryDirectory() as tempdir:
+        logfile = pathlib.Path(tempdir) / 'release.log'
+        try:
+            yield tempdir
+        except:
+            with tempfile.NamedTemporaryFile(delete=False, prefix='release_', suffix='.log') as savelog:
+                savefile = pathlib.Path(savelog.name)
+            savefile.parent.mkdir(parents=True, exist_ok=True)
+            logfile.rename(savefile)
+            print('Failure detected - log saved to', str(savefile))
+
+
+
 def do_it(non_interactive=False):  # Shia LeBeouf!
     """
     Actually cut a release. Use non_interactive to try and run in a one-shot
     process. Might fail if lacking gpg-agent or something.
     """
     pwd = os.getcwd()
-    with tempfile.TemporaryDirectory() as tempdir:
+    with tempdir_and_save_log_on_error() as tempdir:
         dist_dir = pathlib.Path(tempdir) / "dist"
         dist_dir.mkdir(parents=True, exist_ok=True)
 
