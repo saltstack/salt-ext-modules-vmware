@@ -683,7 +683,8 @@ def create_or_update(
                              value is assigned to DHCP server IP address.
                              Existing values cannot be deleted or modified, but
                              additional DHCP ranges can be added.
-                             Formats, e.g. 10.12.2.64/26, 10.12.2.2-10.12.2.50
+                             Formats, e.g. 203.0.113.64/26,
+                             203.0.113.2-203.0.113.50
 
                 type: list
             gateway_address:

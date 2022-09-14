@@ -18,8 +18,8 @@ Example usage :
         - nat_rule: vCenter_Inbound_Rule_2
         - verify_ssl: False
         - cert: /path/to/client/certificate
-        - source_network: "10.117.5.73"
-        - translated_network: "192.168.1.1"
+        - source_network: "203.0.113.73"
+        - translated_network: "198.51.100.1"
 
 
 .. warning::
@@ -187,10 +187,10 @@ def present(
         .. code-block::
 
             action: REFLEXIVE
-            translated_network: 10.182.171.36
+            translated_network: 203.0.113.36
             translated_ports: null
             destination_network: ''
-            source_network: 192.168.1.23
+            source_network: 198.51.100.23
             sequence_number: 0
             service: ''
             logging: false

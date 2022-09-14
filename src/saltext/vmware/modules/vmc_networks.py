@@ -350,14 +350,14 @@ def create(
                     {
                         "gateway_address": "100.1.1.1/16",
                         "dhcp_ranges": [
-                            "10.22.12.2/24"
+                            "203.0.113.2/24"
                         ],
                         "dhcp_config": {
                             "resource_type": "SegmentDhcpV4Config",
                             "lease_time": "8000",
                             "server_address": "100.1.0.0/16",
                             "dns_servers": [
-                                "10.22.12.0"
+                                "203.0.113.0"
                             ]
                         }
                     }
@@ -608,14 +608,14 @@ def update(
                     {
                         "gateway_address": "100.1.1.1/16",
                         "dhcp_ranges": [
-                            "10.22.12.2/24"
+                            "203.0.113.2/24"
                         ],
                         "dhcp_config": {
                             "resource_type": "SegmentDhcpV4Config",
                             "lease_time": "8000",
                             "server_address": "100.1.0.0/16",
                             "dns_servers": [
-                                "10.22.12.0"
+                                "203.0.113.0"
                             ]
                         }
                     }
