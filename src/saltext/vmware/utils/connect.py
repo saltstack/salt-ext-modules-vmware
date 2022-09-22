@@ -9,6 +9,7 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from requests.exceptions import RequestException
 from requests.exceptions import SSLError
+from salt.exceptions import SaltSystemExit
 
 # pylint: disable=no-name-in-module
 try:
@@ -94,6 +95,8 @@ def get_service_instance(opts=None, pillar=None, esxi_host=None):
         "password": password,
         "user": user,
     }
+    if config["host"] is None or config["password"] is None or config["user"] is None:
+        raise ValueError("Cannot create service instance VMware credentials incomplete.")
     service_instance = connect.SmartConnect(
         host=config["host"],
         user=config["user"],
