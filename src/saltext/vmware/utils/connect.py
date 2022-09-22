@@ -9,7 +9,6 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from requests.exceptions import RequestException
 from requests.exceptions import SSLError
-from salt.exceptions import SaltSystemExit
 
 # pylint: disable=no-name-in-module
 try:
