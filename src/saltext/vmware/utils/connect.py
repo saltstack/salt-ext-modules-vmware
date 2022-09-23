@@ -94,6 +94,8 @@ def get_service_instance(opts=None, pillar=None, esxi_host=None):
         "password": password,
         "user": user,
     }
+    if config["host"] is None or config["password"] is None or config["user"] is None:
+        raise ValueError("Cannot create service instance, VMware credentials incomplete.")
     service_instance = connect.SmartConnect(
         host=config["host"],
         user=config["user"],
