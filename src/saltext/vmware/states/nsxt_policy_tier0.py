@@ -75,7 +75,7 @@ def present(
           internal_transit_subnets: ["1.2.0.0/24"]
           transit_subnets: ["100.64.0.0/16"]
           failover_mode: PREEMPTIVE
-          rd_admin_field: "10.10.10.10"
+          rd_admin_field: "203.0.113.10"
           dhcp_config_id: "DHCP-Relay"
           arp_limit: 5000
           force_whitelisting: False
@@ -92,13 +92,13 @@ def present(
             -  display_name: sr-1
                description: Created_by_API
                enabled_on_secondary: true
-               network: 10.10.10.0/23
+               network: 203.0.113.0/23
                next_hops:
                  -  admin_distance: 4
-                    ip_address: 10.1.2.3
+                    ip_address: 203.0.113.3
           bfd_peers:
             -  display_name: srbfdp-1
-               peer_address: 10.1.1.2
+               peer_address: 203.0.113.2
                bfd_profile_id: default
           locale_services:
             -  display_name: "test-t0ls"
@@ -118,7 +118,7 @@ def present(
                  timer:
                    restart_timer: 12
                  route_aggregations:
-                   - prefix: "10.1.1.0/24"
+                   - prefix: "203.0.113.0/24"
                    - prefix: "11.1.0.0/24"
                      summary_only: False
                  neighbors:

@@ -723,7 +723,7 @@ def get_all_firewall_configs(
             for ruleset in firewall_config.firewallInfo.ruleset:
                 ret.setdefault(h.name, []).append(
                     {
-                        "allowed_hosts": {
+                        "allowed_host": {
                             "ip_address": list(ruleset.allowedHosts.ipAddress),
                             "all_ip": ruleset.allowedHosts.allIp,
                             "ip_network": [
@@ -801,7 +801,7 @@ def get_firewall_config(
                 if ruleset_name == ruleset.key:
                     ret.setdefault(h.name, []).append(
                         {
-                            "allowed_hosts": {
+                            "allowed_host": {
                                 "ip_address": list(ruleset.allowedHosts.ipAddress),
                                 "all_ip": ruleset.allowedHosts.allIp,
                                 "ip_network": [
@@ -992,7 +992,7 @@ def backup_config(
 
     .. code-block:: bash
 
-        salt * vmware_esxi.backup_config host_name=10.225.0.53 http_opts='{"verify_ssl": False}'
+        salt * vmware_esxi.backup_config host_name=203.0.113.53 http_opts='{"verify_ssl": False}'
     """
     log.debug("Running vmware_esxi.backup_config")
     ret = {}
@@ -1044,7 +1044,7 @@ def restore_config(
         Specify the source file from which the configuration is to be restored.
         The file can be either on the master, locally on the minion or url.
         E.g.: salt://vmware_config.tgz, /tmp/minion1/vmware_config.tgz or
-        10.225.0.53/downloads/5220da48-552e-5779-703e-5705367bd6d6/configBundle-ESXi-190313806785.eng.vmware.com.tgz
+        203.0.113.53/downloads/5220da48-552e-5779-703e-5705367bd6d6/configBundle-ESXi-190313806785.eng.vmware.com.tgz
 
     saltenv
         Specify the saltenv when the source file needs to be retireved from the master. (optional)
