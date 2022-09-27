@@ -30,12 +30,14 @@ def get_config(config, profile=None, esxi_host=None):
         credentials = config.get("saltext.vmware") or config.get("vmware_config", {})
 
     if esxi_host:
-        host = os.environ.get("SALTEXT_VMWARE_HOST") or credentials.get("esxi_host", {}).get("host")
+        host = esxi_host
+        credentials = credentials.get("esxi_host", {}).get(esxi_host)
+        password = credentials.get("password")
+        user = credentials.get("user")
     else:
         host = os.environ.get("SALTEXT_VMWARE_HOST") or credentials.get("host")
-
-    password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
-    user = os.environ.get("SALTEXT_VMWARE_USER") or credentials.get("user")
+        password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
+        user = os.environ.get("SALTEXT_VMWARE_USER") or credentials.get("user")
 
     return {"host": host, "user": user, "password": password}
 

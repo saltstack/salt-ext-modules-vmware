@@ -53,7 +53,6 @@ def test_when_no_environ_values_and_config_is_missing_conf_values_get_service_in
         connect.get_service_instance(config=config_values)
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "expected_values,esxi_host,profile,conf_values,environ_values",
     [
