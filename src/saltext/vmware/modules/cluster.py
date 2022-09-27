@@ -39,7 +39,7 @@ def list_(service_instance=None, profile=None):
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         datacenters = utils_datacenter.get_datacenters(service_instance, get_all_datacenters=True)
         for datacenter in datacenters:
@@ -79,7 +79,7 @@ def create(name, datacenter, service_instance=None, profile=None):
         salt '*' vmware_cluster.create dc1 cluster1
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_spec = vim.cluster.ConfigSpecEx()
@@ -111,7 +111,7 @@ def get(cluster_name, datacenter_name, service_instance=None, profile=None):
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
@@ -165,7 +165,7 @@ def delete(name, datacenter, service_instance=None, profile=None):
         salt '*' vmware_cluster.delete cl1 dc1
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         utils_cluster.delete_cluster(service_instance, name, datacenter)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:

@@ -67,7 +67,7 @@ def add(license_key, **kwargs):
     profile = kwargs.get("profile", None)
 
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     if not utils_license_mgr.is_vcenter(service_instance):
         ret["message"] = "Failed, not connected to a vCenter"
@@ -119,7 +119,7 @@ def list_(service_instance=None, profile=None):
         salt '*' vmware_license_mgr.list
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     return utils_license_mgr.list_licenses(service_instance)
 
@@ -162,7 +162,7 @@ def remove(license_key, **kwargs):
     profile = kwargs.get("profile", None)
 
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     if not utils_license_mgr.is_vcenter(service_instance):
         ret["message"] = "Failed, not connected to a vCenter"

@@ -37,7 +37,7 @@ def list_(service_instance=None, profile=None):
         salt '*' vmware_datacenter.list
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     return utils_datacenter.list_datacenters(service_instance)
 
 
@@ -61,7 +61,7 @@ def create(name, service_instance=None, profile=None):
         salt '*' vmware_datacenter.create dc1
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         utils_datacenter.create_datacenter(service_instance, name)
     except salt.exceptions.VMwareApiError as exc:
@@ -90,7 +90,7 @@ def get(name, service_instance=None, profile=None):
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, name)
         dc = utils_common.get_mors_with_properties(
@@ -123,7 +123,7 @@ def delete(name, service_instance=None, profile=None):
         salt '*' vmware_datacenter.delete dc1
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         utils_datacenter.delete_datacenter(service_instance, name)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:

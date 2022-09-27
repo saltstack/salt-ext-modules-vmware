@@ -83,7 +83,7 @@ def set_boot_manager(
             - efi_secure_boot_enabled: False
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     vm = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
     boot_order_list = utils_vm.options_order_list(vm, boot_order)
@@ -160,7 +160,7 @@ def snapshot_present(
             - datacenter_name: dc1
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -235,7 +235,7 @@ def snapshot_absent(
             - datacenter_name: dc1
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -294,7 +294,7 @@ def relocate(name, new_host_name, datastore_name, service_instance=None, profile
             - datastore_name: ds01
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(config=__salt__, profile=profile)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
     datastore_match = False

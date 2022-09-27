@@ -95,7 +95,7 @@ def configure(
         salt '*' vmware_cluster_drs.configure cluster1 dc1 enable=True
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster)
@@ -142,7 +142,7 @@ def get(cluster_name, datacenter_name, service_instance=None, profile=None):
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
@@ -209,7 +209,7 @@ def vm_affinity_rule(
     """
     log.debug(f"Configuring a vm to vm DRS rule {name} on cluster {cluster_name}.")
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     vm_refs = []
@@ -278,7 +278,7 @@ def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=No
     """
     log.debug(f"Getting rules info on cluster {cluster_name}.")
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     rules = cluster_ref.configuration.rule

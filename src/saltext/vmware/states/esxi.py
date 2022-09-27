@@ -54,7 +54,7 @@ def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(
-            config=__salt__, esxi_host=esxi_host_name, profile=profile
+            config=__opts__, esxi_host=esxi_host_name, profile=profile
         )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     sys_privs = {"System.Anonymous", "System.Read", "System.View"}
@@ -125,7 +125,7 @@ def role_absent(name, esxi_host_name=None, service_instance=None, profile=None):
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(
-            config=__salt__, esxi_host=esxi_host_name, profile=profile
+            config=__opts__, esxi_host=esxi_host_name, profile=profile
         )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     if not role:
@@ -245,7 +245,7 @@ def vmkernel_adapter_present(
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -373,7 +373,7 @@ def vmkernel_adapter_absent(
     log.debug("Running vmware_esxi.vmkernel_adapter_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -476,7 +476,7 @@ def user_present(
     failed_hosts = []
     diff = {}
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
@@ -614,7 +614,7 @@ def user_absent(
     failed_hosts = []
     diff = {}
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
@@ -822,7 +822,7 @@ def lockdown_mode(
             host_refs = (name,)
         else:
             if service_instance is None:
-                service_instance = get_service_instance(config=__salt__, profile=profile)
+                service_instance = get_service_instance(config=__opts__, profile=profile)
             host_refs = (utils_esxi.get_host(name, service_instance),)
 
     for ref in host_refs:

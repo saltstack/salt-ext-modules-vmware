@@ -46,7 +46,7 @@ def create(folder_name, dc_name, type, service_instance=None, profile=None):
         Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     folder = utils_common.get_mor_by_property(
         service_instance, vim.Folder, folder_name, "name", dc_ref
@@ -84,7 +84,7 @@ def destroy(folder_name, dc_name, type, service_instance=None, profile=None):
         Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
         folder = utils_common.get_mor_by_property(
@@ -131,7 +131,7 @@ def rename(folder_name, new_folder_name, dc_name, type, service_instance=None, p
         Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
         folder = utils_common.get_mor_by_property(
@@ -178,7 +178,7 @@ def move(folder_name, destination_folder_name, dc_name, type, service_instance=N
         Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     dc_ref = utils_datacenter.get_datacenter(service_instance, dc_name)
     if type == "vm":
         folder = utils_common.get_mor_by_property(

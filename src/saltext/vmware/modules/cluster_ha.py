@@ -271,7 +271,7 @@ def configure(
         salt '*' vmware_cluster_ha.configure cluster1 dc1 enable=True
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     admission_control_policy = admission_control_policy or {}
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
@@ -349,7 +349,7 @@ def get(cluster_name, datacenter_name, service_instance=None, profile=None):
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)

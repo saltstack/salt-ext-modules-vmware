@@ -140,7 +140,7 @@ def configure(
         salt '*' vmware_dvswitch.configure dvs1
     """
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         health_spec = product_spec = spec = None
         dc_ref, switch_ref, config_spec = _get_switch_config_spec(
@@ -325,7 +325,7 @@ def remove_hosts(
     log.debug("Running vmware_dvswitch.remove_hosts")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -392,7 +392,7 @@ def add_hosts(
     log.debug("Running vmware_dvswitch.add_hosts")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     _, switch_ref, _ = _get_switch_config_spec(
         service_instance=service_instance,
         datacenter_name=datacenter_name,
@@ -481,7 +481,7 @@ def update_hosts(
     log.debug("Running vmware_dvswitch.update_hosts")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     _, switch_ref, _ = _get_switch_config_spec(
         service_instance=service_instance,
         datacenter_name=datacenter_name,

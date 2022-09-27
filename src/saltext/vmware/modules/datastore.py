@@ -41,7 +41,7 @@ def maintenance_mode(datastore_name, datacenter_name=None, service_instance=None
         Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     assert isinstance(datastore_name, str)
     datastores = utils_datastore.get_datastores(
         service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
@@ -72,7 +72,7 @@ def exit_maintenance_mode(
         Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     assert isinstance(datastore_name, str)
     datastores = utils_datastore.get_datastores(
         service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
@@ -116,7 +116,7 @@ def get(
     log.debug(f"Running {__virtualname__}.get")
     ret = []
     if not service_instance:
-        service_instance = get_service_instance(config=__salt__, profile=profile)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     datastores = utils_datastore.get_datastores(
         service_instance,
         datastore_name=datastore_name,
