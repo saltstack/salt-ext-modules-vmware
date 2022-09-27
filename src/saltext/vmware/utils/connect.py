@@ -105,7 +105,7 @@ def get_service_instance(config=None, esxi_host=None, profile=None):
 
     service_instance = connect.SmartConnect(
         host=config.get("host"),
-        user=config.get("username"),
+        user=config.get("user"),
         pwd=config.get("password"),
         sslContext=ctx,
     )
