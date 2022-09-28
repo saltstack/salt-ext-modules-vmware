@@ -779,7 +779,7 @@ def get_firewall_config(
     log.debug("Running vmware_esxi.get_firewall_config")
     ret = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -857,7 +857,7 @@ def set_firewall_config(
     log.debug("Running vmware_esxi.set_firewall_config")
     ret = []
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -934,7 +934,7 @@ def set_all_firewall_configs(
     log.debug("Running vmware_esxi.set_all_firewall_configs")
     ret = []
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
