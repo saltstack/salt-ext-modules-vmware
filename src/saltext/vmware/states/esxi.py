@@ -28,12 +28,7 @@ def __virtual__():
     return __virtualname__
 
 
-def role_present(
-    name,
-    privilege_ids,
-    esxi_host_name=None,
-    service_instance=None,
-):
+def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None, profile=None):
     """
     Ensure role is present on service instance, which may be an ESXi host or vCenter instance.
 
@@ -51,14 +46,15 @@ def role_present(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     """
     log.debug("Running vmware_esxi.role_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
+            config=__opts__, esxi_host=esxi_host_name, profile=profile
         )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     sys_privs = {"System.Anonymous", "System.Read", "System.View"}
@@ -108,11 +104,7 @@ def role_present(
     return ret
 
 
-def role_absent(
-    name,
-    esxi_host_name=None,
-    service_instance=None,
-):
+def role_absent(name, esxi_host_name=None, service_instance=None, profile=None):
     """
     Ensure role is absent on service instance, which may be an ESXi host or vCenter instance.
 
@@ -125,14 +117,15 @@ def role_absent(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     """
     log.debug("Running vmware_esxi.role_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
+            config=__opts__, esxi_host=esxi_host_name, profile=profile
         )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     if not role:
@@ -170,6 +163,7 @@ def vmkernel_adapter_present(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Ensure VMKernel Adapter exists on matching ESXi hosts.
@@ -237,6 +231,9 @@ def vmkernel_adapter_present(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Save Adapter:
@@ -248,7 +245,7 @@ def vmkernel_adapter_present(
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -318,6 +315,7 @@ def vmkernel_adapter_present(
                         cluster_name=cluster_name,
                         host_name=host,
                         service_instance=service_instance,
+                        profile=profile,
                     )
                     ret["changes"].update(ret_save)
                 except salt.exceptions.SaltException as exc:
@@ -338,7 +336,12 @@ def vmkernel_adapter_present(
 
 
 def vmkernel_adapter_absent(
-    name, datacenter_name=None, cluster_name=None, host_name=None, service_instance=None
+    name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Ensure VMKernel Adapter exists on matching ESXi hosts.
@@ -358,6 +361,9 @@ def vmkernel_adapter_absent(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Delete Adapter:
@@ -367,7 +373,7 @@ def vmkernel_adapter_absent(
     log.debug("Running vmware_esxi.vmkernel_adapter_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -427,6 +433,7 @@ def user_present(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Add local users_by_host on matching ESXi hosts.
@@ -452,6 +459,9 @@ def user_present(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Create User:
@@ -466,19 +476,21 @@ def user_present(
     failed_hosts = []
     diff = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
         cluster_name=cluster_name,
         host_name=host_name,
         service_instance=service_instance,
+        profile=profile,
     )
     hosts = __salt__["vmware_esxi.list_hosts"](
         datacenter_name=datacenter_name,
         cluster_name=cluster_name,
         host_name=host_name,
         service_instance=service_instance,
+        profile=profile,
     )
     for host in hosts:
         if host in users_by_host:
@@ -510,6 +522,7 @@ def user_present(
                     cluster_name=cluster_name,
                     host_name=host,
                     service_instance=service_instance,
+                    profile=profile,
                 )
             except salt.exceptions.SaltException as exc:
                 update -= 1
@@ -565,6 +578,7 @@ def user_absent(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Remove local users_by_host on matching ESXi hosts.
@@ -584,6 +598,9 @@ def user_absent(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Remove User:
@@ -597,7 +614,7 @@ def user_absent(
     failed_hosts = []
     diff = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
@@ -749,6 +766,7 @@ def lockdown_mode(
     cluster_name=None,
     get_all_hosts=False,
     service_instance=None,
+    profile=None,
 ):
     """
     Pust a hosts into or out of lockdown.
@@ -775,7 +793,10 @@ def lockdown_mode(
         Default value is False (optional).
 
     service_instance
-        The Service Instance Object from which to obtain the hosts (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -801,13 +822,13 @@ def lockdown_mode(
             host_refs = (name,)
         else:
             if service_instance is None:
-                service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+                service_instance = get_service_instance(config=__opts__, profile=profile)
             host_refs = (utils_esxi.get_host(name, service_instance),)
 
     for ref in host_refs:
         # check that host is not all ready in lock state.
         host_state = __salt__["vmware_esxi.in_lockdown_mode"](
-            host=ref, service_instance=service_instance
+            host=ref, service_instance=service_instance, profile=profile
         )
         if (host_state["lockdownMode"] == "inLockdown") == enter_lockdown_mode:
             ret[
@@ -824,13 +845,11 @@ def lockdown_mode(
 
         if enter_lockdown_mode:
             host_state = __salt__["vmware_esxi.lockdown_mode"](
-                host=ref,
-                catch_task_error=True,
-                service_instance=service_instance,
+                host=ref, catch_task_error=True, service_instance=service_instance, profile=profile
             )
         else:
             host_state = __salt__["vmware_esxi.exit_lockdown_mode"](
-                host=ref, catch_task_error=True, service_instance=service_instance
+                host=ref, catch_task_error=True, service_instance=service_instance, profile=profile
             )
         ref_results = (host_state["lockdownMode"] == "inLockdown") == enter_lockdown_mode
         if ret["result"]:

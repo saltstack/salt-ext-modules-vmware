@@ -38,7 +38,10 @@ def add(license_key, **kwargs):
         License Key which specifies license to add to license manager
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one [default None]
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     datacenter_name
         Datacenter name to use for the operation [default None]
@@ -61,9 +64,10 @@ def add(license_key, **kwargs):
     datacenter_name = kwargs.get("datacenter_name", None)
     cluster_name = kwargs.get("cluster_name", None)
     esxi_hostname = kwargs.get("esxi_hostname", None)
+    profile = kwargs.get("profile", None)
 
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     if not utils_license_mgr.is_vcenter(service_instance):
         ret["message"] = "Failed, not connected to a vCenter"
@@ -100,19 +104,22 @@ def add(license_key, **kwargs):
     return ret
 
 
-def list_(service_instance=None):
+def list_(service_instance=None, profile=None):
     """
     Returns a list of licenses for the specified Service Instance
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one [default None]
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
         salt '*' vmware_license_mgr.list
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     return utils_license_mgr.list_licenses(service_instance)
 
@@ -126,7 +133,10 @@ def remove(license_key, **kwargs):
         License Key which specifies license to remove from the license manager
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one [default None]
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     datacenter_name
         Datacenter name to use for the operation [default None]
@@ -149,9 +159,10 @@ def remove(license_key, **kwargs):
     datacenter_name = kwargs.get("datacenter_name", None)
     cluster_name = kwargs.get("cluster_name", None)
     esxi_hostname = kwargs.get("esxi_hostname", None)
+    profile = kwargs.get("profile", None)
 
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     if not utils_license_mgr.is_vcenter(service_instance):
         ret["message"] = "Failed, not connected to a vCenter"

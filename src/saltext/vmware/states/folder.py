@@ -25,7 +25,7 @@ def __virtual__():
     return __virtualname__
 
 
-def manage(name, task, dc_name, type, service_instance=None):
+def manage(name, task, dc_name, type, service_instance=None, profile=None):
     """
     Creates or destroy a folder on a given datacenter.
 
@@ -42,10 +42,13 @@ def manage(name, task, dc_name, type, service_instance=None):
         (vm, host, datastore, network) Type of folder to be created.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     task_string = "created" if (task == "create") else "destroyed"
 
@@ -69,7 +72,7 @@ def manage(name, task, dc_name, type, service_instance=None):
     return ret
 
 
-def rename(name, new_folder_name, dc_name, type, service_instance=None):
+def rename(name, new_folder_name, dc_name, type, service_instance=None, profile=None):
     """
     Rename a folder on a given datacenter.
 
@@ -86,10 +89,13 @@ def rename(name, new_folder_name, dc_name, type, service_instance=None):
         (vm, host, datastore, network) Type of folder to be renamed.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
 
     if __opts__["test"]:
@@ -103,7 +109,7 @@ def rename(name, new_folder_name, dc_name, type, service_instance=None):
     return ret
 
 
-def move(name, destination_folder_name, dc_name, type, service_instance=None):
+def move(name, destination_folder_name, dc_name, type, service_instance=None, profile=None):
     """
     Move a folder on a given datacenter.
 
@@ -120,10 +126,13 @@ def move(name, destination_folder_name, dc_name, type, service_instance=None):
         (vm, host, datastore, network) Type of folder to be moved.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
 
     if __opts__["test"]:

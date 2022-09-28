@@ -24,7 +24,7 @@ def __virtual__():
     return __virtualname__
 
 
-def maintenance_mode(datastore_name, datacenter_name=None, service_instance=None):
+def maintenance_mode(datastore_name, datacenter_name=None, service_instance=None, profile=None):
     """
     Put datastore in maintenance mode.
 
@@ -35,10 +35,13 @@ def maintenance_mode(datastore_name, datacenter_name=None, service_instance=None
         (optional) Name of datacenter where datastore exists.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     assert isinstance(datastore_name, str)
     datastores = utils_datastore.get_datastores(
         service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
@@ -50,7 +53,9 @@ def maintenance_mode(datastore_name, datacenter_name=None, service_instance=None
     return {"maintenanceMode": "failed to enter maintenance mode"}
 
 
-def exit_maintenance_mode(datastore_name, datacenter_name=None, service_instance=None):
+def exit_maintenance_mode(
+    datastore_name, datacenter_name=None, service_instance=None, profile=None
+):
     """
     Take datastore out of maintenance mode.
 
@@ -61,10 +66,13 @@ def exit_maintenance_mode(datastore_name, datacenter_name=None, service_instance
         (optional) Name of datacenter where datastore exists.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     assert isinstance(datastore_name, str)
     datastores = utils_datastore.get_datastores(
         service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
@@ -82,6 +90,7 @@ def get(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Return info about datastores.
@@ -101,11 +110,13 @@ def get(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
     """
     log.debug(f"Running {__virtualname__}.get")
     ret = []
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     datastores = utils_datastore.get_datastores(
         service_instance,
         datastore_name=datastore_name,
