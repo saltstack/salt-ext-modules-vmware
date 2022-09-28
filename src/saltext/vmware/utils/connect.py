@@ -39,6 +39,8 @@ def get_config(config, profile=None, esxi_host=None):
         password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
         user = os.environ.get("SALTEXT_VMWARE_USER") or credentials.get("user")
 
+    if host is None or password is None or user is None:
+        raise ValueError("Cannot create service instance, VMware credentials incomplete.")
     return {"host": host, "user": user, "password": password}
 
 
@@ -101,9 +103,6 @@ def get_service_instance(config=None, esxi_host=None, profile=None):
     config = config or {}
 
     config = get_config(config=config, profile=profile, esxi_host=esxi_host)
-
-    if config["host"] is None or config["password"] is None or config["user"] is None:
-        raise ValueError("Cannot create service instance, VMware credentials incomplete.")
 
     service_instance = connect.SmartConnect(
         host=config.get("host"),

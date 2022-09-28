@@ -1094,9 +1094,14 @@ def restore_config(
             else:
                 with open(source_file, "rb") as fp:
                     data = fp.read()
-            _, username, password = get_config(esxi_host=h.name, config=__opts__, profile=profile)
+            conf = get_config(esxi_host=h.name, config=__opts__, profile=profile)
             resp = __salt__["http.query"](
-                url, data=data, method="PUT", username=username, password=password, **http_opts
+                url,
+                data=data,
+                method="PUT",
+                username=conf["user"],
+                password=conf["password"],
+                **http_opts,
             )
             if "error" in resp:
                 ret[h.name] = resp["error"]
