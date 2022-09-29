@@ -26,7 +26,9 @@ def __virtual__():
     return __virtualname__
 
 
-def list_(service_instance=None, datacenter_name=None, cluster_name=None, host_name=None, profile=None):
+def list_(
+    service_instance=None, datacenter_name=None, cluster_name=None, host_name=None, profile=None
+):
     """
     Returns virtual machines.
 
