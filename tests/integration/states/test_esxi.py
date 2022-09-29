@@ -347,3 +347,33 @@ def test_lockdown_mode_dry_run(patch_salt_globals, dry_run):
     assert ret["result"] is None
     assert ret["changes"]
     assert ret["comment"] == "These options are set to change."
+
+
+def test_firewall_config_dry_run(patch_salt_globals, dry_run):
+    ret = esxi.firewall_config("prod", {"prod": [{"name": "CIMHttpServer", "enabled": True}]})
+    assert ret["result"] is None
+    assert ret["changes"]
+    assert ret["comment"] == "These options are set to change."
+
+
+def test_firewall_config(patch_salt_globals):
+    ret = esxi.firewall_config("prod", {"prod": [{"name": "CIMHttpServer", "enabled": True}]})
+    assert ret["result"] is True
+    assert ret["changes"]
+    assert ret["comment"] == "Configurations have successfully been changed."
+    esxi.firewall_config("prod", {"prod": [{"name": "CIMHttpServer", "enabled": False}]})
+
+
+def test_advanced_config_dry_run(patch_salt_globals, dry_run):
+    ret = esxi.advanced_config("Annotations.WelcomeMessage", "hey")
+    assert ret["result"] is None
+    assert ret["changes"]
+    assert ret["comment"] == "These options are set to change."
+
+
+def test_advanced_config(patch_salt_globals):
+    ret = esxi.advanced_config("Annotations.WelcomeMessage", "hey")
+    assert ret["result"] is True
+    assert ret["changes"]
+    assert ret["comment"] == "Configurations have successfully been changed."
+    esxi.advanced_config("Annotations.WelcomeMessage", "")

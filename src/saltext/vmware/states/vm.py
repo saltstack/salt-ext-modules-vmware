@@ -35,6 +35,7 @@ def set_boot_manager(
     retry_delay=10000,
     efi_secure_boot_enabled=False,
     service_instance=None,
+    profile=None,
 ):
     """
     Manage boot option for a virtual machine
@@ -62,9 +63,27 @@ def set_boot_manager(
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: yaml
+
+        Set Boot Manager:
+          vmware_vm.set_boot_manager:
+            - name: vm01
+            - boot_order:
+                - cdrom
+                - disk
+                - ethernet
+            - delay: 5000
+            - enter_bios_setup: False
+            - retry_enabled: True
+            - retry_delay: 5000
+            - efi_secure_boot_enabled: False
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     vm = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
     boot_order_list = utils_vm.options_order_list(vm, boot_order)
@@ -99,6 +118,7 @@ def snapshot_present(
     quiesce=False,
     datacenter_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Create virtual machine snapshot.
@@ -123,9 +143,24 @@ def snapshot_present(
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+     profile
+        Profile to use (optional)
+
+
+    .. code-block:: yaml
+
+        Create Snapshot:
+          vmware_vm.snapshot_present:
+            - name: vm01
+            - snapshot_name: backup_snapshot_1
+            - description: This snapshot is a backup of vm01
+            - include_memory: False
+            - quiesce: True
+            - datacenter_name: dc1
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -163,6 +198,7 @@ def snapshot_absent(
     remove_children=False,
     datacenter_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Create virtual machine snapshot.
@@ -184,9 +220,22 @@ def snapshot_absent(
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: yaml
+
+        Remove Snapshot:
+          vmware_vm.snapshot_present:
+            - name: vm01
+            - snapshot_name: backup_snapshot_1
+            - snapshot_id: 1
+            - remove_children: False
+            - datacenter_name: dc1
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -217,7 +266,7 @@ def snapshot_absent(
         return ret
 
 
-def relocate(name, new_host_name, datastore_name, service_instance=None):
+def relocate(name, new_host_name, datastore_name, service_instance=None, profile=None):
     """
     Relocates a virtual machine to the location specified.
 
@@ -232,9 +281,20 @@ def relocate(name, new_host_name, datastore_name, service_instance=None):
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: yaml
+
+        Relocate Virtual Machine:
+          vmware_vm.relocate:
+            - name: vm01
+            - new_host_name: host1
+            - datastore_name: ds01
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, name)
     datastore_match = False

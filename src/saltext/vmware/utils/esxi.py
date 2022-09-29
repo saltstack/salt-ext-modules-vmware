@@ -334,3 +334,60 @@ def add_host(
 
 def get_host(host, service_instance):
     return utils_common.get_mor_by_property(service_instance, vim.HostSystem, host)
+
+
+def get_firewall_config(
+    ruleset_name,
+    host_name,
+    service_instance,
+):
+    """
+    Get Firewall a rule configuration on matching ESXi hosts.
+
+    ruleset_name
+        Name of firewall rule.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    """
+    host = get_host(
+        host=host_name,
+        service_instance=service_instance,
+    )
+
+    firewall_config = host.configManager.firewallSystem
+    if not firewall_config:
+        return None
+    for ruleset in firewall_config.firewallInfo.ruleset:
+        if ruleset_name == ruleset.key:
+            ret = {
+                host.name: {
+                    ruleset.key: {
+                        "allowed_host": {
+                            "ip_address": list(ruleset.allowedHosts.ipAddress),
+                            "all_ip": ruleset.allowedHosts.allIp,
+                            "ip_network": [
+                                "{}/{}".format(ip.network, ip.prefixLength)
+                                for ip in ruleset.allowedHosts.ipNetwork
+                            ],
+                        },
+                        "service": ruleset.service,
+                        "enabled": ruleset.enabled,
+                        "rule": [
+                            {
+                                "port": r.port,
+                                "end_port": r.endPort,
+                                "direction": r.direction,
+                                "port_type": r.portType,
+                                "protocol": r.protocol,
+                            }
+                            for r in ruleset.rule
+                        ],
+                    }
+                }
+            }
+    return ret

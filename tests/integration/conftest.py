@@ -75,7 +75,7 @@ def integration_test_config():
 def service_instance(integration_test_config):
     config = integration_test_config
     try:
-        si = get_service_instance(opts={"vmware_config": config.copy()} if config else None)
+        si = get_service_instance(config={"saltext.vmware": config.copy()} if config else None)
         return si
     except Exception as e:  # pylint: disable=broad-except
         pytest.skip(f"Unable to create service instance from config. Error = {e}")
@@ -84,24 +84,39 @@ def service_instance(integration_test_config):
 @pytest.fixture
 def patch_salt_globals(vmware_conf):
     """
-    Patch __opts__ and __pillar__
+    Patch __opts__, __pillar__ and __salt__
     """
     setattr(datacenter_mod, "__opts__", {})
     setattr(datacenter_mod, "__pillar__", {})
+    setattr(datacenter_mod, "__salt__", vmware_conf)
+    setattr(datacenter_st, "__salt__", vmware_conf)
     setattr(cluster_mod, "__opts__", {})
     setattr(cluster_mod, "__pillar__", {})
+    setattr(cluster_mod, "__salt__", vmware_conf)
     setattr(cluster_ha_mod, "__opts__", {})
     setattr(cluster_ha_mod, "__pillar__", {})
+    setattr(cluster_ha_mod, "__salt__", vmware_conf)
     setattr(cluster_drs_mod, "__opts__", {})
     setattr(cluster_drs_mod, "__pillar__", {})
+    setattr(cluster_drs_mod, "__salt__", vmware_conf)
     setattr(esxi_mod, "__pillar__", vmware_conf)
     setattr(esxi_mod, "__opts__", {})
+    setattr(esxi_mod, "__salt__", vmware_conf)
     setattr(esxi_st, "__pillar__", vmware_conf)
+    setattr(esxi_st, "__salt__", vmware_conf)
     setattr(folder, "__pillar__", vmware_conf)
+    setattr(folder, "__salt__", vmware_conf)
+    setattr(folder_state, "__salt__", vmware_conf)
+    setattr(datastore, "__salt__", vmware_conf)
+    setattr(datastore_state, "__salt__", vmware_conf)
     setattr(license_mgr_st, "__opts__", {})
     setattr(license_mgr_st, "__pillar__", {})
+    setattr(license_mgr_st, "__salt__", vmware_conf)
     setattr(license_mgr_mod, "__opts__", {})
     setattr(license_mgr_mod, "__pillar__", {})
+    setattr(license_mgr_mod, "__salt__", vmware_conf)
+    setattr(virtual_machine, "__salt__", vmware_conf)
+    setattr(virtual_machine_state, "__salt__", vmware_conf)
     setattr(
         datacenter_st,
         "__salt__",
@@ -156,6 +171,9 @@ def patch_salt_globals(vmware_conf):
             "vmware_esxi.delete_vmkernel_adapter": esxi_mod.delete_vmkernel_adapter,
             "vmware_esxi.update_vmkernel_adapter": esxi_mod.update_vmkernel_adapter,
             "vmware_esxi.get_vmkernel_adapters": esxi_mod.get_vmkernel_adapters,
+            "vmware_esxi.set_firewall_config": esxi_mod.set_firewall_config,
+            "vmware_esxi.get_advanced_config": esxi_mod.get_advanced_config,
+            "vmware_esxi.set_advanced_configs": esxi_mod.set_advanced_configs,
         },
     )
     setattr(
@@ -310,6 +328,11 @@ def vmc_nsx_connect(vmc_config):
 
 
 @pytest.fixture(scope="session")
+def vmc_connect(vmc_config):
+    return vmc_config["vmc_connect"]
+
+
+@pytest.fixture(scope="session")
 def vmc_vcenter_connect(vmc_config):
     return vmc_config["vmc_vcenter_connect"]
 
@@ -337,7 +360,7 @@ def nsxt_config():
 def vmware_conf(integration_test_config):
     config = integration_test_config
     return {
-        "vmware_config": {
+        "saltext.vmware": {
             "host": config["host"],
             "password": config["password"],
             "user": config["user"],
@@ -351,14 +374,14 @@ def vm_ops():
 
 
 @pytest.fixture(scope="function")
-def vmware_license_mgr_inst(patch_salt_globals, service_instance):
+def vmware_license_mgr_inst(patch_salt_globals, service_instance, vmware_conf):
     """
     Return a vmware_license_mgr during start of a test and tear it down once the test ends
 
     vmware_license_mgr is essentially a service_instance to a vCenter
     """
     if not service_instance:
-        lic_mgr = get_service_instance(opts=__opts__, pillar=__pillar__)
+        lic_mgr = get_service_instance(config=vmware_conf)
     else:
         lic_mgr = service_instance
     yield lic_mgr

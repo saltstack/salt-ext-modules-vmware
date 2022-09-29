@@ -23,6 +23,13 @@ create_sddc = {
     "region": "us-west-2",
 }
 
+create_sddc_cluster = {
+    "host_cpu_cores_count": None,
+    "host_instance_type": None,
+    "msft_license_config": None,
+    "num_hosts": 1,
+    "storage_capacity": None,
+}
 
 manage_sddc_host = {
     "availability_zone": None,
@@ -218,3 +225,16 @@ create_vm_disks = {
     "scsi": None,
     "type": None,
 }
+
+add_org_users = {
+    "skipNotify": False,
+    "usernames": ["test@vmware.com"],
+    "organizationRoles": [{"name": "org_member", "expiresAt": None}],
+    "serviceRolesDtos": None,
+    "customRoles": None,
+    "skipNotifyRegistration": False,
+    "invitedBy": None,
+    "customGroupsIds": None,
+}
+
+remove_org_users = {"user_ids": None, "notify_users": False}

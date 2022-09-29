@@ -85,7 +85,7 @@ def vm_data(mock_vmc_vcenter_request_call_api):
 
 
 def test_get_sddc_should_return_api_response(sddc_data):
-    result = vmc_sddc.get(
+    result = vmc_sddc.list_(
         hostname="hostname",
         refresh_key="refresh_key",
         authorization_host="authorization_host",
@@ -99,7 +99,7 @@ def test_get_sddc_should_return_api_response(sddc_data):
 def test_get_sddc_called_with_url():
     expected_url = "https://hostname/vmc/api/orgs/org_id/sddcs"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_sddc.get(
+        vmc_sddc.list_(
             hostname="hostname",
             refresh_key="refresh_key",
             authorization_host="authorization_host",

@@ -124,7 +124,7 @@ def present(
             for dhcp-server-profiles:
 
             server_addresses:
-              - 10.22.12.2/23
+              - 203.0.113.2/23
             tags:
               - tag: tag1
                 scope: scope1
@@ -133,7 +133,7 @@ def present(
             for dhcp-relay-profiles:
 
             server_addresses:
-              - 10.1.1.1
+              - 203.0.113.1
             tags:
               - tag: tag1
                 scope: scope1

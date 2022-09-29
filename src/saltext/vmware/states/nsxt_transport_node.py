@@ -42,7 +42,7 @@ Example:
 
                resource_type: "HostNode"
                display_name: "Host_1"
-               ip_addresses: ["10.149.55.21"]
+               ip_addresses: ["203.0.113.21"]
                os_type: "ESXI"
                os_version: "6.5.0"
                host_credential:
@@ -77,7 +77,7 @@ def __virtual__():
 def _connect_with_vcentre(vcenter_host, username, password):
     vmware_config = {"host": vcenter_host, "user": username, "password": password}
 
-    service_instance = connect.get_service_instance(opts={"vmware_config": vmware_config})
+    service_instance = connect.get_service_instance(opts={"saltext.vmware": vmware_config})
     return service_instance
 
 
@@ -478,7 +478,7 @@ def present(
 
                resource_type: "HostNode"
                display_name: "Host_1"
-               ip_addresses: ["10.149.55.21"]
+               ip_addresses: ["203.0.113.21"]
                os_type: "ESXI"
                os_version: "6.5.0"
                host_credential:
