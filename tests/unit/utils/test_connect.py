@@ -25,7 +25,7 @@ def test_when_no_config_and_environ_is_missing_conf_values_get_service_instance_
         ValueError,
         match="Cannot create service instance, VMware credentials incomplete.",
     ), mock.patch.dict(os.environ, environ_values):
-        connect.get_service_instance()
+        connect.get_service_instance(config={})
 
 
 @pytest.mark.parametrize(
@@ -62,6 +62,18 @@ def test_when_no_environ_values_and_config_is_missing_conf_values_get_service_in
             None,
             None,
             {"saltext.vmware": {"host": "blerp", "user": "whatever", "password": "coolguy"}},
+            {},
+        ),
+        # No environ, simple config in pillar
+        (
+            {"host": "blerp", "user": "whatever", "pwd": "coolguy"},
+            None,
+            None,
+            {
+                "pillar": {
+                    "saltext.vmware": {"host": "blerp", "user": "whatever", "password": "coolguy"}
+                }
+            },
             {},
         ),
         # No environ config, simple profile config
@@ -251,6 +263,49 @@ def test_when_no_environ_values_and_config_is_missing_conf_values_get_service_in
             {
                 "SALTEXT_VMWARE_PASSWORD": "bottia",
             },
+        ),
+        # Grains should come before pillar
+        (
+            {"host": "blerp", "user": "whatever", "pwd": "coolguy"},
+            None,
+            None,
+            {
+                "grains": {
+                    "saltext.vmware": {"host": "blerp", "user": "whatever", "password": "coolguy"}
+                },
+                "pillar": {
+                    "saltext.vmware": {
+                        "host": "bad host",
+                        "user": "bad horse",
+                        "password": "i hate captain hammer",
+                    }
+                },
+            },
+            {},
+        ),
+        # config should come before grains and pillar
+        (
+            {"host": "blerp", "user": "whatever", "pwd": "coolguy"},
+            None,
+            None,
+            {
+                "saltext.vmware": {"host": "blerp", "user": "whatever", "password": "coolguy"},
+                "grains": {
+                    "saltext.vmware": {
+                        "host": "sand.example.com",
+                        "user": "sandman",
+                        "password": "exitnight",
+                    }
+                },
+                "pillar": {
+                    "saltext.vmware": {
+                        "host": "bad host",
+                        "user": "bad horse",
+                        "password": "i hate captain hammer",
+                    }
+                },
+            },
+            {},
         ),
     ],
 )
