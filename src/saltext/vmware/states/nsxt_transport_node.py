@@ -77,7 +77,7 @@ def __virtual__():
 def _connect_with_vcentre(vcenter_host, username, password):
     vmware_config = {"host": vcenter_host, "user": username, "password": password}
 
-    service_instance = connect.get_service_instance(opts={"saltext.vmware": vmware_config})
+    service_instance = connect.get_service_instance(config={"saltext.vmware": vmware_config})
     return service_instance
 
 

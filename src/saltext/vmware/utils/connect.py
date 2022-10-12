@@ -24,34 +24,67 @@ log = logging.getLogger(__name__)
 
 
 def get_config(config, profile=None, esxi_host=None):
+    conf = (
+        config.get("saltext.vmware")
+        or config.get("grains", {}).get("saltext.vmware")
+        or config.get("pillar", {}).get("saltext.vmware")
+        or {}
+    )
+    if not conf:
+        conf = (
+            config.get("vmware_config")
+            or config.get("grains", {}).get("vmware_config")
+            or config.get("pillar", {}).get("vmware_config")
+            or {}
+        )
+        if conf:
+            log.warning(
+                "Config found under vmware_config and not saltext.vmware. vmware_config has been deprecated and will be removed in 2023"
+            )
     if profile:
-        credentials = (config.get("saltext.vmware", {}) or config.get("vmware_config"))[profile]
+        credentials = conf[profile]
     else:
-        credentials = config.get("saltext.vmware") or config.get("vmware_config", {})
+        credentials = conf
 
     if esxi_host:
-        host = os.environ.get("SALTEXT_VMWARE_HOST") or credentials.get("esxi_host", {}).get("host")
+        host = esxi_host
+        credentials = credentials.get("esxi_host", {}).get(esxi_host)
+        password = credentials.get("password")
+        user = credentials.get("user")
     else:
         host = os.environ.get("SALTEXT_VMWARE_HOST") or credentials.get("host")
+        password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
+        user = os.environ.get("SALTEXT_VMWARE_USER") or credentials.get("user")
 
-    password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
-    user = os.environ.get("SALTEXT_VMWARE_USER") or credentials.get("user")
-
+    if host is None or password is None or user is None:
+        raise ValueError("Cannot create service instance, VMware credentials incomplete.")
     return {"host": host, "user": user, "password": password}
 
 
-def get_service_instance(config=None, esxi_host=None, profile=None):
+def get_service_instance(*, config, esxi_host=None, profile=None):
     """
-    Connect to VMware service instance
+    Connect to VMware service instance.
 
     config
-        (optional) If specified, allows for a dictionary of data to be made
-        available to pillar and ext_pillar rendering. These variables
-        will also override any variables of the same name in pillar or
-        ext_pillar.
+        The config to use to search for connection information. The search
+        order matches that found in Salt's `config.get
+        <https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.config.html#salt.modules.config.get>_`.
+        Specifically the order is:
+
+            1. Environment variables
+            2. Minion config
+            3. Minion grains
+            4. Minion pillar data
+
+        Environment variables are:
+            SALTEXT_VMWARE_HOST
+            SALTEXT_VMWARE_PASSWORD
+            SALTEXT_VMWARE_USER
+            SALTEXT_VMWARE_ESXI_USER
+            SALTEXT_VMWARE_ESXI_PASSWORD
 
     esxi_host
-        (optional) If specified, retrieves the configured username and password for this host.
+        (optional) If specified, retrieves the configured username and password for the ESXi host.
 
     profile
         Profile to use (optional)
@@ -100,9 +133,6 @@ def get_service_instance(config=None, esxi_host=None, profile=None):
 
     config = get_config(config=config, profile=profile, esxi_host=esxi_host)
 
-    if config["host"] is None or config["password"] is None or config["user"] is None:
-        raise ValueError("Cannot create service instance, VMware credentials incomplete.")
-
     service_instance = connect.SmartConnect(
         host=config.get("host"),
         user=config.get("user"),
@@ -137,6 +167,7 @@ def request(url, method, body=None, token=None, opts=None, pillar=None):
         will also override any variables of the same name in pillar or
         ext_pillar.
     """
+    # TODO: request needs test coverage -W. Werner, 2022-09-30
     host = (
         os.environ.get("SALTEXT_VMWARE_REST_API_HOST")
         or opts.get("saltext.vmware", {}).get("rest_api_host")

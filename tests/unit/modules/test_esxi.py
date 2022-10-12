@@ -24,10 +24,36 @@ def tgz_file(session_temp_dir):
 @pytest.fixture(autouse=True)
 def patch_salt_loaded_objects():
     # This esxi needs to be the same as the module we're importing
-    with patch.object(esxi, "__opts__", {"cachedir": "."}, create=True), patch.object(
-        esxi, "__pillar__", {}, create=True
-    ), patch.object(esxi, "__salt__", {}, create=True):
+    with patch(
+        "saltext.vmware.modules.esxi.__opts__",
+        {
+            "cachedir": ".",
+            "saltext.vmware": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
+        },
+        create=True,
+    ), patch.object(esxi, "__pillar__", {}, create=True), patch.object(
+        esxi, "__salt__", {}, create=True
+    ):
         yield
+
+
+@pytest.fixture
+def fake_hosts():
+    hosts = [MagicMock()]
+    hosts[0].name = "blerp"
+    hosts[
+        0
+    ].configManager.firmwareSystem.QueryFirmwareConfigUploadURL.return_value = "something/cool/*"
+
+    with patch("saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=hosts):
+        yield hosts
+
+
+@pytest.fixture
+def fake_http_query():
+    fake_query = MagicMock()
+    with patch.dict(esxi.__salt__, {"http.query": fake_query}):
+        yield fake_query
 
 
 def get_host(in_maintenance_mode=None):
@@ -90,8 +116,8 @@ def test_esxi_power_state(monkeypatch, hosts, state, fn, fn_calls, expected):
         [[get_host(), get_host()], True],
     ],
 )
-def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master):
-    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": "."})
+def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master, session_temp_dir):
+    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": str(session_temp_dir)})
     setattr(saltext.vmware.modules.esxi, "__pillar__", MagicMock())
     setattr(
         saltext.vmware.modules.esxi,
@@ -107,7 +133,7 @@ def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master):
     ret = esxi.backup_config(push_file_to_master=push_file_to_master)
     assert ret
     for host in hosts:
-        assert ret[host.name]["file_name"] == os.path.join(".", "vmware.tgz")
+        assert ret[host.name]["file_name"] == str(session_temp_dir / "vmware.tgz")
         assert ret[host.name]["url"] == "http://vmware.tgz"
     assert push_file_to_master == (saltext.vmware.modules.esxi.__salt__["cp.push"].call_count > 0)
 
@@ -123,10 +149,19 @@ def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master):
 def test_esxi_restore_config(hosts, source_file, tgz_file):
     if source_file is None:
         source_file = str(tgz_file)
+    esxi.__opts__["saltext.vmware"]["esxi_host"] = esxi.__opts__["saltext.vmware"].get(
+        "esxi_host", {}
+    )
+    for host in hosts:
+        esxi.__opts__["saltext.vmware"]["esxi_host"][host.name] = {
+            "user": esxi.__opts__["saltext.vmware"]["user"],
+            "password": esxi.__opts__["saltext.vmware"]["password"],
+        }
+    fake_http_query = MagicMock(return_value={"body": b"1"})
     patch_salt = patch.dict(
         esxi.__salt__,
         {
-            "http.query": MagicMock(return_value={"body": b"1"}),
+            "http.query": fake_http_query,
             "cp.cache_file": MagicMock(return_value=str(tgz_file)),
         },
         update=True,
@@ -140,6 +175,58 @@ def test_esxi_restore_config(hosts, source_file, tgz_file):
     assert ret
     for host in hosts:
         assert ret[host.name] is True
+
+
+@pytest.mark.parametrize(
+    "expected_kwargs, host_name",
+    [
+        ({"host_names": None, "get_all_hosts": True}, None),
+        ({"host_names": ["roscivs.example.com"], "get_all_hosts": False}, "roscivs.example.com"),
+    ],
+)
+def test_esxi_restore_config_should_request_correct_hosts(expected_kwargs, host_name):
+    # host_names should be a list or None, and get_all_hosts should be True or
+    # False depending on if a host_name was provided
+    fake_si = MagicMock()
+    with patch(
+        "saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=[]
+    ) as fake_get_hosts:
+        esxi.restore_config(host_name=host_name, source_file=None, service_instance=fake_si)
+    fake_get_hosts.assert_called_with(
+        service_instance=fake_si,
+        cluster_name=None,
+        datacenter_name=None,
+        **expected_kwargs,
+    )
+
+
+def test_esxi_restore_config_should_send_correct_data_to_config_api_endpoint(
+    fake_hosts, session_temp_dir, fake_http_query
+):
+    expected_url = "something/cool/blerp"
+    expected_username = "roscivs"
+    expected_password = "bottia"
+    expected_data = b"hello world!"
+    opts = {
+        "saltext.vmware": {
+            "user": "wrong username",
+            "password": "wrong password",
+            "esxi_host": {
+                fake_hosts[0].name: {"user": expected_username, "password": expected_password},
+            },
+        },
+    }
+    sfile = session_temp_dir / "fnord"
+    sfile.write_bytes(expected_data)
+    with patch.dict(esxi.__opts__, opts):
+        esxi.restore_config(source_file=str(sfile), service_instance=MagicMock())
+    fake_http_query.assert_called_with(
+        expected_url,
+        data=expected_data,
+        method="PUT",
+        username=expected_username,
+        password=expected_password,
+    )
 
 
 @pytest.mark.parametrize(
