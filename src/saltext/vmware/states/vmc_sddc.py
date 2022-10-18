@@ -126,7 +126,7 @@ def present(
 
     msft_license_config :
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
-        It can be specified in the below format
+        It can be specified in the below format:
 
         .. code::
 
@@ -145,13 +145,13 @@ def present(
         Please refer the `VMC Doc about msft_license_config <https://developer.vmware.com/apis/vmc/v1.1/data-structures/MsftLicensingConfig/>`_
 
     sddc_id: String As UUID
-        (Optional)If provided, will be assigned as SDDC id of the provisioned SDDC.
+        (Optional) If provided, will be assigned as SDDC id of the provisioned SDDC.
 
     sddc_template_id : String As UUID
         (Optional) If provided, configuration from the template will applied to the provisioned SDDC.
 
     sddc_type: String
-        (Optional)Denotes the SDDC type, if the value is null or empty, the type is considered as default.
+        (Optional) Denotes the SDDC type, if the value is null or empty, the type is considered as default.
 
     size: String
         (Optional) The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter
@@ -170,7 +170,7 @@ def present(
         instead of using the direct-attached storage, a capacity value amount of seperable storage will be used.
 
     vpc_cidr
-        (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported.
+        (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported. Example: 10.2.0.0/16, 10.2.32.0/20
 
     vxlan_subnet : String
         (Optional) VXLAN IP subnet in CIDR for compute gateway
@@ -288,7 +288,7 @@ def absent(
         The ID of organization to which the SDDC belongs to.
 
     force_delete: Boolean
-        (Optional) If = true, will delete forcefully.
+        (Optional) If true, will delete forcefully.
         Beware: do not use the force flag if there is a chance an active provisioning or deleting task is running
         against this SDDC. This option is restricted.
 

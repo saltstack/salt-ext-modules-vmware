@@ -233,7 +233,7 @@ def create(
 
     msft_license_config :
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
-        It can be specified in the below format
+        It can be specified in the below format:
 
         .. code::
 
@@ -278,7 +278,7 @@ def create(
         (Optional) The storage capacity value to be requested for the sddc primary cluster, in GiBs. If provided, instead of using the direct-attached storage, a capacity value amount of seperable storage will be used.
 
     vpc_cidr
-        (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported.
+        (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported. Example: 10.2.0.0/16, 10.2.32.0/20
 
     vxlan_subnet : String
         (Optional) VXLAN IP subnet in CIDR for compute gateway
@@ -410,7 +410,7 @@ def delete(
         sddc_id which will be deleted
 
     force_delete: Boolean
-        (Optional) If = true, will delete forcefully.
+        (Optional) If true, will delete forcefully.
         Beware: do not use the force flag if there is a chance an active provisioning or deleting task is running against this SDDC. This option is restricted.
 
     retain_configuration: Boolean
@@ -618,7 +618,7 @@ def get_vms(
         When operations return a value of this structure as a result, the field will contain identifiers for the resource type: ClusterComputeResource.
 
     datacenters: Array Of String
-        (Optional)datacenters that must contain the virtual machine for the virtual machine to match the filter.
+        (Optional) datacenters that must contain the virtual machine for the virtual machine to match the filter.
          If unset or empty, virtual machines in any datacenter match the filter.
          When clients pass a value of this structure as a parameter, the field must contain identifiers for the resource type: Datacenter.
          When operations return a value of this structure as a result, the field will contain identifiers for the resource type: Datacenter.

@@ -7,7 +7,7 @@ Things to know about running VMC modules & states
 -------------------------------------------------
 
 
-VMC- Vmware Cloud on AWS which means an instance of the vCloud foundation being executed on AWS bear metal hardware, `You can learn more about VMware Cloud on AWS <https://docs.vmware.com/en/VMware-Cloud-on-AWS/index.html>`_.
+VMC- Vmware Cloud on AWS which means an instance of the vCloud foundation being executed on AWS bare metal hardware, `You can learn more about VMware Cloud on AWS <https://docs.vmware.com/en/VMware-Cloud-on-AWS/index.html>`_.
 
 SDDC- Software Defined Data Center
 
