@@ -239,7 +239,7 @@ def test_invite_state_when_error_from_getting_users_list(mocked_ok_response, moc
         vmc_org_user.__salt__,
         {"vmc_org_users.list": mock_users_list_response},
     ):
-        result = vmc_org_user.invite(
+        result = vmc_org_user.invited(
             name="user_name",
             hostname="hostname",
             refresh_key="refresh_key",
@@ -274,7 +274,7 @@ def test_invite_state_when_error_from_create(mocked_error_response):
             "vmc_org_users.invite": mock_invite,
         },
     ):
-        result = vmc_org_user.invite(
+        result = vmc_org_user.invited(
             name="user_name",
             hostname="hostname",
             refresh_key="refresh_key",
@@ -304,7 +304,7 @@ def test_invite_to_create_when_module_returns_success_response(mocked_ok_respons
             "vmc_org_users.invite": mock_invite_response,
         },
     ):
-        result = vmc_org_user.invite(
+        result = vmc_org_user.invited(
             name=user_name,
             hostname="hostname",
             refresh_key="refresh_key",
@@ -330,7 +330,7 @@ def test_invite_state_for_create_when_opts_test_is_true(mocked_ok_response):
         {"vmc_org_users.list": mock_users_list_response},
     ):
         with patch.dict(vmc_org_user.__opts__, {"test": True}):
-            result = vmc_org_user.invite(
+            result = vmc_org_user.invited(
                 name=user_name,
                 hostname="hostname",
                 refresh_key="refresh_key",
@@ -387,7 +387,7 @@ def test_invite_state_during_create_should_correctly_pass_args(mocked_ok_respons
             "vmc_org_users.invite": mock_invite,
         },
     ):
-        result = vmc_org_user.invite(name=user_name, **actual_args)
+        result = vmc_org_user.invited(name=user_name, **actual_args)
 
     call_kwargs = mock_invite.mock_calls[0][-1]
 

@@ -28,7 +28,7 @@ from saltext.vmware.utils import vmc_state
 log = logging.getLogger(__name__)
 
 
-def invite(
+def invited(
     name,
     hostname,
     refresh_key,
@@ -155,11 +155,13 @@ def invite(
             result=False,
         )
     org_user = None
-    for org_user in org_users_list.get("results"):
-        if username == org_user["user"].get("username"):
+    for org_user in org_users_list["results"]:
+        if username == org_user["name"].get(
+            "username"
+        ):  # will the user ever be missing a username?
             break
-        else:
-            org_user = None
+    else:
+        org_user = None
 
     if __opts__.get("test"):
         log.info("vmc_org_user invite is called with test option")
@@ -286,8 +288,8 @@ def absent(
             user_id = org_user["user"].get("userId")
             log.info("user found with username %s", username)
             break
-        else:
-            org_user = None
+    else:
+        org_user = None
 
     if org_user:
         if __opts__.get("test"):
