@@ -19,10 +19,10 @@ def user_name():
 
 
 def test_vmc_org_user_state_module(salt_call_cli, vmc_common_data, user_name):
-    # Invoke invite state to invite the user
+    # Invoke invited state to invite the user
     response = salt_call_cli.run(
         "state.single",
-        "vmc_org_user.invite",
+        "vmc_org_user.invited",
         name=user_name,
         organization_roles=[
             {
@@ -39,7 +39,7 @@ def test_vmc_org_user_state_module(salt_call_cli, vmc_common_data, user_name):
     changes = result["changes"]
 
     assert changes["old"] is None
-    assert result["comment"] == "Invited user {} successfully".format(user_name)
+    assert result["comment"] == "Invited {} successfully".format(user_name)
 
     # Invoke absent to remove the user
     response = salt_call_cli.run(

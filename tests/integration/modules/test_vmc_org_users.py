@@ -21,20 +21,21 @@ def test_org_users_smoke_test(salt_call_cli, vmc_common_data):
     result_as_json = ret.json
     assert "error" not in result_as_json
 
-    # Invite a new user to the org
-    user_names = ["test@vmware.com"]
+    # add/invite a new user to the org
+    user_name = "test@vmware.com"
     organization_roles = [
         {"name": "org_member"},
         {"name": "developer"},
     ]
     ret = salt_call_cli.run(
-        "vmc_org_users.invite",
-        user_names=user_names,
+        "vmc_org_users.add",
+        user_name=user_name,
         organization_roles=organization_roles,
         **vmc_common_data,
     )
     result_as_json = ret.json
     assert "error" not in result_as_json
+    assert "Invited {} successfully".format(user_name) in result_as_json["message"]
 
     # search the user
     ret = salt_call_cli.run(
@@ -42,7 +43,9 @@ def test_org_users_smoke_test(salt_call_cli, vmc_common_data):
     )
     result_as_json = ret.json
     assert "error" not in result_as_json
-    assert result_as_json["results"] == []
+    assert (
+        result_as_json["results"] == []
+    )  # "test@vmware.com" will not be added to the org directly but will reside in invited user list
 
     # remove the user from org
     user_ids = ["vmware.com:test-123"]

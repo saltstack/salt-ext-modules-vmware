@@ -13,8 +13,8 @@ def mocked_ok_response():
             {
                 "user": {
                     "username": "aahammed@vmware.com",
-                    "firstName": "Ajmal",
-                    "lastName": "Ahammed",
+                    "firstName": "Foo",
+                    "lastName": "Bar",
                     "domain": "vmware.com",
                     "idpId": "vmware.com",
                     "accessible": True,
@@ -259,19 +259,19 @@ def test_invite_state_when_error_from_getting_users_list(mocked_ok_response, moc
     assert not result["result"]
 
 
-def test_invite_state_when_error_from_create(mocked_error_response):
+def test_invited_state_when_error_from_adding_user(mocked_error_response):
     mock_users_list_response = create_autospec(
         vmc_org_users_exec.list_, return_value={"results": []}
     )
     mock_invite = create_autospec(
-        vmc_org_users_exec.invite, return_value={"error": "The credentials were incorrect."}
+        vmc_org_users_exec.add, return_value={"error": "The credentials were incorrect."}
     )
 
     with patch.dict(
         vmc_org_user.__salt__,
         {
             "vmc_org_users.list": mock_users_list_response,
-            "vmc_org_users.invite": mock_invite,
+            "vmc_org_users.add": mock_invite,
         },
     ):
         result = vmc_org_user.invited(
@@ -288,20 +288,19 @@ def test_invite_state_when_error_from_create(mocked_error_response):
     assert not result["result"]
 
 
-def test_invite_to_create_when_module_returns_success_response(mocked_ok_response):
+def test_invited_to_add_user_when_module_returns_success_response(mocked_ok_response):
     mock_users_list_response = create_autospec(
         vmc_org_users_exec.list_, return_value={"results": []}
     )
-    mock_invite_response = create_autospec(
-        vmc_org_users_exec.invite, return_value=mocked_ok_response
-    )
+    mock_invite_response = create_autospec(vmc_org_users_exec.add, return_value=mocked_ok_response)
     user_name = mocked_ok_response["results"][0]["user"]["username"]
+    mock_invite_response.update(message="Invited {} successfully".format(user_name))
 
     with patch.dict(
         vmc_org_user.__salt__,
         {
             "vmc_org_users.list": mock_users_list_response,
-            "vmc_org_users.invite": mock_invite_response,
+            "vmc_org_users.add": mock_invite_response,
         },
     ):
         result = vmc_org_user.invited(
@@ -315,7 +314,7 @@ def test_invite_to_create_when_module_returns_success_response(mocked_ok_respons
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Invited user {} successfully".format(user_name)
+    assert result["comment"] == "Invited {} successfully".format(user_name)
     assert result["result"]
 
 
@@ -368,6 +367,7 @@ def test_invite_state_during_create_should_correctly_pass_args(mocked_ok_respons
     )
     mock_invite_response = mocked_ok_response.copy()
     user_name = mocked_ok_response["results"][0]["user"]["username"]
+    mock_invite_response.update(message="Invited {} successfully".format(user_name))
     common_actual_args = {
         "hostname": "hostname",
         "refresh_key": "refresh_key",
@@ -378,13 +378,13 @@ def test_invite_state_during_create_should_correctly_pass_args(mocked_ok_respons
 
     mock_invite_response.update(actual_args)
     actual_args.update(common_actual_args)
-    mock_invite = create_autospec(vmc_org_users_exec.invite, return_value=mock_invite_response)
+    mock_invite = create_autospec(vmc_org_users_exec.add, return_value=mock_invite_response)
 
     with patch.dict(
         vmc_org_user.__salt__,
         {
             "vmc_org_users.list": mock_users_list_response,
-            "vmc_org_users.invite": mock_invite,
+            "vmc_org_users.add": mock_invite,
         },
     ):
         result = vmc_org_user.invited(name=user_name, **actual_args)
@@ -397,5 +397,5 @@ def test_invite_state_during_create_should_correctly_pass_args(mocked_ok_respons
     assert result is not None
     assert result["changes"]["old"] is None
     assert result["changes"]["new"] == mock_invite_response
-    assert result["comment"] == "Invited user {} successfully".format(user_name)
+    assert result["comment"] == "Invited {} successfully".format(user_name)
     assert result["result"]

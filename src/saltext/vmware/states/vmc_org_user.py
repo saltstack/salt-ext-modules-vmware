@@ -156,7 +156,7 @@ def invited(
         )
     org_user = None
     for org_user in org_users_list["results"]:
-        if username == org_user["name"].get(
+        if username == org_user["user"].get(
             "username"
         ):  # will the user ever be missing a username?
             break
@@ -177,11 +177,11 @@ def invited(
             )
 
     if not org_user:
-        invited_org_user = __salt__["vmc_org_users.invite"](
+        invited_org_user = __salt__["vmc_org_users.add"](
             hostname=hostname,
             refresh_key=refresh_key,
             org_id=org_id,
-            user_names=[username],
+            user_name=username,
             organization_roles=organization_roles,
             skip_notify=skip_notify,
             custom_roles=custom_roles,
@@ -202,7 +202,7 @@ def invited(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Invited user {} successfully".format(username),
+            comment=invited_org_user["message"],
             new_state=invited_org_user,
             result=True,
         )

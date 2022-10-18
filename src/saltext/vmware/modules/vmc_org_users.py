@@ -192,193 +192,6 @@ def search(
     )
 
 
-def invite(
-    hostname,
-    refresh_key,
-    org_id,
-    user_names,
-    organization_roles,
-    skip_notify=False,
-    custom_roles=None,
-    service_roles=None,
-    skip_notify_registration=False,
-    invited_by=None,
-    custom_groups_ids=None,
-    verify_ssl=True,
-    cert=None,
-):
-    """
-    Invite users to the given organization.
-
-    Please refer the `Organization User Invitation documentation <https://developer.vmware.com/apis/csp/csp-iam/latest/csp/gateway/am/api/orgs/orgId/invitations/post/>`_ to get insight of functionality and input parameters
-
-    CLI Example:
-
-      .. code-block:: bash
-
-          salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id=org_id  ...
-
-    hostname
-          The host name of CSP.
-
-    refresh_key
-          API Token of the user which is used to get the Access Token required for VMC operations.
-
-    org_id
-          The ID of organization to which the user should be invited.
-
-    user_names
-        List of Usernames (e-mails) of users to be invited to the organization.
-
-    organization_roles
-        List of unique organization roles assigned to user.
-        It can be specified in the below format
-
-        .. code::
-
-            "organization_roles": [
-                        {
-                            "name": "org_member"
-                        }
-                    ]
-            where 'name' indicates the name of the organization role.
-
-    skip_notify
-        (Optional) Indicates if the notification have to be skipped.
-
-    custom_roles
-        (Optional) List of custom role assigned to a user.
-        It can be specified in the below format
-
-        .. code::
-
-            "custom_roles": [
-                        {
-                            "name": "role_name"
-                        }
-                    ]
-            where 'name' indicates the name of the custom role.
-
-    service_roles
-        (Optional) List of service roles to attach to a user.
-        Below fields defines the properties of service roles.
-
-        'serviceDefinitionLink': (String) (Optional)
-            The link to the service definition.
-
-        'serviceRoles': list
-            It can be specified in the below format
-
-            .. code::
-
-                "serviceRoles": [
-                        {
-                            "name": "role_name"
-                        }
-                    ]
-                where 'name' indicates the name of the service role.
-
-    skip_notify_registration
-        (Optional) Prevent sending mails to users that do not yet have a CSP profile.
-
-    invited_by
-        (Optional) Indicates the actual user who is inviting.
-
-    custom_groups_ids
-        (Optional) List of unique IDs of Custom Groups. Can have a maximum of 15 custom group IDs.
-
-    verify_ssl
-       (Optional) Option to enable/disable SSL verification. Enabled by default.
-       If set to False, the certificate validation is skipped.
-
-    cert
-       (Optional) Path to the SSL client certificate file to connect to VMC Cloud Console.
-       The certificate can be retrieved from browser.
-
-    Example values:
-
-        .. code::
-
-            {
-                "skip_notify": true,
-                "custom_roles": [
-                    {
-                        "name": "string"
-                    }
-                ],
-                "service_roles": [
-                    {
-                        "serviceRoles": [
-                            {
-                                "name": "vmc-user:full"
-                            },
-                            {
-                                "name": "nsx:cloud_admin"
-                            },
-                            {
-                                "name": "nsx:cloud_auditor"
-                            }
-                        ],
-                        "serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_"
-                    }
-                ],
-                "skip_notify_registration": true,
-                "organization_roles": [
-                    {
-                        "name": "org_member"
-                    }
-                ],
-                "invited_by": "string",
-                "user_names": [
-                    "test@vmware.com"
-                ],
-                "custom_groups_ids": [
-                    "string"
-                ]
-            }
-
-        CLI Example:
-
-          .. code-block:: bash
-
-                salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id="1234" refresh_key="J05AftDxW" user_names='["abc@example.com"]' organization_roles='[{"name": "org_member"},{"name": "developer"}]' service_roles='[{"serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_", "serviceRoles": [{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}]}]' verify_ssl=false
-
-    """
-
-    log.info("Adding a user in the org %s", org_id)
-    api_base_url = vmc_request.set_base_url(hostname)
-    api_url = "{base_url}csp/gateway/am/api/orgs/{org_id}/invitations".format(
-        base_url=api_base_url, org_id=org_id
-    )
-
-    allowed_dict = {
-        "usernames": user_names,
-        "skipNotify": skip_notify,
-        "organizationRoles": organization_roles,
-        "customRoles": custom_roles,
-        "serviceRolesDtos": service_roles,
-        "skipNotifyRegistration": skip_notify_registration,
-        "invitedBy": invited_by,
-        "customGroupsIds": custom_groups_ids,
-    }
-
-    req_data = vmc_request._filter_kwargs(allowed_kwargs=allowed_dict.keys(), **allowed_dict)
-
-    request_data = vmc_request.create_payload_for_request(vmc_templates.add_org_users, req_data)
-
-    return vmc_request.call_api(
-        method=vmc_constants.POST_REQUEST_METHOD,
-        url=api_url,
-        refresh_key=refresh_key,
-        authorization_host=hostname,
-        description="vmc_org_users.invite",
-        responsebody_applicable=False,
-        data=request_data,
-        verify_ssl=verify_ssl,
-        cert=cert,
-    )
-
-
 def add(
     hostname,
     refresh_key,
@@ -573,6 +386,7 @@ def add(
     )
     if search_result["results"]:
         log.info("Added %s in the org successfully %s", user_name, org_id)
+        result.update(message="Added {} successfully".format(user_name))
     else:
         # check if user_name is in invitation list
         api_base_url = vmc_request.set_base_url(hostname)
@@ -599,8 +413,11 @@ def add(
 
         for invitation in invitation_list:
             if user_name == invitation["username"] and invitation["status"] == "AVAILABLE":
-                log.info("Invited  %s successfully", user_name)
-                result = invitation
+                log.info("Invited %s successfully", user_name)
+                result = {
+                    "message": "Invited {} successfully".format(user_name),
+                    "invitation": invitation,
+                }
                 break
         else:
             log.info("Failed to add %s", user_name)

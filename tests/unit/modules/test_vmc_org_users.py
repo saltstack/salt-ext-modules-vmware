@@ -197,7 +197,7 @@ def test_assert_list_org_users_should_correctly_filter_args(actual_args, expecte
 
 
 def test_add_org_user_should_return_api_response(mock_vmc_request_call_api, organization_roles):
-    data = {"results": "success", "message": "User has been invited successfully"}
+    data = {"results": "success", "message": "User has been added successfully"}
     mock_vmc_request_call_api.return_value = data
     assert (
         vmc_org_users.add(
