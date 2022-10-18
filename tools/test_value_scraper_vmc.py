@@ -235,7 +235,7 @@ if __name__ == "__main__":
         dest="create",
         action="store_true",
         default=None,
-        help="Create config file if not exists.",
+        help="Create config file if it does not exist.",
     )
     parser.add_argument(
         "CONFIG_FILE",

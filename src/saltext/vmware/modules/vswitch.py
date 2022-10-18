@@ -24,7 +24,7 @@ def __virtual__():
     return __virtualname__
 
 
-def _get(hostname, switch_name=None, service_instance=None):
+def _get(hostname, switch_name=None, service_instance=None, profile=None):
     """
     Returns a list of vswitches found on a host; if switch_name is set, the
     list will contain just that vswitch.
@@ -37,10 +37,13 @@ def _get(hostname, switch_name=None, service_instance=None):
         The vswitch name (optional).
 
     service_instance
-        Use this vCenter service connection instance instead of creating a new one (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     host = utils_esxi.get_host(hostname, service_instance)
 
@@ -55,7 +58,7 @@ def _get(hostname, switch_name=None, service_instance=None):
     return vswitches
 
 
-def get(hostname, switch_name=None, service_instance=None):
+def get(hostname, switch_name=None, service_instance=None, profile=None):
     """
     Get the properties of all vswitches on a host, optionally filtering to one name.
     Returns an empty list if no matching vswitch is found.
@@ -69,6 +72,9 @@ def get(hostname, switch_name=None, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    profile
+        Profile to use (optional)
+
     CLI Example:
 
     .. code-block:: bash
@@ -77,7 +83,10 @@ def get(hostname, switch_name=None, service_instance=None):
     """
     ret = []
     for vswitch in _get(
-        hostname=hostname, switch_name=switch_name, service_instance=service_instance
+        hostname=hostname,
+        switch_name=switch_name,
+        service_instance=service_instance,
+        profile=profile,
     ):
         spec = vswitch.spec
         info = {
@@ -96,7 +105,9 @@ def get(hostname, switch_name=None, service_instance=None):
     return ret
 
 
-def add(switch_name, hostname, mtu=1500, nics=[], num_ports=128, service_instance=None):
+def add(
+    switch_name, hostname, mtu=1500, nics=[], num_ports=128, service_instance=None, profile=None
+):
     """
     Adds a vswitch to the host.
 
@@ -118,6 +129,9 @@ def add(switch_name, hostname, mtu=1500, nics=[], num_ports=128, service_instanc
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    profile
+        Profile to use (optional)
+
     CLI Example:
 
     .. code-block:: bash
@@ -125,7 +139,7 @@ def add(switch_name, hostname, mtu=1500, nics=[], num_ports=128, service_instanc
         salt '*' vmware_vswitch.add switch_name=vSwitch0 hostname=host1 mtu=1500, nics='["vmnic0", "vmnic1"]', num_ports=256
     """
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     host = utils_esxi.get_host(hostname, service_instance)
 
@@ -140,7 +154,7 @@ def add(switch_name, hostname, mtu=1500, nics=[], num_ports=128, service_instanc
     return {"added": switch_name}
 
 
-def remove(switch_name, hostname, service_instance=None):
+def remove(switch_name, hostname, service_instance=None, profile=None):
     """
     Removes a vswitch on the host.
 
@@ -153,6 +167,9 @@ def remove(switch_name, hostname, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one (optional).
 
+    profile
+        Profile to use (optional)
+
     CLI Example:
 
     .. code-block:: bash
@@ -160,7 +177,7 @@ def remove(switch_name, hostname, service_instance=None):
         salt '*' vmware_vswitch.remove switch_name=vSwitch0 host_name=host1
     """
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
 
     host = utils_esxi.get_host(hostname, service_instance)
     host.configManager.networkSystem.RemoveVirtualSwitch(switch_name)

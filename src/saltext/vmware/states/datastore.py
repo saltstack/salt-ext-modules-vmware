@@ -24,7 +24,9 @@ def __virtual__():
     return __virtualname__
 
 
-def maintenance_mode(name, enter_maintenance_mode, datacenter_name=None, service_instance=None):
+def maintenance_mode(
+    name, enter_maintenance_mode, datacenter_name=None, service_instance=None, profile=None
+):
     """
     Manage boot option for a virtual machine
 
@@ -38,10 +40,13 @@ def maintenance_mode(name, enter_maintenance_mode, datacenter_name=None, service
         The name of the datacenter containing the datastore.
 
     service_instance
-        (optional) The Service Instance from which to obtain managed object references.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
     """
     if service_instance is None:
-        service_instance = connect.get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     assert isinstance(name, str)
     datastores = utils_datastore.get_datastores(

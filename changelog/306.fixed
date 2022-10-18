@@ -1,0 +1,1 @@
+Fixed behavior when esxi_host config value was supposed to be used.

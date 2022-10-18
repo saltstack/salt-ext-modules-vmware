@@ -25,12 +25,13 @@ Dev Environment
 
 Since this extension module is currently under active development, it's a good
 idea to have a dev system. This guide also assumes that you have installed
-Salt, by following directions on `<https://repo.saltproject.io/>`_. If you
+Salt, by following directions on
+`<https://docs.saltproject.io/salt/install-guide/en/latest/>`_. If you
 don't have an install of Salt, a quick way would be:
 
-.. code::
+.. code:: shell
 
-    python3 -m venv .dev-saltenv --prompt dev-salt
+    python -m venv .dev-saltenv --prompt dev-salt
     source .dev-saltenv/bin/activate
     python -m pip install salt
 
@@ -43,9 +44,9 @@ better.
 
     The rest of this guide assumes you have Salt installed and you have your
     ``venv`` activated, or that you have Salt installed in your system-wide
-    Python 3. If salt is installed system-wide, then user should be root and
-    the Saltfile instructions may be ignored. Additionally, the paths should be
-    relative to ``/`` instead of the users' homedir.
+    Python 3. If salt is installed system-wide, then user should be
+    ``root`` and the Saltfile instructions may be ignored.  Additionally,
+    the paths should be relative to ``/`` instead of the users' homedir.
 
 
 Config
@@ -58,8 +59,8 @@ with your vSphere. You'll need to set the config values in one of the following 
 * pillar file (default: ``/srv/pillar``)
 * environment variables - this is more for one-off ``salt-call --local``
   statements, and not recommended for general use. But if you really want to,
-  ``VMWARE_CONFIG_HOST``, ``VMWARE_CONFIG_PASSWORD``, and
-  ``VMWARE_CONFIG_USER`` are the names.
+  ``SALTEXT_VMWARE_HOST``, ``SALTEXT_VMWARE_PASSWORD``, and
+  ``SALTEXT_VMWARE_USER`` are the names.
 
 .. note::
 
@@ -68,33 +69,36 @@ with your vSphere. You'll need to set the config values in one of the following 
     info on minion config, see `Configuring the Salt Minion
     <https://docs.saltproject.io/en/latest/ref/configuration/minion.html>`_.
 
-This guide will use the pillar approach, along with Saltfile for convenience.
+This guide will use the "pillar" approach, along with a ``Saltfile``
+for convenience.
 
 .. note::
 
-    When using Saltfile, either the Saltfile must be passed as a command line
-    argument, or the salt commands must be run in the directory containing the
-    Saltfile.
+    Like ``Makefile``, ``Dockerfile``, and ``Vagrantfile``, when using
+    ``Saltfile``, either the ``Saltfile`` must be passed as a command line
+    argument, or the ``salt`` commands must be run in the directory
+    containing the ``Saltfile``.
 
 First, let's create the directories that we need:
 
 
-.. code::
+.. code:: shell
 
     cd
-    mkdir -p salt/etc/salt/pki/
-    mkdir -p salt/var/cache/ salt/var/log/
-    mkdir -p salt/srv/pillar/ salt/srv/salt
+    mkdir -p salt/etc/salt/pki
+    mkdir -p salt/var/cache salt/var/log
+    mkdir -p salt/srv/pillar salt/srv/salt
     cd salt
 
 Now, the Salt config files:
 
-.. code::
+.. code:: shell
 
     $ cat <<EOF> Saltfile
     salt-call:
       local: True
       config_dir: etc/salt
+    EOF
 
     $ cat <<EOF> etc/salt/master
     user: $(whoami)
@@ -129,10 +133,10 @@ Setting the minion ID will allow for easier targeting in the pillar top file.
 .. code:: yaml
 
     # srv/pillar/my_vsphere_conf.sls
-    vmware_config:
+    saltext.vmware:
       host: 203.0.113.42
       password: VMware1!
-      user: adminstrator@vsphere.local
+      user: administrator@vsphere.local
 
 Verify that your config is correct by running
 
@@ -141,7 +145,7 @@ Verify that your config is correct by running
     $ salt-call pillar.items
     local:
         ----------
-        vmware_config:
+        saltext.vmware:
             ----------
             host:
                 203.0.113.42
@@ -161,7 +165,7 @@ Installation
 
 Unlike custom execution modules and state modules for Salt where files are
 dropped directly into a directory (typically ``/srv/salt/_modules/`` and
-``/srv/salt/_states/``), extension modules will be installed via pip. This
+``/srv/salt/_states/``), extension modules will be installed via ``pip``. This
 makes managing the versions much easier!
 
 .. note::
@@ -170,7 +174,7 @@ makes managing the versions much easier!
     module should be installed on the Salt master (unless you have a specific
     minion that you want to communicate with vSphere). If you have a minion
     that should communicate with your SDDC, replace ``salt-call`` with
-    ``salt yourminion ...``. One reason you might need to have a particular
+    ``salt yourminion``. One reason you might need to have a particular
     minion is if your salt master IP is on a blocklist or not on an allowlist
     for your SDDC, but your minion is allowed.
 
@@ -210,7 +214,7 @@ Your output might be a bit different, but as long as ``Successfully installed
 saltext.vmware`` shows up, you should be able to communicate with your vSphere.
 Try it out!
 
-.. code::
+.. code:: shell
 
     $ salt-call vmware_datacenter.list
 
@@ -224,9 +228,9 @@ Your First State
 
 New states and modules are being created weekly. The most up-to-date list can
 be found in the complete list of :ref:`all the states/modules`. Each state or
-module will list the required arguments. For this example, find the vmc_sddc
-module in that list to get more information about what pillar values are
-required, but you could write this state:
+module will list the required arguments. For this example, find the
+``vmc_sddc`` module in that list to get more information about what
+pillar values are required, but you could write this state:
 
 .. code:: yaml
 
@@ -250,7 +254,7 @@ to run a highstate and apply all of your state files:
 
 .. code:: yaml
 
-    # srvs/salt/top.sls
+    # srv/salt/top.sls
     base:
       master_minion:
         - my_sddc

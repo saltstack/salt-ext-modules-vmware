@@ -106,7 +106,7 @@ def present(
                   key: key
                   value: value
             ignored_address_bindings:
-              - ip_address: "10.1.2.122"
+              - ip_address: "203.0.113.122"
           - display_name: test-sp-2
             state: present
           - display_name: test-sp-3
@@ -429,7 +429,8 @@ def present(
                              value is assigned to DHCP server IP address.
                              Existing values cannot be deleted or modified, but
                              additional DHCP ranges can be added.
-                             Formats, e.g. 10.12.2.64/26, 10.12.2.2-10.12.2.50
+                             Formats, e.g. 203.0.113.64/26,
+                             203.0.113.2-203.0.113.50
 
                 type: list
             gateway_address:

@@ -38,6 +38,7 @@ def configure(
     vmotion_rate=3,
     advanced_settings=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Configure a Distributed Resource Scheduler (DRS) for a given cluster
@@ -81,6 +82,12 @@ def configure(
     advanced_settings
         Advanced options for the cluster, to be passed in as a dictionary.
 
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
     CLI Example:
 
     .. code-block:: bash
@@ -88,7 +95,7 @@ def configure(
         salt '*' vmware_cluster_drs.configure cluster1 dc1 enable=True
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster)
@@ -109,7 +116,7 @@ def configure(
     return {cluster: True}
 
 
-def get(cluster_name, datacenter_name, service_instance=None):
+def get(cluster_name, datacenter_name, service_instance=None, profile=None):
     """
     Get DRS info about a cluster in a datacenter
 
@@ -122,6 +129,11 @@ def get(cluster_name, datacenter_name, service_instance=None):
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
     CLI Example:
 
     .. code-block:: bash
@@ -130,7 +142,7 @@ def get(cluster_name, datacenter_name, service_instance=None):
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
@@ -157,6 +169,7 @@ def vm_affinity_rule(
     enabled=True,
     mandatory=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Configure a virtual machine to virtual machine DRS rule
@@ -185,6 +198,9 @@ def vm_affinity_rule(
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
 
+    profile
+        Profile to use (optional)
+
     CLI Example:
 
     .. code-block:: bash
@@ -193,7 +209,7 @@ def vm_affinity_rule(
     """
     log.debug(f"Configuring a vm to vm DRS rule {name} on cluster {cluster_name}.")
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     vm_refs = []
@@ -235,7 +251,7 @@ def vm_affinity_rule(
         return {"created": True}
 
 
-def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=None):
+def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=None, profile=None):
     """
     Return a list of all the DRS rules on a given cluster, or one DRS rule if filtered by rule_name.
 
@@ -251,6 +267,9 @@ def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=No
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
 
+    profile
+        Profile to use (optional)
+
     CLI Example:
 
     .. code-block:: bash
@@ -259,7 +278,7 @@ def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=No
     """
     log.debug(f"Getting rules info on cluster {cluster_name}.")
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     rules = cluster_ref.configuration.rule

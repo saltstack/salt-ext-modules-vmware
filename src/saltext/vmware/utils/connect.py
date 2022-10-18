@@ -23,81 +23,120 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-def get_username_password(esxi_host, opts=None, pillar=None):
-    password = (
-        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
-        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("password")
-        or os.environ.get("VMWARE_CONFIG_PASSWORD")
-        or opts.get("vmware_config", {}).get("password")
-        or pillar.get("vmware_config", {}).get("password")
+def get_config(config, profile=None, esxi_host=None):
+    conf = (
+        config.get("saltext.vmware")
+        or config.get("grains", {}).get("saltext.vmware")
+        or config.get("pillar", {}).get("saltext.vmware")
+        or {}
     )
-    user = (
-        pillar.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
-        or opts.get("vmware_config", {}).get("esxi_host", {}).get(esxi_host, {}).get("user")
-        or os.environ.get("VMWARE_CONFIG_USER")
-        or opts.get("vmware_config", {}).get("user")
-        or pillar.get("vmware_config", {}).get("user")
-    )
-    return user, password
+    if not conf:
+        conf = (
+            config.get("vmware_config")
+            or config.get("grains", {}).get("vmware_config")
+            or config.get("pillar", {}).get("vmware_config")
+            or {}
+        )
+        if conf:
+            log.warning(
+                "Config found under vmware_config and not saltext.vmware. vmware_config has been deprecated and will be removed in 2023"
+            )
+    if profile:
+        credentials = conf[profile]
+    else:
+        credentials = conf
+
+    if esxi_host:
+        host = esxi_host
+        credentials = credentials.get("esxi_host", {}).get(esxi_host)
+        password = credentials.get("password")
+        user = credentials.get("user")
+    else:
+        host = os.environ.get("SALTEXT_VMWARE_HOST") or credentials.get("host")
+        password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
+        user = os.environ.get("SALTEXT_VMWARE_USER") or credentials.get("user")
+
+    if host is None or password is None or user is None:
+        raise ValueError("Cannot create service instance, VMware credentials incomplete.")
+    return {"host": host, "user": user, "password": password}
 
 
-def get_service_instance(opts=None, pillar=None, esxi_host=None):
+def get_service_instance(*, config, esxi_host=None, profile=None):
     """
-    Connect to VMware service instance
+    Connect to VMware service instance.
 
-    opts
-        (optional) Any additional options.
+    config
+        The config to use to search for connection information. The search
+        order matches that found in Salt's `config.get
+        <https://docs.saltproject.io/en/latest/ref/modules/all/salt.modules.config.html#salt.modules.config.get>_`.
+        Specifically the order is:
 
-    pillar
-        (optional) If specified, allows for a dictionary of pillar data to be made
-        available to pillar and ext_pillar rendering. These pillar variables
-        will also override any variables of the same name in pillar or
-        ext_pillar.
+            1. Environment variables
+            2. Minion config
+            3. Minion grains
+            4. Minion pillar data
+
+        Environment variables are:
+            SALTEXT_VMWARE_HOST
+            SALTEXT_VMWARE_PASSWORD
+            SALTEXT_VMWARE_USER
+            SALTEXT_VMWARE_ESXI_USER
+            SALTEXT_VMWARE_ESXI_PASSWORD
 
     esxi_host
-        (optional) If specified, retrieves the configured username and password for this host.
+        (optional) If specified, retrieves the configured username and password for the ESXi host.
+
+    profile
+        Profile to use (optional)
 
     Pillar Example:
 
-    .. code-block::
+    .. code-block:: yaml
 
-        vmware_config:
+        saltext.vmware:
             host: 198.51.100.100
-            password: ****
-            user: @example.com
-
-        vmware_config:
-            host: 198.51.100.100
-            password: ****
-            user: @example.com
+            password: CorrectHorseBatteryStaple
+            user: admin@example.com
             esxi_host:
                 198.52.100.105:
                     user: admin
-                    password: ***
+                    password: CorrectHorseBatteryStaple
                 198.52.100.106:
                     user: admin
-                    password: ***
+                    password: CorrectHorseBatteryStaple
+
+    If configuration for multiple VMware services instances is required, they can be
+    set up as different configuration profiles:
+
+    .. code-block:: yaml
+
+        saltext.vmware:
+          profile1:
+            host: 198.51.100.100
+            password: CorrectHorseBatteryStaple
+            user: admin@example.com
+          profile2:
+            host: 198.51.100.100
+            password: CorrectHorseBatteryStaple
+            user: admin@example.com
+            esxi_host:
+              198.52.100.105:
+                user: admin
+                password: CorrectHorseBatteryStaple
+              198.52.100.106:
+                user: admin
+                password: CorrectHorseBatteryStaple
 
     """
     ctx = ssl._create_unverified_context()
-    opts = opts or {}
-    pillar = pillar or {}
-    host = (
-        esxi_host
-        or os.environ.get("VMWARE_CONFIG_HOST")
-        or opts.get("vmware_config", {}).get("host")
-        or pillar.get("vmware_config", {}).get("host")
-    )
-    user, password = get_username_password(esxi_host=host, opts=opts, pillar=pillar)
-    config = {
-        "host": host,
-        "password": password,
-        "user": user,
-    }
+    config = config or {}
+
+    config = get_config(config=config, profile=profile, esxi_host=esxi_host)
+
     service_instance = connect.SmartConnect(
-        host=config["host"],
-        user=config["user"],
-        pwd=config["password"],
+        host=config.get("host"),
+        user=config.get("user"),
+        pwd=config.get("password"),
         sslContext=ctx,
     )
     return service_instance
@@ -128,37 +167,38 @@ def request(url, method, body=None, token=None, opts=None, pillar=None):
         will also override any variables of the same name in pillar or
         ext_pillar.
     """
+    # TODO: request needs test coverage -W. Werner, 2022-09-30
     host = (
-        os.environ.get("VMWARE_CONFIG_REST_API_HOST")
-        or opts.get("vmware_config", {}).get("rest_api_host")
-        or pillar.get("vmware_config", {}).get("rest_api_host")
-        or os.environ.get("VMWARE_CONFIG_HOST")
-        or opts.get("vmware_config", {}).get("host")
-        or pillar.get("vmware_config", {}).get("host")
+        os.environ.get("SALTEXT_VMWARE_REST_API_HOST")
+        or opts.get("saltext.vmware", {}).get("rest_api_host")
+        or pillar.get("saltext.vmware", {}).get("rest_api_host")
+        or os.environ.get("SALTEXT_VMWARE_HOST")
+        or opts.get("saltext.vmware", {}).get("host")
+        or pillar.get("saltext.vmware", {}).get("host")
     )
     cert = (
-        os.environ.get("VMWARE_CONFIG_REST_API_CERT")
-        or opts.get("vmware_config", {}).get("rest_api_cert")
-        or pillar.get("vmware_config", {}).get("rest_api_cert")
+        os.environ.get("SALTEXT_VMWARE_REST_API_CERT")
+        or opts.get("saltext.vmware", {}).get("rest_api_cert")
+        or pillar.get("saltext.vmware", {}).get("rest_api_cert")
     )
     if not cert:
         cert = False
     if token is None:
         user = (
-            os.environ.get("VMWARE_CONFIG_REST_API_USER")
-            or opts.get("vmware_config", {}).get("rest_api_user")
-            or pillar.get("vmware_config", {}).get("rest_api_user")
-            or os.environ.get("VMWARE_CONFIG_USER")
-            or opts.get("vmware_config", {}).get("user")
-            or pillar.get("vmware_config", {}).get("user")
+            os.environ.get("SALTEXT_VMWARE_REST_API_USER")
+            or opts.get("saltext.vmware", {}).get("rest_api_user")
+            or pillar.get("saltext.vmware", {}).get("rest_api_user")
+            or os.environ.get("SALTEXT_VMWARE_USER")
+            or opts.get("saltext.vmware", {}).get("user")
+            or pillar.get("saltext.vmware", {}).get("user")
         )
         password = (
-            os.environ.get("VMWARE_CONFIG_REST_API_PASSWORD")
-            or opts.get("vmware_config", {}).get("rest_api_password")
-            or pillar.get("vmware_config", {}).get("rest_api_password")
-            or os.environ.get("VMWARE_CONFIG_PASSWORD")
-            or opts.get("vmware_config", {}).get("password")
-            or pillar.get("vmware_config", {}).get("password")
+            os.environ.get("SALTEXT_VMWARE_REST_API_PASSWORD")
+            or opts.get("saltext.vmware", {}).get("rest_api_password")
+            or pillar.get("saltext.vmware", {}).get("rest_api_password")
+            or os.environ.get("SALTEXT_VMWARE_PASSWORD")
+            or opts.get("saltext.vmware", {}).get("password")
+            or pillar.get("saltext.vmware", {}).get("password")
         )
         token = _get_session(host, user, password, cert)
     headers = {
