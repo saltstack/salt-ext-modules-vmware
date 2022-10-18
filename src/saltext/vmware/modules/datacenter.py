@@ -28,7 +28,7 @@ def __virtual__():
     return __virtualname__
 
 
-def list_(service_instance=None):
+def list_(service_instance=None, profile=None):
     """
     Returns a list of datacenters for the specified host.
 
@@ -37,13 +37,19 @@ def list_(service_instance=None):
         salt '*' vmware_datacenter.list
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     return utils_datacenter.list_datacenters(service_instance)
 
 
-def create(name, service_instance=None):
+def create(name, service_instance=None, profile=None):
     """
     Creates a datacenter.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     Supported proxies: esxdatacenter
 
@@ -55,7 +61,7 @@ def create(name, service_instance=None):
         salt '*' vmware_datacenter.create dc1
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         utils_datacenter.create_datacenter(service_instance, name)
     except salt.exceptions.VMwareApiError as exc:
@@ -63,9 +69,15 @@ def create(name, service_instance=None):
     return {name: True}
 
 
-def get(name, service_instance=None):
+def get(name, service_instance=None, profile=None):
     """
     Get the properties of a datacenter.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     Supported proxies: esxdatacenter
 
@@ -78,7 +90,7 @@ def get(name, service_instance=None):
     """
     ret = {}
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, name)
         dc = utils_common.get_mors_with_properties(
@@ -91,9 +103,15 @@ def get(name, service_instance=None):
     return ret
 
 
-def delete(name, service_instance=None):
+def delete(name, service_instance=None, profile=None):
     """
     Deletes a datacenter.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     Supported proxies: esxdatacenter
 
@@ -105,7 +123,7 @@ def delete(name, service_instance=None):
         salt '*' vmware_datacenter.delete dc1
     """
     if service_instance is None:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     try:
         utils_datacenter.delete_datacenter(service_instance, name)
     except (salt.exceptions.VMwareApiError, salt.exceptions.VMwareObjectRetrievalError) as exc:

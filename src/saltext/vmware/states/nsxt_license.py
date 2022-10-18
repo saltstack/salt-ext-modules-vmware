@@ -13,7 +13,7 @@ Example usage :
 
     Ensure license exists:
         nsxt_license.present:
-            hostname: 10.11.12.13
+            hostname: 203.0.113.13
             username: admin
             password: admin_password
             license_key: ABCDE-12345-ABCDE-12345-ABCDE

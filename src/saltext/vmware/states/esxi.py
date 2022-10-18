@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import functools
 import logging
+from bisect import bisect_right
 
 import salt
 import saltext.vmware.utils.esxi as utils_esxi
@@ -27,12 +28,7 @@ def __virtual__():
     return __virtualname__
 
 
-def role_present(
-    name,
-    privilege_ids,
-    esxi_host_name=None,
-    service_instance=None,
-):
+def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None, profile=None):
     """
     Ensure role is present on service instance, which may be an ESXi host or vCenter instance.
 
@@ -50,14 +46,15 @@ def role_present(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     """
     log.debug("Running vmware_esxi.role_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
+            config=__opts__, esxi_host=esxi_host_name, profile=profile
         )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     sys_privs = {"System.Anonymous", "System.Read", "System.View"}
@@ -107,11 +104,7 @@ def role_present(
     return ret
 
 
-def role_absent(
-    name,
-    esxi_host_name=None,
-    service_instance=None,
-):
+def role_absent(name, esxi_host_name=None, service_instance=None, profile=None):
     """
     Ensure role is absent on service instance, which may be an ESXi host or vCenter instance.
 
@@ -124,14 +117,15 @@ def role_absent(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     """
     log.debug("Running vmware_esxi.role_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
+            config=__opts__, esxi_host=esxi_host_name, profile=profile
         )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     if not role:
@@ -169,6 +163,7 @@ def vmkernel_adapter_present(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Ensure VMKernel Adapter exists on matching ESXi hosts.
@@ -236,6 +231,9 @@ def vmkernel_adapter_present(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Save Adapter:
@@ -247,7 +245,7 @@ def vmkernel_adapter_present(
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -317,6 +315,7 @@ def vmkernel_adapter_present(
                         cluster_name=cluster_name,
                         host_name=host,
                         service_instance=service_instance,
+                        profile=profile,
                     )
                     ret["changes"].update(ret_save)
                 except salt.exceptions.SaltException as exc:
@@ -337,7 +336,12 @@ def vmkernel_adapter_present(
 
 
 def vmkernel_adapter_absent(
-    name, datacenter_name=None, cluster_name=None, host_name=None, service_instance=None
+    name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Ensure VMKernel Adapter exists on matching ESXi hosts.
@@ -357,6 +361,9 @@ def vmkernel_adapter_absent(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Delete Adapter:
@@ -366,7 +373,7 @@ def vmkernel_adapter_absent(
     log.debug("Running vmware_esxi.vmkernel_adapter_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -426,6 +433,7 @@ def user_present(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Add local users_by_host on matching ESXi hosts.
@@ -451,6 +459,9 @@ def user_present(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Create User:
@@ -465,19 +476,21 @@ def user_present(
     failed_hosts = []
     diff = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
         cluster_name=cluster_name,
         host_name=host_name,
         service_instance=service_instance,
+        profile=profile,
     )
     hosts = __salt__["vmware_esxi.list_hosts"](
         datacenter_name=datacenter_name,
         cluster_name=cluster_name,
         host_name=host_name,
         service_instance=service_instance,
+        profile=profile,
     )
     for host in hosts:
         if host in users_by_host:
@@ -509,6 +522,7 @@ def user_present(
                     cluster_name=cluster_name,
                     host_name=host,
                     service_instance=service_instance,
+                    profile=profile,
                 )
             except salt.exceptions.SaltException as exc:
                 update -= 1
@@ -564,6 +578,7 @@ def user_absent(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Remove local users_by_host on matching ESXi hosts.
@@ -583,6 +598,9 @@ def user_absent(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Remove User:
@@ -596,7 +614,7 @@ def user_absent(
     failed_hosts = []
     diff = {}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, profile=profile)
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
@@ -748,6 +766,7 @@ def lockdown_mode(
     cluster_name=None,
     get_all_hosts=False,
     service_instance=None,
+    profile=None,
 ):
     """
     Pust a hosts into or out of lockdown.
@@ -774,7 +793,10 @@ def lockdown_mode(
         Default value is False (optional).
 
     service_instance
-        The Service Instance Object from which to obtain the hosts (optional).
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -800,13 +822,13 @@ def lockdown_mode(
             host_refs = (name,)
         else:
             if service_instance is None:
-                service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+                service_instance = get_service_instance(config=__opts__, profile=profile)
             host_refs = (utils_esxi.get_host(name, service_instance),)
 
     for ref in host_refs:
         # check that host is not all ready in lock state.
         host_state = __salt__["vmware_esxi.in_lockdown_mode"](
-            host=ref, service_instance=service_instance
+            host=ref, service_instance=service_instance, profile=profile
         )
         if (host_state["lockdownMode"] == "inLockdown") == enter_lockdown_mode:
             ret[
@@ -823,13 +845,11 @@ def lockdown_mode(
 
         if enter_lockdown_mode:
             host_state = __salt__["vmware_esxi.lockdown_mode"](
-                host=ref,
-                catch_task_error=True,
-                service_instance=service_instance,
+                host=ref, catch_task_error=True, service_instance=service_instance, profile=profile
             )
         else:
             host_state = __salt__["vmware_esxi.exit_lockdown_mode"](
-                host=ref, catch_task_error=True, service_instance=service_instance
+                host=ref, catch_task_error=True, service_instance=service_instance, profile=profile
             )
         ref_results = (host_state["lockdownMode"] == "inLockdown") == enter_lockdown_mode
         if ret["result"]:
@@ -846,4 +866,242 @@ def lockdown_mode(
         ret["comment"] += f"Task was successfully!\n"
     elif ret["result"] is None:
         ret["comment"] += "These options are set to change."
+    return ret
+
+
+def advanced_config(
+    name,
+    value,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set advanced configuration on matching ESXi hosts.
+
+    name
+        Name of configuration on matching ESXi hosts. (required).
+
+    value
+        Value for configuration on matching ESXi hosts. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: yaml
+
+        Remove User:
+          vmware_esxi.advanced_configs:
+            - name: Annotations.WelcomeMessage
+            - value: Hello
+
+    """
+    log.debug("Running vmware_esxi.advanced_config")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+
+    esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
+        config_name=name,
+        datacenter_name=datacenter_name,
+        cluster_name=cluster_name,
+        host_name=host_name,
+        service_instance=service_instance,
+    )
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["changes"] = {"new": {}}
+        for host in esxi_config_old:
+            ret["changes"]["new"][host] = f"{name} will be set to {value}"
+        ret["comment"] = "These options are set to change."
+        return ret
+
+    ret["result"] = True
+    ret["changes"] = {"new": {}, "old": {}}
+    change = False
+    for host in esxi_config_old:
+        if esxi_config_old[host][name] != value:
+            change = True
+            config = __salt__["vmware_esxi.set_advanced_configs"](
+                config_dict={name: value},
+                datacenter_name=datacenter_name,
+                cluster_name=cluster_name,
+                host_name=host,
+                service_instance=service_instance,
+            )
+            ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+            ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
+
+    if change:
+        ret["comment"] = "Configurations have successfully been changed."
+    else:
+        ret["comment"] = "Configurations are already in correct state."
+    return ret
+
+
+def firewall_config(
+    name,
+    value,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+):
+    """
+    Set firewall configuration on matching ESXi hosts.
+
+    name
+        Name of configuration in value. (required).
+
+    value
+        Value for configuration on matching ESXi hosts. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    .. code-block:: yaml
+
+        Set firewall config:
+          vmware_esxi.firewall_config:
+            - name: prod
+    """
+    log.debug("Running vmware_esxi.firewall_config")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    if not service_instance:
+        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    if isinstance(value[name], list):
+        for i in range(len(value[name])):
+            value[name][i] = dict(value[name][i])
+            if "allowed_host" in value[name][i]:
+                value[name][i]["allowed_host"] = dict(value[name][i]["allowed_host"])
+    old_configs = {}
+    for host in hosts:
+        for firewall_conf in value[name]:
+            if host.name in old_configs:
+                fw_config = utils_esxi.get_firewall_config(
+                    ruleset_name=firewall_conf["name"],
+                    host_name=host.name,
+                    service_instance=service_instance,
+                )
+                old_configs[host.name][firewall_conf["name"]] = fw_config[host.name][
+                    firewall_conf["name"]
+                ]
+            else:
+                fw_config = utils_esxi.get_firewall_config(
+                    ruleset_name=firewall_conf["name"],
+                    host_name=host.name,
+                    service_instance=service_instance,
+                )
+                old_configs[host.name] = {}
+                old_configs[host.name][firewall_conf["name"]] = fw_config[host.name][
+                    firewall_conf["name"]
+                ]
+
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["changes"] = {}
+        for host in hosts:
+            ret["changes"][host.name] = {}
+            for firewall_config in value[name]:
+                ret["changes"][host.name][firewall_config["name"]] = {}
+                for k in firewall_conf:
+                    if k == "name":
+                        continue
+                    elif k == "allowed_host":
+                        for j in firewall_conf[k]:
+                            if (
+                                old_configs[host.name][firewall_config["name"]][k][j]
+                                == firewall_conf[k][j]
+                            ):
+                                ret["changes"][host.name][firewall_config["name"]][
+                                    j
+                                ] = f"{j} is already set to {firewall_conf[k][j]}"
+                            else:
+                                ret["changes"][host.name][firewall_config["name"]][
+                                    j
+                                ] = f"{j} will be set to {firewall_conf[k][j]}"
+                    else:
+                        if old_configs[host.name][firewall_config["name"]][k] == firewall_conf[k]:
+                            ret["changes"][host.name][firewall_config["name"]][
+                                k
+                            ] = f"{k} is already set to {firewall_conf[k]}"
+                        else:
+                            ret["changes"][host.name][firewall_config["name"]][
+                                k
+                            ] = f"{k} will be set to {firewall_conf[k]}"
+        ret["comment"] = "These options are set to change."
+        return ret
+
+    ret["result"] = True
+    ret["changes"] = {"new": {}, "old": {}}
+    ret["comment"] = "Configurations are already in correct state."
+    for host in hosts:
+        ret["changes"]["new"][host.name] = {}
+        ret["changes"]["old"][host.name] = {}
+        for firewall_config in value[name]:
+            change = False
+            ret["changes"]["new"][host.name][firewall_config["name"]] = {}
+            ret["changes"]["old"][host.name][firewall_config["name"]] = {}
+            for k in firewall_conf:
+                if k == "name":
+                    continue
+                ret["changes"]["new"][host.name][firewall_config["name"]][k] = {}
+                ret["changes"]["old"][host.name][firewall_config["name"]][k] = {}
+                if k == "allowed_host":
+                    for j in firewall_conf[k]:
+                        if (
+                            old_configs[host.name][firewall_config["name"]][k][j]
+                            != firewall_conf[k][j]
+                        ):
+                            change = True
+                            ret["changes"]["new"][host.name][firewall_config["name"]][k][
+                                j
+                            ] = firewall_conf[k][j]
+                            ret["changes"]["old"][host.name][firewall_config["name"]][k][
+                                j
+                            ] = old_configs[host.name][firewall_config["name"]][k][j]
+                else:
+                    if old_configs[host.name][firewall_config["name"]][k] != firewall_conf[k]:
+                        change = True
+                        ret["changes"]["new"][host.name][firewall_config["name"]][
+                            k
+                        ] = firewall_conf[k]
+                        ret["changes"]["old"][host.name][firewall_config["name"]][k] = old_configs[
+                            host.name
+                        ][firewall_config["name"]][k]
+            if change:
+                __salt__["vmware_esxi.set_firewall_config"](
+                    firewall_config=firewall_config,
+                    host_name=host.name,
+                    service_instance=service_instance,
+                )
+                ret["comment"] = "Configurations have successfully been changed."
+
     return ret
