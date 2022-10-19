@@ -294,7 +294,7 @@ def test_invited_to_add_user_when_module_returns_success_response(mocked_ok_resp
     )
     mock_invite_response = create_autospec(vmc_org_users_exec.add, return_value=mocked_ok_response)
     user_name = mocked_ok_response["results"][0]["user"]["username"]
-    mock_invite_response.update(message="Invited {} successfully".format(user_name))
+    mocked_ok_response.update(message="Invited {} successfully".format(user_name))
 
     with patch.dict(
         vmc_org_user.__salt__,
