@@ -102,7 +102,7 @@ def org_users_data(mock_vmc_request_call_api, org_user_data):
 
 @pytest.fixture
 def organization_roles():
-    data = [{"name": "org_member", "expiresAt": None}, {"name": "developer", "expiresAt": None}]
+    data = [{"name": "org_member"}, {"name": "developer"}]
     yield data
 
 
@@ -196,15 +196,15 @@ def test_assert_list_org_users_should_correctly_filter_args(actual_args, expecte
     assert call_kwargs["params"] == expected_params
 
 
-def test_invite_org_user_should_return_api_response(mock_vmc_request_call_api, organization_roles):
-    data = {"message": "User has been invited successfully"}
+def test_add_org_user_should_return_api_response(mock_vmc_request_call_api, organization_roles):
+    data = {"results": "success", "message": "User has been added successfully"}
     mock_vmc_request_call_api.return_value = data
     assert (
-        vmc_org_users.invite(
+        vmc_org_users.add(
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
-            user_names=["user1, user2"],
+            user_name="user1@vmware.com",
             organization_roles=organization_roles,
             verify_ssl=False,
         )
@@ -212,14 +212,14 @@ def test_invite_org_user_should_return_api_response(mock_vmc_request_call_api, o
     )
 
 
-def test_invite_org_user_called_with_url(organization_roles):
+def test_add_org_user_called_with_url(organization_roles):
     expected_url = "https://hostname/csp/gateway/am/api/orgs/org_id/invitations"
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
-        vmc_org_users.invite(
+        vmc_org_users.add(
             hostname="hostname",
             refresh_key="refresh_key",
             org_id="org_id",
-            user_names=["user1, user2"],
+            user_name="user1@vmware.com",
             organization_roles=organization_roles,
             verify_ssl=False,
         )
@@ -238,8 +238,8 @@ def test_invite_org_user_called_with_url(organization_roles):
             {
                 "usernames": ["test1@vmware.com"],
                 "organizationRoles": [
-                    {"name": "org_member", "expiresAt": None},
-                    {"name": "developer", "expiresAt": None},
+                    {"name": "org_member"},
+                    {"name": "developer"},
                 ],
                 "skipNotify": False,
                 "customRoles": None,
@@ -252,16 +252,19 @@ def test_invite_org_user_called_with_url(organization_roles):
         # all args have values
         (
             {
-                "user_names": ["test1@vmware.com"],
+                "user_name": "test1@vmware.com",
                 "organization_roles": [
-                    {"name": "org_member", "expiresAt": None},
-                    {"name": "developer", "expiresAt": None},
+                    {"name": "org_member"},
+                    {"name": "developer"},
                 ],
                 "skip_notify": False,
-                "custom_roles": [
-                    {"name": "name1", "resource": "resource1", "expiresAt": 3609941597}
+                "custom_roles": [{"name": "name1"}],
+                "service_roles": [
+                    {
+                        "serviceRoles": [{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}],
+                        "serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_",
+                    }
                 ],
-                "service_roles": [{"name": "vmc-user:full", "expiresAt": None}],
                 "skip_notify_registration": False,
                 "invited_by": "owner@vmware.com",
                 "custom_groups_ids": ["abc@vmware.com"],
@@ -269,14 +272,17 @@ def test_invite_org_user_called_with_url(organization_roles):
             {
                 "usernames": ["test1@vmware.com"],
                 "organizationRoles": [
-                    {"name": "org_member", "expiresAt": None},
-                    {"name": "developer", "expiresAt": None},
+                    {"name": "org_member"},
+                    {"name": "developer"},
                 ],
                 "skipNotify": False,
-                "customRoles": [
-                    {"name": "name1", "resource": "resource1", "expiresAt": 3609941597}
+                "customRoles": [{"name": "name1"}],
+                "serviceRolesDtos": [
+                    {
+                        "serviceRoles": [{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}],
+                        "serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_",
+                    }
                 ],
-                "serviceRolesDtos": [{"name": "vmc-user:full", "expiresAt": None}],
                 "skipNotifyRegistration": False,
                 "invitedBy": "owner@vmware.com",
                 "customGroupsIds": ["abc@vmware.com"],
@@ -284,20 +290,20 @@ def test_invite_org_user_called_with_url(organization_roles):
         ),
     ],
 )
-def test_assert_invite_org_users_should_correctly_filter_args(
+def test_assert_add_org_users_should_correctly_filter_args(
     actual_args, expected_payload, organization_roles
 ):
     common_actual_args = {
         "hostname": "hostname",
         "refresh_key": "refresh_key",
         "org_id": "org_id",
-        "user_names": ["test1@vmware.com"],
+        "user_name": "test1@vmware.com",
         "organization_roles": organization_roles,
         "verify_ssl": False,
     }
     with patch("saltext.vmware.utils.vmc_request.call_api", autospec=True) as vmc_call_api:
         actual_args.update(common_actual_args)
-        vmc_org_users.invite(**actual_args)
+        vmc_org_users.add(**actual_args)
 
     call_kwargs = vmc_call_api.mock_calls[0][-1]
     assert call_kwargs["data"] == expected_payload

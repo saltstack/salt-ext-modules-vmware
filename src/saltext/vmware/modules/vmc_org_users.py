@@ -192,11 +192,11 @@ def search(
     )
 
 
-def invite(
+def add(
     hostname,
     refresh_key,
     org_id,
-    user_names,
+    user_name,
     organization_roles,
     skip_notify=False,
     custom_roles=None,
@@ -227,77 +227,37 @@ def invite(
     org_id
           The ID of organization to which the user should be invited.
 
-    user_names
-        List of Usernames (e-mails) of users to be invited to the organization.
+    user_name
+        username (e-mail) of user to be invited to the organization.
 
     organization_roles
         List of unique organization roles assigned to user.
-        Its mandatory while sending invitation to user.
+        It can be specified in the below format
 
-        BaseRoleBinding defines the base binding properties of the role.
+        .. code::
 
-        'name': String
-            The name of the role.
-
-        'createdDate': (String) (Optional)
-            The timestamp the role was created at (measured in number of seconds since 1/1/1970 UTC).
-
-        'expiresAt': (Integer As Int64) (Optional)
-            The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC). Example:3609941597
-
-        'lastUpdatedBy': (String) (Optional)
-            Last Updated time of the role.
-
-        'lastUpdatedDate': (String) (Optional)
-            The timestamp the role was updated at (measured in number of seconds since 1/1/1970 UTC).
-
-        'membershipType': (String) (Optional)
-            Membership type of the member in the organization.
-            DIRECT: if the member roles were assigned directly.
-            GROUP: if the member roles were assigned through custom or enterprise group.
-            Possible values are: DIRECT , GROUP , NESTED
-
-        'createdBy': (String) (Optional)
-            The Creator of the role.
-
-        'resource': (String) (Optional)
-            The resource in which the role is scoped to. The resource will be embedded in the Access Token
-            "perms" claim, as part of the role.
+            "organization_roles": [
+                        {
+                            "name": "org_member"
+                        }
+                    ]
+            where 'name' indicates the name of the organization role.
 
     skip_notify
         (Optional) Indicates if the notification have to be skipped.
 
     custom_roles
-        (Optional) List of custom role bindings which defines the binding properties of the custom role.
-        Custom role binding is a json object which can contain the below fields.
+        (Optional) List of custom role assigned to a user.
+        It can be specified in the below format
 
-        'name': String
-            The name of the role.
+        .. code::
 
-        'createdDate': (String) (Optional)
-            The timestamp the role was created at (measured in number of seconds since 1/1/1970 UTC).
-
-        'expiresAt': (Integer As Int64) (Optional)
-            The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC). Example:3609941597
-
-        'lastUpdatedBy': (String) (Optional)
-            Last Updated time of the role.
-
-        'lastUpdatedDate': (String) (Optional)
-            The timestamp the role was updated at (measured in number of seconds since 1/1/1970 UTC).
-
-        'membershipType': (String) (Optional)
-            Membership type of the member in the organization.
-            DIRECT: if the member roles were assigned directly.
-            GROUP: if the member roles were assigned through custom or enterprise group.
-            Possible values are: DIRECT , GROUP , NESTED
-
-        'createdBy': (String) (Optional)
-            The Creator of the role.
-
-        'resource': (String) (Optional)
-            The resource in which the role is scoped to. The resource will be embedded in the Access Token
-            "perms" claim, as part of the role.
+            "custom_roles": [
+                        {
+                            "name": "role_name"
+                        }
+                    ]
+            where 'name' indicates the name of the custom role.
 
     service_roles
         (Optional) List of service roles to attach to a user.
@@ -306,37 +266,17 @@ def invite(
         'serviceDefinitionLink': (String) (Optional)
             The link to the service definition.
 
-        'serviceRoles': (Optional)
-            List of services role bindings which defines the binding properties of the service role.
-            Service role binding is a json object which can contain the below fields.
+        'serviceRoles': list
+            It can be specified in the below format
 
-            'name': (String)
-                The name of the role.
+            .. code::
 
-            'createdDate': (String) (Optional)
-                The timestamp the role was created at (measured in number of seconds since 1/1/1970 UTC).
-
-            'expiresAt': (Integer As Int64) (Optional)
-                The timestamp the role expires at (measured in number of seconds since 1/1/1970 UTC). Example:3609941597
-
-            'lastUpdatedBy': (String) (Optional)
-                Last Updated time of the role.
-
-            'lastUpdatedDate': (String) (Optional)
-                The timestamp the role was updated at (measured in number of seconds since 1/1/1970 UTC).
-
-            'membershipType': (String) (Optional)
-                Membership type of the member in the organization.
-                DIRECT: if the member roles were assigned directly.
-                GROUP: if the member roles were assigned through custom or enterprise group.
-                Possible values are: DIRECT , GROUP , NESTED
-
-            'createdBy': (String) (Optional)
-                The Creator of the role.
-
-            'resource': (String) (Optional)
-                The resource in which the role is scoped to. The resource will be embedded in the Access Token
-                "perms" claim, as part of the role.
+                "serviceRoles": [
+                        {
+                            "name": "role_name"
+                        }
+                    ]
+                where 'name' indicates the name of the service role.
 
     skip_notify_registration
         (Optional) Prevent sending mails to users that do not yet have a CSP profile.
@@ -363,28 +303,20 @@ def invite(
                 "skip_notify": true,
                 "custom_roles": [
                     {
-                        "name": "string",
-                        "resource": "string",
-                        "expiresAt": 3609941597
+                        "name": "string"
                     }
                 ],
                 "service_roles": [
                     {
                         "serviceRoles": [
                             {
-                                "name": "vmc-user:full",
-                                "resource": None,
-                                "expiresAt":  None
+                                "name": "vmc-user:full"
                             },
                             {
-                                "name": "nsx:cloud_admin",
-                                "resource": None
-                                "expiresAt": None
+                                "name": "nsx:cloud_admin"
                             },
                             {
-                                "name": "nsx:cloud_auditor",
-                                "resource": None
-                                "expiresAt": None
+                                "name": "nsx:cloud_auditor"
                             }
                         ],
                         "serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_"
@@ -393,15 +325,11 @@ def invite(
                 "skip_notify_registration": true,
                 "organization_roles": [
                     {
-                        "name": "org_member",
-                        "resource": None,
-                        "expiresAt": 3609941597
+                        "name": "org_member"
                     }
                 ],
                 "invited_by": "string",
-                "user_names": [
-                    "test@vmware.com"
-                ],
+                "user_name": "test@vmware.com",
                 "custom_groups_ids": [
                     "string"
                 ]
@@ -411,7 +339,7 @@ def invite(
 
           .. code-block:: bash
 
-              salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id="1234" refresh_key="J05AftDxW" user_names='["abc@example.com"]' organization_roles='[{"name": "org_member"},{"name": "developer"}]' service_roles='[{"serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_", "serviceRoles": [{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}]}]' verify_ssl=false
+                salt <minion id> vmc_org_users.invite hostname=console.cloud.vmware.com org_id="1234" refresh_key="J05AftDxW" user_name="abc@example.com" organization_roles='[{"name": "org_member"},{"name": "developer"}]' service_roles='[{"serviceDefinitionLink": "/csp/gateway/slc/api/definitions/paid/tcq4LTfyZ_-UPdPAJIi2LhnvxmE_", "serviceRoles": [{"name": "vmc-user:full"}, {"name": "nsx:cloud_admin"}]}]' verify_ssl=false
 
     """
 
@@ -422,7 +350,7 @@ def invite(
     )
 
     allowed_dict = {
-        "usernames": user_names,
+        "usernames": [user_name],
         "skipNotify": skip_notify,
         "organizationRoles": organization_roles,
         "customRoles": custom_roles,
@@ -431,21 +359,70 @@ def invite(
         "invitedBy": invited_by,
         "customGroupsIds": custom_groups_ids,
     }
+
     req_data = vmc_request._filter_kwargs(allowed_kwargs=allowed_dict.keys(), **allowed_dict)
 
     request_data = vmc_request.create_payload_for_request(vmc_templates.add_org_users, req_data)
 
-    return vmc_request.call_api(
+    result = vmc_request.call_api(
         method=vmc_constants.POST_REQUEST_METHOD,
         url=api_url,
         refresh_key=refresh_key,
         authorization_host=hostname,
-        description="vmc_org_users.invite",
+        description="vmc_org_users.add",
         responsebody_applicable=False,
         data=request_data,
         verify_ssl=verify_ssl,
         cert=cert,
     )
+
+    search_result = search(
+        hostname,
+        refresh_key=refresh_key,
+        org_id=org_id,
+        user_search_term=user_name,
+        verify_ssl=verify_ssl,
+        cert=cert,
+    )
+    if search_result["results"]:
+        log.info("Added %s in the org successfully %s", user_name, org_id)
+        result.update(message="Added {} successfully".format(user_name))
+    else:
+        # check if user_name is in invitation list
+        api_base_url = vmc_request.set_base_url(hostname)
+        api_url = "{base_url}csp/gateway/am/api/orgs/{org_id}/invitations".format(
+            base_url=api_base_url, org_id=org_id
+        )
+
+        allowed_kwargs = ["expand"]
+        params = vmc_request._filter_kwargs(
+            allowed_kwargs=allowed_kwargs,
+            expand=True,
+        )
+
+        invitation_list = vmc_request.call_api(
+            method=vmc_constants.GET_REQUEST_METHOD,
+            url=api_url,
+            refresh_key=refresh_key,
+            authorization_host=hostname,
+            description="vmc_org_users.invitation_list",
+            params=params,
+            verify_ssl=verify_ssl,
+            cert=cert,
+        )
+
+        for invitation in invitation_list:
+            if user_name == invitation["username"] and invitation["status"] == "AVAILABLE":
+                log.info("Invited %s successfully", user_name)
+                result = {
+                    "message": "Invited {} successfully".format(user_name),
+                    "invitation": invitation,
+                }
+                break
+        else:
+            log.info("Failed to add %s", user_name)
+            result = {vmc_constants.ERROR: "Failed to add {}".format(user_name)}
+    return result
 
 
 def remove(hostname, refresh_key, org_id, user_ids, notify_users=False, verify_ssl=True, cert=None):
