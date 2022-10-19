@@ -8,7 +8,7 @@ Example usage :
 .. code-block:: yaml
 
     test_user@vmware.com:
-      vmc_org_user.invite:
+      vmc_org_user.invited:
         - hostname: console-stg.cloud.vmware.com
         - refresh_key: 7jPSGSZpCa8e5Ouks4UY5cZyOtynAhF
         - org_id: 10e1092f-51d0-473a-80f8-137652c39fd0
