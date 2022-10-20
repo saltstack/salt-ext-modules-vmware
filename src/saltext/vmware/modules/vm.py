@@ -681,4 +681,36 @@ def relocate(
 
 
 def get_mks_ticket(vm_name, ticket_type, service_instance=None, profile=None):
-    pass
+    """
+    Get ticket of virtual machine of passed object type.
+
+    vm_name
+        The name of the virtual machine which has tickets. VM names can be
+        found in ``vmware_vm.list``.
+
+    ticket_type
+        Type of ticket - device, guestControl, guestIntegrity, mks, or webmks.
+
+        See https://vdc-download.vmware.com/vmwb-repository/dcr-public/3325c370-b58c-4799-99ff-58ae3baac1bd/45789cc5-aba1-48bc-a320-5e35142b50af/doc/vim.VirtualMachine.TicketType.html
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.get_mks_ticket vm_name=vm01 ticket_type=webmks
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+
+    log.info(f"Acquiring ticket {ticket_type} for {vm_name}")
+    vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+    if vm_ref:
+        ticket = vm_ref.AcquireTicket(ticket_type)
+        return json.loads(json.dumps(ticket, cls=VmomiSupport.VmomiJSONEncoder))
+    return {}
