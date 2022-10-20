@@ -88,3 +88,19 @@ def mock_http_error():
     http_error_obj.response = error_obj_response
     http_error_obj.request = error_obj_request
     yield http_error_obj
+
+
+@pytest.fixture(params=(True, False))
+def fake_service_instance(request):
+    # This fixture should be used for all unit tests where a service instance
+    # is needed. It will test both scenarios where the service instance is
+    # provided, or not.
+    provide_service_instance = request.param
+    with patch("saltext.vmware.utils.connect.get_service_instance", autospec=True) as fake_get_si:
+        if not provide_service_instance:
+            fake_get_si.side_effect = Exception(
+                "get_service instance was unexpectedly called in a test"
+            )
+            yield fake_get_si, fake_get_si.return_value
+        else:
+            yield fake_get_si, None
