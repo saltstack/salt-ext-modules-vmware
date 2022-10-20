@@ -295,9 +295,13 @@ def info(vm_name=None, service_instance=None, profile=None):
         datacenter_ref = utils_common.get_parent_type(vm, vim.Datacenter)
         mac_address = utils_vm.get_mac_address(vm)
         network = utils_vm.get_network(vm)
+        disk_bytes = utils_vm.get_disk_size(vm)
         tags = []
         for tag in vm.tag:
-            tags.append(tag.name)
+            try:
+                tags.append(tag.name)
+            except AttributeError:
+                pass
         folder_path = utils_common.get_path(vm, service_instance)
         info[vm.summary.config.name] = {
             "guest_name": vm.summary.config.name,
@@ -313,6 +317,9 @@ def info(vm_name=None, service_instance=None, profile=None):
             "tags": tags,
             "folder": folder_path,
             "moid": vm._moId,
+            "num_cpu": vm.config.hardware.numCPU,
+            "memory_mb": vm.config.hardware.memoryMB,
+            "disk_bytes": disk_bytes,
         }
     return info
 
@@ -649,6 +656,7 @@ def relocate(
     if ret == "success":
         return {"virtual_machine": "moved"}
     return {"virtual_machine": "failed to move"}
+
 
 def get_mks_ticket(vm_name, ticket_type, service_instance=None, profile=None):
     """
