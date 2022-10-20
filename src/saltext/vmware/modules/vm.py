@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
+import json
 import logging
 
 import salt.exceptions
@@ -11,7 +12,7 @@ import saltext.vmware.utils.vm as utils_vm
 log = logging.getLogger(__name__)
 
 try:
-    from pyVmomi import vim
+    from pyVmomi import vim, VmomiSupport
 
     HAS_PYVMOMI = True
 except ImportError:
@@ -678,4 +679,4 @@ def get_mks_ticket(vm_name, ticket_type, service_instance=None, profile=None):
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
     ticket = vm_ref.AcquireTicket(ticket_type)
 
-    return {"host": ticket.host, "ticket": ticket.ticket}
+    return json.loads(json.dumps(ticket, cls=VmomiSupport.VmomiJSONEncoder))
