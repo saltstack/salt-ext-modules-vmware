@@ -677,6 +677,7 @@ def get_mks_ticket(vm_name, ticket_type, service_instance=None, profile=None):
 
     log.info(f"Acquiring ticket {ticket_type} for {vm_name}")
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
-    ticket = vm_ref.AcquireTicket(ticket_type)
-
-    return json.loads(json.dumps(ticket, cls=VmomiSupport.VmomiJSONEncoder))
+    if vm_ref:
+        ticket = vm_ref.AcquireTicket(ticket_type)
+        return json.loads(json.dumps(ticket, cls=VmomiSupport.VmomiJSONEncoder))
+    return {}
