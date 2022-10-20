@@ -573,6 +573,24 @@ def _get_dvs(service_instance, dvs_name):
 
     return None
 
+def _get_dvs_by_uuid(service_instance, dvs_uuid):
+    """
+    Return a reference to a Distributed Virtual Switch object.
+    :param service_instance: PyVmomi service instance
+    :param dvs_uuid: UUID of DVS to return
+    :return: A PyVmomi DVS object
+    """
+    switches = list_dvs(service_instance, ["uuid"])
+    if dvs_uuid in switches:
+        inventory = get_inventory(service_instance)
+        container = inventory.viewManager.CreateContainerView(
+            inventory.rootFolder, [vim.DistributedVirtualSwitch], True
+        )
+        for item in container.view:
+            if item.uuid == dvs_uuid:
+                return item
+
+    return None
 
 def _get_pnics(host_reference):
     """
@@ -2348,14 +2366,15 @@ def list_folders(service_instance):
     return utils_common.list_objects(service_instance, vim.Folder)
 
 
-def list_dvs(service_instance):
+def list_dvs(service_instance, properties=None):
     """
     Returns a list of distributed virtual switches associated with a given service instance.
-
     service_instance
         The Service Instance Object from which to obtain distributed virtual switches.
+    properties
+        An optional list of object properties used to return reference results.
     """
-    return utils_common.list_objects(service_instance, vim.DistributedVirtualSwitch)
+    return utils_common.list_objects(service_instance, vim.DistributedVirtualSwitch, properties)
 
 
 def list_vapps(service_instance):
