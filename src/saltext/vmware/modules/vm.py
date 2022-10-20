@@ -650,6 +650,7 @@ def relocate(
         return {"virtual_machine": "moved"}
     return {"virtual_machine": "failed to move"}
 
+
 def get_mks_ticket(vm_name, ticket_type, service_instance=None, profile=None):
     """
     Get ticket of virtual machine of passed object type.
