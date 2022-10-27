@@ -926,6 +926,14 @@ def advanced_config(
         ret["comment"] = "These options are set to change."
         return ret
 
+    if __opts__["drift"]:
+        ret["result"] = None
+        for host in esxi_config_old:
+            if esxi_config_old[host][name] != value:
+                ret["drift"]["diff"][host] = f"{name} present value is {esxi_config_old[host][name]}. Expected value is {value}"
+        ret["comment"] = "These options are differnet."
+        return ret
+
     ret["result"] = True
     ret["changes"] = {"new": {}, "old": {}}
     change = False
