@@ -40,7 +40,7 @@ def get(
 
     .. code-block:: bash
 
-        salt vm_minion compute_manager.get hostname=nsxt-manager.local username=admin ...
+        salt vm_minion nsxt_compute_manager.get hostname=nsxt-manager.local username=admin ...
 
     hostname
         The host name of NSX-T manager

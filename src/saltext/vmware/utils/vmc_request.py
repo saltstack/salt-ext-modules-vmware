@@ -35,9 +35,9 @@ def get_access_token(refresh_key, authorization_host):
 
     url = set_base_url(authorization_host) + vmc_constants.CSP_AUTHORIZATION_URL
     params = {vmc_constants.REFRESH_TOKEN: refresh_key}
-    headers = {vmc_constants.CONTENT_TYPE: vmc_constants.APPLICATION_JSON}
+    headers = {vmc_constants.CONTENT_TYPE: vmc_constants.APPLICATION_URLENCODED}
     try:
-        response = requests.post(url, params=params, headers=headers)
+        response = requests.post(url, data=params, headers=headers)
         response.raise_for_status()
         json_response = response.json()
         access_token = json_response[vmc_constants.ACCESS_TOKEN]

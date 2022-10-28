@@ -386,7 +386,7 @@ def create(
             dhcp-server-profiles:
             {
                 "server_addresses": [
-                    "10.22.12.2/23"
+                    "203.0.113.2/23"
                 ],
                 "tags": [
                     {
@@ -400,7 +400,7 @@ def create(
             dhcp-relay-profiles:
             {
                 "server_addresses": [
-                    "10.1.1.1"
+                    "203.0.113.1"
                 ],
                 "tags": [
                     {
@@ -545,7 +545,7 @@ def update(
             {
                 "display_name": "dhcp-test",
                 "server_addresses": [
-                    "10.22.12.2/23"
+                    "203.0.113.2/23"
                 ],
                 "tags": [
                     {
@@ -560,7 +560,7 @@ def update(
             {
                 "display_name": "dhcp-test",
                 "server_addresses": [
-                    "10.1.1.1"
+                    "203.0.113.1"
                 ],
                 "tags": [
                     {
