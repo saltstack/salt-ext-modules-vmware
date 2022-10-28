@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
+import json
 import functools
 import logging
 from bisect import bisect_right
 
 import salt
+import salt.utils.dictdiffer
+import salt.utils.data
 import saltext.vmware.utils.esxi as utils_esxi
 from saltext.vmware.utils.connect import get_service_instance
 
@@ -26,6 +29,31 @@ def __virtual__():
     if not HAS_PYVMOMI:
         return False, "Unable to import pyVmomi module."
     return __virtualname__
+
+def sample(name, config):
+    old =  {
+                    "firewall_rules": [
+                        {
+                            "name": "sshServer",
+                            "enabled": True,
+                            "allowed_hosts": {
+                                "all_ip": False,
+                                "ip_address": [
+                                    "192.168.110.90XXX"
+                                ]
+                            }
+                        }
+                    ]
+                }
+#    changes = salt.utils.dictdiffer.diff(config, old)
+#    breakpoint()
+#    import pdb; pdb.set_trace()
+#    changes=salt.utils.dictdiffer.RecursiveDictDiffer(old, json.loads(json.dumps(config)), ignore_missing_keys=False).diffs
+    changes = salt.utils.data.recursive_diff(old, config)
+    ret = {"name": name, "result": True, "comment": "", "changes": changes}
+#    ret = {"name": name, "result": True, "comment": "", "changes": {"old":old, "new":json.loads(json.dumps(config))}}
+#    ret = {"name": name, "result": True, "comment": "", "changes":changes}
+    return ret
 
 
 def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None, profile=None):
@@ -909,7 +937,7 @@ def advanced_config(
     log.debug("Running vmware_esxi.advanced_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__)
 
     esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
         config_name=name,
@@ -922,16 +950,8 @@ def advanced_config(
         ret["result"] = None
         ret["changes"] = {"new": {}}
         for host in esxi_config_old:
-            ret["changes"]["new"][host] = f"{name} will be set to {value}"
+            ret["changes"]["new"][host] = f"{name} will be set to {value}!!!!!!!!!!!!!!???????!!!!!!!"
         ret["comment"] = "These options are set to change."
-        return ret
-
-    if __opts__["drift"]:
-        ret["result"] = None
-        for host in esxi_config_old:
-            if esxi_config_old[host][name] != value:
-                ret["drift"]["diff"][host] = f"{name} present value is {esxi_config_old[host][name]}. Expected value is {value}"
-        ret["comment"] = "These options are differnet."
         return ret
 
     ret["result"] = True
