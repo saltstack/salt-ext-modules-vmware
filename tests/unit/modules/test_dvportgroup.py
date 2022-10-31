@@ -221,7 +221,6 @@ def mocked_dvportgroup_data(request, fake_service_instance):
         ), request.param["expected"]
 
 
-@pytest.mark.xfail
 def test_dvportgroup_get_should_return_expected_data(
     mocked_dvportgroup_data, fake_service_instance
 ):
@@ -237,7 +236,6 @@ def test_dvportgroup_get_should_return_expected_data(
     assert ret == expected_data
 
 
-@pytest.mark.xfail
 def test_get_should_feed_results_through_VmomiJSONEncoder():
     expected_data = {"blerp": "lawl"}
     with patch("saltext.vmware.utils.vmware._get_dvs", autospec=True) as fake_dvs, patch(
