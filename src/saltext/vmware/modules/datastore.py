@@ -117,8 +117,9 @@ def get(
     """
     log.debug(f"Running {__virtualname__}.get")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     datastores = utils_datastore.get_datastores(
         service_instance,
         datastore_name=datastore_name,

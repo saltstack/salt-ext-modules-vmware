@@ -244,8 +244,9 @@ def vmkernel_adapter_present(
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -372,8 +373,9 @@ def vmkernel_adapter_absent(
     """
     log.debug("Running vmware_esxi.vmkernel_adapter_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -475,8 +477,9 @@ def user_present(
     create = update = 0
     failed_hosts = []
     diff = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
@@ -613,8 +616,9 @@ def user_absent(
     delete = no_user = 0
     failed_hosts = []
     diff = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
