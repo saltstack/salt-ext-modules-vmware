@@ -4,10 +4,10 @@ import logging
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as utils_datacenter
 import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 

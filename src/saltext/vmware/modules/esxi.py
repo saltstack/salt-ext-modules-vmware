@@ -5,11 +5,11 @@ import os
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_config
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
@@ -54,8 +54,9 @@ def get_lun_ids(service_instance=None, profile=None):
         Profile to use (optional)
     """
 
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     ids = set()
@@ -89,8 +90,9 @@ def get_capabilities(service_instance=None, profile=None):
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     capabilities = {}
     for host in hosts:
@@ -2280,8 +2282,9 @@ def connect(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.connect host=host01
     """
     log.debug(f"Connect ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.reconnect_host(host, service_instance)
     return {"state": state}
@@ -2305,8 +2308,9 @@ def disconnect(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.disconnect host=host01
     """
     log.debug(f"Disconnect ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.disconnect_host(host, service_instance)
     return {"state": state}
@@ -2330,8 +2334,9 @@ def remove(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.remove host=host01
     """
     log.debug(f"Remove ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.remove_host(host, service_instance)
     return {"state": state}
@@ -2358,8 +2363,9 @@ def move(host, cluster_name, service_instance=None, profile=None):
         salt '*' vmware_esxi.move host=host01 cluster=cl1
     """
     log.debug(f"Move ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.move_host(host, cluster_name, service_instance)
     return {"state": state}
@@ -2411,8 +2417,9 @@ def add(
         salt '*' vmware_esxi.add host=host01 root_user=root password=CorrectHorseBatteryStaple cluster_name=cl1 datacenter_name=dc1 verify_host_cert=False connect=True
     """
     log.debug(f"Adding ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     state = utils_esxi.add_host(
         host,
         root_user,

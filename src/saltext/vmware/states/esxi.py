@@ -4,8 +4,8 @@ import logging
 from bisect import bisect_right
 
 import salt
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.esxi as utils_esxi
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
