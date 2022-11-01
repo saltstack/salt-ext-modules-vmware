@@ -52,10 +52,11 @@ def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None
     """
     log.debug("Running vmware_esxi.role_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-    if not service_instance:
-        service_instance = get_service_instance(
-            config=__opts__, esxi_host=esxi_host_name, profile=profile
-        )
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     sys_privs = {"System.Anonymous", "System.Read", "System.View"}
     del_privs = list(set(role.get("privilege_ids", [])) - sys_privs - set(privilege_ids))
@@ -123,10 +124,11 @@ def role_absent(name, esxi_host_name=None, service_instance=None, profile=None):
     """
     log.debug("Running vmware_esxi.role_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-    if not service_instance:
-        service_instance = get_service_instance(
-            config=__opts__, esxi_host=esxi_host_name, profile=profile
-        )
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     if not role:
         ret["comment"] = "Role {} is not present.".format(name)
@@ -825,8 +827,9 @@ def lockdown_mode(
         if isinstance(name, vim.HostSystem):
             host_refs = (name,)
         else:
-            if service_instance is None:
-                service_instance = get_service_instance(config=__opts__, profile=profile)
+            service_instance = service_instance or connect.get_service_instance(
+                config=__opts__, profile=profile
+            )
             host_refs = (utils_esxi.get_host(name, service_instance),)
 
     for ref in host_refs:
@@ -912,8 +915,9 @@ def advanced_config(
     """
     log.debug("Running vmware_esxi.advanced_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
         config_name=name,
@@ -990,8 +994,9 @@ def firewall_config(
     """
     log.debug("Running vmware_esxi.firewall_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,

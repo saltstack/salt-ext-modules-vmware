@@ -139,7 +139,7 @@ def power_state(
     """
     ret = None
     task = None
-    service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = connect.get_service_instance(config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -787,8 +787,9 @@ def get_firewall_config(
     """
     log.debug("Running vmware_esxi.get_firewall_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -865,8 +866,9 @@ def set_firewall_config(
     """
     log.debug("Running vmware_esxi.set_firewall_config")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -942,8 +944,9 @@ def set_all_firewall_configs(
     """
     log.debug("Running vmware_esxi.set_all_firewall_configs")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2145,12 +2148,11 @@ def add_role(
     """
     log.debug("Running vmware_esxi.add_role")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         ret["role_id"] = service_instance.content.authorizationManager.AddAuthorizationRole(
             name=role_name, privIds=privilege_ids
@@ -2188,12 +2190,11 @@ def update_role(
         salt '*' vmware_esxi.update_role role_name=foo privileges=['Folder.Create']
     """
     log.debug("Running vmware_esxi.update_role")
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
         if not role:
@@ -2232,12 +2233,11 @@ def remove_role(
         salt '*' vmware_esxi.remove_role role_name=foo
     """
     log.debug("Running vmware_esxi.update_role")
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
         if not role:
@@ -2272,8 +2272,11 @@ def get_role(role_name, esxi_host_name=None, service_instance=None, profile=None
     """
     log.debug("Running vmware_esxi.get_role")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, esxi_host=esxi_host_name)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         for role in service_instance.content.authorizationManager.roleList:
             if role.name == role_name:
