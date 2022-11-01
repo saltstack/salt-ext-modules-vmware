@@ -257,7 +257,7 @@ def test_esxi_restore_config_should_send_correct_data_to_config_api_endpoint(
         [[get_host(), get_host()]],
     ],
 )
-def test_esxi_reset_config(monkeypatch, hosts, fake_service_instance):
+def test_esxi_reset_config(hosts, fake_service_instance):
     _, service_instance = fake_service_instance
     patch_get_hosts = patch(
         "saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=hosts
