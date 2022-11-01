@@ -3,8 +3,8 @@
 import json
 import logging
 
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.vmware as utils_vmware
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
@@ -49,21 +49,23 @@ def get(switch_name, portgroup_key, host_name=None, service_instance=None, profi
     """
     ret = {}
 
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     switch_ref = utils_vmware._get_dvs(service_instance=service_instance, dvs_name=switch_name)
 
-    for portgroup in switch_ref.portgroup:
-        if portgroup.key == portgroup_key:
-            ret["name"] = portgroup.config.name
-            ret["vlan"] = portgroup.config.defaultPortConfig.vlan.vlanId
-            ret["pnic"] = []
-            if host_name:
-                for host in portgroup.config.distributedVirtualSwitch.config.host:
-                    if host.config.host.name == host_name:
-                        for pnic in host.config.backing.pnicSpec:
-                            ret["pnic"].append(pnic.pnicDevice)
+    if switch_ref:
+        for portgroup in switch_ref.portgroup:
+            if portgroup.key == portgroup_key:
+                ret["name"] = portgroup.config.name
+                ret["vlan"] = portgroup.config.defaultPortConfig.vlan.vlanId
+                ret["pnic"] = []
+                if host_name:
+                    for host in portgroup.config.distributedVirtualSwitch.config.host:
+                        if host.config.host.name == host_name:
+                            for pnic in host.config.backing.pnicSpec:
+                                ret["pnic"].append(pnic.pnicDevice)
 
-    ret = json.loads(json.dumps(ret, cls=VmomiSupport.VmomiJSONEncoder))
+        ret = json.loads(json.dumps(ret, cls=VmomiSupport.VmomiJSONEncoder))
     return ret
