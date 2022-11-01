@@ -266,6 +266,7 @@ def test_esxi_reset_config(hosts, fake_service_instance):
         "saltext.vmware.utils.common.wait_for_task", autospec=True, return_value=None
     )
     patch_opts = patch.dict(esxi.__opts__, {"cachedir": "."})
+    fake_http_query = MagicMock(return_value={"body": b"1"})
     patch_salt = patch.dict(
         esxi.__salt__,
         {
