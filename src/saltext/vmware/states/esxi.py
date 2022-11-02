@@ -30,21 +30,22 @@ def __virtual__():
         return False, "Unable to import pyVmomi module."
     return __virtualname__
 
+
 def sample(name, config):
-    old =  {
-                    "firewall_rules": [
-                        {
-                            "name": "sshServer",
-                            "enabled": True,
-                            "allowed_hosts": {
-                                "all_ip": False,
-                                "ip_address": [
-                                    "192.168.110.90XXX"
-                                ]
-                            }
-                        }
+    old = {
+        "firewall_rules": [
+            {
+                "name": "sshServer",
+                "enabled": True,
+                "allowed_hosts": {
+                    "all_ip": False,
+                    "ip_address": [
+                        "192.168.110.90XXX"
                     ]
                 }
+            }
+        ]
+    }
 #    changes = salt.utils.dictdiffer.diff(config, old)
 #    breakpoint()
 #    import pdb; pdb.set_trace()
@@ -84,10 +85,13 @@ def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None
         service_instance = get_service_instance(
             config=__opts__, esxi_host=esxi_host_name, profile=profile
         )
-    role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
+    role = __salt__["vmware_esxi.get_role"](
+        role_name=name, service_instance=service_instance)
     sys_privs = {"System.Anonymous", "System.Read", "System.View"}
-    del_privs = list(set(role.get("privilege_ids", [])) - sys_privs - set(privilege_ids))
-    new_privs = list(set(privilege_ids) - set(role.get("privilege_ids", [])) - sys_privs)
+    del_privs = list(set(role.get("privilege_ids", [])) -
+                     sys_privs - set(privilege_ids))
+    new_privs = list(set(privilege_ids) -
+                     set(role.get("privilege_ids", [])) - sys_privs)
     changes = {
         "new": {
             "role_id": role.get("role_id"),
@@ -119,7 +123,8 @@ def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None
         ret[
             "comment"
         ] = "Role {} will be updated. {} privileges will be added. {} privileges will be removed.".format(
-            name, ",".join(sorted(new_privs)) or "No", ",".join(sorted(del_privs)) or "No"
+            name, ",".join(sorted(new_privs)) or "No", ",".join(
+                sorted(del_privs)) or "No"
         )
         ret["result"] = None
     else:
@@ -155,7 +160,8 @@ def role_absent(name, esxi_host_name=None, service_instance=None, profile=None):
         service_instance = get_service_instance(
             config=__opts__, esxi_host=esxi_host_name, profile=profile
         )
-    role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
+    role = __salt__["vmware_esxi.get_role"](
+        role_name=name, service_instance=service_instance)
     if not role:
         ret["comment"] = "Role {} is not present.".format(name)
         ret["result"] = None
@@ -163,7 +169,8 @@ def role_absent(name, esxi_host_name=None, service_instance=None, profile=None):
         ret["comment"] = "Role {} will be deleted.".format(name)
         ret["result"] = None
     else:
-        __salt__["vmware_esxi.remove_role"](role_name=name, service_instance=service_instance)
+        __salt__["vmware_esxi.remove_role"](
+            role_name=name, service_instance=service_instance)
         ret["comment"] = "Role {} deleted.".format(name)
         ret["result"] = True
     return ret
@@ -273,7 +280,8 @@ def vmkernel_adapter_present(
     log.debug("Running vmware_esxi.vmkernel_adapter_present")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = get_service_instance(
+            config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -317,10 +325,12 @@ def vmkernel_adapter_present(
                 try:
                     func = None
                     if action == "add":
-                        func = functools.partial(__salt__["vmware_esxi.create_vmkernel_adapter"])
+                        func = functools.partial(
+                            __salt__["vmware_esxi.create_vmkernel_adapter"])
                     else:
                         func = functools.partial(
-                            __salt__["vmware_esxi.update_vmkernel_adapter"], adapter_name=name
+                            __salt__[
+                                "vmware_esxi.update_vmkernel_adapter"], adapter_name=name
                         )
                     ret_save = func(
                         port_group_name=port_group_name,
@@ -401,7 +411,8 @@ def vmkernel_adapter_absent(
     log.debug("Running vmware_esxi.vmkernel_adapter_absent")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = get_service_instance(
+            config=__opts__, profile=profile)
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -424,7 +435,8 @@ def vmkernel_adapter_absent(
         )
         ret["result"] = None
     elif not delete_on_hosts:
-        ret["comment"] = "vmkernel adapter {!r} absent on all hosts. No changes made.".format(name)
+        ret["comment"] = "vmkernel adapter {!r} absent on all hosts. No changes made.".format(
+            name)
     else:
         hosts_in_error = []
         sample_exception = None
@@ -504,7 +516,8 @@ def user_present(
     failed_hosts = []
     diff = {}
     if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = get_service_instance(
+            config=__opts__, profile=profile)
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
@@ -530,7 +543,8 @@ def user_present(
             }
             update += 1
         else:
-            diff[host] = {"new": {"name": name, "description": description}, "action": "create"}
+            diff[host] = {"new": {"name": name,
+                                  "description": description}, "action": "create"}
             create += 1
     for host in diff.copy():
         if __opts__["test"]:
@@ -559,7 +573,8 @@ def user_present(
                 ret[
                     "comment"
                 ] = "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, create, update, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                    name, create, update, len(failed_hosts), ",".join(
+                        sorted(failed_hosts)), exc
                 )
                 ret["changes"] = diff
                 ret["result"] = False
@@ -587,7 +602,8 @@ def user_present(
                 ret[
                     "comment"
                 ] = "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, create, update, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                    name, create, update, len(failed_hosts), ",".join(
+                        sorted(failed_hosts)), exc
                 )
                 ret["changes"] = diff
                 ret["result"] = False
@@ -642,7 +658,8 @@ def user_absent(
     failed_hosts = []
     diff = {}
     if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = get_service_instance(
+            config=__opts__, profile=profile)
     users_by_host = __salt__["vmware_esxi.get_user"](
         user_name=name,
         datacenter_name=datacenter_name,
@@ -667,7 +684,8 @@ def user_absent(
     for host in diff.copy():
         if __opts__["test"]:
             if not ret["comment"]:
-                ret["comment"] = "User {} will be deleted on {} host(s).".format(name, delete)
+                ret["comment"] = "User {} will be deleted on {} host(s).".format(
+                    name, delete)
                 ret["result"] = None
         elif diff[host][name]:
             try:
@@ -685,16 +703,19 @@ def user_absent(
                 ret[
                     "comment"
                 ] = "User {} removed on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, delete, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                    name, delete, len(failed_hosts), ",".join(
+                        sorted(failed_hosts)), exc
                 )
                 ret["changes"] = diff
                 ret["result"] = False
             if not ret["comment"]:
-                ret["comment"] = "User {} removed on {} host(s).".format(name, delete)
+                ret["comment"] = "User {} removed on {} host(s).".format(
+                    name, delete)
                 ret["changes"] = diff
                 ret["result"] = True
     if not ret["comment"]:
-        ret["comment"] = "User {} doesn't exist on {} host(s).".format(name, no_user)
+        ret["comment"] = "User {} doesn't exist on {} host(s).".format(
+            name, no_user)
         ret["result"] = None
     return ret
 
@@ -775,7 +796,8 @@ def maintenance_mode(
             host=name, timeout=timeout, catch_task_error=True, service_instance=service_instance
         )
 
-    ret["result"] = (host_state["maintenanceMode"] == "inMaintenance") == enter_maintenance_mode
+    ret["result"] = (host_state["maintenanceMode"] ==
+                     "inMaintenance") == enter_maintenance_mode
     if ret["result"]:
         ret["changes"] = {
             "new": f"Host entered {'Maintenance' if enter_maintenance_mode else 'Normal'} mode."
@@ -850,7 +872,8 @@ def lockdown_mode(
             host_refs = (name,)
         else:
             if service_instance is None:
-                service_instance = get_service_instance(config=__opts__, profile=profile)
+                service_instance = get_service_instance(
+                    config=__opts__, profile=profile)
             host_refs = (utils_esxi.get_host(name, service_instance),)
 
     for ref in host_refs:
@@ -879,7 +902,8 @@ def lockdown_mode(
             host_state = __salt__["vmware_esxi.exit_lockdown_mode"](
                 host=ref, catch_task_error=True, service_instance=service_instance, profile=profile
             )
-        ref_results = (host_state["lockdownMode"] == "inLockdown") == enter_lockdown_mode
+        ref_results = (host_state["lockdownMode"] ==
+                       "inLockdown") == enter_lockdown_mode
         if ret["result"]:
             ret["result"] = ref_results
         if ref_results:
@@ -898,8 +922,9 @@ def lockdown_mode(
 
 
 def advanced_config(
-    name,
-    value,
+    name=None,
+    value=None,
+    config_input=None,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -947,11 +972,22 @@ def advanced_config(
         service_instance=service_instance,
     )
     if __opts__["test"]:
-        ret["result"] = None
-        ret["changes"] = {"new": {}}
-        for host in esxi_config_old:
-            ret["changes"]["new"][host] = f"{name} will be set to {value}!!!!!!!!!!!!!!???????!!!!!!!"
-        ret["comment"] = "These options are set to change."
+        if config_input:
+            ret["changes”"] = {"new": {}}
+            # compare with Target State File
+            for host in esxi_config_old:
+                changes = salt.utils.data.recursive_diff(host, config_input)
+                ret = {"name": name, "result": True,
+                       "comment": "", "changes": changes}
+                ret["comment"] = "Muri & Jordi changes test"
+                return ret
+        else:
+            ret["result"] = None
+            ret["changes”"] = {"new": {}}
+            for host in esxi_config_old:
+                ret["changes"]["new"][host] = f"{name} will be set to {value}"
+                ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+            ret["comment"] = "These options are set to change."
         return ret
 
     ret["result"] = True
@@ -1015,7 +1051,8 @@ def firewall_config(
     log.debug("Running vmware_esxi.firewall_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(
+            config=__opts__, pillar=__pillar__)
 
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
@@ -1028,7 +1065,8 @@ def firewall_config(
         for i in range(len(value[name])):
             value[name][i] = dict(value[name][i])
             if "allowed_host" in value[name][i]:
-                value[name][i]["allowed_host"] = dict(value[name][i]["allowed_host"])
+                value[name][i]["allowed_host"] = dict(
+                    value[name][i]["allowed_host"])
     old_configs = {}
     for host in hosts:
         for firewall_conf in value[name]:
