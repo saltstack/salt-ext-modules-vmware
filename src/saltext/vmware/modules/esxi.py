@@ -599,6 +599,8 @@ def set_advanced_configs(
 
             advanced_configs = []
             for opt in config_dict:
+                if opt not in supported_configs:
+                    continue
                 opt_type = supported_configs[opt]
                 val = config_dict[opt]
                 if isinstance(opt_type, vim.option.BoolOption) and not isinstance(val, bool):
@@ -609,7 +611,8 @@ def set_advanced_configs(
                     val = VmomiSupport.vmodlTypes["int"](val)
                 advanced_configs.append(vim.option.OptionValue(key=opt, value=val))
                 ret[h.name][opt] = config_dict[opt]
-            config_manager.UpdateOptions(changedValue=advanced_configs)
+            if advanced_configs:
+                config_manager.UpdateOptions(changedValue=advanced_configs)
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
     return ret

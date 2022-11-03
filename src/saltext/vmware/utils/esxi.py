@@ -48,6 +48,7 @@ def get_hosts(
         Default value is False.
     """
     properties = ["name"]
+    #import pdb; pdb.set_trace()
     if cluster_name and not datacenter_name:
         raise salt.exceptions.ArgumentValueError(
             "Must specify the datacenter when specifying the cluster"

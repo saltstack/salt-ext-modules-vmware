@@ -968,6 +968,7 @@ def advanced_config(
         # service_instance = get_service_instance(
         #   config=__opts__, pillar=__pillar__)
 
+    #import pdb; pdb.set_trace()
     esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
         config_name=name,
         datacenter_name=datacenter_name,
@@ -998,7 +999,7 @@ def advanced_config(
     ret["changes"] = {"new": {}, "old": {}}
     change = False
     for host in esxi_config_old:
-        if esxi_config_old[host][name] != value:
+        if host not in esxi_config_old or name not in esxi_config_old[host] or esxi_config_old[host][name] != value:
             change = True
             config = __salt__["vmware_esxi.set_advanced_configs"](
                 config_dict={name: value},
