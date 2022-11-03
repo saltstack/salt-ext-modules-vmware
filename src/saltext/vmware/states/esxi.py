@@ -31,30 +31,30 @@ def __virtual__():
     return __virtualname__
 
 
-def sample(name, config):
-    old = {
-        "firewall_rules": [
-            {
-                "name": "sshServer",
-                "enabled": True,
-                "allowed_hosts": {
-                    "all_ip": False,
-                    "ip_address": [
-                        "192.168.110.90XXX"
-                    ]
-                }
-            }
-        ]
-    }
-#    changes = salt.utils.dictdiffer.diff(config, old)
-#    breakpoint()
-#    import pdb; pdb.set_trace()
-#    changes=salt.utils.dictdiffer.RecursiveDictDiffer(old, json.loads(json.dumps(config)), ignore_missing_keys=False).diffs
-    changes = salt.utils.data.recursive_diff(old, config)
-    ret = {"name": name, "result": True, "comment": "", "changes": changes}
-#    ret = {"name": name, "result": True, "comment": "", "changes": {"old":old, "new":json.loads(json.dumps(config))}}
-#    ret = {"name": name, "result": True, "comment": "", "changes":changes}
-    return ret
+# def sample(name, config):
+#     old = {
+#     "firewall_rules": [
+#         {
+#             "name": "sshServer",
+#             "enabled": True,
+#             {"allowed_hosts": {
+#                 "all_ip": False,
+#                     "ip_address": [
+#                         "192.168.110.90XXX"
+#                     ]
+#             }
+#             }
+#         ]
+#     }
+# #    changes = salt.utils.dictdiffer.diff(config, old)
+# #    breakpoint()
+# #    import pdb; pdb.set_trace()
+# #    changes=salt.utils.dictdiffer.RecursiveDictDiffer(old, json.loads(json.dumps(config)), ignore_missing_keys=False).diffs
+#     changes = salt.utils.data.recursive_diff(old, config)
+#     ret = {"name": name, "result": True, "comment": "", "changes": changes}
+# #    ret = {"name": name, "result": True, "comment": "", "changes": {"old":old, "new":json.loads(json.dumps(config))}}
+# #    ret = {"name": name, "result": True, "comment": "", "changes":changes}
+#     return ret
 
 
 def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None, profile=None):
@@ -962,8 +962,11 @@ def advanced_config(
     log.debug("Running vmware_esxi.advanced_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(
-            config=__opts__, pillar=__pillar__)
+        #print("config = ", __opts__)
+        log.warn("config %r", __opts__)
+        service_instance = get_service_instance(config=__opts__)
+        # service_instance = get_service_instance(
+        #   config=__opts__, pillar=__pillar__)
 
     esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
         config_name=name,
