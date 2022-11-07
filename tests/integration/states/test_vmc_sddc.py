@@ -91,53 +91,58 @@ def test_vmc_sddc_state_module(salt_call_cli, vmc_common_data, delete_sddc, sddc
     )
     response_json = response.json
     result = list(response_json.values())[0]
-    changes = result["changes"]
+    if result["result"]:
+        result = list(response_json.values())[0]
+        changes = result["changes"]
+        assert changes["old"] is None
+        assert changes["new"]["params"]["sddcConfig"]["name"] == sddc_name
+        assert result["comment"] == "Created SDDC {}".format(sddc_name)
 
-    assert changes["old"] is None
-    assert changes["new"]["params"]["sddcConfig"]["name"] == sddc_name
-    assert result["comment"] == "Created SDDC {}".format(sddc_name)
+        # get the sddc_id of newly created SDDC
+        sddc_id = result["changes"]["new"]["resource_id"]
 
-    # get the sddc_id of newly created SDDC
-    sddc_id = result["changes"]["new"]["resource_id"]
-
-    # Invoke present state where sddc already exist
-    response = salt_call_cli.run(
-        "state.single",
-        "vmc_sddc.present",
-        name=sddc_name,
-        num_hosts=1,
-        provider="ZEROCLOUD",
-        region="us-west-2",
-        **vmc_common_data,
-    )
-    response_json = response.json
-    result = list(response_json.values())[0]
-    changes = result["changes"]
-
-    # assert no changes are done
-    assert changes == {}
-    assert result["comment"] == "SDDC is already present"
-
-    # Get the SDDC data
-    ret = salt_call_cli.run("vmc_sddc.get_by_id", sddc_id=sddc_id, **vmc_common_data)
-    result_as_json = ret.json
-    assert "error" not in result_as_json
-    sddc = result_as_json
-
-    # Invoke absent to delete the sddc
-    response = salt_call_cli.run("state.single", "vmc_sddc.absent", name=sddc_id, **vmc_common_data)
-    response_json = response.json
-    result = list(response_json.values())[0]
-    changes = result["changes"]
-
-    if sddc.get("sddc_state") in ("DEPLOYING", "DELETED", "DELETION_IN_PROGRESS"):
-        assert changes == {}
-        assert result[
-            "comment"
-        ] == "No SDDC found with ID {} or deletion is already in progress or SDDC is still deploying".format(
-            sddc_id
+        # Invoke present state where sddc already exist
+        response = salt_call_cli.run(
+            "state.single",
+            "vmc_sddc.present",
+            name=sddc_name,
+            num_hosts=1,
+            provider="ZEROCLOUD",
+            region="us-west-2",
+            **vmc_common_data,
         )
+        response_json = response.json
+        result = list(response_json.values())[0]
+        changes = result["changes"]
+
+        # assert no changes are done
+        assert changes == {}
+        assert result["comment"] == "SDDC is already present"
+
+        # Get the SDDC data
+        ret = salt_call_cli.run("vmc_sddc.get_by_id", sddc_id=sddc_id, **vmc_common_data)
+        result_as_json = ret.json
+        assert "error" not in result_as_json
+        sddc = result_as_json
+
+        # Invoke absent to delete the sddc
+        response = salt_call_cli.run(
+            "state.single", "vmc_sddc.absent", name=sddc_id, **vmc_common_data
+        )
+        response_json = response.json
+        result = list(response_json.values())[0]
+        changes = result["changes"]
+
+        if sddc.get("sddc_state") in ("DEPLOYING", "DELETED", "DELETION_IN_PROGRESS"):
+            assert changes == {}
+            assert result[
+                "comment"
+            ] == "No SDDC found with ID {} or deletion is already in progress or SDDC is still deploying".format(
+                sddc_id
+            )
+        else:
+            assert changes["new"] is None
+            assert changes["old"]["id"] == sddc_id
+            assert result["comment"] == "Deleted SDDC {}".format(sddc_id)
     else:
-        assert changes["new"] is None
-        assert changes["old"]["id"] == sddc_id
-        assert result["comment"] == "Deleted SDDC {}".format(sddc_id)
+        assert "Failed to add SDDC" in result["comment"]
