@@ -8,22 +8,22 @@ Example usage :
 .. code-block:: yaml
 
     ensure_sddc_exists:
-        vmc_sddc.present:
-            - hostname: stg.skyscraper.vmware.com
-            - refresh_key: bRfsZYg3vVFOZEBHDp9GFSKv76UMfc4DOnWgNk9vDxNVPfHqt73rk75x0vSUtx8w
-            - authorization_host: console-stg.cloud.vmware.com
-            - org_id: 10e1092f-51d0-473a-80f8-137652fd0c39
-            - sddc_id: 15251c47-bad0-4adf-b8f2-85eba94a2a2f
-            - sddc_name: test-1234
-            - verify_ssl: False
-            - cert: /path/to/client/certificate
+      vmc_sddc.present:
+        - hostname: stg.skyscraper.vmware.com
+        - refresh_key: 7jPSGSZpCa8e5Ouks4UY5cZyOtynAhF
+        - authorization_host: console-stg.cloud.vmware.com
+        - org_id: 10e1092f-51d0-473a-80f8-137652fd0c39
+        - sddc_id: 15251c47-bad0-4adf-b8f2-85eba94a2a2f
+        - sddc_name: test-1234
+        - verify_ssl: False
+        - cert: /path/to/client/certificate
 
     sddc_test-id:
-        vmc_sddc.absent
-            - hostname: stg.skyscraper.vmware.com
-            - refresh_key: bRfsZYg3vVFOZEBHDp9GFSKv76UMfc4DOnWgNk9vDxNVPfHqt73rk75x0vSUtx8w
-            - authorization_host: console-stg.cloud.vmware.com
-            - org_id: 10e1092f-51d0-473a-80f8-137652fd0c39
+      vmc_sddc.absent:
+        - hostname: stg.skyscraper.vmware.com
+        - refresh_key: 7jPSGSZpCa8e5Ouks4UY5cZyOtynAhF
+        - authorization_host: console-stg.cloud.vmware.com
+        - org_id: 10e1092f-51d0-473a-80f8-137652fd0c39
 
 .. warning::
 
@@ -97,13 +97,14 @@ def present(
         (Optional) The account linking configuration, we will keep this one and remove accountLinkSddcConfig finally.
 
         account_link_config expects to be passed as a dict having delay_account_link parameter
-            delay_account_link: Boolean
-            (Optional) Boolean flag identifying whether account linking should be delayed or not for the SDDC.
 
-            .. code::
+        delay_account_link: Boolean
+        (Optional) Boolean flag identifying whether account linking should be delayed or not for the SDDC.
 
-                account_link_config
-                    - delay_account_link: False
+        .. code:: yaml
+
+            account_link_config:
+              delay_account_link: False
 
     account_link_sddc_config
         (Optional) A list of the AccountLinkSddcConfig which indicates SDDC linking configurations to use.
@@ -121,26 +122,34 @@ def present(
         Possible values are: SingleAZ, MultiAZ
 
     host_instance_type: String
-        (Optional) The instance type for the ESX hosts in the primary cluster of the SDDC.
+        (Optional) The instance type for the hosts in the primary cluster of the SDDC.
         Possible values are: i3.metal, r5.metal, i3en.metal
 
     msft_license_config :
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
         It can be specified in the below format:
 
-        .. code::
+        .. code:: yaml
 
-            msft_license_config
-                - academic_license: False
-                - mssql_licensing: "DISABLED"
-                - windows_licensing: "DISABLED"
+            msft_license_config:
+              academic_license: False
+              mssql_licensing: "DISABLED"
+              windows_licensing: "DISABLED"
 
-             where,
-             academic_license - Flag to identify if it is Academic Standard or Commercial Standard License.
-             mssql_licensing - The status MSSQL licensing for this SDDC’s clusters.
-                                Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
-             windows_licensing - The status of Windows licensing for this SDDC’s clusters. Can be enabled, disabled, or customer’s.
-                                Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+        Possible values are:
+
+        **academic_license**
+
+        ``True`` if it is Academic Standard or ``False`` Commercial Standard License.
+
+        **mssql_licensing**
+
+        The status MSSQL licensing for this SDDC’s clusters. Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+
+        **windows_licensing**
+
+        The status of Windows licensing for this SDDC’s clusters. Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+        Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
 
         Please refer the `VMC Doc about msft_license_config <https://developer.vmware.com/apis/vmc/v1.1/data-structures/MsftLicensingConfig/>`_
 
@@ -167,7 +176,7 @@ def present(
 
     storage_capacity:  Integer As Int64
         (Optional) The storage capacity value to be requested for the SDDC primary cluster, in GiBs. If provided,
-        instead of using the direct-attached storage, a capacity value amount of seperable storage will be used.
+        instead of using the direct-attached storage, a capacity value amount of separable storage will be used.
 
     vpc_cidr
         (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported. Example: 10.2.0.0/16, 10.2.32.0/20
@@ -288,13 +297,16 @@ def absent(
         The ID of organization to which the SDDC belongs to.
 
     force_delete: Boolean
-        (Optional) If true, will delete forcefully.
+        (Optional) If ``True``, will delete forcefully.
         Beware: do not use the force flag if there is a chance an active provisioning or deleting task is running
         against this SDDC. This option is restricted.
 
     retain_configuration: Boolean
-        (Optional) If = 'true', the SDDC's configuration is retained as a template for later use.
+        (Optional) If ``True``, the SDDC's configuration is retained as a template for later use.
         This flag is applicable only to SDDCs in ACTIVE state.
+
+    template_name: String
+        (Optional) Only applicable when retainConfiguration is also set to ``True``. When set, this value will be used as the name of the SDDC configuration template generated.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.

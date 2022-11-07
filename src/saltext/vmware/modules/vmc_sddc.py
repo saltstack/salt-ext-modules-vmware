@@ -51,7 +51,7 @@ def list_(
         The Id of organization from which SDDCs are retrieved
 
     include_deleted: Boolean
-        (Optional) When true, forces the result to also include deleted SDDCs.
+        (Optional) When ``True``, forces the result to also include deleted SDDCs.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -228,30 +228,38 @@ def create(
         Possible values are: SingleAZ, MultiAZ
 
     host_instance_type: String
-        (Optional) The instance type for the ESX hosts in the primary cluster of the SDDC.
+        (Optional) The instance type for the hosts in the primary cluster of the SDDC.
         Possible values are: i3.metal, r5.metal, i3en.metal
 
     msft_license_config :
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
         It can be specified in the below format:
 
-        .. code::
+        .. code:: python
 
             "msft_license_config": [
-                        {
-                            "academic_license": false,
-                            "mssql_licensing": "DISABLED",
-                            "windows_licensing": "DISABLED"
+                {
+                    "academic_license": False,
+                    "mssql_licensing": "DISABLED",
+                    "windows_licensing": "DISABLED"
 
-                        }
-                    ]
+                }
+            ]
 
-             where,
-            'academic_license' - Flag to identify if it is Academic Standard or Commercial Standard License.
-            'mssql_licensing' - The status MSSQL licensing for this SDDC’s clusters.
-                                Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
-            'windows_licensing' - The status of Windows licensing for this SDDC’s clusters. Can be enabled, disabled, or customer’s.
-                                Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+        Possible values are:
+
+        **academic_license**
+
+        ``True`` if it is Academic Standard or ``False`` Commercial Standard License.
+
+        **mssql_licensing**
+
+        The status MSSQL licensing for this SDDC’s clusters. Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+
+        **windows_licensing**
+
+        The status of Windows licensing for this SDDC’s clusters. Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+                                        Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
 
         Please refer the `VMC Doc about msft_license_config <https://developer.vmware.com/apis/vmc/v1.1/data-structures/MsftLicensingConfig/>`_
 
@@ -275,7 +283,7 @@ def create(
         (Optional) The SSO domain name to use for vSphere users. If not specified, vmc.local will be used.
 
     storage_capacity:  Integer As Int64
-        (Optional) The storage capacity value to be requested for the sddc primary cluster, in GiBs. If provided, instead of using the direct-attached storage, a capacity value amount of seperable storage will be used.
+        (Optional) The storage capacity value to be requested for the sddc primary cluster, in GiBs. If provided, instead of using the direct-attached storage, a capacity value amount of separable storage will be used.
 
     vpc_cidr
         (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported. Example: 10.2.0.0/16, 10.2.32.0/20
@@ -284,7 +292,7 @@ def create(
         (Optional) VXLAN IP subnet in CIDR for compute gateway
 
     validate_only: Boolean
-        (Optional) When true, only validates the given sddc configuration without provisioning
+        (Optional) When ``True``, only validates the given sddc configuration without provisioning
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -410,15 +418,15 @@ def delete(
         sddc_id which will be deleted
 
     force_delete: Boolean
-        (Optional) If true, will delete forcefully.
+        (Optional) If ``True``, will delete forcefully.
         Beware: do not use the force flag if there is a chance an active provisioning or deleting task is running against this SDDC. This option is restricted.
 
     retain_configuration: Boolean
-        (Optional) If = 'true', the SDDC's configuration is retained as a template for later use.
+        (Optional) If ``True``, the SDDC's configuration is retained as a template for later use.
         This flag is applicable only to SDDCs in ACTIVE state.
 
     template_name: String
-        (Optional) Only applicable when retainConfiguration is also set to 'true'. When set, this value will be used as the name of the SDDC configuration template generated.
+        (Optional) Only applicable when retainConfiguration is also set to ``True``. When set, this value will be used as the name of the SDDC configuration template generated.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
