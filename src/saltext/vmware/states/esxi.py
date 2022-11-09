@@ -1103,52 +1103,54 @@ def firewall_config(
     old_configs = {}
     for host in hosts:
         old_configs[host.name] = {}
-        for firewall_conf in value[name]:
+        for ruleset in value[name]:
+            rule = ruleset["name"]
             fw_config = utils_esxi.get_firewall_config(
-                ruleset_name=firewall_conf["name"],
+                ruleset_name=rule,
                 host_name=host.name,
                 service_instance=service_instance,
             )
-            old_configs[host.name][firewall_conf["name"]] = fw_config[host.name][firewall_conf["name"]]
+            old_configs[host.name][rule] = fw_config[host.name][rule]
 
     if __opts__["test"]:
         for host in hosts:
             ret["changes"][host.name] = {}
-            for firewall_config in value[name]:
-                ret["changes"][host.name][firewall_config["name"]] = {}
-                for k in firewall_conf:
+            for ruleset in value[name]:
+                rule = ruleset["name"]
+                ret["changes"][host.name][rule] = {}
+                for k in ruleset:
                     if k == "name":
                         continue
                     elif k == "allowed_host":
-                        for j in firewall_conf[k]:
+                        for j in ruleset[k]:
                             if (
-                                old_configs[host.name][firewall_config["name"]][k][j]
-                                == firewall_conf[k][j]
+                                old_configs[host.name][rule][k][j]
+                                == ruleset[k][j]
                             ):
                                 if verbose:
-                                    ret["changes"][host.name][firewall_config["name"]][
+                                    ret["changes"][host.name][rule][
                                         j
-                                    ] = f"{j} is already set to {firewall_conf[k][j]}"
+                                    ] = f"{j} is already set to {ruleset[k][j]}"
                             else:
                                 if verbose:
-                                    ret["changes"][host.name][firewall_config["name"]][
+                                    ret["changes"][host.name][rule][
                                         j
-                                    ] = f"{j} will be set to {firewall_conf[k][j]}"
+                                    ] = f"{j} will be set to {ruleset[k][j]}"
                                 else:
-                                    ret["changes"][host.name][firewall_conf["name"]][j] = firewall_config[k][j]
+                                    ret["changes"][host.name][rule][j] = ruleset[k][j]
                     else:
-                        if old_configs[host.name][firewall_config["name"]][k] == firewall_conf[k]:
+                        if old_configs[host.name][rule][k] == ruleset[k]:
                             if verbose:
-                                ret["changes"][host.name][firewall_config["name"]][
+                                ret["changes"][host.name][rule][
                                     k
-                                ] = f"{k} is already set to {firewall_conf[k]}"
+                                ] = f"{k} is already set to {ruleset[k]}"
                         else:
                             if verbose:
-                                ret["changes"][host.name][firewall_config["name"]][
+                                ret["changes"][host.name][rule][
                                     k
-                                ] = f"{k} will be set to {firewall_conf[k]}"
+                                ] = f"{k} will be set to {ruleset[k]}"
                             else:
-                                ret["changes"][host.name][firewall_conf["name"]][k] = firewall_config[k]
+                                ret["changes"][host.name][rule][k] = ruleset[k]
         ret["comment"] = "These options are set to change."
         return ret
 
@@ -1158,40 +1160,41 @@ def firewall_config(
     for host in hosts:
         ret["changes"]["new"][host.name] = {}
         ret["changes"]["old"][host.name] = {}
-        for firewall_config in value[name]:
+        for ruleset in value[name]:
+            rule = ruleset["name"]
             change = False
-            ret["changes"]["new"][host.name][firewall_config["name"]] = {}
-            ret["changes"]["old"][host.name][firewall_config["name"]] = {}
-            for k in firewall_conf:
+            ret["changes"]["new"][host.name][rule] = {}
+            ret["changes"]["old"][host.name][rule] = {}
+            for k in ruleset:
                 if k == "name":
                     continue
-                ret["changes"]["new"][host.name][firewall_config["name"]][k] = {}
-                ret["changes"]["old"][host.name][firewall_config["name"]][k] = {}
+                ret["changes"]["new"][host.name][rule][k] = {}
+                ret["changes"]["old"][host.name][rule][k] = {}
                 if k == "allowed_host":
-                    for j in firewall_conf[k]:
+                    for j in ruleset[k]:
                         if (
-                            old_configs[host.name][firewall_config["name"]][k][j]
-                            != firewall_conf[k][j]
+                            old_configs[host.name][rule][k][j]
+                            != ruleset[k][j]
                         ):
                             change = True
-                            ret["changes"]["new"][host.name][firewall_config["name"]][k][
+                            ret["changes"]["new"][host.name][rule][k][
                                 j
-                            ] = firewall_conf[k][j]
-                            ret["changes"]["old"][host.name][firewall_config["name"]][k][
+                            ] = ruleset[k][j]
+                            ret["changes"]["old"][host.name][rule][k][
                                 j
-                            ] = old_configs[host.name][firewall_config["name"]][k][j]
+                            ] = old_configs[host.name][rule][k][j]
                 else:
-                    if old_configs[host.name][firewall_config["name"]][k] != firewall_conf[k]:
+                    if old_configs[host.name][rule][k] != ruleset[k]:
                         change = True
-                        ret["changes"]["new"][host.name][firewall_config["name"]][
+                        ret["changes"]["new"][host.name][rule][
                             k
-                        ] = firewall_conf[k]
-                        ret["changes"]["old"][host.name][firewall_config["name"]][k] = old_configs[
+                        ] = ruleset[k]
+                        ret["changes"]["old"][host.name][rule][k] = old_configs[
                             host.name
-                        ][firewall_config["name"]][k]
+                        ][rule][k]
             if change:
                 __salt__["vmware_esxi.set_firewall_config"](
-                    firewall_config=firewall_config,
+                    firewall_config=ruleset,
                     host_name=host.name,
                     service_instance=service_instance,
                 )
