@@ -963,7 +963,7 @@ def advanced_config(
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(config=__opts__)
-        
+
     esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
         config_name=name,
         datacenter_name=datacenter_name,
@@ -973,13 +973,10 @@ def advanced_config(
     )
     if __opts__["test"]:
         if config_input:
-            ret["changes"] = {"new": {}}
-            # compare with Target State File
             for host in esxi_config_old:
-                changes = salt.utils.data.recursive_diff(host, config_input)
+                changes = salt.utils.data.recursive_diff(esxi_config_old[host], config_input["advanced_options"])["new"]
                 ret = {"name": name, "result": True,
-                       "comment": "", "changes": changes}
-                ret["comment"] = "Muri & Jordi changes test"
+                       "comment": config_input["advanced_options"], "changes": changes}
                 return ret
         else:
             ret["result"] = None
