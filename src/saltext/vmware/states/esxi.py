@@ -1102,30 +1102,16 @@ def firewall_config(
                     value[name][i]["allowed_host"])
     old_configs = {}
     for host in hosts:
+        old_configs[host.name] = {}
         for firewall_conf in value[name]:
-            if host.name in old_configs:
-                fw_config = utils_esxi.get_firewall_config(
-                    ruleset_name=firewall_conf["name"],
-                    host_name=host.name,
-                    service_instance=service_instance,
-                )
-                old_configs[host.name][firewall_conf["name"]] = fw_config[host.name][
-                    firewall_conf["name"]
-                ]
-            else:
-                fw_config = utils_esxi.get_firewall_config(
-                    ruleset_name=firewall_conf["name"],
-                    host_name=host.name,
-                    service_instance=service_instance,
-                )
-                old_configs[host.name] = {}
-                old_configs[host.name][firewall_conf["name"]] = fw_config[host.name][
-                    firewall_conf["name"]
-                ]
+            fw_config = utils_esxi.get_firewall_config(
+                ruleset_name=firewall_conf["name"],
+                host_name=host.name,
+                service_instance=service_instance,
+            )
+            old_configs[host.name][firewall_conf["name"]] = fw_config[host.name][firewall_conf["name"]]
 
     if __opts__["test"]:
-        ret["result"] = None
-        ret["changes"] = {}
         for host in hosts:
             ret["changes"][host.name] = {}
             for firewall_config in value[name]:
