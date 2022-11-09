@@ -2587,9 +2587,13 @@ def get(
                 ret[h.name]["vnics"][nic.device]["portgroup"] = nic.spec.portgroup
                 if nic.spec.distributedVirtualPort:
                     ret[h.name]["vnics"][nic.device][
-                        "distributed_virtual_portgroup"] = nic.spec.distributedVirtualPort.portgroupKey
-                    ret[h.name]["vnics"][nic.device]["distributed_virtual_switch"] = utils_vmware._get_dvs_by_uuid(
-                        service_instance, nic.spec.distributedVirtualPort.switchUuid).config.name
+                        "distributed_virtual_portgroup"
+                    ] = nic.spec.distributedVirtualPort.portgroupKey
+                    ret[h.name]["vnics"][nic.device][
+                        "distributed_virtual_switch"
+                    ] = utils_vmware._get_dvs_by_uuid(
+                        service_instance, nic.spec.distributedVirtualPort.switchUuid
+                    ).config.name
                 else:
                     ret[h.name]["vnics"][nic.device]["distributed_virtual_portgroup"] = None
                     ret[h.name]["vnics"][nic.device]["distributed_virtual_switch"] = None
@@ -2637,8 +2641,10 @@ def get(
             ret[h.name]["portgroups"] = {}
             for portgroup in h.config.network.portgroup:
                 ret[h.name]["portgroups"][portgroup.spec.name] = {}
-                ret[h.name]["portgroups"][portgroup.spec.name]["vlan_id"] = portgroup.spec.vlanId,
-                ret[h.name]["portgroups"][portgroup.spec.name]["switch_name"] = portgroup.spec.vswitchName
+                ret[h.name]["portgroups"][portgroup.spec.name]["vlan_id"] = (portgroup.spec.vlanId,)
+                ret[h.name]["portgroups"][portgroup.spec.name][
+                    "switch_name"
+                ] = portgroup.spec.vswitchName
 
             ret[h.name]["cpu_model"] = h.summary.hardware.cpuModel
             ret[h.name]["num_cpu_cores"] = h.summary.hardware.numCpuCores

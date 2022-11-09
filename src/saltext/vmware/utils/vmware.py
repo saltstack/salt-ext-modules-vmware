@@ -573,6 +573,7 @@ def _get_dvs(service_instance, dvs_name):
 
     return None
 
+
 def _get_dvs_by_uuid(service_instance, dvs_uuid):
     """
     Return a reference to a Distributed Virtual Switch object.
@@ -591,6 +592,7 @@ def _get_dvs_by_uuid(service_instance, dvs_uuid):
                 return item
 
     return None
+
 
 def _get_pnics(host_reference):
     """
