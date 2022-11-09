@@ -1085,7 +1085,7 @@ def firewall_config(
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
         service_instance = get_service_instance(
-            config=__opts__, pillar=__pillar__)
+            config=__opts__)
 
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
