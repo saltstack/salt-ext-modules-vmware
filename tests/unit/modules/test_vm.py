@@ -1,9 +1,10 @@
-from collections import namedtuple
 import itertools
+import unittest.mock as mock
+from collections import namedtuple
+
 import pytest
 import salt.exceptions
 import saltext.vmware.modules.vm as vm
-import unittest.mock as mock
 
 # TODO: why is `name` bad when it comes to Mock? Why do we need to use a namedtuple? -W. Werner, 2022-07-19
 PropSet = namedtuple("PropSet", "name,val")
