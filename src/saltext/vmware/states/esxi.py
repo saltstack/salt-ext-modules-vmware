@@ -1025,6 +1025,8 @@ def firewall_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    verbose=False,
+    quiet=False
 ):
     """
     Set firewall configuration on matching ESXi hosts.
@@ -1046,6 +1048,32 @@ def firewall_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    verbose
+        Default False. If this is set to True, in test mode show which values
+        are already correct as well as which values will be changed.
+
+    less
+        Default False. If this is set to True, only the changed values will be reported. For example
+
+        .. code-block:: yaml
+
+            Set firewall config:
+              vmware_esxi.firewall_config:
+                - name: example
+                - config:
+                    foo: bar
+                    quux: bang
+
+        If the existing config was ``{"foo": "bar", "quux": "fnord"}`` then the output would be:
+
+        .. code-block:
+
+            Set firewall config:
+            ...
+            changes:
+              {"quux": "bang"}
+
 
     .. code-block:: yaml
 
@@ -1111,22 +1139,50 @@ def firewall_config(
                                 old_configs[host.name][firewall_config["name"]][k][j]
                                 == firewall_conf[k][j]
                             ):
-                                ret["changes"][host.name][firewall_config["name"]][
-                                    j
-                                ] = f"{j} is already set to {firewall_conf[k][j]}"
+                                if verbose:
+                                    ret["changes"][host.name][firewall_config["name"]][
+                                        j
+                                    ] = f"{j} is already set to {firewall_conf[k][j]}"
                             else:
-                                ret["changes"][host.name][firewall_config["name"]][
-                                    j
-                                ] = f"{j} will be set to {firewall_conf[k][j]}"
+                                if verbose:
+                                    ret["changes"][host.name][firewall_config["name"]][
+                                        j
+                                    ] = f"{j} will be set to {firewall_conf[k][j]}"
+                                else:
+                                    ret["changes"][host.name][firewall_conf["name"]][j] = firewall_config[k][j]
                     else:
                         if old_configs[host.name][firewall_config["name"]][k] == firewall_conf[k]:
-                            ret["changes"][host.name][firewall_config["name"]][
-                                k
-                            ] = f"{k} is already set to {firewall_conf[k]}"
+                            if verbose:
+                                ret["changes"][host.name][firewall_config["name"]][
+                                    k
+                                ] = f"{k} is already set to {firewall_conf[k]}"
                         else:
-                            ret["changes"][host.name][firewall_config["name"]][
-                                k
-                            ] = f"{k} will be set to {firewall_conf[k]}"
+                            if verbose:
+                                ret["changes"][host.name][firewall_config["name"]][
+                                    k
+                                ] = f"{k} will be set to {firewall_conf[k]}"
+                            else:
+                                ret["changes"][host.name][firewall_conf["name"]][k] = firewall_config[k]
+'''
+somestate:
+  vmware_esxi.firewall_config:
+    - config:
+        foo: bar
+        something: else
+        cool: guy
+
+
+changes:
+    foo is already set to bar
+    something will be changed to else
+    cool is already set to guy
+
+
+
+changes:
+    new:
+       {"something": "else"}
+'''
         ret["comment"] = "These options are set to change."
         return ret
 
