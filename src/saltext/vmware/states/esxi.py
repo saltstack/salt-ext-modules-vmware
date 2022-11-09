@@ -1163,26 +1163,6 @@ def firewall_config(
                                 ] = f"{k} will be set to {firewall_conf[k]}"
                             else:
                                 ret["changes"][host.name][firewall_conf["name"]][k] = firewall_config[k]
-'''
-somestate:
-  vmware_esxi.firewall_config:
-    - config:
-        foo: bar
-        something: else
-        cool: guy
-
-
-changes:
-    foo is already set to bar
-    something will be changed to else
-    cool is already set to guy
-
-
-
-changes:
-    new:
-       {"something": "else"}
-'''
         ret["comment"] = "These options are set to change."
         return ret
 
