@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
+import json
 import logging
 
 import salt.exceptions
@@ -11,7 +12,7 @@ import saltext.vmware.utils.vm as utils_vm
 log = logging.getLogger(__name__)
 
 try:
-    from pyVmomi import vim
+    from pyVmomi import vim, VmomiSupport
 
     HAS_PYVMOMI = True
 except ImportError:

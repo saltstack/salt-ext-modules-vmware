@@ -909,7 +909,7 @@ def advanced_config(
     log.debug("Running vmware_esxi.advanced_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
 
     esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
         config_name=name,
@@ -987,7 +987,7 @@ def firewall_config(
     log.debug("Running vmware_esxi.firewall_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     if not service_instance:
-        service_instance = get_service_instance(opts=__opts__, pillar=__pillar__)
+        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
 
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
