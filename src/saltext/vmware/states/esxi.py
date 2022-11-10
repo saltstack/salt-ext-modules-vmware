@@ -929,6 +929,7 @@ def advanced_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None
 ):
     """
     Set advanced configuration on matching ESXi hosts.
@@ -951,6 +952,9 @@ def advanced_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: yaml
 
         Remove User:
@@ -962,8 +966,7 @@ def advanced_config(
     log.debug("Running vmware_esxi.advanced_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     service_instance = service_instance or connect.get_service_instance(
-        config=__opts__
-        #, profile=profile
+        config=__opts__, profile=profile
     )
 
     esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
@@ -1020,6 +1023,7 @@ def firewall_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
     less=False
 ):
     """
@@ -1043,9 +1047,8 @@ def firewall_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
-    verbose
-        Default False. If this is set to True, in test mode show which values
-        are already correct as well as which values will be changed.
+    profile
+        Profile to use (optional)
 
     less
         Default False. If this is set to True, only the changed values will be reported. For example
@@ -1078,8 +1081,7 @@ def firewall_config(
     log.debug("Running vmware_esxi.firewall_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     service_instance = service_instance or connect.get_service_instance(
-        config=__opts__
-        #, profile=profile
+        config=__opts__, profile=profile
     )
 
     hosts = utils_esxi.get_hosts(
