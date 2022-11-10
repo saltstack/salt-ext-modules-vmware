@@ -976,9 +976,9 @@ def advanced_config(
             changes = {}
             for host in esxi_config_old:
                 changes[host] = salt.utils.data.recursive_diff(esxi_config_old[host], config_input["advanced_options"])["new"]
-                ret = {"name": name, "result": True,
+            ret = {"name": name, "result": True,
                        "comment": config_input["advanced_options"], "changes": changes}
-                return ret
+            return ret
         else:
             ret["result"] = None
             ret["changes"] = {"new": {}}
