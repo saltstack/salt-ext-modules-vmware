@@ -21,6 +21,11 @@ def tgz_file(session_temp_dir):
     yield tgz
 
 
+@pytest.fixture
+def configure_loader_modules():
+    return {esxi: {"__opts__": {}, "__pillar__": {}}}
+
+
 @pytest.fixture(autouse=True)
 def patch_salt_loaded_objects():
     # This esxi needs to be the same as the module we're importing
@@ -95,16 +100,25 @@ def get_host(in_maintenance_mode=None):
         ["shutdown", "ShutdownHost_Task"],
     ],
 )
-def test_esxi_power_state(monkeypatch, hosts, state, fn, fn_calls, expected):
-    setattr(saltext.vmware.modules.esxi, "__opts__", MagicMock())
-    setattr(saltext.vmware.modules.esxi, "__pillar__", MagicMock())
-    monkeypatch.setattr(saltext.vmware.modules.esxi, "get_service_instance", MagicMock())
-    monkeypatch.setattr(saltext.vmware.utils.esxi, "get_hosts", MagicMock(return_value=hosts))
-    monkeypatch.setattr(saltext.vmware.utils.common, "wait_for_task", MagicMock())
-    ret = esxi.power_state(state=state)
+def test_esxi_power_state(hosts, state, fn, fn_calls, expected, fake_service_instance):
+    _, service_instance = fake_service_instance
+
+    patch_get_hosts = patch(
+        "saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=hosts
+    )
+    patch_wait_for_task = patch(
+        "saltext.vmware.utils.common.wait_for_task", autospec=True, return_value=None
+    )
+
+    with patch_get_hosts, patch_wait_for_task:
+        ret = esxi.power_state(state=state, service_instance=service_instance)
+
     cnt = 0
     for h in hosts:
-        cnt += getattr(h, fn).call_count
+        mock_func = getattr(h, fn)
+        cnt += mock_func.call_count
+        # the get_host() fixtures are shared between other test runs
+        mock_func.reset_mock()
     assert cnt == fn_calls
     assert ret is expected
 
@@ -116,26 +130,34 @@ def test_esxi_power_state(monkeypatch, hosts, state, fn, fn_calls, expected):
         [[get_host(), get_host()], True],
     ],
 )
-def test_esxi_backup_config(monkeypatch, hosts, push_file_to_master, session_temp_dir):
-    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": str(session_temp_dir)})
-    setattr(saltext.vmware.modules.esxi, "__pillar__", MagicMock())
-    setattr(
-        saltext.vmware.modules.esxi,
-        "__salt__",
-        {
-            "http.query": MagicMock(return_value={"body": b"1"}),
-            "cp.push": MagicMock(return_value=True),
-        },
+def test_esxi_backup_config(hosts, push_file_to_master, session_temp_dir, fake_service_instance):
+    _, service_instance = fake_service_instance
+    patch_get_hosts = patch(
+        "saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=hosts
     )
-    monkeypatch.setattr(saltext.vmware.modules.esxi, "get_service_instance", MagicMock())
-    monkeypatch.setattr(saltext.vmware.utils.esxi, "get_hosts", MagicMock(return_value=hosts))
-    monkeypatch.setattr(saltext.vmware.utils.common, "wait_for_task", MagicMock())
-    ret = esxi.backup_config(push_file_to_master=push_file_to_master)
-    assert ret
-    for host in hosts:
-        assert ret[host.name]["file_name"] == str(session_temp_dir / "vmware.tgz")
-        assert ret[host.name]["url"] == "http://vmware.tgz"
-    assert push_file_to_master == (saltext.vmware.modules.esxi.__salt__["cp.push"].call_count > 0)
+    patch_wait_for_task = patch(
+        "saltext.vmware.utils.common.wait_for_task", autospec=True, return_value=None
+    )
+    fake_http_query = MagicMock(return_value={"body": b"1"})
+    patch_salt = patch.dict(
+        esxi.__salt__,
+        {
+            "http.query": fake_http_query,
+            "cp.push": MagicMock(return_value=True),
+            "cp.cache_file": MagicMock(return_value=str(tgz_file)),
+        },
+        update=True,
+    )
+    patch_opts = patch.dict(esxi.__opts__, {"cachedir": str(session_temp_dir)})
+    with patch_get_hosts, patch_wait_for_task, patch_salt, patch_opts:
+        ret = esxi.backup_config(
+            push_file_to_master=push_file_to_master, service_instance=service_instance
+        )
+        assert ret
+        for host in hosts:
+            assert ret[host.name]["file_name"] == str(session_temp_dir / "vmware.tgz")
+            assert ret[host.name]["url"] == "http://vmware.tgz"
+        assert push_file_to_master == (esxi.__salt__["cp.push"].call_count > 0)
 
 
 @pytest.mark.parametrize(
@@ -235,21 +257,26 @@ def test_esxi_restore_config_should_send_correct_data_to_config_api_endpoint(
         [[get_host(), get_host()]],
     ],
 )
-def test_esxi_reset_config(monkeypatch, hosts):
-    setattr(saltext.vmware.modules.esxi, "__opts__", {"cachedir": "."})
-    setattr(saltext.vmware.modules.esxi, "__pillar__", MagicMock())
-    setattr(
-        saltext.vmware.modules.esxi,
-        "__salt__",
+def test_esxi_reset_config(hosts, fake_service_instance):
+    _, service_instance = fake_service_instance
+    patch_get_hosts = patch(
+        "saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=hosts
+    )
+    patch_wait_for_task = patch(
+        "saltext.vmware.utils.common.wait_for_task", autospec=True, return_value=None
+    )
+    patch_opts = patch.dict(esxi.__opts__, {"cachedir": "."})
+    fake_http_query = MagicMock(return_value={"body": b"1"})
+    patch_salt = patch.dict(
+        esxi.__salt__,
         {
-            "http.query": MagicMock(return_value={"body": b"1"}),
+            "http.query": fake_http_query,
             "cp.cache_file": MagicMock(return_value="vmware.tgz"),
         },
+        update=True,
     )
-    monkeypatch.setattr(saltext.vmware.modules.esxi, "get_service_instance", MagicMock())
-    monkeypatch.setattr(saltext.vmware.utils.esxi, "get_hosts", MagicMock(return_value=hosts))
-    monkeypatch.setattr(saltext.vmware.utils.common, "wait_for_task", MagicMock())
-    ret = esxi.reset_config()
-    assert ret
-    for host in hosts:
-        assert ret[host.name]
+    with patch_get_hosts, patch_wait_for_task, patch_salt, patch_opts:
+        ret = esxi.reset_config(service_instance=service_instance)
+        assert ret
+        for host in hosts:
+            assert ret[host.name]

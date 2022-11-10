@@ -6,7 +6,7 @@ import logging
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.license_mgr as utils_license_mgr
-from saltext.vmware.utils.connect import get_service_instance
+import saltext.vmware.utils.connect as connect
 
 log = logging.getLogger(__name__)
 
@@ -66,8 +66,9 @@ def add(license_key, **kwargs):
     esxi_hostname = kwargs.get("esxi_hostname", None)
     profile = kwargs.get("profile", None)
 
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     if not utils_license_mgr.is_vcenter(service_instance):
         ret["message"] = "Failed, not connected to a vCenter"
@@ -118,8 +119,9 @@ def list_(service_instance=None, profile=None):
 
         salt '*' vmware_license_mgr.list
     """
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     return utils_license_mgr.list_licenses(service_instance)
 
@@ -161,8 +163,9 @@ def remove(license_key, **kwargs):
     esxi_hostname = kwargs.get("esxi_hostname", None)
     profile = kwargs.get("profile", None)
 
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     if not utils_license_mgr.is_vcenter(service_instance):
         ret["message"] = "Failed, not connected to a vCenter"
