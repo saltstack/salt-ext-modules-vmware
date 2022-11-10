@@ -8,6 +8,13 @@ for VMware as quick as possible.
 
 .. note::
 
+    This is the quickstart guide for using the module as an end user. If you
+    want to contribute to the project or hack on the module, you'll want to
+    check out the :ref:`contributing` guide. Following these instructions will
+    install the module, but your changes will not be detected.
+
+.. note::
+
     This extension module is currently undergoing rapid changes. If you're
     using it for any production purposes, make sure that you're specifying
     which version of the extension module that you want, and you're testing the
