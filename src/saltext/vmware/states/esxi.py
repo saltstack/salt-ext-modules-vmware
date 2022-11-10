@@ -1018,8 +1018,7 @@ def firewall_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
-    verbose=False,
-    quiet=False
+    less=False
 ):
     """
     Set firewall configuration on matching ESXi hosts.
@@ -1120,12 +1119,12 @@ def firewall_config(
                                 old_configs[host.name][rule][k][j]
                                 == ruleset[k][j]
                             ):
-                                if verbose:
+                                if not less:
                                     ret["changes"][host.name][rule][
                                         j
                                     ] = f"{j} is already set to {ruleset[k][j]}"
                             else:
-                                if verbose:
+                                if not less:
                                     ret["changes"][host.name][rule][
                                         j
                                     ] = f"{j} will be set to {ruleset[k][j]}"
@@ -1133,12 +1132,12 @@ def firewall_config(
                                     ret["changes"][host.name][rule][j] = ruleset[k][j]
                     else:
                         if old_configs[host.name][rule][k] == ruleset[k]:
-                            if verbose:
+                            if not less:
                                 ret["changes"][host.name][rule][
                                     k
                                 ] = f"{k} is already set to {ruleset[k]}"
                         else:
-                            if verbose:
+                            if not less:
                                 ret["changes"][host.name][rule][
                                     k
                                 ] = f"{k} will be set to {ruleset[k]}"
