@@ -55,7 +55,9 @@ def list_(
         salt '*' vmware_vm.list
     """
     log.debug("Running vmware_vm.list")
-    service_instance = service_instance or connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     return utils_vm.list_vms(
         service_instance=service_instance,
         host_name=host_name,
