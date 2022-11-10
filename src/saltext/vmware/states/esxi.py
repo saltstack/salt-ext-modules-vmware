@@ -962,7 +962,8 @@ def advanced_config(
     log.debug("Running vmware_esxi.advanced_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     service_instance = service_instance or connect.get_service_instance(
-        config=__opts__, profile=profile
+        config=__opts__
+        #, profile=profile
     )
 
     esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
