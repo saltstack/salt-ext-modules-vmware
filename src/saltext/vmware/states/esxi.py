@@ -1078,7 +1078,8 @@ def firewall_config(
     log.debug("Running vmware_esxi.firewall_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     service_instance = service_instance or connect.get_service_instance(
-        config=__opts__, profile=profile
+        config=__opts__
+        #, profile=profile
     )
 
     hosts = utils_esxi.get_hosts(
