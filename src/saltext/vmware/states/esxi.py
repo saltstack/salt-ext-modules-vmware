@@ -997,7 +997,7 @@ def advanced_config(
     ret["changes"] = {"new": {}, "old": {}}
     change = False
     for host in esxi_config_old:
-        if host not in esxi_config_old or name not in esxi_config_old[host] or esxi_config_old[host][name] != value:
+        if esxi_config_old[host][name] != value:
             change = True
             config = __salt__["vmware_esxi.set_advanced_configs"](
                 config_dict={name: value},
