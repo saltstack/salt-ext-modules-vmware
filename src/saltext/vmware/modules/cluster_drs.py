@@ -5,8 +5,8 @@ import logging
 import salt.exceptions
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as utils_datacenter
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
@@ -94,8 +94,9 @@ def configure(
 
         salt '*' vmware_cluster_drs.configure cluster1 dc1 enable=True
     """
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster)
@@ -141,8 +142,9 @@ def get(cluster_name, datacenter_name, service_instance=None, profile=None):
         salt '*' vmware_cluster_drs.get cluster_name=cl1 datacenter_name=dc1
     """
     ret = {}
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     try:
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
@@ -208,8 +210,9 @@ def vm_affinity_rule(
         salt '*' vmware_cluster_drs.vm_affinity_rule name="Example Anti-Affinity Rule" affinity=False vm_names='["vm1", "vm2"]' cluster_name=cl1 datacenter_name=dc1 mandatory=True
     """
     log.debug(f"Configuring a vm to vm DRS rule {name} on cluster {cluster_name}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     vm_refs = []
@@ -277,8 +280,9 @@ def rule_info(cluster_name, datacenter_name, rule_name=None, service_instance=No
         salt '*' vmware_cluster_drs.rule_info cluster_name=cl1 datacenter_name=dc1
     """
     log.debug(f"Getting rules info on cluster {cluster_name}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     dc_ref = utils_common.get_datacenter(service_instance, datacenter_name)
     cluster_ref = utils_cluster.get_cluster(dc_ref, cluster_name)
     rules = cluster_ref.configuration.rule

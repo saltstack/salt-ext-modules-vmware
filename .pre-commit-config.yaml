@@ -59,7 +59,7 @@ repos:
     rev: v2.10.0
     hooks:
       - id: pyupgrade
-        name: Rewrite Code to be Py3.5+
+        name: Rewrite Code to be Py3.7+
         args: [
           --py3-plus
         ]
@@ -153,28 +153,6 @@ repos:
     rev: dff9089c1003af49665064067ff63c75b9b69dcd
     hooks:
       - id: pip-tools-compile
-        alias: compile-3.5-test-requirements
-        name: Py3.5 Test Requirements
-        files: ^requirements/tests.in$
-        pass_filenames: false
-        args:
-          - -v
-          - --py-version=3.5
-          - --platform=linux
-          - requirements/tests.in
-
-      - id: pip-tools-compile
-        alias: compile-3.6-test-requirements
-        name: Py3.6 Test Requirements
-        files: ^requirements/tests.in$
-        pass_filenames: false
-        args:
-          - -v
-          - --py-version=3.6
-          - --platform=linux
-          - requirements/tests.in
-
-      - id: pip-tools-compile
         alias: compile-3.7-test-requirements
         name: Py3.7 Test Requirements
         files: ^requirements/tests.in$
@@ -210,28 +188,6 @@ repos:
 
   # ----- Static Lint Requirements -------------------------------------------------------------->
       - id: pip-tools-compile
-        alias: compile-3.5-test-requirements
-        name: Py3.5 Lint Requirements
-        files: ^requirements/lint.in$
-        pass_filenames: false
-        args:
-          - -v
-          - --py-version=3.5
-          - --platform=linux
-          - requirements/lint.in
-
-      - id: pip-tools-compile
-        alias: compile-3.6-test-requirements
-        name: Py3.6 Lint Requirements
-        files: ^requirements/lint.in$
-        pass_filenames: false
-        args:
-          - -v
-          - --py-version=3.6
-          - --platform=linux
-          - requirements/lint.in
-
-      - id: pip-tools-compile
         alias: compile-3.7-test-requirements
         name: Py3.7 Lint Requirements
         files: ^requirements/lint.in$
@@ -266,28 +222,6 @@ repos:
   # <---- Static Lint Requirements ---------------------------------------------------------------
 
   # ----- Static Docs Requirements -------------------------------------------------------------->
-      - id: pip-tools-compile
-        alias: compile-3.5-test-requirements
-        name: Py3.5 Docs Requirements
-        files: ^requirements/docs.in$
-        pass_filenames: false
-        args:
-          - -v
-          - --py-version=3.5
-          - --platform=linux
-          - requirements/docs.in
-
-      - id: pip-tools-compile
-        alias: compile-3.6-test-requirements
-        name: Py3.6 Docs Requirements
-        files: ^requirements/docs.in$
-        pass_filenames: false
-        args:
-          - -v
-          - --py-version=3.6
-          - --platform=linux
-          - requirements/docs.in
-
       - id: pip-tools-compile
         alias: compile-3.7-test-requirements
         name: Py3.7 Docs Requirements
