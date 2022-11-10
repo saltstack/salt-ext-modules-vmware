@@ -2,8 +2,8 @@
 # SPDX-License: Apache-2.0
 import logging
 
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datastore as utils_datastore
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
@@ -40,8 +40,9 @@ def maintenance_mode(datastore_name, datacenter_name=None, service_instance=None
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     assert isinstance(datastore_name, str)
     datastores = utils_datastore.get_datastores(
         service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
@@ -71,8 +72,9 @@ def exit_maintenance_mode(
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     assert isinstance(datastore_name, str)
     datastores = utils_datastore.get_datastores(
         service_instance, datastore_name=datastore_name, datacenter_name=datacenter_name
@@ -115,8 +117,9 @@ def get(
     """
     log.debug(f"Running {__virtualname__}.get")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     datastores = utils_datastore.get_datastores(
         service_instance,
         datastore_name=datastore_name,

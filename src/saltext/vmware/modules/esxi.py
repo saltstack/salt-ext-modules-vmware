@@ -5,11 +5,11 @@ import os
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as utils_connect
 import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_config
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
@@ -54,8 +54,9 @@ def get_lun_ids(service_instance=None, profile=None):
         Profile to use (optional)
     """
 
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     ids = set()
@@ -89,8 +90,9 @@ def get_capabilities(service_instance=None, profile=None):
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     capabilities = {}
     for host in hosts:
@@ -106,6 +108,7 @@ def power_state(
     timeout=600,
     force=True,
     profile=None,
+    service_instance=None,
 ):
     """
     Manage the power state of the ESXi host.
@@ -137,7 +140,9 @@ def power_state(
     """
     ret = None
     task = None
-    service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -211,8 +216,9 @@ def manage_service(
     log.debug("Running vmware_esxi.manage_service")
     ret = None
     task = None
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -290,8 +296,9 @@ def list_services(
     """
     log.debug("Running vmware_esxi.list_services")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -377,8 +384,9 @@ def get_acceptance_level(
 
     log.debug("Running vmware_esxi.get_acceptance_level")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -447,8 +455,9 @@ def set_acceptance_level(
 
     log.debug("Running vmware_esxi.set_acceptance_level")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -504,8 +513,9 @@ def get_advanced_config(
     """
     log.debug("Running vmware_esxi.get_advanced_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -574,8 +584,9 @@ def set_advanced_configs(
     """
     log.debug("Running vmware_esxi.set_advanced_configs")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -704,8 +715,9 @@ def get_all_firewall_configs(
     """
     log.debug("Running vmware_esxi.get_all_firewall_configs")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -781,8 +793,9 @@ def get_firewall_config(
     """
     log.debug("Running vmware_esxi.get_firewall_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -859,8 +872,9 @@ def set_firewall_config(
     """
     log.debug("Running vmware_esxi.set_firewall_config")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -936,8 +950,9 @@ def set_all_firewall_configs(
     """
     log.debug("Running vmware_esxi.set_all_firewall_configs")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -996,8 +1011,9 @@ def backup_config(
     log.debug("Running vmware_esxi.backup_config")
     ret = {}
     http_opts = http_opts or {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1074,8 +1090,9 @@ def restore_config(
     log.debug("Running vmware_esxi.backup_config")
     ret = {}
     http_opts = http_opts or {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1156,8 +1173,9 @@ def reset_config(
     """
     log.debug("Running vmware_esxi.reset_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1217,8 +1235,9 @@ def get_dns_config(
     """
     log.debug("Running vmware_esxi.get_dns_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1270,8 +1289,9 @@ def get_ntp_config(
     """
     log.debug("Running vmware_esxi.get_ntp_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1326,8 +1346,9 @@ def list_hosts(
     """
     log.debug("Running vmware_esxi.list_hosts")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1387,8 +1408,9 @@ def add_user(
     """
     log.debug("Running vmware_esxi.add_user")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1453,8 +1475,9 @@ def update_user(
     """
     log.debug("Running vmware_esxi.update_user")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1511,8 +1534,9 @@ def remove_user(
     """
     log.debug("Running vmware_esxi.remove_user")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1638,8 +1662,9 @@ def create_vmkernel_adapter(
     """
     log.debug("Running vmware_esxi.create_vmkernel_adapter")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1807,8 +1832,9 @@ def get_vmkernel_adapters(
     """
     log.debug("Running vmware_esxi.get_vmkernel_adapter")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1929,8 +1955,9 @@ def update_vmkernel_adapter(
     """
     log.debug("Running vmware_esxi.update_vmkernel_adapter")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2003,8 +2030,9 @@ def delete_vmkernel_adapter(
     """
     log.debug("Running vmware_esxi.delete_vmkernel_adapter")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2060,8 +2088,9 @@ def get_user(
     """
     log.debug("Running vmware_esxi.get_user")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2125,12 +2154,11 @@ def add_role(
     """
     log.debug("Running vmware_esxi.add_role")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         ret["role_id"] = service_instance.content.authorizationManager.AddAuthorizationRole(
             name=role_name, privIds=privilege_ids
@@ -2168,12 +2196,11 @@ def update_role(
         salt '*' vmware_esxi.update_role role_name=foo privileges=['Folder.Create']
     """
     log.debug("Running vmware_esxi.update_role")
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
         if not role:
@@ -2212,12 +2239,11 @@ def remove_role(
         salt '*' vmware_esxi.remove_role role_name=foo
     """
     log.debug("Running vmware_esxi.update_role")
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
         if not role:
@@ -2252,8 +2278,11 @@ def get_role(role_name, esxi_host_name=None, service_instance=None, profile=None
     """
     log.debug("Running vmware_esxi.get_role")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, esxi_host=esxi_host_name)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         for role in service_instance.content.authorizationManager.roleList:
             if role.name == role_name:
@@ -2283,8 +2312,9 @@ def connect(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.connect host=host01
     """
     log.debug(f"Connect ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.reconnect_host(host, service_instance)
     return {"state": state}
@@ -2308,8 +2338,9 @@ def disconnect(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.disconnect host=host01
     """
     log.debug(f"Disconnect ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.disconnect_host(host, service_instance)
     return {"state": state}
@@ -2333,8 +2364,9 @@ def remove(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.remove host=host01
     """
     log.debug(f"Remove ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.remove_host(host, service_instance)
     return {"state": state}
@@ -2361,8 +2393,9 @@ def move(host, cluster_name, service_instance=None, profile=None):
         salt '*' vmware_esxi.move host=host01 cluster=cl1
     """
     log.debug(f"Move ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.move_host(host, cluster_name, service_instance)
     return {"state": state}
@@ -2414,8 +2447,9 @@ def add(
         salt '*' vmware_esxi.add host=host01 root_user=root password=CorrectHorseBatteryStaple cluster_name=cl1 datacenter_name=dc1 verify_host_cert=False connect=True
     """
     log.debug(f"Adding ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     state = utils_esxi.add_host(
         host,
         root_user,
@@ -2465,8 +2499,9 @@ def list_pkgs(
     """
     log.debug("Running vmware_esxi.list_pkgs")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2553,8 +2588,9 @@ def get(
     """
     log.debug("Running vmware_esxi.get")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2646,8 +2682,9 @@ def in_maintenance_mode(host, service_instance=None, profile=None):
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = "normal"
     if host_ref.runtime.inMaintenanceMode:
@@ -2697,8 +2734,9 @@ def maintenance_mode(
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_maintenance_mode(host_ref, service_instance)
     if mode["maintenanceMode"] == "inMaintenance":
@@ -2745,8 +2783,9 @@ def exit_maintenance_mode(
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_maintenance_mode(host_ref, service_instance)
     if mode["maintenanceMode"] == "normal":
@@ -2783,8 +2822,9 @@ def in_lockdown_mode(host, service_instance=None, profile=None):
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = "normal"
     if host_ref.config.adminDisabled:
@@ -2815,8 +2855,9 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None, profile=No
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_lockdown_mode(host_ref)
     if mode["lockdownMode"] == "inLockdown":
@@ -2855,8 +2896,9 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None, profi
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_lockdown_mode(host_ref)
     if mode["lockdownMode"] == "normal":
