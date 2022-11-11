@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.esxi as utils_esxi
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
@@ -42,8 +42,9 @@ def _get(hostname, switch_name=None, service_instance=None, profile=None):
     profile
         Profile to use (optional)
     """
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     host = utils_esxi.get_host(hostname, service_instance)
 
@@ -138,8 +139,9 @@ def add(
 
         salt '*' vmware_vswitch.add switch_name=vSwitch0 hostname=host1 mtu=1500, nics='["vmnic0", "vmnic1"]', num_ports=256
     """
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     host = utils_esxi.get_host(hostname, service_instance)
 
@@ -176,8 +178,9 @@ def remove(switch_name, hostname, service_instance=None, profile=None):
 
         salt '*' vmware_vswitch.remove switch_name=vSwitch0 host_name=host1
     """
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     host = utils_esxi.get_host(hostname, service_instance)
     host.configManager.networkSystem.RemoveVirtualSwitch(switch_name)
