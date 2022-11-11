@@ -1004,7 +1004,7 @@ def advanced_config(
 
     for host in esxi_config_old:
         for name in config_input:
-            value = config_input[value]
+            value = config_input[name]
             if esxi_config_old[host][name] != value:
                 change = True
                 config = __salt__["vmware_esxi.set_advanced_configs"](
