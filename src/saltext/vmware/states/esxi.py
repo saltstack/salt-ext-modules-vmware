@@ -1162,6 +1162,11 @@ def firewall_config(
     ret["result"] = True
     ret["changes"] = {"new": {}, "old": {}}
     ret["comment"] = "Configurations are already in correct state."
+    missing_rules = utils_esxi.get_missing_firewall_rules(value.keys, hosts)
+    if len(missing_rules) > 0:
+        messages = list(map(lambda r: f"{r[0]} ruleset does not exist on esxi server {r[1]}.", missing_rules))
+        comment = "\n".join(messages)
+        return {"result": False, "comment": comment, "changes":{}}
     for host in hosts:
         ret["changes"]["new"][host.name] = {}
         ret["changes"]["old"][host.name] = {}

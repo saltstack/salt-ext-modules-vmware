@@ -391,3 +391,12 @@ def get_firewall_config(
                 }
             }
     return ret
+
+def get_missing_firewall_rules(rules, hosts):
+    missing = []
+    for host in hosts:
+        ruleset = host.configManager.firewallSystem.firewallInfo.ruleset
+        for rule in ruleset:
+            if rule not in rules:
+                missing.append((rule, host))
+    return missing
