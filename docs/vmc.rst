@@ -6,6 +6,11 @@ Managing VMC SDDC with Salt
 Things to know about running VMC modules & states
 -------------------------------------------------
 
+
+VMC- Vmware Cloud on AWS which means an instance of the vCloud foundation being executed on AWS bare metal hardware, `You can learn more about VMware Cloud on AWS <https://docs.vmware.com/en/VMware-Cloud-on-AWS/index.html>`_.
+
+SDDC- Software Defined Data Center
+
 To create CSP API token which is referred to as ``refresh_key`` across all the VMC modules and states:
     Please refer `Generate API Token <https://docs.vmware.com/en/vRealize-Operations-Manager/8.4/com.vmware.vcom.core.doc/GUID-3B8C8821-FB07-412F-A2E4-C5CA34D8A473.html>`_.
 
