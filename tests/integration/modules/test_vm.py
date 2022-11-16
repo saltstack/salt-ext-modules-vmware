@@ -56,7 +56,10 @@ def test_vm_list(integration_test_config, patch_salt_globals_vm):
     """
     Test vm list_
     """
-    all = virtual_machine.list_()
+    all = virtual_machine.list_(
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
     assert all == integration_test_config["virtual_machines"]
 
 

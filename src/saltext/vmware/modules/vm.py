@@ -27,9 +27,20 @@ def __virtual__():
     return __virtualname__
 
 
-def list_(service_instance=None, profile=None):
+def list_(
+    service_instance=None, datacenter_name=None, cluster_name=None, host_name=None, profile=None
+):
     """
     Returns virtual machines.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this host name (optional)
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
@@ -43,10 +54,16 @@ def list_(service_instance=None, profile=None):
 
         salt '*' vmware_vm.list
     """
+    log.debug("Running vmware_vm.list")
     service_instance = service_instance or connect.get_service_instance(
         config=__opts__, profile=profile
     )
-    return utils_vm.list_vms(service_instance)
+    return utils_vm.list_vms(
+        service_instance=service_instance,
+        host_name=host_name,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+    )
 
 
 def list_templates(service_instance=None, profile=None):
