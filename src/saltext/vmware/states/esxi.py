@@ -1105,8 +1105,8 @@ def firewall_config(
             if "allowed_host" in value[name][i]:
                 value[name][i]["allowed_host"] = dict(
                     value[name][i]["allowed_host"])
-                    
-    missing_rules = utils_esxi.get_missing_firewall_rules(value.keys, hosts)
+
+    missing_rules = utils_esxi.get_missing_firewall_rules(value.keys(), hosts)
     if len(missing_rules) > 0:
         messages = list(map(lambda r: f"{r[0]} ruleset does not exist on esxi server {r[1]}.", missing_rules))
         comment = "\n".join(messages)
