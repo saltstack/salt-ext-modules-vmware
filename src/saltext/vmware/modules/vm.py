@@ -27,9 +27,20 @@ def __virtual__():
     return __virtualname__
 
 
-def list_(service_instance=None, profile=None):
+def list_(
+    service_instance=None, datacenter_name=None, cluster_name=None, host_name=None, profile=None
+):
     """
     Returns virtual machines.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this host name (optional)
 
     service_instance
         (optional) The Service Instance from which to obtain managed object references.
@@ -43,9 +54,16 @@ def list_(service_instance=None, profile=None):
 
         salt '*' vmware_vm.list
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
-    return utils_vm.list_vms(service_instance)
+    log.debug("Running vmware_vm.list")
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    return utils_vm.list_vms(
+        service_instance=service_instance,
+        host_name=host_name,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+    )
 
 
 def list_templates(service_instance=None, profile=None):
@@ -64,8 +82,9 @@ def list_templates(service_instance=None, profile=None):
 
         salt '*' vmware_vm.list_templates
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     return utils_vm.list_vm_templates(service_instance)
 
 
@@ -88,8 +107,9 @@ def path(vm_name, service_instance=None, profile=None):
 
         salt '*' vmware_vm.path vm_name=vm01
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     vm_ref = utils_common.get_mor_by_property(
         service_instance,
         vim.VirtualMachine,
@@ -119,8 +139,9 @@ def _deploy_ovf(name, host_name, ovf, service_instance=None, profile=None):
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     vms = list_(service_instance)
     if name in vms:
@@ -228,8 +249,9 @@ def deploy_template(vm_name, template_name, host_name, service_instance=None, pr
 
         salt '*' vmware_vm.deploy_template vm_name=vm01 template_name=template1 host_name=host1
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     vms = list_(service_instance)
     if vm_name in vms:
@@ -273,8 +295,9 @@ def info(vm_name=None, service_instance=None, profile=None):
     """
     vms = []
     info = {}
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     if vm_name:
         vms.append(
@@ -343,8 +366,9 @@ def power_state(vm_name, state, datacenter_name=None, service_instance=None, pro
         salt '*' vmware_vm.power_state vm_name=vm01 state=powered-on datacenter_name=dc1
     """
     log.trace(f"Managing power state of virtual machine {vm_name} to {state}")
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -422,8 +446,9 @@ def boot_manager(
 
         salt '*' vmware_vm.boot_manager vm_name=vm01 order='["cdrom", "disk", "ethernet"]' delay=5000 enter_bios_setup=False retry_delay=5000 efi_secure_boot_enabled=False
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     vm = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
 
@@ -490,8 +515,9 @@ def create_snapshot(
         salt '*' vmware_vm.create_snapshot vm_name=vm01 snapshot_name=backup_snapshot_1 description="This snapshot is a backup of vm01" include_memory=False quiesce=True datacenter_name=dc1
     """
 
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -548,8 +574,9 @@ def destroy_snapshot(
 
         salt '*' vmware_vm.destroy_snapshot vm_name=vm01 snapshot_name=backup_snapshot_1 snapshot_id=1 remove_children=False datacenter_name=dc1
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -583,8 +610,9 @@ def snapshot(vm_name, datacenter_name=None, service_instance=None, profile=None)
 
         salt '*' vmware_vm.snapshot vm_name=vm01 datacenter_name=dc1
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     if datacenter_name:
         dc_ref = utils_common.get_mor_by_property(service_instance, vim.Datacenter, datacenter_name)
@@ -634,8 +662,9 @@ def relocate(
 
         salt '*' vmware_vm.relocate vm_name=vm01 new_host_name=host1 datastore_name=ds01
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
     resources = utils_common.deployment_resources(new_host_name, service_instance)
     assert isinstance(datastore_name, str)

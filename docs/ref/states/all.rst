@@ -33,5 +33,6 @@ State Modules
     saltext.vmware.states.vmc_networks
     saltext.vmware.states.vmc_org_user
     saltext.vmware.states.vmc_public_ip
+    saltext.vmware.states.vmc_sddc
     saltext.vmware.states.vmc_security_groups
     saltext.vmware.states.vmc_security_rules

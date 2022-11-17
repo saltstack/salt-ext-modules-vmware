@@ -51,7 +51,7 @@ def list_(
         The Id of organization from which SDDCs are retrieved
 
     include_deleted: Boolean
-        (Optional) When true, forces the result to also include deleted SDDCs.
+        (Optional) When ``True``, forces the result to also include deleted SDDCs.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -195,10 +195,10 @@ def create(
 
     provider: String
         (Required) Determines what additional properties are available based on cloud provider.
-        Possible values are: AWS , ZEROCLOUD
+        Possible values are: AWS, ZEROCLOUD
 
     region: String
-        (Required) Aws region where SDDC will be deployed
+        (Required) AWS region where SDDC will be deployed
 
     account_link_config
         (Optional) The account linking configuration, we will keep this one and remove accountLinkSddcConfig finally.
@@ -225,14 +225,43 @@ def create(
 
     deployment_type: String
         (Optional) Denotes if request is for a SingleAZ or a MultiAZ SDDC. Default is SingleAZ.
-        Possible values are: SingleAZ , MultiAZ
+        Possible values are: SingleAZ, MultiAZ
 
     host_instance_type: String
-        (Optional) The instance type for the esx hosts in the primary cluster of the SDDC.
+        (Optional) The instance type for the hosts in the primary cluster of the SDDC.
         Possible values are: i3.metal, r5.metal, i3en.metal
 
-    msft_license_config : MsftLicensingConfig
+    msft_license_config :
         (Optional) Indicates the desired licensing support, if any, of Microsoft software.
+        It can be specified in the below format:
+
+        .. code:: python
+
+            "msft_license_config": [
+                {
+                    "academic_license": False,
+                    "mssql_licensing": "DISABLED",
+                    "windows_licensing": "DISABLED"
+
+                }
+            ]
+
+        Possible values are:
+
+        **academic_license**
+
+        ``True`` if it is Academic Standard or ``False`` Commercial Standard License.
+
+        **mssql_licensing**
+
+        The status MSSQL licensing for this SDDC’s clusters. Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+
+        **windows_licensing**
+
+        The status of Windows licensing for this SDDC’s clusters. Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+                                        Possible values are: DISABLED, CUSTOMER_SUPPLIED, ENABLED
+
+        Please refer the `VMC Doc about msft_license_config <https://developer.vmware.com/apis/vmc/v1.1/data-structures/MsftLicensingConfig/>`_
 
     sddc_id: String As UUID
         (Optional) If provided, will be assigned as SDDC id of the provisioned SDDC.
@@ -241,11 +270,11 @@ def create(
         (Optional) If provided, configuration from the template will applied to the provisioned SDDC.
 
     sddc_type: String
-        (Optional) Denotes the sddc type , if the value is null or empty, the type is considered as default.
+        (Optional) Denotes the sddc type, if the value is null or empty, the type is considered as default.
 
     size:String
         (Optional) The size of the vCenter and NSX appliances. “large” sddcSize corresponds to a ‘large’ vCenter appliance and ‘large’ NSX appliance. ‘medium’ sddcSize corresponds to ‘medium’ vCenter appliance and ‘medium’ NSX appliance. Value defaults to ‘medium’.
-        Possible values are: nsx_small , medium , large , nsx_large
+        Possible values are: nsx_small, medium, large, nsx_large
 
     skip_creating_vxlan : Boolean
         (Optional) skip creating vxlan for compute gateway for SDDC provisioning
@@ -254,16 +283,16 @@ def create(
         (Optional) The SSO domain name to use for vSphere users. If not specified, vmc.local will be used.
 
     storage_capacity:  Integer As Int64
-        (Optional) The storage capacity value to be requested for the sddc primary cluster, in GiBs. If provided, instead of using the direct-attached storage, a capacity value amount of seperable storage will be used.
+        (Optional) The storage capacity value to be requested for the sddc primary cluster, in GiBs. If provided, instead of using the direct-attached storage, a capacity value amount of separable storage will be used.
 
     vpc_cidr
-        (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported.
+        (Optional) AWS VPC IP range. Only prefix of 16 or 20 is currently supported. Example: 10.2.0.0/16, 10.2.32.0/20
 
     vxlan_subnet : String
         (Optional) VXLAN IP subnet in CIDR for compute gateway
 
     validate_only: Boolean
-        (Optional) When true, only validates the given sddc configuration without provisioning
+        (Optional) When ``True``, only validates the given sddc configuration without provisioning
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -389,15 +418,15 @@ def delete(
         sddc_id which will be deleted
 
     force_delete: Boolean
-        (Optional) If = true, will delete forcefully.
+        (Optional) If ``True``, will delete forcefully.
         Beware: do not use the force flag if there is a chance an active provisioning or deleting task is running against this SDDC. This option is restricted.
 
     retain_configuration: Boolean
-        (Optional) If = 'true', the SDDC's configuration is retained as a template for later use.
+        (Optional) If ``True``, the SDDC's configuration is retained as a template for later use.
         This flag is applicable only to SDDCs in ACTIVE state.
 
     template_name: String
-        (Optional) Only applicable when retainConfiguration is also set to 'true'. When set, this value will be used as the name of the SDDC configuration template generated.
+        (Optional) Only applicable when retainConfiguration is also set to ``True``. When set, this value will be used as the name of the SDDC configuration template generated.
 
     verify_ssl
         (Optional) Option to enable/disable SSL verification. Enabled by default.
@@ -597,7 +626,7 @@ def get_vms(
         When operations return a value of this structure as a result, the field will contain identifiers for the resource type: ClusterComputeResource.
 
     datacenters: Array Of String
-        (Optional)datacenters that must contain the virtual machine for the virtual machine to match the filter.
+        (Optional) datacenters that must contain the virtual machine for the virtual machine to match the filter.
          If unset or empty, virtual machines in any datacenter match the filter.
          When clients pass a value of this structure as a parameter, the field must contain identifiers for the resource type: Datacenter.
          When operations return a value of this structure as a result, the field will contain identifiers for the resource type: Datacenter.

@@ -47,8 +47,9 @@ def manage(name, task, dc_name, type, service_instance=None, profile=None):
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     task_string = "created" if (task == "create") else "destroyed"
 
@@ -94,8 +95,9 @@ def rename(name, new_folder_name, dc_name, type, service_instance=None, profile=
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
 
     if __opts__["test"]:
@@ -131,8 +133,9 @@ def move(name, destination_folder_name, dc_name, type, service_instance=None, pr
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
 
     if __opts__["test"]:
