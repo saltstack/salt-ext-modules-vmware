@@ -516,7 +516,7 @@ def test_esxi_get(service_instance):
     assert not ret
 
 
-def test_get_ntp_config(service_instance):
+def test_ntp_config(service_instance):
     """
     Test get ntp configuration on ESXi host
     """
@@ -536,6 +536,44 @@ def test_get_ntp_config(service_instance):
     }
     for host in ret:
         assert not expected - set(ret[host])
+
+        assert ret[host]["ntp_servers"] == []
+
+    ret = esxi.set_ntp_config(
+        ntp_servers=["192.174.1.100", "192.174.1.200"],
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    for host in ret:
+        assert host
+
+    ret = esxi.get_ntp_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+
+    for host in ret:
+        assert ret[host]["ntp_servers"] == ["192.174.1.100", "192.174.1.200"]
+
+    ret = esxi.set_ntp_config(
+        ntp_servers=[],
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+    for host in ret:
+        assert host
+
+    ret = esxi.get_ntp_config(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+    )
+
+    for host in ret:
+        assert ret[host]["ntp_servers"] == []
 
     ret = esxi.get_ntp_config(
         service_instance=service_instance,
