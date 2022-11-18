@@ -1316,6 +1316,75 @@ def get_ntp_config(
         raise salt.exceptions.SaltException(str(exc))
 
 
+def set_ntp_config(
+    ntp_servers,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Set NTP configuration on matching ESXi hosts.
+
+    ntp_servers
+        A list of servers that should be added to and configured for the specified
+        host's NTP configuration.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.set_ntp_config '[192.174.1.100, 192.174.1.200]'
+    """
+    log.debug("Running vmware_esxi.set_ntp_config")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+
+    if not isinstance(ntp_servers, list):
+        raise salt.exceptions.CommandExecutionError("'ntp_servers' must be a list.")
+
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for host in hosts:
+            date_time_manager = host.configManager.dateTimeSystem
+
+            ntp_config = vim.host.NtpConfig()
+            ntp_config.server = ntp_servers
+            date_config_spec = vim.host.DateTimeConfig()
+            date_config_spec.ntpConfig = ntp_config
+
+            date_time_manager.UpdateDateTimeConfig(date_config_spec)
+            ret[host.name] = True
+
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
 def list_hosts(
     datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):

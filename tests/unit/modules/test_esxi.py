@@ -280,3 +280,35 @@ def test_esxi_reset_config(hosts, fake_service_instance):
         assert ret
         for host in hosts:
             assert ret[host.name]
+
+
+@pytest.mark.parametrize(
+    ["hosts"],
+    [
+        [[get_host(), get_host()]],
+    ],
+)
+def test_ntp_config(hosts, fake_service_instance):
+    _, service_instance = fake_service_instance
+
+    patch_get_hosts = patch(
+        "saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=hosts
+    )
+    with patch_get_hosts:
+        ret = esxi.get_ntp_config(service_instance=service_instance)
+        assert ret
+        expected = {
+            "ntp_config_file",
+            "time_zone",
+            "time_zone_description",
+            "time_zone_name",
+            "ntp_servers",
+            "time_zone_gmt_offset",
+        }
+        for host in ret:
+            assert not expected - set(ret[host])
+
+        ret = esxi.set_ntp_config(
+            ntp_servers=["192.174.1.100", "192.174.1.200"], service_instance=service_instance
+        )
+        assert ret
