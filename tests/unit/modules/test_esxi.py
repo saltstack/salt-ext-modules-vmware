@@ -307,6 +307,8 @@ def test_ntp_config(hosts, fake_service_instance):
         }
         for host in ret:
             assert not expected - set(ret[host])
-        
-        ret = esxi.set_ntp_config(ntp_servers=["192.174.1.100", "192.174.1.200"],service_instance=service_instance)
+
+        ret = esxi.set_ntp_config(
+            ntp_servers=["192.174.1.100", "192.174.1.200"], service_instance=service_instance
+        )
         assert ret
