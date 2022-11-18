@@ -8,6 +8,6 @@ This project uses [CalVer][calver] - YY.M.D.MICRO
 - VMC functionality
 - ESXi functionality
 
-# [Unreleased]
+# [22.11.18]
 
 - ESXi ntp config module
