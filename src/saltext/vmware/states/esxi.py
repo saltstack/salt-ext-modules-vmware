@@ -912,9 +912,6 @@ def advanced_config(
     value
         Value for configuration on matching ESXi hosts. (required).
 
-    config_input
-        Set of configuation properties to be set on matching ESXi hosts. Use this if you want to set multiple properties at the same time (optional)
-
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
 
@@ -964,24 +961,19 @@ def advanced_config(
     ret["result"] = True
     ret["changes"] = {"new": {}, "old": {}}
     change = False
-    
-    if not config_input:
-        config_input = {name: value}
 
     for host in esxi_config_old:
-        for name in config_input:
-            value = config_input[name]
-            if esxi_config_old[host][name] != value:
-                change = True
-                config = __salt__["vmware_esxi.set_advanced_configs"](
-                    config_dict={name: value},
-                    datacenter_name=datacenter_name,
-                    cluster_name=cluster_name,
-                    host_name=host,
-                    service_instance=service_instance,
-                )
-                ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
-                ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
+        if esxi_config_old[host][name] != value:
+            change = True
+            config = __salt__["vmware_esxi.set_advanced_configs"](
+                config_dict={name: value},
+                datacenter_name=datacenter_name,
+                cluster_name=cluster_name,
+                host_name=host,
+                service_instance=service_instance,
+            )
+            ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+            ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
 
     if change:
         ret["comment"] = "Configurations have successfully been changed."
@@ -1042,7 +1034,21 @@ def advanced_configs(
             changes[host] = salt.utils.data.recursive_diff(esxi_config_old[host], configs["advanced_options"])["new"]
         ret = {"name": "advanced_configs", "result": True, "comment": "", "changes": changes}
         return ret
-
+    
+    
+    for host in esxi_config_old:
+        for name in configs:
+            value = configs[name]
+            if esxi_config_old[host][name] != value:
+                config = __salt__["vmware_esxi.set_advanced_configs"](
+                    config_dict={name: value},
+                    datacenter_name=datacenter_name,
+                    cluster_name=cluster_name,
+                    host_name=host,
+                    service_instance=service_instance,
+                )
+                ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+                ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
 
 
 def firewall_config(
