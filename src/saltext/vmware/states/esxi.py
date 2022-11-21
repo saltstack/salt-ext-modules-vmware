@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
-import json
 import functools
 import logging
 from bisect import bisect_right
@@ -29,32 +28,6 @@ def __virtual__():
     if not HAS_PYVMOMI:
         return False, "Unable to import pyVmomi module."
     return __virtualname__
-
-
-# def sample(name, config):
-#     old = {
-#     "firewall_rules": [
-#         {
-#             "name": "sshServer",
-#             "enabled": True,
-#             {"allowed_hosts": {
-#                 "all_ip": False,
-#                     "ip_address": [
-#                         "192.168.110.90XXX"
-#                     ]
-#             }
-#             }
-#         ]
-#     }
-# #    changes = salt.utils.dictdiffer.diff(config, old)
-# #    breakpoint()
-# #    import pdb; pdb.set_trace()
-# #    changes=salt.utils.dictdiffer.RecursiveDictDiffer(old, json.loads(json.dumps(config)), ignore_missing_keys=False).diffs
-#     changes = salt.utils.data.recursive_diff(old, config)
-#     ret = {"name": name, "result": True, "comment": "", "changes": changes}
-# #    ret = {"name": name, "result": True, "comment": "", "changes": {"old":old, "new":json.loads(json.dumps(config))}}
-# #    ret = {"name": name, "result": True, "comment": "", "changes":changes}
-#     return ret
 
 
 def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None, profile=None):
@@ -924,7 +897,6 @@ def lockdown_mode(
 def advanced_config(
     name=None,
     value=None,
-    config_input=None,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -976,21 +948,14 @@ def advanced_config(
         host_name=host_name,
         service_instance=service_instance,
     )
+
     if __opts__["test"]:
-        if config_input:
-            changes = {}
-            for host in esxi_config_old:
-                changes[host] = salt.utils.data.recursive_diff(esxi_config_old[host], config_input["advanced_options"])["new"]
-            ret = {"name": name, "result": True,
-                       "comment": config_input["advanced_options"], "changes": changes}
-            return ret
-        else:
-            ret["result"] = None
-            ret["changes"] = {"new": {}}
-            for host in esxi_config_old:
-                ret["changes"]["new"][host] = f"{name} will be set to {value}"
-                ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
-            ret["comment"] = "These options are set to change."
+        ret["result"] = None
+        ret["changes"] = {"new": {}}
+        for host in esxi_config_old:
+            ret["changes"]["new"][host] = f"{name} will be set to {value}"
+            ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+        ret["comment"] = "These options are set to change."
         return ret
 
     ret["result"] = True
@@ -1014,6 +979,61 @@ def advanced_config(
     else:
         ret["comment"] = "Configurations are already in correct state."
     return ret
+
+def advanced_configs(
+    configs,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None
+):
+    """
+        Set advanced configuration on matching ESXi hosts.
+
+        configs
+            Set of key value pairs to be set on matching ESXi hosts (required)
+
+        datacenter_name
+            Filter by this datacenter name (required when cluster is specified)
+
+        cluster_name
+            Filter by this cluster name (optional)
+
+        host_name
+            Filter by this ESXi hostname (optional)
+
+        service_instance
+            Use this vCenter service connection instance instead of creating a new one. (optional).
+
+        profile
+            Profile to use (optional)
+
+        .. code-block:: yaml
+
+            Remove User:
+            vmware_esxi.advanced_configs:
+                - name: Annotations.WelcomeMessage
+                - value: Hello
+    """
+    log.debug("Running vmware_esxi.advanced_config")
+    service_instance = service_instance or connect.get_service_instance(config=__opts__, profile=profile)
+
+    esxi_config_old = __salt__["vmware_esxi.get_advanced_config"](
+        config_name="",
+        datacenter_name=datacenter_name,
+        cluster_name=cluster_name,
+        host_name=host_name,
+        service_instance=service_instance,
+    )
+
+    if __opts__["test"]:
+        changes = {}
+        for host in esxi_config_old:
+            changes[host] = salt.utils.data.recursive_diff(esxi_config_old[host], configs["advanced_options"])["new"]
+        ret = {"name": "advanced_configs", "result": True, "comment": "", "changes": changes}
+        return ret
+
 
 
 def firewall_config(
