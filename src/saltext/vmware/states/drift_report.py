@@ -22,7 +22,7 @@ def report(name, firewall_config, advanced_config, storage_policy):
     context = {"__opts__": __opts__, "__salt__": __salt__, "__pillar__": __pillar__}
     firewall_result = global_injector_decorator(context)(esxi.firewall_config)(**firewall_config)["changes"]
     advanced_result = global_injector_decorator(context)(esxi.advanced_config)(**advanced_config)["changes"]
-    storage_policy_result = global_injector_decorator(context)(state_storage_policy.storage_policy)(**storage_policy)["changes"]
+    storage_policy_result = global_injector_decorator(context)(state_storage_policy.storage_policy)(**storage_policy)["changes"]["new"]
 
     esxi_result = {host: {"firewall_config": firewall_result[host],
                           "advanced_config": advanced_result[host]} for host in firewall_result}

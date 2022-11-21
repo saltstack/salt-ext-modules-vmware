@@ -912,6 +912,9 @@ def advanced_config(
     value
         Value for configuration on matching ESXi hosts. (required).
 
+    config_input
+        Set of configuation properties to be set on matching ESXi hosts. Use this if you want to set multiple properties at the same time (optional)
+
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
 
@@ -961,18 +964,24 @@ def advanced_config(
     ret["result"] = True
     ret["changes"] = {"new": {}, "old": {}}
     change = False
+    
+    if not config_input:
+        config_input = {name: value}
+
     for host in esxi_config_old:
-        if esxi_config_old[host][name] != value:
-            change = True
-            config = __salt__["vmware_esxi.set_advanced_configs"](
-                config_dict={name: value},
-                datacenter_name=datacenter_name,
-                cluster_name=cluster_name,
-                host_name=host,
-                service_instance=service_instance,
-            )
-            ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
-            ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
+        for name in config_input:
+            value = config_input[name]
+            if esxi_config_old[host][name] != value:
+                change = True
+                config = __salt__["vmware_esxi.set_advanced_configs"](
+                    config_dict={name: value},
+                    datacenter_name=datacenter_name,
+                    cluster_name=cluster_name,
+                    host_name=host,
+                    service_instance=service_instance,
+                )
+                ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+                ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
 
     if change:
         ret["comment"] = "Configurations have successfully been changed."
@@ -1117,6 +1126,13 @@ def firewall_config(
             if "allowed_host" in value[name][i]:
                 value[name][i]["allowed_host"] = dict(
                     value[name][i]["allowed_host"])
+
+    missing_rules = utils_esxi.get_missing_firewall_rules(value.keys(), hosts)
+    if len(missing_rules) > 0:
+        messages = list(map(lambda r: f"{r[0]} ruleset does not exist on esxi server {r[1]}.", missing_rules))
+        comment = "\n".join(messages)
+        return {"result": False, "comment": comment, "changes":{}}
+
     old_configs = {}
     for host in hosts:
         old_configs[host.name] = {}
