@@ -1138,7 +1138,7 @@ def firewall_config(
     if len(missing_rules) > 0:
         messages = list(map(lambda r: f"{r[0]} ruleset does not exist on esxi server {r[1]}.", missing_rules))
         comment = "\n".join(messages)
-        return {"result": False, "comment": comment, "changes":{}}
+        return {"name": name, "result": False, "comment": comment, "changes":{}}
 
     old_configs = {}
     for host in hosts:
