@@ -398,5 +398,5 @@ def get_missing_firewall_rules(rules, hosts):
         ruleset = host.configManager.firewallSystem.firewallInfo.ruleset
         for rule in ruleset:
             if rule.key not in rules:
-                missing.append((rule.key, host))
+                missing.append((rule.key, host.name))
     return missing
