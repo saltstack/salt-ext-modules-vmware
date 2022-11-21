@@ -57,9 +57,9 @@ def do_it(*, config_file):
     hosts = si.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     for host in hosts:
         config["esxi_host_name"] = host.name
-#        config["esxi_datastore_disk_names"] = [
-#            extent.diskName for datastore in host.datastore for extent in datastore.info.vmfs.extent
-#        ]
+        config["esxi_datastore_disk_names"] = [
+            extent.diskName for datastore in host.datastore for extent in datastore.info.vmfs.extent
+        ]
         config["esxi_capabilities"] = {host.name: dict(host.capability.__dict__) for host in hosts}
     config["virtual_machines"] = []
     config["virtual_machines_templates"] = []
