@@ -23,7 +23,7 @@ def storage_policy(name, storagePolicies):
         "/api/vcenter/storage/policies", "GET", opts=__opts__, pillar=__pillar__
     )
     response = res["response"].json()
-    current_policies = list(map(lambda p: p['name'], response))
+    current_policies = [p["name"] for p in response]
     changes = []
     for policy in storagePolicies:
         if policy['policyName'] not in current_policies:
