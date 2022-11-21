@@ -2,7 +2,7 @@
 import logging
 from salt.loader.lazy import global_injector_decorator
 import saltext.vmware.states.esxi as esxi
-import saltext.vmware.states.storage_policy as state_storage_policy
+import states.vsphere as state_storage_policy
 
 log = logging.getLogger(__name__)
 
