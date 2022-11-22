@@ -10,6 +10,7 @@ State Modules
 
     saltext.vmware.states.datacenter
     saltext.vmware.states.datastore
+    saltext.vmware.states.drift_report
     saltext.vmware.states.esxi
     saltext.vmware.states.folder
     saltext.vmware.states.license_mgr
@@ -35,3 +36,4 @@ State Modules
     saltext.vmware.states.vmc_public_ip
     saltext.vmware.states.vmc_security_groups
     saltext.vmware.states.vmc_security_rules
+    saltext.vmware.states.vsphere
