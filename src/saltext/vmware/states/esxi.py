@@ -1210,7 +1210,7 @@ def firewall_config(
                     continue
                 ret["changes"]["new"][host.name][rule][k] = {}
                 ret["changes"]["old"][host.name][rule][k] = {}
-                if k == "allowed_host":
+                if k == "allowed_host" or k == "allowed_hosts":
                     for j in ruleset[k]:
                         if (
                             old_configs[host.name][rule][k][j]
