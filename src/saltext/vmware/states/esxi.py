@@ -1161,7 +1161,7 @@ def firewall_config(
                 for k in ruleset:
                     if k == "name":
                         continue
-                    elif k == "allowed_host":
+                    elif k == "allowed_host" or k == "allowed_hosts":
                         for j in ruleset[k]:
                             if (
                                 old_configs[host.name][rule][k][j]
