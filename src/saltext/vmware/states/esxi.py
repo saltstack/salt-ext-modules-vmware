@@ -1133,6 +1133,9 @@ def firewall_config(
             if "allowed_host" in value[name][i]:
                 value[name][i]["allowed_host"] = dict(
                     value[name][i]["allowed_host"])
+            if "allowed_hosts" in value[name][i]:
+                value[name][i]["allowed_hosts"] = dict(
+                    value[name][i]["allowed_hosts"])
 
     missing_rules = utils_esxi.get_missing_firewall_rules(value[name], hosts)
     if len(missing_rules) > 0:
