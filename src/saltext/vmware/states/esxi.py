@@ -988,7 +988,8 @@ def advanced_configs(
     cluster_name=None,
     host_name=None,
     service_instance=None,
-    profile=None
+    profile=None,
+    less = False
 ):
     """
         Set advanced configuration on matching ESXi hosts.
@@ -1017,6 +1018,9 @@ def advanced_configs(
             vmware_esxi.advanced_configs:
                 - name: Annotations.WelcomeMessage
                 - value: Hello
+
+        less
+            Default False. If this is set to True, only the changed values will be reported as changes.
     """
     log.debug("Running vmware_esxi.advanced_config")
     service_instance = service_instance or connect.get_service_instance(config=__opts__, profile=profile)
@@ -1029,13 +1033,18 @@ def advanced_configs(
         service_instance=service_instance,
     )
 
-    if __opts__["test"]:
-        changes = {}
-        for host in esxi_config_old:
-            changes[host] = salt.utils.data.recursive_diff(esxi_config_old[host], configs)["new"]
-        ret = {"name": name, "result": True, "comment": "", "changes": changes}
-        return ret
     
+    changes = {} if less else {"new": {}, "old": {}}
+
+    if __opts__["test"]:
+        for host in esxi_config_old:
+            diff = salt.utils.data.recursive_diff(esxi_config_old[host], configs)
+            if less:
+                changes[host] = diff["new"]
+            else:
+                changes["new"][host] = [f"{k} will be set to {diff['new'][k]}" for k in diff["new"]]
+                changes["old"][host] = [f"{k} was {diff['old'][k]}" for k in diff["new"]]
+        return {"name": name, "result": True, "comment": "", "changes": changes}
     
     for host in esxi_config_old:
         for name in configs:
@@ -1048,8 +1057,14 @@ def advanced_configs(
                     host_name=host,
                     service_instance=service_instance,
                 )
-                ret["changes"]["old"][host] = f"{name} was {esxi_config_old[host][name]}"
-                ret["changes"]["new"][host] = f"{name} was changed to {config[host][name]}"
+                if less:
+                    changes[host] = diff["new"]
+                else:
+                    changes["old"][host] = diff["old"]
+                changes["new"][host] = diff["new"]
+                changes["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+                changes["new"][host] = f"{name} was changed to {config[host][name]}"
+    return {"name": name, "result": True, "comment": "", "changes": changes}
 
 
 def firewall_config(
@@ -1087,32 +1102,7 @@ def firewall_config(
         Profile to use (optional)
 
     less
-        Default False. If this is set to True, only the changed values will be reported. For example
-
-        .. code-block:: yaml
-
-            Set firewall config:
-              vmware_esxi.firewall_config:
-                - name: example
-                - config:
-                    foo: bar
-                    quux: bang
-
-        If the existing config was ``{"foo": "bar", "quux": "fnord"}`` then the output would be:
-
-        .. code-block:
-
-            Set firewall config:
-            ...
-            changes:
-              {"quux": "bang"}
-
-
-    .. code-block:: yaml
-
-        Set firewall config:
-          vmware_esxi.firewall_config:
-            - name: prod
+        Default False. If this is set to True, only the changed values will be reported as changes.
     """
     log.debug("Running vmware_esxi.firewall_config")
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
