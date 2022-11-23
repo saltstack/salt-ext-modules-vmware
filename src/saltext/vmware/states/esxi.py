@@ -1105,8 +1105,8 @@ def firewall_config(
     if isinstance(value[name], list):
         for i in range(len(value[name])):
             value[name][i] = dict(value[name][i])
-            if "allowed_host" in value[name][i]:
-                value[name][i]["allowed_host"] = dict(value[name][i]["allowed_host"])
+            if "allowed_hosts" in value[name][i]:
+                value[name][i]["allowed_hosts"] = dict(value[name][i]["allowed_hosts"])
 
     missing_rules = utils_esxi.get_missing_firewall_rules(value[name], hosts)
 
@@ -1136,7 +1136,7 @@ def firewall_config(
                 for k in ruleset:
                     if k == "name":
                         continue
-                    elif k == "allowed_host":
+                    elif k == "allowed_hosts":
                         for j in ruleset[k]:
                             if old_configs[host.name][rule][k][j] == ruleset[k][j]:
                                 if not less:
@@ -1182,7 +1182,7 @@ def firewall_config(
                     continue
                 ret["changes"]["new"][host.name][rule][k] = {}
                 ret["changes"]["old"][host.name][rule][k] = {}
-                if k == "allowed_host":
+                if k == "allowed_hosts":
                     for j in ruleset[k]:
                         if old_configs[host.name][rule][k][j] != ruleset[k][j]:
                             change = True

@@ -367,7 +367,7 @@ def get_firewall_config(
             ret = {
                 host.name: {
                     ruleset.key: {
-                        "allowed_host": {
+                        "allowed_hosts": {
                             "ip_address": list(ruleset.allowedHosts.ipAddress),
                             "all_ip": ruleset.allowedHosts.allIp,
                             "ip_network": [
