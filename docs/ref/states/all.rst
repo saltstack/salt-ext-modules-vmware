@@ -10,7 +10,6 @@ State Modules
 
     saltext.vmware.states.datacenter
     saltext.vmware.states.datastore
-    saltext.vmware.states.drift_report
     saltext.vmware.states.esxi
     saltext.vmware.states.folder
     saltext.vmware.states.license_mgr
