@@ -367,7 +367,7 @@ def get_firewall_config(
             ret = {
                 host.name: {
                     ruleset.key: {
-                        "allowed_host": {
+                        "allowed_hosts": {
                             "ip_address": list(ruleset.allowedHosts.ipAddress),
                             "all_ip": ruleset.allowedHosts.allIp,
                             "ip_network": [
@@ -392,11 +392,13 @@ def get_firewall_config(
             }
     return ret
 
+
 def get_missing_firewall_rules(rules, hosts):
     missing = []
     for host in hosts:
         ruleset = host.configManager.firewallSystem.firewallInfo.ruleset
-        for rule in ruleset:
-            if rule.key not in rules:
-                missing.append((rule.key, host))
+        existing = [r.key for r in ruleset]
+        for rule in rules:
+            if rule["name"] not in existing:
+                missing.append((rule.key, host.name))
     return missing

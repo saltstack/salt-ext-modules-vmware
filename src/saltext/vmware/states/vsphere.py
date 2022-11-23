@@ -5,14 +5,14 @@ import saltext.vmware.utils.connect as connect
 
 log = logging.getLogger(__name__)
 
-__virtualname__ = "vsphere_storage_policy"
+__virtualname__ = "vsphere"
 
 
 def __virtual__():
     return __virtualname__
 
 
-def storage_policy(name, storagePolicies):
+def storage_policy(name, policies):
     """
     Checks state of storage policy of each host
     policies
@@ -23,9 +23,9 @@ def storage_policy(name, storagePolicies):
         "/api/vcenter/storage/policies", "GET", opts=__opts__, pillar=__pillar__
     )
     response = res["response"].json()
-    current_policies = list(map(lambda p: p['name'], response))
+    current_policies = [p["name"] for p in response]
     changes = []
-    for policy in storagePolicies:
+    for policy in policies:
         if policy['policyName'] not in current_policies:
             changes.append(policy['policyName'])
 
