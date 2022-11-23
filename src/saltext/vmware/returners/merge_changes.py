@@ -53,5 +53,5 @@ def returner(ret):
     for state in return_value.values():
         changes[state["__id__"]] = state["changes"]
     with salt.utils.files.flopen(opts["filename"], "a") as logfile:
-        salt.utils.json.dump(ret, logfile)
+        salt.utils.json.dump(changes, logfile)
         logfile.write("\n")
