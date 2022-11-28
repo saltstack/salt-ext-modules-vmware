@@ -164,10 +164,9 @@ def test_manage_service(service_instance):
     Test manage services on esxi host
     """
     SSH_SERVICE = "TSM-SSH"
-    ret = esxi.manage_service(
+    ret = esxi.service_start(
         service_name=SSH_SERVICE,
         service_instance=service_instance,
-        state="start",
         datacenter_name="Datacenter",
         cluster_name="Cluster",
     )
@@ -182,10 +181,9 @@ def test_manage_service(service_instance):
     for host in ret:
         assert ret[host][SSH_SERVICE]["state"] == "running"
 
-    ret = esxi.manage_service(
+    ret = esxi.service_stop(
         service_name=SSH_SERVICE,
         service_instance=service_instance,
-        state="stop",
         datacenter_name="Datacenter",
         cluster_name="Cluster",
     )
@@ -200,10 +198,9 @@ def test_manage_service(service_instance):
     for host in ret:
         assert ret[host][SSH_SERVICE]["state"] == "stopped"
 
-    ret = esxi.manage_service(
+    ret = esxi.service_restart(
         service_name=SSH_SERVICE,
         service_instance=service_instance,
-        state="restart",
         datacenter_name="Datacenter",
         cluster_name="Cluster",
     )
@@ -218,10 +215,10 @@ def test_manage_service(service_instance):
         assert ret[host][SSH_SERVICE]["state"] == "running"
 
     for policy in ["on", "off", "automatic"]:
-        ret = esxi.manage_service(
+        ret = esxi.service_policy(
             service_name=SSH_SERVICE,
-            service_instance=service_instance,
             startup_policy=policy,
+            service_instance=service_instance,
             datacenter_name="Datacenter",
             cluster_name="Cluster",
         )

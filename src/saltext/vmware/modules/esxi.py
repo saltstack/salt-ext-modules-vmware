@@ -169,18 +169,16 @@ def power_state(
     return ret
 
 
-def manage_service(
+def service_start(
     service_name,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
-    state=None,
-    startup_policy=None,
     service_instance=None,
     profile=None,
 ):
     """
-    Manage the state of the service running on the ESXi host.
+    Start service on the ESXi host.
 
     service_name
         Service that needs to be managed.
@@ -194,15 +192,6 @@ def manage_service(
     host_name
         Filter by this ESXi hostname whose power state needs to be managed (optional)
 
-    state
-        Sets the service running on the ESXi host to this state. Valid values: "start", "stop", "restart".
-
-    startup_policy
-        Sets the service startup policy. If unspecified, no changes are made. Valid values "on", "off", "automatic".
-        - on: Start and stop with host
-        - off: Start and stop manually
-        - automatic: Start automatically if any ports are open, and stop when all ports are closed
-
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
@@ -211,11 +200,10 @@ def manage_service(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.manage_service sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1 state=restart startup_policy=on
+        salt '*' vmware_esxi.service_start sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1
     """
-    log.debug("Running vmware_esxi.manage_service")
+    log.debug("Running vmware_esxi.service_start")
     ret = None
-    task = None
     service_instance = service_instance or utils_connect.get_service_instance(
         config=__opts__, profile=profile
     )
@@ -226,27 +214,194 @@ def manage_service(
         datacenter_name=datacenter_name,
         get_all_hosts=host_name is None,
     )
-
     try:
-        for h in hosts:
-            host_service = h.configManager.serviceSystem
+        for host in hosts:
+            host_service = host.configManager.serviceSystem
             if not host_service:
                 continue
-            if state:
-                if state == "start":
-                    host_service.StartService(id=service_name)
-                elif state == "stop":
-                    host_service.StopService(id=service_name)
-                elif state == "restart":
-                    host_service.RestartService(id=service_name)
-                else:
-                    raise salt.exceptions.SaltException("Unknown state - {}".format(state))
-            if startup_policy is not None:
-                if startup_policy is True:
-                    startup_policy = "on"
-                elif startup_policy is False:
-                    startup_policy = "off"
-                host_service.UpdateServicePolicy(id=service_name, policy=startup_policy)
+            host_service.StartService(id=service_name)
+        ret = True
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+    return ret
+
+
+def service_stop(
+    service_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Stop service on the ESXi host.
+
+    service_name
+        Service that needs to be managed.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.service_stop sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1
+    """
+    log.debug("Running vmware_esxi.service_stop")
+    ret = None
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    try:
+        for host in hosts:
+            host_service = host.configManager.serviceSystem
+            if not host_service:
+                continue
+            host_service.StopService(id=service_name)
+        ret = True
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+    return ret
+
+
+def service_restart(
+    service_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Restart service on the ESXi host.
+
+    service_name
+        Service that needs to be managed.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.service_restart sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1
+    """
+    log.debug("Running vmware_esxi.service_restart")
+    ret = None
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    try:
+        for host in hosts:
+            host_service = host.configManager.serviceSystem
+            if not host_service:
+                continue
+            host_service.RestartService(id=service_name)
+        ret = True
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+    return ret
+
+
+def service_policy(
+    service_name,
+    startup_policy,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Manage service policy on the ESXi host.
+
+    service_name
+        Service that needs to be managed.
+
+    startup_policy
+        Valid values "on", "off", "automatic".
+        - on: Start and stop with host
+        - off: Start and stop manually
+        - automatic: Start automatically if any ports are open, and stop when all ports are closed
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.service_restart sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1
+    """
+    log.debug("Running vmware_esxi.service_restart")
+    ret = None
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    try:
+        for host in hosts:
+            host_service = host.configManager.serviceSystem
+            if not host_service:
+                continue
+            if startup_policy is True:
+                startup_policy = "on"
+            elif startup_policy is False:
+                startup_policy = "off"
+            host_service.UpdateServicePolicy(id=service_name, policy=startup_policy)
         ret = True
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
