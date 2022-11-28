@@ -18,7 +18,7 @@ import salt.utils.json
 log = logging.getLogger(__name__)
 
 # Define the module's virtual name
-__virtualname__ = "merge_changes"
+__virtualname__ = "merge_changes_esxi"
 
 
 def __virtual__():
