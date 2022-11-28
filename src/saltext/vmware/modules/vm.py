@@ -678,3 +678,48 @@ def relocate(
     if ret == "success":
         return {"virtual_machine": "moved"}
     return {"virtual_machine": "failed to move"}
+
+
+def network(vm_name, service_instance=None, profile=None):
+    """
+    Retreives the networking for a virtual machine.
+
+    vm_name
+        The name of the virtual machine to relocate.
+
+    service_instance
+        (optional) The Service Instance from which to obtain managed object references.
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.network vm_name=vm01
+    """
+    ret = {}
+
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    vm_ref = utils_common.get_mor_by_property(service_instance, vim.VirtualMachine, vm_name)
+
+    network_refs = vm_ref.network
+
+    for network in network_refs:
+        ret[network.name] = {}
+
+        try:
+            ret[network.name]["config"] = network.config
+        except AttributeError:
+            # Fetch the port groups via host configuration attached to the virtual machine
+            host = vm_ref.summary.runtime.host
+            for portgroup in host.config.network.portgroup:
+                if network.name == portgroup.spec.name:
+                    ret[network.name]["config"] = portgroup.spec
+
+    ret = json.loads(json.dumps(ret, cls=VmomiSupport.VmomiJSONEncoder))
+
+    return ret
