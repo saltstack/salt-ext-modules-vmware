@@ -58,8 +58,9 @@ def returner(ret):
             for host in state["changes"]:
                 if host not in changes["esxi"]:
                     changes["esxi"][host] = {}
-                changes["esxi"][host][state["__id__"]] = state[host]
-        changes[state["__id__"]] = state["changes"]
+                changes["esxi"][host][state["__id__"]] = state["changes"][host]
+        else:
+            changes[state["__id__"]] = state["changes"]
     with salt.utils.files.flopen(opts["filename"], "a") as logfile:
         salt.utils.json.dump(changes, logfile)
         logfile.write("\n")
