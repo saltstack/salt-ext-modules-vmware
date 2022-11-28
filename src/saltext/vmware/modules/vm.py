@@ -716,9 +716,10 @@ def network(vm_name, service_instance=None, profile=None):
         except AttributeError:
             # Fetch the port groups via host configuration attached to the virtual machine
             host = vm_ref.summary.runtime.host
-            for portgroup in host.config.network.portgroup:
-                if network.name == portgroup.spec.name:
-                    ret[network.name]["config"] = portgroup.spec
+            if host.config:
+                for portgroup in host.config.network.portgroup:
+                    if network.name == portgroup.spec.name:
+                        ret[network.name]["config"] = portgroup.spec
 
     ret = json.loads(json.dumps(ret, cls=VmomiSupport.VmomiJSONEncoder))
 
