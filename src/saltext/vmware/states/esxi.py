@@ -1025,7 +1025,7 @@ def advanced_configs(
         for host in esxi_config_old:
             diff = salt.utils.data.recursive_diff(esxi_config_old[host], configs)
             if less:
-                changes[host] = [diff["old"][k] for k in diff["new"]]
+                changes[host] = {k: diff["old"][k] for k in diff["new"]}
             else:
                 changes["new"][host] = [f"{k} will be set to {diff['new'][k]}" for k in diff["new"]]
                 changes["old"][host] = [f"{k} was {diff['old'][k]}" for k in diff["new"]]
