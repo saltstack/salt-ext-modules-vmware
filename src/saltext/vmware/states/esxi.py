@@ -1025,7 +1025,7 @@ def advanced_configs(
         for host in esxi_config_old:
             diff = salt.utils.data.recursive_diff(esxi_config_old[host], configs)
             if less:
-                changes[host] = diff["new"]
+                changes[host] = {k: diff["old"][k] for k in diff["new"]}
             else:
                 changes["new"][host] = [f"{k} will be set to {diff['new'][k]}" for k in diff["new"]]
                 changes["old"][host] = [f"{k} was {diff['old'][k]}" for k in diff["new"]]
@@ -1043,12 +1043,10 @@ def advanced_configs(
                     service_instance=service_instance,
                 )
                 if less:
-                    changes[host] = diff["new"]
+                    changes[host] = diff["old"]
                 else:
-                    changes["old"][host] = diff["old"]
-                changes["new"][host] = diff["new"]
-                changes["old"][host] = f"{name} was {esxi_config_old[host][name]}"
-                changes["new"][host] = f"{name} was changed to {config[host][name]}"
+                    changes["old"][host] = f"{name} was {esxi_config_old[host][name]}"
+                    changes["new"][host] = f"{name} was changed to {config[host][name]}"
     return {"name": name, "result": True, "comment": "", "changes": changes}
 
 
@@ -1149,7 +1147,9 @@ def firewall_config(
                                         j
                                     ] = f"{j} will be set to {ruleset[k][j]}"
                                 else:
-                                    ret["changes"][host.name][rule][j] = ruleset[k][j]
+                                    ret["changes"][host.name][rule][j] = old_configs[host.name][
+                                        rule
+                                    ][k][j]
                     else:
                         if old_configs[host.name][rule][k] == ruleset[k]:
                             if not less:
@@ -1162,7 +1162,7 @@ def firewall_config(
                                     k
                                 ] = f"{k} will be set to {ruleset[k]}"
                             else:
-                                ret["changes"][host.name][rule][k] = ruleset[k]
+                                ret["changes"][host.name][rule][k] = old_configs[host.name][rule][k]
         ret["comment"] = "These options are set to change."
         return ret
 
