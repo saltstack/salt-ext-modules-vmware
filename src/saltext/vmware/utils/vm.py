@@ -316,18 +316,68 @@ def unregister_vm(vm_ref):
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
 
 
-def list_vms(service_instance):
+def list_vms(
+    service_instance,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+):
     """
     Returns a list of VMs associated with a given service instance.
 
     service_instance
         The Service Instance Object from which to obtain VMs.
+
+    datacenter_name
+        The datacenter name. Default is None.
+
+    cluster_name
+        The cluster name - used to restrict the VMs retrieved. Only used if
+        the datacenter is set.  This argument is optional.
+
+    host_name
+        The host_name to be retrieved. Default is None.
     """
+    properties = ["name", "config"]
+
+    if cluster_name and not datacenter_name:
+        raise salt.exceptions.ArgumentValueError(
+            "Must specify the datacenter when specifying the cluster"
+        )
+
+    if not datacenter_name:
+        # Assume the root folder is the starting point
+        start_point = utils_common.get_root_folder(service_instance)
+    else:
+        start_point = utils_datacenter.get_datacenter(service_instance, datacenter_name)
+        if cluster_name:
+            # Retrieval to test if cluster exists. Cluster existence only makes
+            # sense if the datacenter has been specified
+            properties.append("parent")
+
+    if host_name:
+        host = utils_common.get_mor_by_property(service_instance, vim.HostSystem, host_name)
+        properties.append("runtime.host")
+        log.trace("Retrieved host: %s", host)
+    else:
+        host = None
+
+    # Search for the objects
+    vms = utils_common.get_mors_with_properties(
+        service_instance,
+        vim.VirtualMachine,
+        container_ref=start_point,
+        property_list=properties,
+    )
+
     items = []
-    vms = utils_common.get_mors_with_properties(service_instance, vim.VirtualMachine)
     for vm in vms:
         if not vm["config"].template:
-            items.append(vm["name"])
+            if host_name:
+                if host == vm["runtime.host"]:
+                    items.append(vm["name"])
+            else:
+                items.append(vm["name"])
     return items
 
 
