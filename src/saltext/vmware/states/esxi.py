@@ -1043,10 +1043,15 @@ def advanced_configs(
                     service_instance=service_instance,
                 )
                 if less:
-                    changes[host] = diff["old"]
+                    if host not in changes:
+                        changes[host] = {}
+                    changes[host][name] = esxi_config_old[host][name]
                 else:
-                    changes["old"][host] = f"{name} was {esxi_config_old[host][name]}"
-                    changes["new"][host] = f"{name} was changed to {config[host][name]}"
+                    if host not in changes["old"]:
+                        changes["old"][host] = {}
+                        changes["new"][host] = {}
+                    changes["old"][host][name] = f"was {esxi_config_old[host][name]}"
+                    changes["new"][host][name] = f"was changed to {config[host][name]}"
     return {"name": name, "result": True, "comment": "", "changes": changes}
 
 
