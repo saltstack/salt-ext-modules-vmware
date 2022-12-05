@@ -1,0 +1,4 @@
+Added custom returner merge_changes
+Added custom returner merge_changes_esxi, for ESXi scope based report
+Added vmware_esxi.advanded_configs state for modifying multiple ESXi configurations at the same time
+Added less parameter to firewall_config to modify changes section verbosity

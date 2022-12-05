@@ -999,7 +999,7 @@ def advanced_configs(
     .. code-block:: yaml
 
         Remove User:
-        vmware_esxi.advanced_configs:
+          vmware_esxi.advanced_configs:
             - name: Annotations.WelcomeMessage
             - value: Hello
 
@@ -1043,10 +1043,15 @@ def advanced_configs(
                     service_instance=service_instance,
                 )
                 if less:
-                    changes[host] = diff["old"]
+                    if host not in changes:
+                        changes[host] = {}
+                    changes[host][name] = esxi_config_old[host][name]
                 else:
-                    changes["old"][host] = f"{name} was {esxi_config_old[host][name]}"
-                    changes["new"][host] = f"{name} was changed to {config[host][name]}"
+                    if host not in changes["old"]:
+                        changes["old"][host] = {}
+                        changes["new"][host] = {}
+                    changes["old"][host][name] = f"was {esxi_config_old[host][name]}"
+                    changes["new"][host][name] = f"was changed to {config[host][name]}"
     return {"name": name, "result": True, "comment": "", "changes": changes}
 
 
@@ -1108,8 +1113,8 @@ def firewall_config(
 
     missing_rules = utils_esxi.get_missing_firewall_rules(value[name], hosts)
 
-    if len(missing_rules) > 0:
-        messages = [f"{r[0]} ruleset does not exist on esxi server {r[1]}." for r in missing_rules]
+    if missing_rules:
+        messages = [f"{r[0]} ruleset does not exist on ESXi server {r[1]}." for r in missing_rules]
         comment = "\n".join(messages)
         return {"name": name, "result": False, "comment": comment, "changes": {}}
 
