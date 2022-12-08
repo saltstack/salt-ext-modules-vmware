@@ -174,6 +174,13 @@ def patch_salt_globals(vmware_conf):
             "vmware_esxi.set_firewall_config": esxi_mod.set_firewall_config,
             "vmware_esxi.get_advanced_config": esxi_mod.get_advanced_config,
             "vmware_esxi.set_advanced_configs": esxi_mod.set_advanced_configs,
+            "vmware_esxi.get_ntp_config": esxi_mod.get_ntp_config,
+            "vmware_esxi.list_services": esxi_mod.list_services,
+            "vmware_esxi.set_ntp_config": esxi_mod.set_ntp_config,
+            "vmware_esxi.service_start": esxi_mod.service_start,
+            "vmware_esxi.service_stop": esxi_mod.service_stop,
+            "vmware_esxi.service_policy": esxi_mod.service_policy,
+            "vmware_esxi.service_restart": esxi_mod.service_restart,
         },
     )
     setattr(
