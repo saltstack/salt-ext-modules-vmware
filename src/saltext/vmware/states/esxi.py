@@ -1211,6 +1211,7 @@ def ntp_config(
                 )
                 error = response.get("Error")
                 if error:
+                    ret["result"] = False
                     ret["comment"] = "Error: {}".format(error)
                     return ret
             # Set changes dictionary for ntp_servers
@@ -1219,7 +1220,7 @@ def ntp_config(
             )
 
         # Configure service_running state
-        ntp_running = True if ntp_service_state[host.name][ntpd]["state"] == "running" else False
+        ntp_running = ntp_service_state[host.name][ntpd]["state"] == "running"
         if service_running != ntp_running:
             if host.name not in ret["changes"]:
                 ret["changes"][host.name] = {}
@@ -1272,12 +1273,13 @@ def ntp_config(
             ret["changes"][host.name].update(
                 {"service_restart": {"old": "", "new": "NTP Daemon Restarted."}}
             )
-    ret["result"] = True
-    if ret["changes"] == {}:
-        ret["comment"] = "NTP is already in the desired state."
-        return ret
 
     if __opts__["test"]:
         ret["result"] = None
         ret["comment"] = "NTP state will change."
+        return ret
+
+    ret["result"] = True
+    if ret["changes"] == {}:
+        ret["comment"] = "NTP is already in the desired state."
     return ret
