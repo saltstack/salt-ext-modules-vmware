@@ -1146,7 +1146,7 @@ def ntp_config(
         The policy to set for the NTP service.
 
         .. note::
-        
+
             When setting the service policy to ``off`` or ``on``, you *must* quote the
             setting. If you don't, the yaml parser will set the string to a boolean,
             which will cause trouble checking for stateful changes and will error when
