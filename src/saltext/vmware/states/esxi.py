@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import functools
+import json
 import logging
 from bisect import bisect_right
 
@@ -1417,7 +1418,7 @@ def firewall_configs(
             new_rules = rule_diff[host.name]["new"]
             for rule_name in new_rules:
                 # don't use delta like this - ({"name": rule_name} | new_rules[rule_name]), but:
-                hosts_changes[host.name].append({"name": rule_name} | new_configs[rule_name])
+                hosts_changes[host.name].append({**{"name": rule_name}, **new_configs[rule_name]})
 
     # If it's not dry-run and has changes, then apply changes
     if not __opts__["test"] and hosts_changes:
