@@ -37,7 +37,7 @@ def config(name, config, service_instance=None, profile=None):
     config
         List of objects with configuration values. (required).
 
-        Example:
+    .. code-block:: yaml
 
         storage_policies_drift:
             storage_policy.config:
@@ -132,7 +132,7 @@ def config(name, config, service_instance=None, profile=None):
         # add changes for process if not dry-run
         for policy_name in policies_diff:
             new_policy = policies_diff[policy_name]["new"]
-            changes.append({"name": policy_name} | new_policy)
+            changes.append(**{"name": policy_name}, **new_policy)
 
     # If it's not dry-run and has changes, then apply changes
     if not __opts__["test"] and changes:
