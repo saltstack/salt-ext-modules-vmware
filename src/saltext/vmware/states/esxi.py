@@ -4,7 +4,9 @@ import logging
 from bisect import bisect_right
 
 import salt
+import saltext.vmware.modules.esxi as vmware_esxi
 import saltext.vmware.utils.connect as connect
+import saltext.vmware.utils.drift as drift
 import saltext.vmware.utils.esxi as utils_esxi
 
 log = logging.getLogger(__name__)
@@ -1282,4 +1284,167 @@ def ntp_config(
     ret["result"] = True
     if ret["changes"] == {}:
         ret["comment"] = "NTP is already in the desired state."
+    return ret
+
+
+def firewall_configs(
+    name,
+    configs,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Get/Set firewall configuration on matching ESXi hosts based on drift report.
+
+    name
+        Name of configuration. (required).
+
+    configs
+        Map with configuration values. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+
+    .. code-block:: yaml
+
+        Set firewall config:
+          vmware_esxi.firewall_drift:
+            - config:
+              - name: sshServer
+                enabled: True
+              - name: sshClient
+                enabled: True
+    """
+
+    # Keep this structure
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    # Connect to VMware service
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+
+    # Get Host/s list
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    # Clone config input to a Map.
+    # Can be used to transform input to internal objects and do validation if needed
+    new_configs = {}
+    for rule_config in configs:
+        # Create full representation of the object, default or empty values
+        new_config = {
+            "enabled": rule_config["enabled"],
+            "allowed_hosts": {
+                "all_ip": True,  # by default is True
+                "ip_address": [],  # by default is Empty
+                "ip_network": [],  # by default is Empty
+            },
+        }
+        # Transform / Validate input vs object, e.g. allowed_hosts section
+        if "allowed_hosts" in rule_config:
+            if "ip_address" in rule_config["allowed_hosts"]:
+                ip_addresses = rule_config["allowed_hosts"]["ip_address"]
+                if ip_addresses:
+                    new_config["allowed_hosts"]["all_ip"] = False
+                    new_config["allowed_hosts"]["ip_address"] = ip_addresses
+            if "ip_network" in rule_config["allowed_hosts"]:
+                ip_networks = rule_config["allowed_hosts"]["ip_network"]
+                if ip_networks:
+                    new_config["allowed_hosts"]["all_ip"] = False
+                    new_config["allowed_hosts"]["ip_network"] = ip_networks
+        new_configs[rule_config["name"]] = new_config
+
+    # Get all firewall rules per host,
+    # old_configs holds only the rules that are in the scope of interest (provided in argument config_input)
+    old_configs = {}
+    for host in hosts:
+        firewall_config = host.configManager.firewallSystem
+        if not firewall_config:
+            continue
+
+        ruleset_configs = {}
+        for ruleset in firewall_config.firewallInfo.ruleset:
+            # filter only interesting rules (provided as arguments config_input)
+            if ruleset.key in new_configs.keys():
+                # all fields are present in vmomi object, hence also in our object
+                ruleset_configs[ruleset.key] = {
+                    "enabled": ruleset.enabled,
+                    "allowed_hosts": {
+                        "all_ip": ruleset.allowedHosts.allIp,
+                        "ip_address": list(ruleset.allowedHosts.ipAddress),
+                        "ip_network": [
+                            f"{n.network}/{n.prefixLength}"
+                            for n in list(ruleset.allowedHosts.ipNetwork)
+                        ],
+                    },
+                }
+        old_configs[host.name] = ruleset_configs
+
+    # Find rules changes
+    hosts_changes = {}
+    for host in hosts:
+        rule_diff = drift.drift_report(
+            {host.name: old_configs[host.name]}, {host.name: new_configs}, diff_level=0
+        )
+        rule_diff = json.loads(json.dumps(rule_diff))  # clone object
+        if rule_diff is not None and host.name in rule_diff:
+            ret["changes"][host.name] = rule_diff[host.name]
+
+            # add changes for process if not dry-run
+            if host.name not in hosts_changes:
+                hosts_changes[host.name] = []
+            new_rules = rule_diff[host.name]["new"]
+            for rule_name in new_rules:
+                # don't use delta like this - ({"name": rule_name} | new_rules[rule_name]), but:
+                hosts_changes[host.name].append({"name": rule_name} | new_configs[rule_name])
+
+    # If it's not dry-run and has changes, then apply changes
+    if not __opts__["test"] and hosts_changes:
+        comments = {}
+        success = True
+        for host_name in hosts_changes:
+            changes = hosts_changes[host_name]
+            for new_rule in changes:
+                try:
+                    vmware_esxi.set_firewall_config(
+                        firewall_config=new_rule,
+                        host_name=host_name,
+                        service_instance=service_instance,
+                    )
+
+                    comments[new_rule["name"]] = {
+                        "status": "SUCCESS",
+                        "message": f"Rule '{new_rule['name']}' has been changed successfully for host {host_name}.",
+                    }
+                except Exception as err:
+                    success = False
+                    comments[new_rule["name"]] = {
+                        "status": "FAILURE",
+                        "message": f"Error occured while setting rule '{new_rule['name']}' for host {host_name}: {err}",
+                    }
+        # ret["comment"] = "\n ".join(comments)
+        ret["comment"] = comments  # it's more readable if passed as object
+        ret["result"] = success  # at least one success
+
     return ret
