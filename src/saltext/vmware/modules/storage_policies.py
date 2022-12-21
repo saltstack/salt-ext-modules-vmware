@@ -333,14 +333,14 @@ def find(policy_name=None, service_instance=None, profile=None):
         policy_json["constraints"] = []
         try:
             for sub_profile in policy.constraints.subProfiles:
-                policy_constrain = {"name": sub_profile.name}
-                policy_json["constraints"].append(policy_constrain)
+                policy_constraint = {"name": sub_profile.name}
+                policy_json["constraints"].append(policy_constraint)
 
                 for capability in sub_profile.capability:
                     for constraint in capability.constraint:
                         for prop in constraint.propertyInstance:
-                            policy_constrain[prop.id] = prop.value
-        except Exception as err:
+                            policy_constraint[prop.id] = prop.value
+        except AttributeError as err:
             pass  # skip if there is no subProfiles in policy.constraints
 
         result.append(policy_json)
