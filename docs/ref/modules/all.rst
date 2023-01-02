@@ -33,6 +33,7 @@ Execution Modules
     saltext.vmware.modules.nsxt_uplink_profiles
     saltext.vmware.modules.ssl_adapter
     saltext.vmware.modules.storage_policies
+    saltext.vmware.modules.subscribed_library
     saltext.vmware.modules.tag
     saltext.vmware.modules.vm
     saltext.vmware.modules.vmc_dhcp_profiles
