@@ -20,8 +20,7 @@ def list():
     response = connect.request(
         "/api/content/local-library", "GET", opts=__opts__, pillar=__pillar__
     )
-    response = response["response"].json()
-    return response["value"]
+    return response["response"].json()
 
 
 def list_detailed():
@@ -34,7 +33,7 @@ def list_detailed():
         response = get(library_id)
         name = response["name"]
         result[name] = response
-    return response
+    return result
 
 
 def get(id):
