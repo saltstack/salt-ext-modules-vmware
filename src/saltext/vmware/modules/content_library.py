@@ -24,6 +24,19 @@ def list():
     return response["value"]
 
 
+def list_detailed():
+    """
+    Lists all the content libraries on a given vCenter with all their details.
+    """
+    result = {}
+    library_ids = list()
+    for library_id in library_ids:
+        response = get(library_id)
+        name = response["name"]
+        result[name] = response
+    return response
+
+
 def get(id):
     """
     Returns info on given content library.
