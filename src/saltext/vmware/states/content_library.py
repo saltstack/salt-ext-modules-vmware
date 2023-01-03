@@ -19,10 +19,10 @@ def _transform_libraries_to_state(libraries):
     result = {}
     for name, library in libraries.items():
         library_state = {}
-        library_state["description"] = library.description
-        library_state["published"] = library.publish_info.published
-        library_state["authentication"] = library.publish_info.authentication_method
-        library_state["datastore"] = library.storage_backings.datastore_id
+        library_state["description"] = library["description"]
+        library_state["published"] = library["publish_info"]["published"]
+        library_state["authentication"] = library["publish_info"]["authentication_method"]
+        library_state["datastore"] = library["storage_backings"][0]["datastore_id"]
         result[name] = library_state
     return result
 
