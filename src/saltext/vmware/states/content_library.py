@@ -31,13 +31,13 @@ def _transform_config_to_state(config):
     result = {}
     for library in config:
         library_state = {}
-        if config.description is not None:
+        if library.description is not None:
             library_state["description"] = config.description
-        if config.description is not None:
+        if library.published is not None:
             library_state["published"] = config.published
-        if config.description is not None:
+        if library.authentication is not None:
             library_state["authentication"] = config.authentication
-        if config.description is not None:
+        if library.datastore is not None:
             library_state["datastore"] = config.datastore
         result[library] = library_state
     return result
