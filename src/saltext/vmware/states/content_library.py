@@ -7,7 +7,7 @@ import saltext.vmware.utils.connect as connect
 
 log = logging.getLogger(__name__)
 
-__virtualname__ = "content_library"
+__virtualname__ = "vsphere_content_library"
 
 
 def __virtual__():
@@ -27,7 +27,7 @@ def local(name, config):
         Example:
 
         content_library_example:
-          content_library.local:
+          vsphere_content_library.local:
             name: local_example
             config:
               - name: publish
@@ -38,6 +38,6 @@ def local(name, config):
                 datastore: datastore-00001
     """
 
-    current_state = __salt__["content_library.list_detailed"]()
+    current_state = __salt__["vsphere_content_library.list_detailed"]()
     changes = {}
     return {"name": name, "result": True, "comment": "", "changes": changes}
