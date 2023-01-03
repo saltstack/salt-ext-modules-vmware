@@ -69,6 +69,6 @@ def local(name, config):
 
     current_libraries = __salt__["vsphere_content_library.list_detailed"]()
     old_state = _transform_libraries_to_state(current_libraries)
-    new_state = _transform_config_to_state(config)
-    changes = salt.utils.data.recursive_diff(old_state, new_state)
+    # new_state = _transform_config_to_state(config)
+    changes = salt.utils.data.recursive_diff(old_state, config)
     return {"name": name, "result": True, "comment": "", "changes": changes}
