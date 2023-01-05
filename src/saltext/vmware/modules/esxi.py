@@ -1708,13 +1708,13 @@ def update_user(
     )
 
     try:
-        for h in hosts:
+        for host in hosts:
             account_spec = vim.host.LocalAccountManager.AccountSpecification()
             account_spec.id = user_name
             account_spec.password = password
             account_spec.description = description
-            h.configManager.accountManager.UpdateUser(account_spec)
-            ret[h.name] = True
+            host.configManager.accountManager.UpdateUser(account_spec)
+            ret[host.name] = True
         return ret
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
