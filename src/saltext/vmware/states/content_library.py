@@ -31,14 +31,14 @@ def _transform_config_to_state(config):
     result = {}
     for library in config:
         library_state = {}
-        if library.description is not None:
-            library_state["description"] = config.description
-        if library.published is not None:
-            library_state["published"] = config.published
-        if library.authentication is not None:
-            library_state["authentication"] = config.authentication
-        if library.datastore is not None:
-            library_state["datastore"] = config.datastore
+        if library["description"] is not None:
+            library_state["description"] = config["description"]
+        if library["published"] is not None:
+            library_state["published"] = config["published"]
+        if library["authentication"] is not None:
+            library_state["authentication"] = config["authentication"]
+        if library["datastore"] is not None:
+            library_state["datastore"] = config["datastore"]
         result[library] = library_state
     return result
 
@@ -69,6 +69,11 @@ def local(name, config):
 
     current_libraries = __salt__["vsphere_content_library.list_detailed"]()
     old_state = _transform_libraries_to_state(current_libraries)
-    # new_state = _transform_config_to_state(config)
-    changes = salt.utils.data.recursive_diff(old_state, config)
+    new_state = _transform_config_to_state(config)
+    changes = salt.utils.data.recursive_diff(old_state, new_state)
+    if not __opts__["test"] and changes:
+        for change in changes:
+            update = change["new"]
+            # __salt__["vsphere_content_library.update"]()
+
     return {"name": name, "result": True, "comment": "", "changes": changes}
