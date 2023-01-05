@@ -72,20 +72,29 @@ def _drift_subtree_(result_tree, diff_level, result_subtree, level=0, new_subtre
 
 def _drift_recurse_(obj1, obj2, result, keys=[]):
     if isinstance(obj1, dict) and isinstance(obj2, dict):
-        if not keys:  # first level only
+        if not keys:
+            # use symmetric difference for first level only
             for k in set(obj1).symmetric_difference(obj2):
                 if k in obj1:
+                    # first level element value should be dict
                     result.append(tuple(keys) + (k,) + ((obj1[k], {}),))
                 else:
+                    # first level element value should be dict
                     result.append(tuple(keys) + (k,) + (({}, obj2[k]),))
+        else:
+            # otherwise make difference only for added elements in obj2
+            for k in set(obj1).symmetric_difference(obj2):
+                if k in obj2:
+                    # only for complex types - dict, list
+                    if isinstance(obj2[k], dict):
+                        result.append(tuple(keys) + (k,) + (({}, obj2[k]),))
+                    elif isinstance(obj2[k], (list, tuple)):
+                        result.append(tuple(keys) + (k,) + (([], obj2[k]),))
         for k in set(obj1).intersection(obj2):
             _drift_recurse_(obj1[k], obj2[k], result, keys=keys + [k])
     else:
-        if (
-            isinstance(obj1, (list, tuple))
-            and isinstance(obj2, (list, tuple))
-            and set(obj1) != set(obj2)
-        ):
-            result.append(tuple(keys) + ((obj1, obj2),))
+        if isinstance(obj1, (list, tuple)) and isinstance(obj2, (list, tuple)):
+            if set(obj1) != set(obj2):
+                result.append(tuple(keys) + ((obj1, obj2),))
         elif obj1 != obj2:
             result.append(tuple(keys) + ((obj1, obj2),))
