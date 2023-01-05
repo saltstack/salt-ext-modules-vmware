@@ -379,97 +379,71 @@ def save(policy_config, service_instance=None, profile=None):
 
     profileManager = pbmSi.RetrieveContent().profileManager
 
+    constraints = {}
+    for subProfileProps in policy_config["constraints"]:
+        subProfileName = subProfileProps["name"]
+        constraints[subProfileName] = {}
+        for con_name, con_value in subProfileProps.items():
+            if con_name != "name":
+                constraints[subProfileName][con_name] = con_value
+
     if policy is None:
         if not policy_name:
             raise salt.exceptions.CommandExecutionError(f"Policy name is required!")
 
-        spec = pbm.profile.CapabilityBasedProfileCreateSpec()
-        resourceType = pbm.profile.ResourceType()
-        resourceType.resourceType = "STORAGE"
-        spec.resourceType = resourceType
-        subProfiles = []
-        for subProfileProps in policy_config["constraints"]:
-            subProfileName = subProfileProps["name"]
-            subProfile = pbm.profile.SubProfileCapabilityConstraints.SubProfile()
-            subProfile.name = subProfileName
-            capabilities = []
-            for propName in subProfileProps.keys():
-                propValue = subProfileProps[propName]
-
-                capability = pbm.capability.CapabilityInstance()
-
-                id = pbm.capability.CapabilityMetadata.UniqueId()
-                id.id = propName
-                id.namespace = subProfileName
-                capability.id = id
-
-                constraint = pbm.capability.ConstraintInstance()
-                propertyInstance = pbm.capability.PropertyInstance()
-                propertyInstance.id = propName
-                propertyInstance.value = propValue
-                constraint.propertyInstance = [propertyInstance]
-                capability.constraint = [constraint]
-
-                capabilities.append(capability)
-            subProfile.capability = capabilities
-            subProfiles.append(subProfile)
-        constraints = pbm.profile.SubProfileCapabilityConstraints()
-        constraints.subProfiles = subProfiles
-        spec.name = policy_name
-        spec.constraints = constraints
-
-        policy = profileManager.PbmCreate(spec)
+        _create_profile(profileManager, policy_name, constraints)
         return {"status": "created"}
     else:
-        spec = pbm.profile.CapabilityBasedProfileUpdateSpec()
-        subProfiles = list(policy.constraints.subProfiles)
-        for subProfileProps in policy_config["constraints"]:
-            subProfileName = subProfileProps["name"]
-
-            # find existing
-            subProfile = None
-            for p in subProfiles:
-                if p.name == subProfileName:
-                    subProfile = p
-                    break
-            # otherwise create subProfile
-            if subProfile is None:
-                subProfile = pbm.profile.SubProfileCapabilityConstraints.SubProfile()
-                subProfile.name = subProfileName
-                subProfiles.append(subProfile)
-
-            capabilities = list(subProfile.capability)
-            for propName in subProfileProps.keys():
-                propValue = subProfileProps[propName]
-
-                # find existing
-                capability = None
-                for c in capabilities:
-                    if c.id.id == propName:
-                        capability = c
-                        break
-                # otherwise create capability
-                if capability is None:
-                    capability = pbm.capability.CapabilityInstance()
-                    id = pbm.capability.CapabilityMetadata.UniqueId()
-                    id.id = propName
-                    id.namespace = subProfileName
-                    capability.id = id
-                    capabilities.append(capability)
-
-                constraint = pbm.capability.ConstraintInstance()
-                propertyInstance = pbm.capability.PropertyInstance()
-                propertyInstance.id = propName
-                propertyInstance.value = propValue
-                constraint.propertyInstance = [propertyInstance]
-                capability.constraint = [constraint]
-            subProfile.capability = capabilities
-
-        constraints = (
-            policy.constraints
-        )  # use from policy instance not pbm.profile.SubProfileCapabilityConstraints()
-        constraints.subProfiles = subProfiles
-        spec.constraints = constraints
-
-        profileManager.PbmUpdate(policy.profileId, spec)
+        _update_profile(profileManager, policy.profileId, constraints)
         return {"status": "updated"}
+
+
+# Create required SPBM Capability object from python dict
+def _dict_to_capability(d, namespace):
+    return [
+        pbm.capability.CapabilityInstance(
+            id=pbm.capability.CapabilityMetadata.UniqueId(namespace=namespace, id=k),
+            constraint=[
+                pbm.capability.ConstraintInstance(
+                    propertyInstance=[pbm.capability.PropertyInstance(id=k, value=v)]
+                )
+            ],
+        )
+        for k, v in d.items()
+    ]
+
+
+# Update existing VM Storage Policy
+def _update_profile(pm, profile_id, constraints):
+    pm.PbmUpdate(
+        profileId=profile_id,
+        updateSpec=pbm.profile.CapabilityBasedProfileUpdateSpec(
+            description=None,
+            constraints=pbm.profile.SubProfileCapabilityConstraints(
+                subProfiles=[
+                    pbm.profile.SubProfileCapabilityConstraints.SubProfile(
+                        name=name, capability=_dict_to_capability(rules, name)
+                    )
+                    for name, rules in constraints.items()
+                ]
+            ),
+        ),
+    )
+
+
+# Create new VM Storage Policy
+def _create_profile(pm, profile_name, constraints):
+    pm.PbmCreate(
+        createSpec=pbm.profile.CapabilityBasedProfileCreateSpec(
+            name=profile_name,
+            resourceType=pbm.profile.ResourceType(resourceType="STORAGE"),
+            constraints=pbm.profile.SubProfileCapabilityConstraints(
+                subProfiles=[
+                    pbm.profile.SubProfileCapabilityConstraints.SubProfile(
+                        name=name, capability=_dict_to_capability(rules, name)
+                    )
+                    for name, rules in constraints.items()
+                ]
+            ),
+        )
+    )

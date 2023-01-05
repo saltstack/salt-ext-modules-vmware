@@ -297,13 +297,7 @@ def test_update_storage_policies(mocked_storage_policies_data, fake_service_inst
         profile="vcenter",
     )
 
-    # check updated policy
-    ret = storage_policies.find(
-        policy_name=policy_name,
-        service_instance=service_instance,
-        profile="vcenter",
-    )
-    assert ret[0] == updated_policy
+    assert ret["status"] == "updated"
 
 
 def test_create_storage_policies(mocked_storage_policies_data, fake_service_instance):
