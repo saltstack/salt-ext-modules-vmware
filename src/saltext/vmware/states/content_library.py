@@ -74,8 +74,20 @@ def local(name, config):
     new_state = _transform_config_to_state(config)
     changes = salt.utils.data.recursive_diff(old_state, new_state)
     if not __opts__["test"] and changes:
-        for change in changes:
-            update = change["new"]
-            # __salt__["vsphere_content_library.update"]()
-
+        for name, library in changes["new"].items():
+            if name in changes["old"]:
+                library_id = current_libraries[name]["id"]
+                __salt__["vsphere_content_library.update"](library_id, library)
+            else:
+                if "datastore" not in library:
+                    raise ValueError(
+                        "Non existing libraries must be provided with a datastore ID for creation"
+                    )
+                new_library = {
+                    "name": name,
+                    "datastore": library["datastore"],
+                    "published": library.get("published") or False,
+                    "published": library.get("authentication") or "NONE",
+                }
+                __salt__["vsphere_content_library.create"](new_library)
     return {"name": name, "result": True, "comment": "", "changes": changes}

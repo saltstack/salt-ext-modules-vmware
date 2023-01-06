@@ -48,37 +48,43 @@ def get(id):
     return response["response"].json()
 
 
-def create(name, description, published, authentication, datastore):
+def create(library):
     """
     Creates a new content library.
 
-    name
-        Name of the content library.
+    library
+        Dictionary having values for library, as following:
 
-    datastore
-        Datastore ID where library will store its contents.
+        name
+            Name of the content library.
 
-    description
-        (optional) Description for the content library being created.
+        description
+            (optional) Description for the content library being created.
 
-    published
-        (optional) Whether the content library should be published or not.
+        datastore
+            Datastore ID where library will store its contents.
 
-    authentication
-        (optional) The authentication method when the content library is published.
+        published
+            (optional) Whether the content library should be published or not.
+
+        authentication
+            (optional) The authentication method when the content library is published.
     """
 
-    publish_info = {"published": published, "authentication_method": authentication}
-    storage_backings = {"datastore_id": datastore, "type": "DATASTORE"}
+    publish_info = {
+        "published": library["published"],
+        "authentication_method": library["authentication"],
+    }
+    storage_backings = {"datastore_id": library["datastore"], "type": "DATASTORE"}
 
     data = {
-        "name": name,
+        "name": library["name"],
         "publish_info": publish_info,
         "storage_backings": storage_backings,
         "type": "LOCAL",
     }
-    if description is not None:
-        data["description"] = description
+    if "description" in library:
+        data["description"] = library["description"]
 
     response = connect.request(
         "/api/content/local-library", "POST", body=data, opts=__opts__, pillar=__pillar__
@@ -86,27 +92,30 @@ def create(name, description, published, authentication, datastore):
     return response["response"].json()
 
 
-def update(id, name, description, published, authentication, datastore):
+def update(id, library):
     """
     Updates content library with given id.
 
     id
         (string) Content library ID .
 
-    name
-        (optional) Name of the content library.
+    library
+        Dictionary having values for library, as following:
 
-    description
-        (optional) Description for the content library being updated.
+        name
+            (optional) Name of the content library.
 
-    published
-        (optional) Whether the content library should be published or not.
+        description
+            (optional) Description for the content library being updated.
 
-    authentication
-        (optional) The authentication method when the content library is published.
+        published
+            (optional) Whether the content library should be published or not.
 
-    datastore
-        (optional) Datastore ID where library will store its contents.
+        authentication
+            (optional) The authentication method when the content library is published.
+
+        datastore
+            (optional) Datastore ID where library will store its contents.
     """
 
     publish_info = {"published": published, "authentication_method": authentication}
