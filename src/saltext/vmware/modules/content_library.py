@@ -125,6 +125,10 @@ def update(id, library):
         publish_info["authentication_method"] = library["authentication"]
 
     data = {}
+    if "name" in library:
+        data["name"] = library["name"]
+    if "description" in library:
+        publish_info["description"] = library["description"]
     if publish_info:
         data["publish_info"] = publish_info
     if "datastore" in library:
