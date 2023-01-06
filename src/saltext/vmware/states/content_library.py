@@ -30,16 +30,18 @@ def _transform_libraries_to_state(libraries):
 def _transform_config_to_state(config):
     result = {}
     for library in config:
+        if "name" not in library:
+            raise ValueError("Every library configuration should have a name")
         library_state = {}
         if "description" in library:
-            library_state["description"] = config["description"]
+            library_state["description"] = library["description"]
         if "published" in library:
-            library_state["published"] = config["published"]
+            library_state["published"] = library["published"]
         if "authentication" in library:
-            library_state["authentication"] = config["authentication"]
+            library_state["authentication"] = library["authentication"]
         if "datastore" in library:
-            library_state["datastore"] = config["datastore"]
-        result[library] = library_state
+            library_state["datastore"] = library["datastore"]
+        result[library["name"]] = library_state
     return result
 
 
