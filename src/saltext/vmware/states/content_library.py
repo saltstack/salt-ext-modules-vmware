@@ -1,10 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
-import json
 import logging
 
 import salt.utils.data
-import saltext.vmware.utils.common as utils_common
-import saltext.vmware.utils.connect as connect
 
 log = logging.getLogger(__name__)
 
@@ -73,7 +70,8 @@ def local(name, config):
     old_state = _transform_libraries_to_state(current_libraries)
     new_state = _transform_config_to_state(config)
     changes = salt.utils.data.recursive_diff(old_state, new_state)
-    if not __opts__["test"] and changes:
+    changes_required = any(changes.values())
+    if not __opts__["test"] and changes_required:
         for name, library in changes["new"].items():
             if name in changes["old"]:
                 library_id = current_libraries[name]["id"]

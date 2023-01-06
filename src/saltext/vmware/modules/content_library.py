@@ -75,7 +75,7 @@ def create(library):
         "published": library["published"],
         "authentication_method": library["authentication"],
     }
-    storage_backings = {"datastore_id": library["datastore"], "type": "DATASTORE"}
+    storage_backings = [{"datastore_id": library["datastore"], "type": "DATASTORE"}]
 
     data = {
         "name": library["name"],
@@ -118,18 +118,17 @@ def update(id, library):
             (optional) Datastore ID where library will store its contents.
     """
 
-    publish_info = {"published": published, "authentication_method": authentication}
-    storage_backings = {"datastore_id": datastore, "type": "DATASTORE"}
+    publish_info = {}
+    if "published" in library:
+        publish_info["published"] = library["published"]
+    if "authentication" in library:
+        publish_info["authentication_method"] = library["authentication"]
 
     data = {}
-    if name is not None:
-        data["name"] = name
-    if description is not None:
-        data["name"] = description
-    if published is not None:
+    if publish_info:
         data["publish_info"] = publish_info
-    if datastore is not None:
-        data["storage_backings"] = storage_backings
+    if "datastore" in library:
+        data["storage_backings"] = [{"datastore_id": library["datastore"], "type": "DATASTORE"}]
 
     url = f"/api/content/local-library/{id}"
     response = connect.request(url, "PATCH", body=data, opts=__opts__, pillar=__pillar__)
