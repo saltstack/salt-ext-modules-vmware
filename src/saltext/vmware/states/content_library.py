@@ -70,7 +70,7 @@ def local(name, config):
     old_state = _transform_libraries_to_state(current_libraries)
     new_state = _transform_config_to_state(config)
     changes = salt.utils.data.recursive_diff(old_state, new_state)
-    changes_required = any(changes.values())
+    changes_required = any(changes["new"].values())
     if not __opts__["test"] and changes_required:
         for name, library in changes["new"].items():
             if name in changes["old"]:
