@@ -87,7 +87,7 @@ def local(name, config):
                     "name": name,
                     "datastore": library["datastore"],
                     "published": library.get("published") or False,
-                    "published": library.get("authentication") or "NONE",
+                    "authentication": library.get("authentication") or "NONE",
                 }
                 __salt__["vsphere_content_library.create"](new_library)
     return {"name": name, "result": True, "comment": "", "changes": changes}
