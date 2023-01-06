@@ -1,7 +1,6 @@
 """
     Unit Tests for content library module
 """
-from unittest.mock import MagicMock
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -18,13 +17,14 @@ def configure_loader_modules():
 
 def get_mock_success_response(body):
     response = Mock()
-    response.raise_for_status = Mock()
     response.status_code = 200
-    response["response"].json = MagicMock(return_value=body)
+    response.json = Mock(return_value=body)
     return response
 
 
-def xtest_list_content_libraries():
-    content_library.connect.request = MagicMock(return_value=get_mock_success_response(dummy_list))
+@patch.object(content_library.connect, "request")
+def test_list_content_libraries(mock_request):
+    response = get_mock_success_response(dummy_list)
+    mock_request.return_value = {"response": response, "token": ""}
     result = content_library.list()
     assert result == dummy_list
