@@ -1326,7 +1326,7 @@ def firewall_configs(
 
         Set firewall config:
           vmware_esxi.firewall_drift:
-            - config:
+            - configs:
               - name: sshServer
                 enabled: True
               - name: sshClient
@@ -1356,24 +1356,24 @@ def firewall_configs(
         # Create full representation of the object, default or empty values
         new_config = {
             "enabled": rule_config["enabled"],
-            "allowed_hosts": {
+            "allowed_host": {
                 "all_ip": True,  # by default is True
                 "ip_address": [],  # by default is Empty
                 "ip_network": [],  # by default is Empty
             },
         }
-        # Transform / Validate input vs object, e.g. allowed_hosts section
-        if "allowed_hosts" in rule_config:
-            if "ip_address" in rule_config["allowed_hosts"]:
-                ip_addresses = rule_config["allowed_hosts"]["ip_address"]
+        # Transform / Validate input vs object, e.g. allowed_host section
+        if "allowed_host" in rule_config:
+            if "ip_address" in rule_config["allowed_host"]:
+                ip_addresses = rule_config["allowed_host"]["ip_address"]
                 if ip_addresses:
-                    new_config["allowed_hosts"]["all_ip"] = False
-                    new_config["allowed_hosts"]["ip_address"] = ip_addresses
-            if "ip_network" in rule_config["allowed_hosts"]:
-                ip_networks = rule_config["allowed_hosts"]["ip_network"]
+                    new_config["allowed_host"]["all_ip"] = False
+                    new_config["allowed_host"]["ip_address"] = ip_addresses
+            if "ip_network" in rule_config["allowed_host"]:
+                ip_networks = rule_config["allowed_host"]["ip_network"]
                 if ip_networks:
-                    new_config["allowed_hosts"]["all_ip"] = False
-                    new_config["allowed_hosts"]["ip_network"] = ip_networks
+                    new_config["allowed_host"]["all_ip"] = False
+                    new_config["allowed_host"]["ip_network"] = ip_networks
         new_configs[rule_config["name"]] = new_config
 
     # Get all firewall rules per host,
@@ -1391,7 +1391,7 @@ def firewall_configs(
                 # all fields are present in vmomi object, hence also in our object
                 ruleset_configs[ruleset.key] = {
                     "enabled": ruleset.enabled,
-                    "allowed_hosts": {
+                    "allowed_host": {
                         "all_ip": ruleset.allowedHosts.allIp,
                         "ip_address": list(ruleset.allowedHosts.ipAddress),
                         "ip_network": [
@@ -1432,15 +1432,16 @@ def firewall_configs(
                         firewall_config=new_rule,
                         host_name=host_name,
                         service_instance=service_instance,
+                        profile=profile,
                     )
 
-                    comments[new_rule["name"]] = {
+                    comments[host_name + " " + new_rule["name"]] = {
                         "status": "SUCCESS",
                         "message": f"Rule '{new_rule['name']}' has been changed successfully for host {host_name}.",
                     }
                 except Exception as err:
                     success = False
-                    comments[new_rule["name"]] = {
+                    comments[host_name + " " + new_rule["name"]] = {
                         "status": "FAILURE",
                         "message": f"Error occured while setting rule '{new_rule['name']}' for host {host_name}: {err}",
                     }
