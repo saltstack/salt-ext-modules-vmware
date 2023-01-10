@@ -120,7 +120,7 @@ def configure_loader_modules():
                     {
                         "name": "sshServer",
                         "enabled": True,
-                        "allowed_hosts": {
+                        "allowed_host": {
                             "all_ip": False,
                             "ip_address": ["192.168.110.90"],
                             "ip_network": [],
@@ -129,7 +129,7 @@ def configure_loader_modules():
                     {
                         "name": "sshClient",
                         "enabled": True,
-                        "allowed_hosts": {
+                        "allowed_host": {
                             "all_ip": False,
                             "ip_address": ["3.3.3.3"],
                             "ip_network": ["1.1.1.1/24", "2.2.2.2/24"],
@@ -140,7 +140,7 @@ def configure_loader_modules():
                     {
                         "name": "sshServer",
                         "enabled": True,
-                        "allowed_hosts": {
+                        "allowed_host": {
                             "all_ip": False,
                             "ip_address": ["192.168.0.253", "192.168.10.1"],
                             "ip_network": ["192.168.0.0/24"],
@@ -154,13 +154,13 @@ def configure_loader_modules():
                         "esxi-01a.corp.local": {
                             "old": {
                                 "sshServer": {
-                                    "allowed_hosts": {
+                                    "allowed_host": {
                                         "ip_address": ["192.168.110.90"],
                                         "ip_network": [],
                                     }
                                 },
                                 "sshClient": {
-                                    "allowed_hosts": {
+                                    "allowed_host": {
                                         "ip_address": ["3.3.3.3"],
                                         "all_ip": False,
                                         "ip_network": ["1.1.1.1/24", "2.2.2.2/24"],
@@ -169,13 +169,13 @@ def configure_loader_modules():
                             },
                             "new": {
                                 "sshServer": {
-                                    "allowed_hosts": {
+                                    "allowed_host": {
                                         "ip_address": ["192.168.0.253", "192.168.10.1"],
                                         "ip_network": ["192.168.0.0/24"],
                                     }
                                 },
                                 "sshClient": {
-                                    "allowed_hosts": {
+                                    "allowed_host": {
                                         "ip_address": [],
                                         "all_ip": True,
                                         "ip_network": [],
@@ -223,11 +223,11 @@ def test_drift_report_firewall_rules(mocked_firewall_rules_data, fake_service_in
         if config_name == "Test case 1":
             expected_change["result"] = True
             expected_change["comment"] = {
-                "sshServer": {
+                "esxi-01a.corp.local sshServer": {
                     "status": "SUCCESS",
                     "message": f"Rule 'sshServer' has been changed successfully for host esxi-01a.corp.local.",
                 },
-                "sshClient": {
+                "esxi-01a.corp.local sshClient": {
                     "status": "SUCCESS",
                     "message": f"Rule 'sshClient' has been changed successfully for host esxi-01a.corp.local.",
                 },
