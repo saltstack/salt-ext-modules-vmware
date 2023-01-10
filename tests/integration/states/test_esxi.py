@@ -436,3 +436,23 @@ def test_ntp_config(patch_salt_globals, service_instance):
         service_policy="off",
         service_instance=service_instance,
     )
+
+
+def test_password_present_dry_run(patch_salt_globals, dry_run, service_instance):
+    ret = esxi.password_present(
+        name="root",
+        password="TheBigTestPass1!",
+        service_instance=service_instance,
+    )
+    assert ret["result"] is None
+    assert ret["comment"] == "Host password will change."
+
+
+def test_password_present_run(patch_salt_globals, service_instance):
+    ret = esxi.password_present(
+        name="root",
+        password="TheBigTestPass1!",
+        service_instance=service_instance,
+    )
+    assert ret["result"] is True
+    assert ret["comment"] == "Host password changed."

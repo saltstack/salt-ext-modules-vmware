@@ -181,6 +181,7 @@ def patch_salt_globals(vmware_conf):
             "vmware_esxi.service_stop": esxi_mod.service_stop,
             "vmware_esxi.service_policy": esxi_mod.service_policy,
             "vmware_esxi.service_restart": esxi_mod.service_restart,
+            "vmware_esxi.update_user": esxi_mod.update_user,
         },
     )
     setattr(
