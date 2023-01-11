@@ -25,6 +25,7 @@ State Modules
     saltext.vmware.states.nsxt_transport_node_profiles
     saltext.vmware.states.nsxt_transport_zone
     saltext.vmware.states.nsxt_uplink_profiles
+    saltext.vmware.states.roles
     saltext.vmware.states.tag
     saltext.vmware.states.vm
     saltext.vmware.states.vmc_dhcp_profiles
