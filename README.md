@@ -54,7 +54,13 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     # 1. Make a local salt dir
     mkdir -p local/etc/salt
 
-    # 2. Create a minion config
+    # 2. Make a local dir for salt state files
+    mkdir -p local/srv/salt
+
+    # 3. Make a local dir for salt pillar files
+    mkdir -p local/srv/pillar
+
+    # 4. Create a minion config
     cat << EOF> local/etc/salt/minion
     user: $(whoami)
     root_dir: $PWD/local/
@@ -67,17 +73,33 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
         - $PWD/local/srv/pillar
     EOF
 
-    # 3. Make a Saltfile
+    # 5. Make a Saltfile
     cat << EOF> Saltfile
     salt-call:
       local: true
       config_dir: local/etc/salt
     EOF
 
-    # 4. Create a test config file:
+    # 6. Create a pillar file for you configuration
+    cat << EOF> local/srv/my_vsphere_conf.sls
+    # vCenter
+    vmware_config:
+      host: insert_host_name_or_ip_address
+      password: insert_password
+      user: insert_user_name
+    EOF
+
+    # 7. Create a pillar top file
+    cat << EOF>  local/srv/pillar.sls
+    base:
+      saltdev:
+        - my_vsphere_conf
+    EOF
+
+    # 8. Create a test config file:
     python tools/test_value_scraper.py -c local/vcenter.conf
 
-    # 5. Create a test config file for VMC:
+    # 8. Create a test config file for VMC:
     python tools/test_value_scraper_vmc.py --help
     This command will return the required information.
 
