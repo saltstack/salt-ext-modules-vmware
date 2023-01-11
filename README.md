@@ -26,7 +26,7 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     # Change to the repo dir
     cd salt-ext-modules-vmware
 
-    # Create a new venv
+    # Create a new venv, after activate can use python to regfer to python3
     python3 -m venv env --prompt vmw-ext
     source env/bin/activate
 
@@ -62,12 +62,22 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     master: localhost
     id: saltdev
     master_port: 55506
+    pillar_roots:
+      base:
+        - $PWD/local/srv/pillar
     EOF
 
-    # 3. Create a test config file:
+    # 3. Make a Saltfile
+    cat << EOF> Saltfile
+    salt-call:
+      local: true
+      config_dir: local/etc/salt
+    EOF
+
+    # 4. Create a test config file:
     python tools/test_value_scraper.py -c local/vcenter.conf
 
-    # 4. Create a test config file for VMC:
+    # 5. Create a test config file for VMC:
     python tools/test_value_scraper_vmc.py --help
     This command will return the required information.
 
