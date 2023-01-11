@@ -199,7 +199,7 @@ def mocked_drift_report_configs(request):
     yield request.param[0], request.param[1], request.param[2]
 
 
-def test_druft_report(mocked_drift_report_configs):
+def test_drift_report(mocked_drift_report_configs):
     _old, _new, _drift = mocked_drift_report_configs
     diff = drift.drift_report(_old, _new, diff_level=0)
 

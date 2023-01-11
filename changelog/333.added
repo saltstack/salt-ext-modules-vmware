@@ -1,3 +1,2 @@
-Added modules/storage_policies
-Added states/storage_policies
-Added utils/drift lib
+Added modules storage_policy.find and storage_policy.save.
+Added state storage_policy.config.
