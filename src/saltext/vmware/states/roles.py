@@ -85,19 +85,14 @@ def config(name, config, service_instance=None, profile=None):
                     new_role_config["privileges"][priv_group].append(item)
         new_config[role_config["role"]] = new_role_config
 
-    print("---------------NEW--------------")
-    print(json.dumps(new_config, indent=2))
-    print("---------------NEW--------------")
+    log.debug("---------------NEW--------------")
+    log.debug(json.dumps(new_config, indent=2))
+    log.debug("---------------NEW--------------")
 
     # Get all policies from vCenter, the objects are VMOMI objects
     old_configs = roles_module.find(
         role_name=None, service_instance=service_instance, profile=profile
     )
-
-    # for role in old_configs:
-    #     if role["label"] not in new_config.keys():
-    #         continue
-    #     print(json.dumps(role, indent=2))
 
     # make JSON representation of current policies
     # old_configs holds only the rules that are in the scope of interest (provided in argument config_input)
@@ -115,9 +110,9 @@ def config(name, config, service_instance=None, profile=None):
             role_json["privileges"][group_name].append(priv_name)
         old_config[role["label"]] = role_json
 
-    print("--------------OLD---------------")
-    print(json.dumps(old_config, indent=2))
-    print("--------------OLD---------------")
+    log.debug("--------------OLD---------------")
+    log.debug(json.dumps(old_config, indent=2))
+    log.debug("--------------OLD---------------")
 
     # Find rules changes
     changes = []
@@ -126,9 +121,9 @@ def config(name, config, service_instance=None, profile=None):
     if diffs is not None:
         ret["changes"] = diffs
 
-        print("==============DRIFT===============")
-        print(json.dumps(diffs, indent=2))
-        print("==============DRIFT===============")
+        log.debug("==============DRIFT===============")
+        log.debug(json.dumps(diffs, indent=2))
+        log.debug("==============DRIFT===============")
 
         # add changes for process if not dry-run
         for d_name in diffs:
@@ -139,9 +134,9 @@ def config(name, config, service_instance=None, profile=None):
     if not __opts__["test"] and changes:
         success = True
 
-        print("===============CHANGES==============")
-        print(json.dumps(changes, indent=2))
-        print("===============CHANGES==============")
+        log.debug("===============CHANGES==============")
+        log.debug(json.dumps(changes, indent=2))
+        log.debug("===============CHANGES==============")
 
         comments = {}
         for change in changes:
