@@ -26,7 +26,7 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     # Change to the repo dir
     cd salt-ext-modules-vmware
 
-    # Create a new venv, after activate can use python to regfer to python3
+    # Create a new venv, after sourcing activate `python` will refer to python3.
     python3 -m venv env --prompt vmw-ext
     source env/bin/activate
 
@@ -83,10 +83,11 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
     # 6. Create a pillar file for you configuration
     cat << EOF> local/srv/my_vsphere_conf.sls
     # vCenter
-    vmware_config:
-      host: insert_host_name_or_ip_address
-      password: insert_password
-      user: insert_user_name
+    saltext.vmware:
+      # Or use IP address, e.g. 203.0.113.42
+      host: vsphere.example.com
+      password: CorrectHorseBatteryStaple
+      user: BobbyTables
     EOF
 
     # 7. Create a pillar top file
@@ -96,10 +97,10 @@ The [Salt Contributing guide][salt-contributing] has a lot of relevant informati
         - my_vsphere_conf
     EOF
 
-    # 8. Create a test config file:
+    # 8. (deprecated but not removed yet) If you're contributing to the project and need to run the tests, create a test config file:
     python tools/test_value_scraper.py -c local/vcenter.conf
 
-    # 8. Create a test config file for VMC:
+    # 9. (deprecated but not removed yet) Create a test config file for VMC:
     python tools/test_value_scraper_vmc.py --help
     This command will return the required information.
 
