@@ -37,6 +37,30 @@ def find(role_name=None, service_instance=None, profile=None):
 
     profile
         Profile to use (optional)
+
+    Returns:
+        List of all roles or filtered by role_name
+
+    .. code-block:: json
+    {
+        "role": "SRM Administrator",
+        "privileges": {
+            "Protection Group": [
+                "Assign to plan",
+                "Create",
+                "Modify",
+                "Remove",
+                "Remove from plan"
+            ],
+            "Recovery Plan": [
+                "Configure commands",
+                "Create",
+                "Remove",
+                "Modify",
+                "Recovery"
+            ]
+        }
+    }
     """
     service_instance = service_instance or connect.get_service_instance(
         config=__opts__, profile=profile
@@ -98,7 +122,19 @@ def find(role_name=None, service_instance=None, profile=None):
             )
         result.append(role_json)
 
-    return result
+    # make JSON representation of current policies
+    roles_config = []
+    for role in result:
+        role_json = {"role": role["label"], "privileges": {}}
+        for privilege in role["privileges"]:
+            priv_name = privilege["name"]
+            group_name = privilege["groupLabel"]
+            if group_name not in role_json["privileges"]:
+                role_json["privileges"][group_name] = []
+            role_json["privileges"][group_name].append(priv_name)
+        roles_config.append(role_json)
+
+    return roles_config
 
 
 def save(role_config, service_instance=None, profile=None):
@@ -116,6 +152,27 @@ def save(role_config, service_instance=None, profile=None):
 
     profile
         Profile to use (optional)
+
+    .. code-block:: json
+    {
+        "role": "SRM Administrator",
+        "privileges": {
+            "Protection Group": [
+                "Assign to plan",
+                "Create",
+                "Modify",
+                "Remove",
+                "Remove from plan"
+            ],
+            "Recovery Plan": [
+                "Configure commands",
+                "Create",
+                "Remove",
+                "Modify",
+                "Recovery"
+            ]
+        }
+    }
     """
     service_instance = service_instance or connect.get_service_instance(
         config=__opts__, profile=profile

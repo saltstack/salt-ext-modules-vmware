@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.roles as security_roles
+import saltext.vmware.utils.drift as drift
 from pyVmomi import vim
 
 
@@ -79,61 +80,43 @@ def configure_loader_modules():
             "old": [
                 {
                     "role": "SRM Administrator",
-                    "groups": [
-                        {"group": "SRM Protection", "privileges": ["Stop", "Protect"]},
-                        {
-                            "group": "Recovery History",
-                            "privileges": ["Delete History", "View Deleted Plans"],
-                        },
-                        {
-                            "group": "Recovery Plan",
-                            "privileges": [
-                                "Configure commands",
-                                "Create",
-                                "Remove",
-                                "Modify",
-                                "Recovery",
-                                "Reprotect",
-                                "Test",
-                            ],
-                        },
-                        {
-                            "group": "Protection Group",
-                            "privileges": ["Assign to plan", "Create", "Modify"],
-                        },
-                    ],
+                    "privileges": {
+                        "SRM Protection": ["Stop", "Protect"],
+                        "Recovery History": ["Delete History", "View Deleted Plans"],
+                        "Recovery Plan": [
+                            "Configure commands",
+                            "Create",
+                            "Remove",
+                            "Modify",
+                            "Recovery",
+                            "Reprotect",
+                            "Test",
+                        ],
+                        "Protection Group": ["Assign to plan", "Create", "Modify"],
+                    },
                 }
             ],
             "new": [
                 {
                     "role": "SRM Administrator",
-                    "groups": [
-                        {"group": "SRM Protection", "privileges": ["Stop", "Protect"]},
-                        {
-                            "group": "Recovery History",
-                            "privileges": ["Delete History", "View Deleted Plans"],
-                        },
-                        {
-                            "group": "Recovery Plan",
-                            "privileges": [
-                                "Configure commands",
-                                "Create",
-                                "Remove",
-                                "Modify",
-                                "Recovery",
-                            ],
-                        },
-                        {
-                            "group": "Protection Group",
-                            "privileges": [
-                                "Assign to plan",
-                                "Create",
-                                "Modify",
-                                "Remove",
-                                "Remove from plan",
-                            ],
-                        },
-                    ],
+                    "privileges": {
+                        "SRM Protection": ["Stop", "Protect"],
+                        "Recovery History": ["Delete History", "View Deleted Plans"],
+                        "Recovery Plan": [
+                            "Configure commands",
+                            "Create",
+                            "Remove",
+                            "Modify",
+                            "Recovery",
+                        ],
+                        "Protection Group": [
+                            "Assign to plan",
+                            "Create",
+                            "Modify",
+                            "Remove",
+                            "Remove from plan",
+                        ],
+                    },
                 }
             ],
             "vmomi_old": mock_pyvmomi_role_object(
@@ -212,22 +195,22 @@ def mocked_roles_data(request, fake_service_instance):
     )
 
     with patch("pyVmomi.vmodl.query.PropertyCollector.ObjectSpec", autospec=True) as fake_obj_spec:
-        yield request.param["role_name"], request.param["new"]
+        yield request.param["role_name"], request.param["old"], request.param["new"]
 
 
 def test_find_roles(mocked_roles_data, fake_service_instance):
     _, service_instance = fake_service_instance
-    policy_name, expected_data = mocked_roles_data
+    policy_name, current_data, _ = mocked_roles_data
     ret = security_roles.find(
         role_name=policy_name,
         service_instance=service_instance,
         profile="vcenter",
     )
-    print(json.dumps(ret[0], indent=2))
-    assert ret[0] == expected_data
+    # comparing 2 dict with '==' fails, because of inner lists with different orders, use drift.drift_report
+    assert drift.drift_report(ret[0], current_data[0]) == {}
 
 
-# def test_update_storage_policies(mocked_storage_policies_data, fake_service_instance):
+# def test_update_role(mocked_storage_policies_data, fake_service_instance):
 #     _, service_instance = fake_service_instance
 #     policy_name, expected_data, update_policy, updated_policy = mocked_storage_policies_data
 

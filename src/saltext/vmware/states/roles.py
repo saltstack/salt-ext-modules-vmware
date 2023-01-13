@@ -36,42 +36,42 @@ def config(name, config, service_instance=None, profile=None):
     config
         List of objects with configuration values. (required).
 
-    .. code-block:: yaml
-
-    vcenter_roles_config_example:
-        vcenter_roles.config:
-            - profile: vcenter
-            - config:
-            - role: SRM Administrator
-                groups:
-                - group: SRM Protection
-                    privileges:
-                    - Stop
-                    - Protect
-                - group: Recovery History
-                    privileges:
-                    - Delete History
-                    - View Deleted Plans
-                - group: Recovery Plan
-                    privileges:
-                    - Configure commands
-                    - Create
-                    - Remove
-                    - Modify
-                    - Recovery
-                - group: Protection Group
-                    privileges:
-                    - Assign to plan
-                    - Create
-                    - Modify
-                    - Remove
-                    - Remove from plan
-
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
     profile
         Profile to use (optional)
+
+    .. code-block:: yaml
+
+        vcenter_roles_config_example:
+            vcenter_roles.config:
+                - profile: vcenter
+                - config:
+                - role: SRM Administrator
+                    groups:
+                    - group: SRM Protection
+                        privileges:
+                        - Stop
+                        - Protect
+                    - group: Recovery History
+                        privileges:
+                        - Delete History
+                        - View Deleted Plans
+                    - group: Recovery Plan
+                        privileges:
+                        - Configure commands
+                        - Create
+                        - Remove
+                        - Modify
+                        - Recovery
+                    - group: Protection Group
+                        privileges:
+                        - Assign to plan
+                        - Create
+                        - Modify
+                        - Remove
+                        - Remove from plan
     """
 
     service_instance = service_instance or connect.get_service_instance(
@@ -103,21 +103,13 @@ def config(name, config, service_instance=None, profile=None):
         role_name=None, service_instance=service_instance, profile=profile
     )
 
-    # make JSON representation of current policies
-    # old_configs holds only the rules that are in the scope of interest (provided in argument config_input)
+    # old_configs must have only the rules that are in the scope of interest (provided in argument config_input)
     old_config = {}
     for role in old_configs:
-        if role["label"] not in new_config.keys():
+        if role["role"] not in new_config.keys():
             continue
 
-        role_json = {"privileges": {}}
-        for privilege in role["privileges"]:
-            priv_name = privilege["name"]
-            group_name = privilege["groupLabel"]
-            if group_name not in role_json["privileges"]:
-                role_json["privileges"][group_name] = []
-            role_json["privileges"][group_name].append(priv_name)
-        old_config[role["label"]] = role_json
+        old_config[role["role"]] = {"privileges": role["privileges"]}
 
     log.debug("--------------OLD---------------")
     log.debug(json.dumps(old_config, indent=2))
