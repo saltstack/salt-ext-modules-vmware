@@ -583,7 +583,7 @@ def test_ntp_config(service_instance):
 
 def test_add_update_remove_user(service_instance):
     """
-    Test add/update/remove a local ESXi user
+    Test add/get/update/remove a local ESXi user
     """
     user_name = "A{}".format(uuid.uuid4())
     ret = esxi.add_user(
@@ -592,6 +592,16 @@ def test_add_update_remove_user(service_instance):
         cluster_name="Cluster",
         user_name=user_name,
         password="Secret@123",
+    )
+    assert ret
+    for host in ret:
+        assert ret[host]
+
+    ret = esxi.get_user(
+        service_instance=service_instance,
+        datacenter_name="Datacenter",
+        cluster_name="Cluster",
+        user_name=user_name,
     )
     assert ret
     for host in ret:
