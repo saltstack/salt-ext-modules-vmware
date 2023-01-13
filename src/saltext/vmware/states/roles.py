@@ -38,25 +38,34 @@ def config(name, config, service_instance=None, profile=None):
 
     .. code-block:: yaml
 
-        vcenter_roles_drift:
-            vcenter_roles.config:
-                - profile: vcenter
-                - config:
-                - roleName: Performance - Thick
-                    constraints:
-                    - name: VSAN
-                        replicaPreference: 1 failures - RAID-1 (Mirroring)
-                        hostFailuresToTolerate: 2
-                        checksumDisabled: true
-                        stripeWidth: 2
-                        proportionalCapacity: 50
-                        cacheReservation: 0
-                - roleName: New VM Storage Policy
-                    constraints:
-                    - name: VSAN
-                        hostFailuresToTolerate: 2
-                        replicaPreference: 2 failures - RAID-1 (Mirroring)
-                        proportionalCapacity: 1
+    vcenter_roles_config_example:
+        vcenter_roles.config:
+            - profile: vcenter
+            - config:
+            - role: SRM Administrator
+                groups:
+                - group: SRM Protection
+                    privileges:
+                    - Stop
+                    - Protect
+                - group: Recovery History
+                    privileges:
+                    - Delete History
+                    - View Deleted Plans
+                - group: Recovery Plan
+                    privileges:
+                    - Configure commands
+                    - Create
+                    - Remove
+                    - Modify
+                    - Recovery
+                - group: Protection Group
+                    privileges:
+                    - Assign to plan
+                    - Create
+                    - Modify
+                    - Remove
+                    - Remove from plan
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).

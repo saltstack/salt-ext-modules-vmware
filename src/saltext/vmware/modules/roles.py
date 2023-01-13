@@ -73,7 +73,7 @@ def find(role_name=None, service_instance=None, profile=None):
     # old_configs holds only the rules that are in the scope of interest (provided in argument config_input)
     result = []
     for role in authorizationManager.roleList:
-        if role_name is not None and role_name != role.name:
+        if role_name is not None and role_name != role.info.label:
             continue
 
         role_json = {
@@ -120,6 +120,8 @@ def save(role_config, service_instance=None, profile=None):
     service_instance = service_instance or connect.get_service_instance(
         config=__opts__, profile=profile
     )
+
+    print(json.dumps(role_config, indent=2))
 
     authorizationManager = service_instance.RetrieveContent().authorizationManager
 
@@ -170,10 +172,10 @@ def save(role_config, service_instance=None, profile=None):
         if not role_name:
             raise salt.exceptions.CommandExecutionError(f"Role name is required!")
 
-        log.debug()
+        log.debug("")
         log.debug("*********************************")
         log.debug("Create Role:", role_name)
-        log.debug()
+        log.debug("")
 
         role_privileges = []
         for group in new_privileges_by_groups:
@@ -202,10 +204,10 @@ def save(role_config, service_instance=None, profile=None):
                 # collect current privileges
                 old_privileges_by_groups[group].append(priv_name)
 
-        log.debug()
+        log.debug("")
         log.debug("*********************************")
         log.debug("Update Role:", role_name)
-        log.debug()
+        log.debug("")
         add_privileges = []
         remove_priviliges = []
         for group in new_privileges_by_groups:
