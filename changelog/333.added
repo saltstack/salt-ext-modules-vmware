@@ -1,0 +1,2 @@
+Added modules storage_policy.find and storage_policy.save.
+Added state storage_policy.config.

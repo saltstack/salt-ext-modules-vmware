@@ -16,7 +16,40 @@ def drift_report(obj1, obj2, diff_level=None):
         Second dictionary
     diff_level
         Defines on what tree level to show the drift.
-        If not specified the changes are shown in the last leaf level.
+        If not specified the changes are shown in the last/leaf level.
+
+        Drift level None - all leaf nodes changes:
+        o
+        |_
+        | x
+        |__
+        |  |_
+        x  | x
+            |__
+            |  |_
+            x    x
+
+        Drift level 0 - changes in first level of config tree:
+        o
+        |
+        x...
+        |
+        x...
+
+        Drift level 1 - changes in second level of config tree:
+        o
+        |_
+        | x...
+        |_
+            x...
+
+        Drift level 2 - changes in third level of config tree:
+        o
+        |_
+        | |_
+        |_  x
+            |_
+            x
     """
     result_diffs = []
     _drift_recurse_(obj1, obj2, result_diffs)
