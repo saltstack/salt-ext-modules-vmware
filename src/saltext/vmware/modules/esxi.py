@@ -1716,13 +1716,13 @@ def update_user(
     )
 
     try:
-        for h in hosts:
+        for host in hosts:
             account_spec = vim.host.LocalAccountManager.AccountSpecification()
             account_spec.id = user_name
             account_spec.password = password
             account_spec.description = description
-            h.configManager.accountManager.UpdateUser(account_spec)
-            ret[h.name] = True
+            host.configManager.accountManager.UpdateUser(account_spec)
+            ret[host.name] = True
         return ret
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
@@ -1778,6 +1778,63 @@ def remove_user(
         for h in hosts:
             h.configManager.accountManager.RemoveUser(user_name)
             ret[h.name] = True
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def get_user(
+    user_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Get local user on matching ESXi hosts.
+
+    user_name
+        User to delete on matching ESXi hosts. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_user user_name=foo
+    """
+    log.debug("Running vmware_esxi.get_user")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for host in hosts:
+            user_account = host.configManager.userDirectory.RetrieveUserGroups(
+                None, user_name, None, None, True, True, False
+            )
+            ret[host.name] = user_account
         return ret
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))

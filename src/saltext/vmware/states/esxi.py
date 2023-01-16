@@ -1450,3 +1450,74 @@ def firewall_configs(
         ret["result"] = success  # at least one success
 
     return ret
+
+
+def password_present(
+    name,
+    password,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Update the password for a given host.
+
+    name
+        Existing user to update on matching ESXi hosts. (required)
+
+    password
+        The new password to change on the host. (required)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: yaml
+
+        Set firewall config:
+        vmware_esxi.password_present:
+            - name: root
+            - password: Password1!
+    """
+    log.debug("Running vmware_esxi.password_present")
+    ret = {
+        "name": name,
+        "result": True,
+        "changes": {},
+        "comment": "",
+    }
+
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["comment"] = "Host password will change."
+        return ret
+    else:
+        try:
+            __salt__["vmware_esxi.update_user"](
+                user_name=name,
+                password=password,
+                datacenter_name=datacenter_name,
+                cluster_name=cluster_name,
+                host_name=host_name,
+                service_instance=service_instance,
+                profile=profile,
+            )
+        except salt.exceptions.CommandExecutionError as err:
+            ret["result"] = False
+            ret["comment"] = "Error: {}".format(err)
+            return ret
+    ret["comment"] = "Host password changed."
+    return ret
