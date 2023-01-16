@@ -178,8 +178,6 @@ def save(role_config, service_instance=None, profile=None):
         config=__opts__, profile=profile
     )
 
-    print(json.dumps(role_config, indent=2))
-
     authorizationManager = service_instance.RetrieveContent().authorizationManager
 
     privileges_desc = {}
@@ -231,7 +229,7 @@ def save(role_config, service_instance=None, profile=None):
 
         log.debug("")
         log.debug("*********************************")
-        log.debug("Create Role:", role_name)
+        log.debug("Create Role: " + role_name)
         log.debug("")
 
         role_privileges = []
@@ -263,7 +261,7 @@ def save(role_config, service_instance=None, profile=None):
 
         log.debug("")
         log.debug("*********************************")
-        log.debug("Update Role:", role_name)
+        log.debug("Update Role: " + role_name)
         log.debug("")
         add_privileges = []
         remove_priviliges = []

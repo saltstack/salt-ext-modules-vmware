@@ -15,7 +15,7 @@ def mock_with_name(name, *args, **kwargs):
     return mock
 
 
-def mock_pyvmomi_role_object(name, label, new_privileges=[]):
+def mock_pyvmomi_role_object(roleId, name, label, new_privileges=[]):
     """
 
     .. code-block:: json
@@ -59,7 +59,7 @@ def mock_pyvmomi_role_object(name, label, new_privileges=[]):
     privileges += new_privileges
 
     return mock_with_name(
-        roleId=1101,
+        roleId=roleId,
         system=False,
         name=name,
         info=Mock(label=label, summary=label),
@@ -76,7 +76,6 @@ def configure_loader_modules():
 @pytest.fixture(
     params=(
         {
-            "role_name": "SRM Administrator",
             "old": [
                 {
                     "role": "SRM Administrator",
@@ -96,7 +95,7 @@ def configure_loader_modules():
                     },
                 }
             ],
-            "new": [
+            "update": [
                 {
                     "role": "SRM Administrator",
                     "privileges": {
@@ -116,10 +115,28 @@ def configure_loader_modules():
                             "Remove",
                             "Remove from plan",
                         ],
+                        "Tasks": ["Create task", "Update task"],
+                    },
+                }
+            ],
+            "add": [
+                {
+                    "role": "Other Role",
+                    "privileges": {
+                        "SRM Protection": ["Stop", "Protect"],
+                        "Recovery History": ["Delete History", "View Deleted Plans"],
+                        "Protection Group": [
+                            "Assign to plan",
+                            "Create",
+                            "Modify",
+                            "Remove",
+                            "Remove from plan",
+                        ],
                     },
                 }
             ],
             "vmomi_old": mock_pyvmomi_role_object(
+                1101,
                 "SrmAdministrator",
                 "SRM Administrator",
                 [
@@ -135,7 +152,8 @@ def configure_loader_modules():
                     "VcDr.RecoveryProfile.com.vmware.vcDr.Run",
                 ],
             ),
-            "vmomi_new": mock_pyvmomi_role_object(
+            "vmomi_update": mock_pyvmomi_role_object(
+                1101,
                 "SrmAdministrator",
                 "SRM Administrator",
                 [
@@ -149,6 +167,20 @@ def configure_loader_modules():
                     "VcDr.RecoveryProfile.com.vmware.vcDr.Delete",
                     "VcDr.RecoveryProfile.com.vmware.vcDr.Edit",
                     "VcDr.RecoveryProfile.com.vmware.vcDr.Failover",
+                    "Task.Create",
+                    "Task.Update",
+                ],
+            ),
+            "vmomi_add": mock_pyvmomi_role_object(
+                1102,
+                "Other Role",
+                "Other Role",
+                [
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.AssignToRecoveryPlan",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.Create",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.Edit",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.Delete",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.RemoveFromRecoveryPlan",
                 ],
             ),
         },
@@ -160,21 +192,22 @@ def mocked_roles_data(request, fake_service_instance):
     privilege_descriptions = []
     privilege_group_descriptions = []
     privileges_list = []
-    with open("../../test_files/privilege-descriptions.json") as dfile:
+    with open("../../test_files/role-privilege-descriptions.json") as dfile:
         descs = json.load(dfile)
         for desc in descs:
             privilege_descriptions.append(Mock(**desc))
-    with open("../../test_files/privilege-group-descriptions.json") as dfile:
+    with open("../../test_files/role-privilege-group-descriptions.json") as dfile:
         descs = json.load(dfile)
         for desc in descs:
             privilege_group_descriptions.append(Mock(**desc))
-    with open("../../test_files/privileges.json") as dfile:
+    with open("../../test_files/role-privileges.json") as dfile:
         descs = json.load(dfile)
         for desc in descs:
             privileges_list.append(Mock(**desc))
 
     vmomi_old = request.param["vmomi_old"]
-    vmomi_new = request.param["vmomi_new"]
+    vmomi_update = request.param["vmomi_update"]
+    vmomi_add = request.param["vmomi_add"]
     fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.description.privilege = (
         privilege_descriptions
     )
@@ -187,22 +220,39 @@ def mocked_roles_data(request, fake_service_instance):
     fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.roleList = [
         vmomi_old
     ]
-    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.AddAuthorizationRole.return_value = (
-        vmomi_new
+
+    def _add_mock(name, privIds):
+        assert name == vmomi_add.name
+        privileges = list(vmomi_add.privilege)
+        privileges.sort()
+        privIds.sort()
+        assert privileges == privIds
+
+    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.AddAuthorizationRole = (
+        _add_mock
     )
-    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.UpdateAuthorizationRole.return_value = (
-        vmomi_new
+
+    def _update_mock(roleId, newName, privIds):
+        assert roleId == 1101
+        assert newName == vmomi_update.name
+        privileges = list(vmomi_update.privilege)
+        privileges.sort()
+        privIds.sort()
+        assert privileges == privIds
+
+    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.UpdateAuthorizationRole = (
+        _update_mock
     )
 
     with patch("pyVmomi.vmodl.query.PropertyCollector.ObjectSpec", autospec=True) as fake_obj_spec:
-        yield request.param["role_name"], request.param["old"], request.param["new"]
+        yield request.param["old"], request.param["update"], request.param["add"]
 
 
 def test_find_roles(mocked_roles_data, fake_service_instance):
     _, service_instance = fake_service_instance
-    policy_name, current_data, _ = mocked_roles_data
+    current_data, _, _ = mocked_roles_data
     ret = security_roles.find(
-        role_name=policy_name,
+        role_name=current_data[0]["role"],
         service_instance=service_instance,
         profile="vcenter",
     )
@@ -210,54 +260,45 @@ def test_find_roles(mocked_roles_data, fake_service_instance):
     assert drift.drift_report(ret[0], current_data[0]) == {}
 
 
-# def test_update_role(mocked_storage_policies_data, fake_service_instance):
-#     _, service_instance = fake_service_instance
-#     policy_name, expected_data, update_policy, updated_policy = mocked_storage_policies_data
+def test_update_role(mocked_roles_data, fake_service_instance):
+    _, service_instance = fake_service_instance
+    old_role, update_role, _ = mocked_roles_data
 
-#     # check existing policy
-#     ret = storage_policies.find(
-#         policy_name=policy_name,
-#         service_instance=service_instance,
-#         profile="vcenter",
-#     )
-#     policy = ret[0]
-#     assert policy == expected_data
+    ret = security_roles.find(
+        role_name=old_role[0]["role"],
+        service_instance=service_instance,
+        profile="vcenter",
+    )
+    # comparing 2 dict with '==' fails, because of inner lists with different orders, use drift.drift_report
+    assert drift.drift_report(ret[0], old_role[0]) == {}
 
-#     # update existing policy
-#     ret = storage_policies.save(
-#         policy_config=update_policy,
-#         service_instance=service_instance,
-#         profile="vcenter",
-#     )
+    # update existing policy
+    ret = security_roles.save(
+        role_config=update_role[0],
+        service_instance=service_instance,
+        profile="vcenter",
+    )
 
-#     # check updated policy
-#     ret = storage_policies.find(
-#         policy_name=policy_name,
-#         service_instance=service_instance,
-#         profile="vcenter",
-#     )
-#     assert ret[0] == updated_policy
+    assert ret["status"] == "updated"
 
-# def test_create_storage_policies(mocked_storage_policies_data, fake_service_instance):
-#     _, service_instance = fake_service_instance
-#     policy_name, expected_data, _, _ = mocked_storage_policies_data
 
-#     policy_name = "New " + policy_name
-#     expected_data["policyName"] = policy_name
+def test_add_role(mocked_roles_data, fake_service_instance):
+    _, service_instance = fake_service_instance
+    old_role, _, add_role = mocked_roles_data
 
-#     # check policy doesn't exist
-#     ret = storage_policies.find(
-#         policy_name=policy_name,
-#         service_instance=service_instance,
-#         profile="vcenter",
-#     )
-#     assert len(ret) == 0
+    ret = security_roles.find(
+        role_name=old_role[0]["role"],
+        service_instance=service_instance,
+        profile="vcenter",
+    )
+    # comparing 2 dict with '==' fails, because of inner lists with different orders, use drift.drift_report
+    assert drift.drift_report(ret[0], old_role[0]) == {}
 
-#     # create new policy
-#     ret = storage_policies.save(
-#         policy_config=expected_data,
-#         service_instance=service_instance,
-#         profile="vcenter",
-#     )
+    # update existing policy
+    ret = security_roles.save(
+        role_config=add_role[0],
+        service_instance=service_instance,
+        profile="vcenter",
+    )
 
-#     assert ret['status'] == 'created'
+    assert ret["status"] == "created"

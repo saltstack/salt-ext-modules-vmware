@@ -1,11 +1,10 @@
 import json
-from unittest.mock import MagicMock
 from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
-import saltext.vmware.modules.esxi as esxi_module
-import saltext.vmware.states.esxi as esxi
+import saltext.vmware.states.roles as security_roles
+import saltext.vmware.utils.drift as drift
 from pyVmomi import vim
 
 
@@ -16,228 +15,298 @@ def mock_with_name(name, *args, **kwargs):
     return mock
 
 
-sshClientMockObject = mock_with_name(
-    name="sshClient",
-    service="sshClient",
-    spec=vim.host.Ruleset,
-    dynamicProperty=[],
-    key="sshClient",
-    label="SSH Client",
-    required=False,
-    rule=[
-        Mock(
-            spec=vim.host.Ruleset.Rule,
-            dynamicProperty=[],
-            port=22,
-            endPort=24,
-            direction="outbound",
-            portType="dst",
-            protocol="tcp",
-        )
-    ],
-    enabled=True,
-    allowedHosts=Mock(
-        spec=vim.host.Ruleset.IpList,
-        dynamicProperty=[],
-        ipAddress=["3.3.3.3"],
-        ipNetwork=[
-            Mock(
-                spec=vim.host.Ruleset.IpNetwork,
-                dynamicProperty=[],
-                network="1.1.1.1",
-                prefixLength=24,
-            ),
-            Mock(
-                spec=vim.host.Ruleset.IpNetwork,
-                dynamicProperty=[],
-                network="2.2.2.2",
-                prefixLength=24,
-            ),
-        ],
-        allIp=False,
-    ),
-)
+def mock_pyvmomi_role_object(roleId, name, label, new_privileges=[]):
+    """
 
-sshServerMockObject = mock_with_name(
-    name="sshServer",
-    service="sshServer",
-    spec=vim.host.Ruleset,
-    dynamicProperty=[],
-    key="sshServer",
-    label="SSH Server",
-    required=True,
-    rule=[
-        Mock(
-            spec=vim.host.Ruleset.Rule,
-            dynamicProperty=[],
-            port=22,
-            endPort=24,
-            direction="inbound",
-            portType="dst",
-            protocol="tcp",
-        )
-    ],
-    enabled=True,
-    allowedHosts=Mock(
-        spec=vim.host.Ruleset.IpList,
-        dynamicProperty=[],
-        ipAddress=["192.168.110.90"],
-        ipNetwork=[],
-        allIp=False,
-    ),
-)
+    .. code-block:: json
+    (vim.AuthorizationManager.Role) {
+        dynamicType = <unset>,
+        dynamicProperty = (vmodl.DynamicProperty) [],
+        roleId = 1101,
+        system = false,
+        name = 'SrmAdministrator',
+        info = (vim.Description) {
+            dynamicType = <unset>,
+            dynamicProperty = (vmodl.DynamicProperty) [],
+            label = 'SRM Administrator',
+            summary = 'SRM Administrator'
+        },
+        privilege = (str) [
+            'Datastore.Replication.com.vmware.vcDr.Protect',
+            'Datastore.Replication.com.vmware.vcDr.Unprotect',
+            'Resource.com.vmware.vcDr.RecoveryUse',
+            'StorageProfile.View',
+            'System.Anonymous',
+            'System.Read',
+            'System.View',
+        ]
+    }
 
+    Args:
+        name (str): role name
 
-def mock_firewall_rules_object(name):
-    if name == "sshServer":
-        return sshServerMockObject
-    elif name == "sshClient":
-        return sshClientMockObject
-    else:
-        return None
+    Returns:
+        Mock: mock of role
+    """
 
+    privileges = [
+        "VcDr.RecoveryHistoryManager.com.vmware.vcDr.Delete",
+        "VcDr.RecoveryHistoryManager.com.vmware.vcDr.ViewDeleted",
+        "VirtualMachine.Replication.com.vmware.vcDr.Protect",
+        "VirtualMachine.Replication.com.vmware.vcDr.Unprotect",
+    ]
 
-@pytest.fixture()
-def fake_service_instance(request):
-    with patch("saltext.vmware.utils.connect.get_service_instance", autospec=True) as fake_get_si:
-        fake_get_si.side_effect = Exception(
-            "get_service instance was unexpectedly called in a test"
-        )
-        yield fake_get_si, fake_get_si.return_value
+    privileges += new_privileges
+
+    return mock_with_name(
+        roleId=roleId,
+        system=False,
+        name=name,
+        info=Mock(label=label, summary=label),
+        privilege=privileges,
+        spec=vim.AuthorizationManager.Role,
+    )
 
 
 @pytest.fixture
 def configure_loader_modules():
-    return {esxi: {}}
+    return {security_roles: {}}
 
 
 @pytest.fixture(
     params=(
-        [
-            {
-                "test_name": "Test case 1",
-                "rules": [
-                    {
-                        "name": "sshServer",
-                        "enabled": True,
-                        "allowed_hosts": {
-                            "all_ip": False,
-                            "ip_address": ["192.168.110.90"],
-                            "ip_network": [],
+        {
+            "config_name": "Test case 1",
+            "old": [
+                {
+                    "role": "SRM Administrator",
+                    "groups": [
+                        {
+                            "group": "Recovery Plan",
+                            "privileges": [
+                                "Configure commands",
+                                "Create",
+                                "Remove",
+                                "Modify",
+                                "Recovery",
+                                "Reprotect",
+                                "Test",
+                            ],
                         },
-                    },
-                    {
-                        "name": "sshClient",
-                        "enabled": True,
-                        "allowed_hosts": {
-                            "all_ip": False,
-                            "ip_address": ["3.3.3.3"],
-                            "ip_network": ["1.1.1.1/24", "2.2.2.2/24"],
+                        {
+                            "group": "Protection Group",
+                            "privileges": ["Assign to plan", "Create", "Modify"],
                         },
-                    },
-                ],
-                "updates": [
-                    {
-                        "name": "sshServer",
-                        "enabled": True,
-                        "allowed_hosts": {
-                            "all_ip": False,
-                            "ip_address": ["192.168.0.253", "192.168.10.1"],
-                            "ip_network": ["192.168.0.0/24"],
+                    ],
+                }
+            ],
+            "update": [
+                {
+                    "role": "SRM Administrator",
+                    "groups": [
+                        {
+                            "group": "Recovery Plan",
+                            "privileges": [
+                                "Configure commands",
+                                "Create",
+                                "Remove",
+                                "Modify",
+                                "Recovery",
+                            ],
                         },
-                    },
-                    {"name": "sshClient", "enabled": True},
-                ],
-                "expected_changes": {
+                        {
+                            "group": "Protection Group",
+                            "privileges": [
+                                "Assign to plan",
+                                "Create",
+                                "Modify",
+                                "Remove",
+                                "Remove from plan",
+                            ],
+                        },
+                        {"group": "Tasks", "privileges": ["Create task", "Update task"]},
+                    ],
+                }
+            ],
+            "add": [
+                {
+                    "role": "Other Role",
+                    "groups": [{"group": "Tasks", "privileges": ["Create task", "Update task"]}],
+                }
+            ],
+            "drift_report": [
+                {
                     "name": "Test case 1",
                     "changes": {
-                        "esxi-01a.corp.local": {
+                        "SRM Administrator": {
                             "old": {
-                                "sshServer": {
-                                    "allowed_hosts": {
-                                        "ip_address": ["192.168.110.90"],
-                                        "ip_network": [],
-                                    }
-                                },
-                                "sshClient": {
-                                    "allowed_hosts": {
-                                        "ip_address": ["3.3.3.3"],
-                                        "all_ip": False,
-                                        "ip_network": ["1.1.1.1/24", "2.2.2.2/24"],
-                                    }
-                                },
+                                "privileges": {
+                                    "Tasks": [],
+                                    "Protection Group": ["Assign to plan", "Create", "Modify"],
+                                    "Recovery Plan": [
+                                        "Configure commands",
+                                        "Create",
+                                        "Remove",
+                                        "Modify",
+                                        "Recovery",
+                                        "Reprotect",
+                                        "Test",
+                                    ],
+                                }
                             },
                             "new": {
-                                "sshServer": {
-                                    "allowed_hosts": {
-                                        "ip_address": ["192.168.0.253", "192.168.10.1"],
-                                        "ip_network": ["192.168.0.0/24"],
-                                    }
-                                },
-                                "sshClient": {
-                                    "allowed_hosts": {
-                                        "ip_address": [],
-                                        "all_ip": True,
-                                        "ip_network": [],
-                                    }
-                                },
+                                "privileges": {
+                                    "Tasks": ["Create task", "Update task"],
+                                    "Protection Group": [
+                                        "Assign to plan",
+                                        "Create",
+                                        "Modify",
+                                        "Remove",
+                                        "Remove from plan",
+                                    ],
+                                    "Recovery Plan": [
+                                        "Configure commands",
+                                        "Create",
+                                        "Remove",
+                                        "Modify",
+                                        "Recovery",
+                                    ],
+                                }
                             },
-                        },
+                        }
                     },
                     "result": None,
                     "comment": "",
-                },
-                "vmomi_content": [
-                    mock_firewall_rules_object("sshServer"),
-                    mock_firewall_rules_object("sshClient"),
+                }
+            ],
+            "vmomi_old": mock_pyvmomi_role_object(
+                1101,
+                "SrmAdministrator",
+                "SRM Administrator",
+                [
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.AssignToRecoveryPlan",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.Create",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.Edit",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.ConfigureServerCommands",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Create",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Delete",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Edit",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Failover",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Reprotect",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Run",
                 ],
-            }
-        ]
+            ),
+            "vmomi_update": mock_pyvmomi_role_object(
+                1101,
+                "SrmAdministrator",
+                "SRM Administrator",
+                [
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.AssignToRecoveryPlan",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.Create",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.Edit",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.Delete",
+                    "VcDr.ProtectionProfile.com.vmware.vcDr.RemoveFromRecoveryPlan",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.ConfigureServerCommands",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Create",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Delete",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Edit",
+                    "VcDr.RecoveryProfile.com.vmware.vcDr.Failover",
+                    "Task.Create",
+                    "Task.Update",
+                ],
+            ),
+            "vmomi_add": mock_pyvmomi_role_object(
+                1102, "Other Role", "Other Role", ["Task.Create", "Task.Update"]
+            ),
+        },
     )
 )
-def mocked_firewall_rules_data(request, fake_service_instance):
-    vmomi_content = request.param["vmomi_content"]
-    _, service_instance = fake_service_instance
+def mocked_roles_data(request, fake_service_instance):
+    fake_get_service_instance, _ = fake_service_instance
 
-    hosts = [MagicMock()]
-    hosts[0].name = "esxi-01a.corp.local"
-    hosts[0].configManager.firewallSystem.firewallInfo.ruleset = vmomi_content
+    privilege_descriptions = []
+    privilege_group_descriptions = []
+    privileges_list = []
+    with open("../../test_files/role-privilege-descriptions.json") as dfile:
+        descs = json.load(dfile)
+        for desc in descs:
+            privilege_descriptions.append(Mock(**desc))
+    with open("../../test_files/role-privilege-group-descriptions.json") as dfile:
+        descs = json.load(dfile)
+        for desc in descs:
+            privilege_group_descriptions.append(Mock(**desc))
+    with open("../../test_files/role-privileges.json") as dfile:
+        descs = json.load(dfile)
+        for desc in descs:
+            privileges_list.append(Mock(**desc))
 
-    with patch("saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=hosts):
-        service_instance.return_value.configManager.firewallSystem.firewallInfo.ruleset = (
-            vmomi_content
-        )
-        service_instance.return_value.viewManager.CreateContainerView.return_value = hosts
+    vmomi_old = request.param["vmomi_old"]
+    vmomi_update = request.param["vmomi_update"]
+    vmomi_add = request.param["vmomi_add"]
+    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.description.privilege = (
+        privilege_descriptions
+    )
+    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.description.privilegeGroup = (
+        privilege_group_descriptions
+    )
+    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.privilegeList = (
+        privileges_list
+    )
+    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.roleList = [
+        vmomi_old
+    ]
 
-        yield request.param["test_name"], request.param["rules"], request.param[
-            "updates"
-        ], request.param["expected_changes"]
+    def _add_mock(name, privIds):
+        assert name == vmomi_add.name
+        privileges = list(vmomi_add.privilege)
+        privileges.sort()
+        privIds.sort()
+        assert privileges == privIds
+
+    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.AddAuthorizationRole = (
+        _add_mock
+    )
+
+    def _update_mock(roleId, newName, privIds):
+        assert roleId == 1101
+        assert newName == vmomi_update.name
+        privileges = list(vmomi_update.privilege)
+        privileges.sort()
+        privIds.sort()
+        assert privileges == privIds
+
+    fake_get_service_instance.return_value.RetrieveContent.return_value.authorizationManager.UpdateAuthorizationRole = (
+        _update_mock
+    )
+
+    with patch("pyVmomi.vmodl.query.PropertyCollector.ObjectSpec", autospec=True) as fake_obj_spec:
+        yield request.param["config_name"], request.param["old"], request.param[
+            "update"
+        ], request.param["add"], request.param["drift_report"]
 
 
 @pytest.mark.parametrize("test_run", [True, False])
-def test_drift_report_firewall_rules(mocked_firewall_rules_data, fake_service_instance, test_run):
+def test_drift_report_roles(mocked_roles_data, fake_service_instance, test_run):
     _, service_instance = fake_service_instance
-    config_name, rules, update, expected_change = mocked_firewall_rules_data
+    config_name, _, update_role, _, drift_report = mocked_roles_data
 
     if not test_run:
         if config_name == "Test case 1":
-            expected_change["result"] = True
-            expected_change["comment"] = {
-                "sshServer": {
+            drift_report[0]["result"] = True
+            drift_report[0]["comment"] = {
+                update_role[0]["role"]: {
                     "status": "SUCCESS",
-                    "message": f"Rule 'sshServer' has been changed successfully for host esxi-01a.corp.local.",
-                },
-                "sshClient": {
-                    "status": "SUCCESS",
-                    "message": f"Rule 'sshClient' has been changed successfully for host esxi-01a.corp.local.",
-                },
+                    "message": f"Role '{update_role[0]['role']}' has been changed successfully.",
+                }
             }
 
-    with patch.dict(esxi.__opts__, {"test": test_run}):
-        ret = esxi.firewall_configs(
+    with patch.dict(security_roles.__opts__, {"test": test_run}):
+        ret = security_roles.config(
             name=config_name,
-            configs=update,
+            config=update_role,
             service_instance=service_instance,
             profile="vcenter",
         )
-        assert ret == expected_change
+
+        # comparing 2 dict with '==' fails, because of inner lists with different orders, use drift.drift_report
+        assert drift.drift_report(ret, drift_report) == {}
