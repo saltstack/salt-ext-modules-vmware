@@ -6,12 +6,7 @@ import pytest
 import saltext.vmware.modules.storage_policies as storage_policies
 from pyVmomi import pbm
 
-
-def mock_with_name(name, *args, **kwargs):
-    # Can't mock name via constructor: https://docs.python.org/3/library/unittest.mock.html#mock-names-and-the-name-attribute
-    mock = Mock(*args, **kwargs)
-    mock.name = name
-    return mock
+from tests.helpers import mock_with_name
 
 
 def mock_pyvmomi_storage_policy_object(name):

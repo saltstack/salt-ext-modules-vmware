@@ -7,6 +7,8 @@ import pytest
 import salt.exceptions
 import saltext.vmware.modules.vm as vm
 
+from tests.helpers import mock_with_name
+
 # TODO: why is `name` bad when it comes to Mock? Why do we need to use a namedtuple? -W. Werner, 2022-07-19
 PropSet = namedtuple("PropSet", "name,val")
 non_template_config = mock.Mock(template=None)
@@ -279,14 +281,6 @@ def test_when_vm_is_not_found_then_get_mks_ticket_should_return_empty_data(fake_
             vm_name="fnord", ticket_type="fnord", service_instance=service_instance
         )
         assert result == {}
-
-
-# TODO: Move to a helper class, also refactor other tests using this. -W. Werner, 2023-01-17
-def mock_with_name(name, *args, **kwargs):
-    # Can't mock name via constructor: https://docs.python.org/3/library/unittest.mock.html#mock-names-and-the-name-attribute
-    m = mock.Mock(*args, **kwargs)
-    m.name = name
-    return m
 
 
 def test_when_vm_is_found_then_expected_ticket_information_should_be_returned(
