@@ -27,7 +27,7 @@ def __virtual__():
 
 def find(role_name=None, service_instance=None, profile=None):
     """
-    Gets vCenter roles. Returns list.
+    Gets vCenter roles. Returns list of roles filtered by role_name or all roles if rone_name is not provided.
 
     role_name
         Filter by role name, if None returns all policies
@@ -38,29 +38,27 @@ def find(role_name=None, service_instance=None, profile=None):
     profile
         Profile to use (optional)
 
-    Returns:
-        List of all roles or filtered by role_name
-
     .. code-block:: json
-    {
-        "role": "SRM Administrator",
-        "privileges": {
-            "Protection Group": [
-                "Assign to plan",
-                "Create",
-                "Modify",
-                "Remove",
-                "Remove from plan"
-            ],
-            "Recovery Plan": [
-                "Configure commands",
-                "Create",
-                "Remove",
-                "Modify",
-                "Recovery"
-            ]
+
+        {
+            "role": "SRM Administrator",
+            "privileges": {
+                "Protection Group": [
+                    "Assign to plan",
+                    "Create",
+                    "Modify",
+                    "Remove",
+                    "Remove from plan"
+                ],
+                "Recovery Plan": [
+                    "Configure commands",
+                    "Create",
+                    "Remove",
+                    "Modify",
+                    "Recovery"
+                ]
+            }
         }
-    }
     """
     service_instance = service_instance or connect.get_service_instance(
         config=__opts__, profile=profile
@@ -154,25 +152,26 @@ def save(role_config, service_instance=None, profile=None):
         Profile to use (optional)
 
     .. code-block:: json
-    {
-        "role": "SRM Administrator",
-        "privileges": {
-            "Protection Group": [
-                "Assign to plan",
-                "Create",
-                "Modify",
-                "Remove",
-                "Remove from plan"
-            ],
-            "Recovery Plan": [
-                "Configure commands",
-                "Create",
-                "Remove",
-                "Modify",
-                "Recovery"
-            ]
+
+        {
+            "role": "SRM Administrator",
+            "privileges": {
+                "Protection Group": [
+                    "Assign to plan",
+                    "Create",
+                    "Modify",
+                    "Remove",
+                    "Remove from plan"
+                ],
+                "Recovery Plan": [
+                    "Configure commands",
+                    "Create",
+                    "Remove",
+                    "Modify",
+                    "Recovery"
+                ]
+            }
         }
-    }
     """
     service_instance = service_instance or connect.get_service_instance(
         config=__opts__, profile=profile
