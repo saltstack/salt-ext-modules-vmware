@@ -23,11 +23,11 @@ def drift_report(obj1, obj2, diff_level=None):
         |_
         | x
         |__
-        |  |_
-        x  | x
+        |   |__
+        o   |   x
             |__
-            |  |_
-            x    x
+            |   |__
+            o   |   x
 
         Drift level 0 - changes in first level of config tree:
         o
@@ -38,18 +38,22 @@ def drift_report(obj1, obj2, diff_level=None):
 
         Drift level 1 - changes in second level of config tree:
         o
-        |_
-        | x...
-        |_
-            x...
+        |__
+        o   x...
+        |
+        |__
+        o   x...
 
         Drift level 2 - changes in third level of config tree:
         o
-        |_
-        | |_
-        |_  x
-            |_
-            x
+        |__
+        o   o
+        |   |__
+        |       x...
+        |__
+        o   o
+            |__
+                x...
     """
     result_diffs = []
     _drift_recurse_(obj1, obj2, result_diffs)
@@ -68,13 +72,11 @@ def drift_report(obj1, obj2, diff_level=None):
 
 def _drift_tree_(diffs, result_tree):
     branch = result_tree
-    for i in range(len(diffs)):
-        if i < (len(diffs) - 2):
-            if diffs[i] not in branch:
-                branch[diffs[i]] = {}
-            branch = branch[diffs[i]]
-        elif i == (len(diffs) - 2):
-            branch[diffs[i]] = diffs[i + 1]
+    for diff in diffs[:-2]:
+        if diff not in branch:
+            branch[diff] = {}
+        branch = branch[diff]
+    branch[diffs[-2]] = diffs[-1]
 
 
 def _drift_subtree_(result_tree, diff_level, result_subtree, level=0, new_subtree=0):

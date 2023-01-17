@@ -97,15 +97,6 @@ def mock_firewall_rules_object(name):
         return None
 
 
-@pytest.fixture()
-def fake_service_instance(request):
-    with patch("saltext.vmware.utils.connect.get_service_instance", autospec=True) as fake_get_si:
-        fake_get_si.side_effect = Exception(
-            "get_service instance was unexpectedly called in a test"
-        )
-        yield fake_get_si, fake_get_si.return_value
-
-
 @pytest.fixture
 def configure_loader_modules():
     return {esxi: {}}
@@ -196,8 +187,9 @@ def configure_loader_modules():
     )
 )
 def mocked_firewall_rules_data(request, fake_service_instance):
+    service_instance, _ = fake_service_instance
+
     vmomi_content = request.param["vmomi_content"]
-    _, service_instance = fake_service_instance
 
     hosts = [MagicMock()]
     hosts[0].name = "esxi-01a.corp.local"
@@ -211,12 +203,12 @@ def mocked_firewall_rules_data(request, fake_service_instance):
 
         yield request.param["test_name"], request.param["rules"], request.param[
             "updates"
-        ], request.param["expected_changes"]
+        ], json.loads(json.dumps(request.param["expected_changes"]))
 
 
 @pytest.mark.parametrize("test_run", [True, False])
 def test_drift_report_firewall_rules(mocked_firewall_rules_data, fake_service_instance, test_run):
-    _, service_instance = fake_service_instance
+    service_instance, _ = fake_service_instance
     config_name, rules, update, expected_change = mocked_firewall_rules_data
 
     if not test_run:
