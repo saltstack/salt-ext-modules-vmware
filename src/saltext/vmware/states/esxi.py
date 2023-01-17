@@ -1290,12 +1290,13 @@ def ntp_config(
 
 def firewall_configs(
     name,
-    configs,
+    config,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
     service_instance=None,
     profile=None,
+    drift_level=0,
 ):
     """
     Get/Set firewall configuration on matching ESXi hosts based on drift report.
@@ -1303,7 +1304,7 @@ def firewall_configs(
     name
         Name of configuration. (required).
 
-    configs
+    config
         Map with configuration values. (required).
 
     datacenter_name
@@ -1321,16 +1322,35 @@ def firewall_configs(
     profile
         Profile to use (optional)
 
+    drift_level
+        Defines the tree level at which drift changes will be represented in output (optional)
 
     .. code-block:: yaml
 
-        Set firewall config:
-          vmware_esxi.firewall_drift:
+        firewall_rules_test1:
+            vmware_esxi.firewall_configs:
             - configs:
-              - name: sshServer
+                - name: sshServer
                 enabled: True
-              - name: sshClient
+                - name: sshClient
                 enabled: True
+
+        firewall_rules_test2:
+            mware_esxi.firewall_configs:
+            - profile: vcenter
+            - drift_level: 1
+            - config:
+                - name: sshServer
+                enabled: true
+                allowed_host:
+                    all_ip: false
+                    ip_address:
+                    - 192.168.0.253
+                    - 192.168.10.1
+                    ip_network:
+                    - 192.168.0.0/24
+                - name: sshClient
+                enabled: true
     """
 
     # Keep this structure
@@ -1352,7 +1372,7 @@ def firewall_configs(
     # Clone config input to a Map.
     # Can be used to transform input to internal objects and do validation if needed
     new_configs = {}
-    for rule_config in configs:
+    for rule_config in config:
         # Create full representation of the object, default or empty values
         new_config = {
             "enabled": rule_config["enabled"],
@@ -1419,6 +1439,16 @@ def firewall_configs(
             for rule_name in new_rules:
                 # don't use delta like this - ({"name": rule_name} | new_rules[rule_name]), but:
                 hosts_changes[host.name].append({**{"name": rule_name}, **new_configs[rule_name]})
+
+        # it's used only in changes representation and drift report is bigger than first level
+        if drift_level > 0:
+            rule_diff = drift.drift_report(
+                {host.name: old_configs[host.name]},
+                {host.name: new_configs},
+                diff_level=drift_level,
+            )
+            if rule_diff is not None and host.name in rule_diff:
+                ret["changes"][host.name] = rule_diff[host.name]
 
     # If it's not dry-run and has changes, then apply changes
     if not __opts__["test"] and hosts_changes:

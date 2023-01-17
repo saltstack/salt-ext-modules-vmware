@@ -228,7 +228,7 @@ def test_drift_report_firewall_rules(mocked_firewall_rules_data, fake_service_in
     with patch.dict(esxi.__opts__, {"test": test_run}):
         ret = esxi.firewall_configs(
             name=config_name,
-            configs=update,
+            config=update,
             service_instance=service_instance,
             profile="vcenter",
         )
