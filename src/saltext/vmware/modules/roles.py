@@ -25,6 +25,57 @@ def __virtual__():
     return __virtualname__
 
 
+def _get_privilege_descriptions(authorizationManager):
+    privileges_desc = {}
+    for desciption in authorizationManager.description.privilege:
+        privileges_desc[desciption.key] = {"label": desciption.label, "summary": desciption.summary}
+    return privileges_desc
+
+
+def _get_privilege_group_descriptions(authorizationManager):
+    privilege_groups_desc = {}
+    for desciption in authorizationManager.description.privilegeGroup:
+        privilege_groups_desc[desciption.key] = {
+            "label": desciption.label,
+            "summary": desciption.summary,
+        }
+    return privilege_groups_desc
+
+
+def get_privilege_descriptions(service_instance=None, profile=None):
+    """
+    Returns descriptions of all privileges.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+    """
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    authorizationManager = service_instance.RetrieveContent().authorizationManager
+    return _get_privilege_descriptions(authorizationManager)
+
+
+def get_privilege_group_descriptions(service_instance=None, profile=None):
+    """
+    Returns descriptions of all privilege groups.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+    """
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    authorizationManager = service_instance.RetrieveContent().authorizationManager
+    return _get_privilege_group_descriptions(authorizationManager)
+
+
 def find(role_name=None, service_instance=None, profile=None):
     """
     Gets vCenter roles. Returns list of roles filtered by role_name or all roles if rone_name is not provided.
@@ -67,15 +118,8 @@ def find(role_name=None, service_instance=None, profile=None):
     authorizationManager = service_instance.RetrieveContent().authorizationManager
 
     # Collect priviliges descriptions
-    privileges_desc = {}
-    privilege_groups_desc = {}
-    for desciption in authorizationManager.description.privilege:
-        privileges_desc[desciption.key] = {"label": desciption.label, "summary": desciption.summary}
-    for desciption in authorizationManager.description.privilegeGroup:
-        privilege_groups_desc[desciption.key] = {
-            "label": desciption.label,
-            "summary": desciption.summary,
-        }
+    privileges_desc = _get_privilege_descriptions(authorizationManager)
+    privilege_groups_desc = _get_privilege_group_descriptions(authorizationManager)
 
     # Collect all privilages with their descriptions
     privileges = {}
@@ -179,15 +223,8 @@ def save(role_config, service_instance=None, profile=None):
 
     authorizationManager = service_instance.RetrieveContent().authorizationManager
 
-    privileges_desc = {}
-    privilege_groups_desc = {}
-    for desciption in authorizationManager.description.privilege:
-        privileges_desc[desciption.key] = {"label": desciption.label, "summary": desciption.summary}
-    for desciption in authorizationManager.description.privilegeGroup:
-        privilege_groups_desc[desciption.key] = {
-            "label": desciption.label,
-            "summary": desciption.summary,
-        }
+    privileges_desc = _get_privilege_descriptions(authorizationManager)
+    privilege_groups_desc = _get_privilege_group_descriptions(authorizationManager)
 
     # Collect privilages by group label and privilege name
     group_privileges = {}
