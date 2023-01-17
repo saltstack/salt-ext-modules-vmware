@@ -920,6 +920,7 @@ def get_firewall_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Get Firewall a rule configuration on matching ESXi hosts.
@@ -938,6 +939,9 @@ def get_firewall_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
@@ -999,6 +1003,7 @@ def set_firewall_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Set Firewall rule configuration on matching ESXi hosts.
@@ -1017,6 +1022,9 @@ def set_firewall_config(
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
 
     .. code-block:: bash
 
