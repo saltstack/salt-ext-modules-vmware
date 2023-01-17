@@ -192,15 +192,15 @@ def mocked_roles_data(request, fake_service_instance):
     privilege_descriptions = []
     privilege_group_descriptions = []
     privileges_list = []
-    with open("../../test_files/role-privilege-descriptions.json") as dfile:
+    with open("tests/test_files/role-privilege-descriptions.json") as dfile:
         descs = json.load(dfile)
         for desc in descs:
             privilege_descriptions.append(Mock(**desc))
-    with open("../../test_files/role-privilege-group-descriptions.json") as dfile:
+    with open("tests/test_files/role-privilege-group-descriptions.json") as dfile:
         descs = json.load(dfile)
         for desc in descs:
             privilege_group_descriptions.append(Mock(**desc))
-    with open("../../test_files/role-privileges.json") as dfile:
+    with open("tests/test_files/role-privileges.json") as dfile:
         descs = json.load(dfile)
         for desc in descs:
             privileges_list.append(Mock(**desc))

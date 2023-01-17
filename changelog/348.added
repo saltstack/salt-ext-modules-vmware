@@ -1,0 +1,2 @@
+Added module for vCenter Security Roles with functionality - list/find/save roles.
+Added state for Security Roles - drift report and remediation.
