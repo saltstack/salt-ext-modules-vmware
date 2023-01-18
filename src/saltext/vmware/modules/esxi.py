@@ -682,11 +682,11 @@ def get_advanced_config(
     try:
         for h in hosts:
             config_manager = h.configManager.advancedOption
-            ret[h.name] = {}
-            if not config_manager:
-                continue
-            for opt in config_manager.QueryOptions(config_name):
-                ret[h.name][opt.key] = opt.value
+            ret[h.name] = (
+                {}
+                if not config_manager
+                else {data.key: data.value for data in config_manager.QueryOptions(config_name)}
+            )
 
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
