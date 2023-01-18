@@ -1114,3 +1114,243 @@ def firewall_config(
                 ret["comment"] = "Configurations have successfully been changed."
 
     return ret
+
+
+def ntp_config(
+    name,
+    service_running,
+    ntp_servers=None,
+    service_policy=None,
+    service_restart=False,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Set ntp configuration on matching ESXi hosts.
+
+    name
+        Name of the state.
+
+    service_running
+        Ensures the running state of the ntp daemon for the host. Boolean value where
+        ``True`` indicates that ntpd should be running and ``False`` indicates that it
+        should be stopped.
+
+    ntp_servers
+        A list of servers that should be added to the ESXi host's NTP configuration.
+
+    service_policy
+        The policy to set for the NTP service.
+
+        .. note::
+
+            When setting the service policy to ``off`` or ``on``, you *must* quote the
+            setting. If you don't, the yaml parser will set the string to a boolean,
+            which will cause trouble checking for stateful changes and will error when
+            trying to set the policy on the ESXi host.
+
+    service_restart
+        If set to ``True``, the ntp daemon will be restarted, regardless of its previous
+        running state. Default is ``False``.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: yaml
+
+        Set firewall config:
+          vmware_esxi.ntp_config:
+            - service_running: True
+            - ntp_servers:
+              - 192.174.1.100
+              - 192.174.1.200
+            - service_policy: 'on'
+            - service_restart: True
+    """
+    log.debug("Running vmware_esxi.ntp_config")
+    ret = {"name": name, "result": None, "comment": "", "changes": {}}
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    ntpd = "ntpd"
+
+    ntp_config = __salt__["vmware_esxi.get_ntp_config"](service_instance=service_instance)
+    ntp_service_state = __salt__["vmware_esxi.list_services"](
+        service_name=ntpd, service_instance=service_instance
+    )
+
+    for host in hosts:
+        if ntp_servers and set(ntp_servers) != set(ntp_config[host.name]["ntp_servers"]):
+            ret["changes"][host.name] = {}
+            if not __opts__["test"]:
+                response = __salt__["vmware_esxi.set_ntp_config"](
+                    ntp_servers=ntp_servers, host_name=host.name, service_instance=service_instance
+                )
+                error = response.get("Error")
+                if error:
+                    ret["result"] = False
+                    ret["comment"] = "Error: {}".format(error)
+                    return ret
+            # Set changes dictionary for ntp_servers
+            ret["changes"][host.name].update(
+                {"ntp_servers": {"old": ntp_config[host.name]["ntp_servers"], "new": ntp_servers}}
+            )
+
+        # Configure service_running state
+        ntp_running = ntp_service_state[host.name][ntpd]["state"] == "running"
+        if service_running != ntp_running:
+            if host.name not in ret["changes"]:
+                ret["changes"][host.name] = {}
+            # Only run the command if not using test=True
+            if not __opts__["test"]:
+                # Start ntdp if service_running=True
+                if service_running is True:
+                    response = __salt__["vmware_esxi.service_start"](
+                        service_name=ntpd, host_name=host.name, service_instance=service_instance
+                    )
+                # Stop ntpd if service_running=False
+                else:
+                    response = __salt__["vmware_esxi.service_stop"](
+                        service_name=ntpd, host_name=host.name, service_instance=service_instance
+                    )
+            ret["changes"][host.name].update(
+                {"service_running": {"old": ntp_running, "new": service_running}}
+            )
+        # Configure service_policy
+        if service_policy:
+            if service_policy != ntp_service_state[host.name][ntpd]["startup_policy"]:
+                if host.name not in ret["changes"]:
+                    ret["changes"][host.name] = {}
+                # Only run the command if not using test=True
+                if not __opts__["test"]:
+                    response = __salt__["vmware_esxi.service_policy"](
+                        service_name=ntpd,
+                        startup_policy=service_policy,
+                        host_name=host.name,
+                        service_instance=service_instance,
+                    )
+                ret["changes"][host.name].update(
+                    {
+                        "service_policy": {
+                            "old": ntp_service_state[host.name][ntpd]["startup_policy"],
+                            "new": service_policy,
+                        }
+                    }
+                )
+
+        # Restart ntp_service if service_restart=True
+        if service_restart:
+            if host.name not in ret["changes"]:
+                ret["changes"][host.name] = {}
+            # Only run the command if not using test=True
+            if not __opts__["test"]:
+                response = __salt__["vmware_esxi.service_restart"](
+                    service_name=ntpd, host_name=host.name, service_instance=service_instance
+                )
+            ret["changes"][host.name].update(
+                {"service_restart": {"old": "", "new": "NTP Daemon Restarted."}}
+            )
+
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["comment"] = "NTP state will change."
+        return ret
+
+    ret["result"] = True
+    if ret["changes"] == {}:
+        ret["comment"] = "NTP is already in the desired state."
+    return ret
+
+
+def password_present(
+    name,
+    password,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Update the password for a given host.
+
+    name
+        Existing user to update on matching ESXi hosts. (required)
+
+    password
+        The new password to change on the host. (required)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: yaml
+
+        Set firewall config:
+        vmware_esxi.password_present:
+            - name: root
+            - password: Password1!
+    """
+    log.debug("Running vmware_esxi.password_present")
+    ret = {
+        "name": name,
+        "result": True,
+        "changes": {},
+        "comment": "",
+    }
+
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["comment"] = "Host password will change."
+        return ret
+    else:
+        try:
+            __salt__["vmware_esxi.update_user"](
+                user_name=name,
+                password=password,
+                datacenter_name=datacenter_name,
+                cluster_name=cluster_name,
+                host_name=host_name,
+                service_instance=service_instance,
+                profile=profile,
+            )
+        except salt.exceptions.CommandExecutionError as err:
+            ret["result"] = False
+            ret["comment"] = "Error: {}".format(err)
+            return ret
+    ret["comment"] = "Host password changed."
+    return ret

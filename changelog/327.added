@@ -1,0 +1,1 @@
+Added vmware_esxi. service_start, service_stop, service_restart, and service_policy module

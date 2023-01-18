@@ -28,54 +28,54 @@ import saltext.vmware.states.vm as virtual_machine_state
 from saltext.vmware.utils.connect import get_service_instance
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="session")
 def master(master):
+    default_path = Path(__file__).parent.parent.parent / "local" / "vcenter.sls"
+    default_path = (
+        default_path
+        if default_path.exists()
+        else Path(__file__).parent.parent.parent / "local" / "vcenter.conf"
+    )
+    config_path = Path(os.environ.get("VCENTER_CONFIG", default_path))
+    pillar_path = master.pillar_tree.base.paths[0]
+    (pillar_path / "top.sls").write_text('base:\n  "*":\n    - vcenter')
+    (pillar_path / "vcenter.sls").write_bytes(config_path.read_bytes())
     with master.started():
         yield master
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="session")
 def minion(minion):
     with minion.started():
+        minion.salt_call_cli().run("saltutil.refresh_pillar")
         yield minion
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def salt_run_cli(master):
     return master.salt_run_cli()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def salt_cli(master):
     return master.get_salt_cli()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def salt_call_cli(minion):
     return minion.salt_call_cli()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def integration_test_config():
-    # Most of the values in the vcenter config are pulled using the vcenter
-    # credentials *in* the vcenter config, and are populated via a manual call
-    # to tools/test_value_scraper.py.
-    # This is not ideal.
-    default_path = Path(__file__).parent.parent.parent / "local" / "vcenter.conf"
-    config_path = Path(os.environ.get("VCENTER_CONFIG", default_path))
-
-    try:
-        with config_path.open() as f:
-            return json.load(f)
-    except Exception as e:  # pylint: disable=broad-except
-        return None
+    pytest.skip("TODO stop using integration test config")
 
 
 @pytest.fixture(scope="session")
-def service_instance(integration_test_config):
-    config = integration_test_config
+def service_instance(salt_call_cli):
+    config = salt_call_cli.run("pillar.items").json
     try:
-        si = get_service_instance(config={"saltext.vmware": config.copy()} if config else None)
+        si = get_service_instance(config=config if config else None)
         return si
     except Exception as e:  # pylint: disable=broad-except
         pytest.skip(f"Unable to create service instance from config. Error = {e}")
@@ -174,6 +174,14 @@ def patch_salt_globals(vmware_conf):
             "vmware_esxi.set_firewall_config": esxi_mod.set_firewall_config,
             "vmware_esxi.get_advanced_config": esxi_mod.get_advanced_config,
             "vmware_esxi.set_advanced_configs": esxi_mod.set_advanced_configs,
+            "vmware_esxi.get_ntp_config": esxi_mod.get_ntp_config,
+            "vmware_esxi.list_services": esxi_mod.list_services,
+            "vmware_esxi.set_ntp_config": esxi_mod.set_ntp_config,
+            "vmware_esxi.service_start": esxi_mod.service_start,
+            "vmware_esxi.service_stop": esxi_mod.service_stop,
+            "vmware_esxi.service_policy": esxi_mod.service_policy,
+            "vmware_esxi.service_restart": esxi_mod.service_restart,
+            "vmware_esxi.update_user": esxi_mod.update_user,
         },
     )
     setattr(
