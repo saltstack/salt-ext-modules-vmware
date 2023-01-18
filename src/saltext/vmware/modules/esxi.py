@@ -886,7 +886,7 @@ def get_all_firewall_configs(
             for ruleset in firewall_config.firewallInfo.ruleset:
                 ret.setdefault(h.name, []).append(
                     {
-                        "allowed_host": {
+                        "allowed_hosts": {
                             "ip_address": list(ruleset.allowedHosts.ipAddress),
                             "all_ip": ruleset.allowedHosts.allIp,
                             "ip_network": [
@@ -969,7 +969,7 @@ def get_firewall_config(
                 if ruleset_name == ruleset.key:
                     ret.setdefault(h.name, []).append(
                         {
-                            "allowed_host": {
+                            "allowed_hosts": {
                                 "ip_address": list(ruleset.allowedHosts.ipAddress),
                                 "all_ip": ruleset.allowedHosts.allIp,
                                 "ip_network": [
@@ -1053,16 +1053,18 @@ def set_firewall_config(
                 firewall.EnableRuleset(id=firewall_config["name"])
             else:
                 firewall.DisableRuleset(id=firewall_config["name"])
-            if "allowed_host" in firewall_config:
-                if "all_ip" in firewall_config["allowed_host"]:
-                    firewall_rulespec.allowedHosts.allIp = firewall_config["allowed_host"]["all_ip"]
-                if "ip_address" in firewall_config["allowed_host"]:
+            if "allowed_hosts" in firewall_config:
+                if "all_ip" in firewall_config["allowed_hosts"]:
+                    firewall_rulespec.allowedHosts.allIp = firewall_config["allowed_hosts"][
+                        "all_ip"
+                    ]
+                if "ip_address" in firewall_config["allowed_hosts"]:
                     firewall_rulespec.allowedHosts.ipAddress = list(
-                        firewall_config["allowed_host"]["ip_address"]
+                        firewall_config["allowed_hosts"]["ip_address"]
                     )
                 firewall_rulespec.allowedHosts.ipNetwork = []
-                if "ip_network" in firewall_config["allowed_host"]:
-                    for network in firewall_config["allowed_host"]["ip_network"]:
+                if "ip_network" in firewall_config["allowed_hosts"]:
+                    for network in firewall_config["allowed_hosts"]["ip_network"]:
                         address, mask = network.split("/")
                         tmp_ip_network_spec = vim.host.Ruleset.IpNetwork()
                         tmp_ip_network_spec.network = address
