@@ -35,14 +35,16 @@ dummy_desired_advanced_config = {
 }
 
 dummy_expected_advanced_config_changes_less = {
-    "host1": {
-        "config1": "old",
-    },
     "host2": {
-        "config1": "old",
-        "config2": "old",
+        "new": {"config1": "new", "config2": "new"},
+        "old": {"config1": "old", "config2": "old"},
+    },
+    "host1": {
+        "new": {"config1": "new"},
+        "old": {"config1": "old"},
     },
 }
+
 
 NAME = "test"
 
@@ -50,17 +52,6 @@ NAME = "test"
 @pytest.fixture
 def configure_loader_modules():
     return {esxi: {}}
-
-
-def test_get_advanced_config_success_test_less():
-    mock_get_advanced_config = MagicMock(return_value=dummy_advanced_config)
-    esxi.connect = MagicMock()
-
-    with patch.dict(esxi.__salt__, {"vmware_esxi.get_advanced_config": mock_get_advanced_config}):
-        with patch.dict(esxi.__opts__, {"test": True}):
-            result = esxi.advanced_configs(
-                name=NAME, configs=dummy_desired_advanced_config, less=True
-            )
 
 
 def test_get_advanced_config_success_less():
@@ -76,9 +67,7 @@ def test_get_advanced_config_success_less():
         },
     ):
         with patch.dict(esxi.__opts__, {"test": False}):
-            result = esxi.advanced_configs(
-                name=NAME, configs=dummy_desired_advanced_config, less=True
-            )
+            result = esxi.advanced_configs(name=NAME, configs=dummy_desired_advanced_config)
 
     assert result is not None
     assert result["changes"] == dummy_expected_advanced_config_changes_less
@@ -99,9 +88,7 @@ def test_get_advanced_config_no_changes():
         },
     ):
         with patch.dict(esxi.__opts__, {"test": False}):
-            result = esxi.advanced_configs(
-                name=NAME, configs=dummy_desired_advanced_config, less=True
-            )
+            result = esxi.advanced_configs(name=NAME, configs=dummy_desired_advanced_config)
 
     assert result is not None
     assert result["changes"] == {}
@@ -115,12 +102,10 @@ def test_get_advanced_config_test_verbose_changes():
 
     with patch.dict(esxi.__salt__, {"vmware_esxi.get_advanced_config": mock_get_advanced_config}):
         with patch.dict(esxi.__opts__, {"test": True}):
-            result = esxi.advanced_configs(
-                name=NAME, configs=dummy_desired_advanced_config, less=False
-            )
+            result = esxi.advanced_configs(name=NAME, configs=dummy_desired_advanced_config)
 
     assert result is not None
-    assert result["result"]
+    assert result["result"] is None
 
 
 def test_get_advanced_config_verbose_changes():
@@ -136,9 +121,7 @@ def test_get_advanced_config_verbose_changes():
         },
     ):
         with patch.dict(esxi.__opts__, {"test": False}):
-            result = esxi.advanced_configs(
-                name=NAME, configs=dummy_desired_advanced_config, less=False
-            )
+            result = esxi.advanced_configs(name=NAME, configs=dummy_desired_advanced_config)
 
     assert result is not None
     assert result["result"]

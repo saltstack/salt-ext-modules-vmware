@@ -888,7 +888,6 @@ def advanced_configs(
     host_name=None,
     service_instance=None,
     profile=None,
-    less=False,
 ):
     """
     Set advanced configuration on matching ESXi hosts.
@@ -911,14 +910,11 @@ def advanced_configs(
     profile
         Profile to use (optional)
 
-    less
-        Default False. If this is set to True, only the changed values will be reported as changes.
 
     .. code-block:: yaml
 
         ESXi_advanced_config_example:
           vmware_esxi.advanced_configs:
-            - less: True
             - configs:
                 DCUI.Access: root
                 Net.BlockGuestBPDU: 1
@@ -936,7 +932,7 @@ def advanced_configs(
         service_instance=service_instance,
     )
 
-    changes = {} if less else {"new": {}, "old": {}}
+    changes = {}
 
     for key in configs:
         for host in esxi_config_old:
@@ -948,38 +944,28 @@ def advanced_configs(
                     "changes": changes,
                 }
 
-    if __opts__["test"]:
-        for host in esxi_config_old:
-            diff = salt.utils.data.recursive_diff(esxi_config_old[host], configs)
-            if less:
-                changes[host] = {k: diff["old"][k] for k in diff["new"]}
-            else:
-                changes["new"][host] = [f"{k} will be set to {diff['new'][k]}" for k in diff["new"]]
-                changes["old"][host] = [f"{k} was {diff['old'][k]}" for k in diff["new"]]
-        return {"name": name, "result": True, "comment": "", "changes": changes}
-
+    result = True
+    comment = "Config already in correct state"
     for host in esxi_config_old:
-        for name in configs:
-            value = configs[name]
-            if esxi_config_old[host][name] != value:
+        diff = salt.utils.data.recursive_diff(
+            esxi_config_old[host], configs, ignore_missing_keys=True
+        )
+        if "new" in diff:
+            changes[host] = diff
+            if __opts__["test"]:
+                if diff:
+                    result = None
+                    comment = "Changes would be made"
+            else:
                 config = __salt__["vmware_esxi.set_advanced_configs"](
-                    config_dict={name: value},
+                    config_dict=diff["new"],
                     datacenter_name=datacenter_name,
                     cluster_name=cluster_name,
                     host_name=host,
                     service_instance=service_instance,
                 )
-                if less:
-                    if host not in changes:
-                        changes[host] = {}
-                    changes[host][name] = esxi_config_old[host][name]
-                else:
-                    if host not in changes["old"]:
-                        changes["old"][host] = {}
-                        changes["new"][host] = {}
-                    changes["old"][host][name] = f"was {esxi_config_old[host][name]}"
-                    changes["new"][host][name] = f"was changed to {config[host][name]}"
-    return {"name": name, "result": True, "comment": "", "changes": changes}
+                comment = "Changes were made"
+    return {"name": name, "result": result, "comment": comment, "changes": changes}
 
 
 def firewall_config(
