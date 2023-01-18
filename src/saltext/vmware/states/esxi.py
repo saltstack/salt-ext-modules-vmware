@@ -3,7 +3,7 @@ import functools
 import json
 import logging
 
-import salt
+import salt.exceptions
 import salt.utils.data
 import salt.utils.dictdiffer
 import saltext.vmware.modules.esxi as vmware_esxi
