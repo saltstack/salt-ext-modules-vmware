@@ -1,0 +1,1 @@
+Fixed incorrect firewall config allowed_host to allowed_hosts
