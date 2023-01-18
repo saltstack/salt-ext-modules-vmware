@@ -44,6 +44,8 @@ dummy_expected_advanced_config_changes_less = {
     },
 }
 
+NAME = "test"
+
 
 @pytest.fixture
 def configure_loader_modules():
@@ -56,7 +58,9 @@ def test_get_advanced_config_success_test_less():
 
     with patch.dict(esxi.__salt__, {"vmware_esxi.get_advanced_config": mock_get_advanced_config}):
         with patch.dict(esxi.__opts__, {"test": True}):
-            result = esxi.advanced_configs(configs=dummy_desired_advanced_config, less=True)
+            result = esxi.advanced_configs(
+                name=NAME, configs=dummy_desired_advanced_config, less=True
+            )
 
 
 def test_get_advanced_config_success_less():
@@ -72,7 +76,9 @@ def test_get_advanced_config_success_less():
         },
     ):
         with patch.dict(esxi.__opts__, {"test": False}):
-            result = esxi.advanced_configs(configs=dummy_desired_advanced_config, less=True)
+            result = esxi.advanced_configs(
+                name=NAME, configs=dummy_desired_advanced_config, less=True
+            )
 
     assert result is not None
     assert result["changes"] == dummy_expected_advanced_config_changes_less
@@ -93,7 +99,9 @@ def test_get_advanced_config_no_changes():
         },
     ):
         with patch.dict(esxi.__opts__, {"test": False}):
-            result = esxi.advanced_configs(configs=dummy_desired_advanced_config, less=True)
+            result = esxi.advanced_configs(
+                name=NAME, configs=dummy_desired_advanced_config, less=True
+            )
 
     assert result is not None
     assert result["changes"] == {}
@@ -107,7 +115,9 @@ def test_get_advanced_config_test_verbose_changes():
 
     with patch.dict(esxi.__salt__, {"vmware_esxi.get_advanced_config": mock_get_advanced_config}):
         with patch.dict(esxi.__opts__, {"test": True}):
-            result = esxi.advanced_configs(configs=dummy_desired_advanced_config, less=False)
+            result = esxi.advanced_configs(
+                name=NAME, configs=dummy_desired_advanced_config, less=False
+            )
 
     assert result is not None
     assert result["result"]
@@ -126,7 +136,9 @@ def test_get_advanced_config_verbose_changes():
         },
     ):
         with patch.dict(esxi.__opts__, {"test": False}):
-            result = esxi.advanced_configs(configs=dummy_desired_advanced_config, less=False)
+            result = esxi.advanced_configs(
+                name=NAME, configs=dummy_desired_advanced_config, less=False
+            )
 
     assert result is not None
     assert result["result"]
