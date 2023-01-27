@@ -785,3 +785,11 @@ def test_lockdown_mode(service_instance):
 
     ret = esxi.in_lockdown_mode(host, service_instance)
     assert ret == dict(lockdownMode="normal")
+
+
+def test_get_vsan_enabled(service_instance):
+    ret = esxi.get_vsan_enabled(
+        service_instance=service_instance,
+    )
+    breakpoint()
+    assert ret

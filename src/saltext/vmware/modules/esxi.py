@@ -4,6 +4,7 @@ import logging
 import os
 
 import salt.exceptions
+from salt.ext import six
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as utils_connect
 import saltext.vmware.utils.esxi as utils_esxi
@@ -3198,3 +3199,323 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None, profi
     mode = in_lockdown_mode(host_ref, service_instance)
     mode["changes"] = mode["lockdownMode"] == "normal"
     return mode
+
+
+def get_vsan_enabled(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Get the VSAN enabled status for a given host or all hosts. Returns ``True``
+    if VSAN is enabled, ``False`` if it is not enabled.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+    
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_vsan_enabled host_name='192.0.2.117'
+    """
+    log.debug("Running vmware_esxi.get_vsan_enabled")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for host in hosts:
+        ret[host.name] = host.config.vsanHostConfig.enabled
+    return ret
+
+
+def vsan_enable(
+    enable=True,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Enable VSAN for a given host or all hosts.
+
+    enable
+        Enable vSAN. Valid values: True, False.
+    
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.vsan_enable host_name='192.0.2.117'
+    """
+    log.debug("Running vmware_esxi.get_vsan_enabled")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for host in hosts:
+        config = vim.vsan.host.ConfigInfo()
+        config.enabled = enable
+        task = host.configManager.vsanSystem.UpdateVsan_Task(config)
+        utils_common.wait_for_task(task, host.name, "UpdateVsan_Task")
+        ret[host.name] = host.config.vsanHostConfig.enabled
+    return ret
+
+
+def _get_vsan_eligible_disks(hosts):
+    """
+    Helper function that returns a dictionary of host_name keys with either a list of eligible
+    disks that can be added to VSAN or either an 'Error' message or a message saying no
+    eligible disks were found. Possible keys/values look like:
+
+    return = {'host_1': {'Error': 'VSAN System Config Manager is unset ...'},
+              'host_2': {'Eligible': 'The host xxx does not have any VSAN eligible disks.'},
+              'host_3': {'Eligible': [disk1, disk2, disk3, disk4],
+              'host_4': {'Eligible': []}}
+
+    hosts
+        list of host references
+
+    """
+    ret = {}
+    for host in hosts:
+        # Get VSAN System Config Manager, if available.
+        vsan_system = host.configManager.vsanSystem
+        if vsan_system is None:
+            msg = 'VSAN System Config Manager is unset for host \'{0}\'. ' \
+                  'VSAN configuration cannot be changed without a configured ' \
+                  'VSAN System.'.format(host.name)
+            log.debug(msg)
+            ret.update({host.name: {'Error': msg}})
+            continue
+
+        # Get all VSAN suitable disks for this host.
+        suitable_disks = []
+        query = vsan_system.QueryDisksForVsan()
+        for item in query:
+            if item.state == 'eligible':
+                suitable_disks.append(item)
+
+        # No suitable disks were found to add. Warn and move on.
+        # This isn't an error as the state may run repeatedly after all eligible disks are added.
+        if not suitable_disks:
+            msg = 'The host \'{0}\' does not have any VSAN eligible disks.'.format(host.name)
+            log.warning(msg)
+            ret.update({host.name: {'Eligible': msg}})
+            continue
+
+        # Get disks for host and combine into one list of Disk Objects
+        disks = utils_esxi.get_host_ssds(host) + utils_esxi.get_host_non_ssds(host)
+
+        # Get disks that are in both the disks list and suitable_disks lists.
+        matching = []
+        for disk in disks:
+            for suitable_disk in suitable_disks:
+                if disk.canonicalName == suitable_disk.disk.canonicalName:
+                    matching.append(disk)
+
+        ret.update({host.name: {'Eligible': matching}})
+    return ret
+
+def get_vsan_eligible_disks(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Returns a list of VSAN-eligible disks for a given host or list of host_names.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_vsan_enabled host_name='192.0.2.117'
+    """
+    log.debug("Running vmware_esxi.get_vsan_enabled")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    response = _get_vsan_eligible_disks(hosts)
+    ret = {}
+    for host_name, value in six.iteritems(response):
+        error = value.get('Error')
+        if error:
+            ret.update({host_name: {'Error': error}})
+            continue
+
+        disks = value.get('Eligible')
+        # If we have eligible disks, it will be a list of disk objects
+        if disks and isinstance(disks, list):
+            disk_names = []
+            # We need to return ONLY the disk names, otherwise
+            # MessagePack can't deserialize the disk objects.
+            for disk in disks:
+                disk_names.append(disk.canonicalName)
+            ret.update({host_name: {'Eligible': disk_names}})
+        else:
+            # If we have disks, but it's not a list, it's actually a
+            # string message that we're passing along.
+            ret.update({host_name: {'Eligible': disks}})
+
+    return ret
+
+
+def vsan_add_disks(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Add any VSAN-eligible disks to the VSAN System for the given host or list of host_names.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.vsan_add_disks host_name='192.0.2.117'
+    """
+    log.debug("Running vmware_esxi.vsan_add_disks")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    response = _get_vsan_eligible_disks(hosts)
+
+    for host_name, value in six.iteritems(response):
+        host_ref = utils_esxi.get_host(host_name, service_instance)
+        vsan_system = host_ref.configManager.vsanSystem
+
+        # We must have a VSAN Config in place before we can manipulate it.
+        if vsan_system is None:
+            msg = 'VSAN System Config Manager is unset for host \'{0}\'. ' \
+                  'VSAN configuration cannot be changed without a configured ' \
+                  'VSAN System.'.format(host_name)
+            log.debug(msg)
+            ret.update({host_name: {'Error': msg}})
+        else:
+            eligible = value.get('Eligible')
+            error = value.get('Error')
+
+            if eligible and isinstance(eligible, list):
+                # If we have eligible, matching disks, add them to VSAN.
+                try:
+                    task = vsan_system.AddDisks(eligible)
+                    utils_common.wait_for_task(task, host_name, 'Adding disks to VSAN', sleep_seconds=3)
+                except vim.fault.InsufficientDisks as err:
+                    log.debug(err.msg)
+                    ret.update({host_name: {'Error': err.msg}})
+                    continue
+                except Exception as err:
+                    msg = '\'vsphere.vsan_add_disks\' failed for host {0}: {1}'.format(host_name, err)
+                    log.debug(msg)
+                    ret.update({host_name: {'Error': msg}})
+                    continue
+
+                log.debug('Successfully added disks to the VSAN system for host \'{0}\'.'.format(host_name))
+                # We need to return ONLY the disk names, otherwise Message Pack can't deserialize the disk objects.
+                disk_names = []
+                for disk in eligible:
+                    disk_names.append(disk.canonicalName)
+                ret.update({host_name: {'Disks Added': disk_names}})
+            elif eligible and isinstance(eligible, six.string_types):
+                # If we have a string type in the eligible value, we don't
+                # have any VSAN-eligible disks. Pull the message through.
+                ret.update({host_name: {'Disks Added': eligible}})
+            elif error:
+                # If we hit an error, populate the Error return dict for state functions.
+                ret.update({host_name: {'Error': error}})
+            else:
+                # If we made it this far, we somehow have eligible disks, but they didn't
+                # match the disk list and just got an empty list of matching disks.
+                ret.update({host_name: {'Disks Added': 'No new VSAN-eligible disks were found to add.'}})
+
+    return ret
