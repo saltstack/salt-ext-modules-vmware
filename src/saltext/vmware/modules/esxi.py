@@ -4,12 +4,12 @@ import logging
 import os
 
 import salt.exceptions
-from salt.ext import six
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as utils_connect
 import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vmware as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
+from salt.ext import six
 from saltext.vmware.utils.connect import get_config
 
 log = logging.getLogger(__name__)
@@ -3214,7 +3214,7 @@ def get_vsan_enabled(
 
     host_name
         Filter by this ESXi hostname (optional)
-    
+
     datacenter_name
         Filter by this datacenter name (required when cluster is specified)
 
@@ -3262,7 +3262,7 @@ def vsan_enable(
 
     enable
         Enable vSAN. Valid values: True, False.
-    
+
     host_name
         Filter by this ESXi hostname (optional)
 
@@ -3324,26 +3324,28 @@ def _get_vsan_eligible_disks(hosts):
         # Get VSAN System Config Manager, if available.
         vsan_system = host.configManager.vsanSystem
         if vsan_system is None:
-            msg = 'VSAN System Config Manager is unset for host \'{0}\'. ' \
-                  'VSAN configuration cannot be changed without a configured ' \
-                  'VSAN System.'.format(host.name)
+            msg = (
+                "VSAN System Config Manager is unset for host '{}'. "
+                "VSAN configuration cannot be changed without a configured "
+                "VSAN System.".format(host.name)
+            )
             log.debug(msg)
-            ret.update({host.name: {'Error': msg}})
+            ret.update({host.name: {"Error": msg}})
             continue
 
         # Get all VSAN suitable disks for this host.
         suitable_disks = []
         query = vsan_system.QueryDisksForVsan()
         for item in query:
-            if item.state == 'eligible':
+            if item.state == "eligible":
                 suitable_disks.append(item)
 
         # No suitable disks were found to add. Warn and move on.
         # This isn't an error as the state may run repeatedly after all eligible disks are added.
         if not suitable_disks:
-            msg = 'The host \'{0}\' does not have any VSAN eligible disks.'.format(host.name)
+            msg = "The host '{}' does not have any VSAN eligible disks.".format(host.name)
             log.warning(msg)
-            ret.update({host.name: {'Eligible': msg}})
+            ret.update({host.name: {"Eligible": msg}})
             continue
 
         # Get disks for host and combine into one list of Disk Objects
@@ -3356,8 +3358,9 @@ def _get_vsan_eligible_disks(hosts):
                 if disk.canonicalName == suitable_disk.disk.canonicalName:
                     matching.append(disk)
 
-        ret.update({host.name: {'Eligible': matching}})
+        ret.update({host.name: {"Eligible": matching}})
     return ret
+
 
 def get_vsan_eligible_disks(
     host_name=None,
@@ -3403,13 +3406,13 @@ def get_vsan_eligible_disks(
 
     response = _get_vsan_eligible_disks(hosts)
     ret = {}
-    for host_name, value in six.iteritems(response):
-        error = value.get('Error')
+    for host_name, value in response.items():
+        error = value.get("Error")
         if error:
-            ret.update({host_name: {'Error': error}})
+            ret.update({host_name: {"Error": error}})
             continue
 
-        disks = value.get('Eligible')
+        disks = value.get("Eligible")
         # If we have eligible disks, it will be a list of disk objects
         if disks and isinstance(disks, list):
             disk_names = []
@@ -3417,11 +3420,11 @@ def get_vsan_eligible_disks(
             # MessagePack can't deserialize the disk objects.
             for disk in disks:
                 disk_names.append(disk.canonicalName)
-            ret.update({host_name: {'Eligible': disk_names}})
+            ret.update({host_name: {"Eligible": disk_names}})
         else:
             # If we have disks, but it's not a list, it's actually a
             # string message that we're passing along.
-            ret.update({host_name: {'Eligible': disks}})
+            ret.update({host_name: {"Eligible": disks}})
 
     return ret
 
@@ -3470,52 +3473,60 @@ def vsan_add_disks(
 
     response = _get_vsan_eligible_disks(hosts)
 
-    for host_name, value in six.iteritems(response):
+    for host_name, value in response.items():
         host_ref = utils_esxi.get_host(host_name, service_instance)
         vsan_system = host_ref.configManager.vsanSystem
 
         # We must have a VSAN Config in place before we can manipulate it.
         if vsan_system is None:
-            msg = 'VSAN System Config Manager is unset for host \'{0}\'. ' \
-                  'VSAN configuration cannot be changed without a configured ' \
-                  'VSAN System.'.format(host_name)
+            msg = (
+                "VSAN System Config Manager is unset for host '{}'. "
+                "VSAN configuration cannot be changed without a configured "
+                "VSAN System.".format(host_name)
+            )
             log.debug(msg)
-            ret.update({host_name: {'Error': msg}})
+            ret.update({host_name: {"Error": msg}})
         else:
-            eligible = value.get('Eligible')
-            error = value.get('Error')
+            eligible = value.get("Eligible")
+            error = value.get("Error")
 
             if eligible and isinstance(eligible, list):
                 # If we have eligible, matching disks, add them to VSAN.
                 try:
                     task = vsan_system.AddDisks(eligible)
-                    utils_common.wait_for_task(task, host_name, 'Adding disks to VSAN', sleep_seconds=3)
+                    utils_common.wait_for_task(
+                        task, host_name, "Adding disks to VSAN", sleep_seconds=3
+                    )
                 except vim.fault.InsufficientDisks as err:
                     log.debug(err.msg)
-                    ret.update({host_name: {'Error': err.msg}})
+                    ret.update({host_name: {"Error": err.msg}})
                     continue
                 except Exception as err:
-                    msg = '\'vsphere.vsan_add_disks\' failed for host {0}: {1}'.format(host_name, err)
+                    msg = "'vsphere.vsan_add_disks' failed for host {}: {}".format(host_name, err)
                     log.debug(msg)
-                    ret.update({host_name: {'Error': msg}})
+                    ret.update({host_name: {"Error": msg}})
                     continue
 
-                log.debug('Successfully added disks to the VSAN system for host \'{0}\'.'.format(host_name))
+                log.debug(
+                    "Successfully added disks to the VSAN system for host '{}'.".format(host_name)
+                )
                 # We need to return ONLY the disk names, otherwise Message Pack can't deserialize the disk objects.
                 disk_names = []
                 for disk in eligible:
                     disk_names.append(disk.canonicalName)
-                ret.update({host_name: {'Disks Added': disk_names}})
-            elif eligible and isinstance(eligible, six.string_types):
+                ret.update({host_name: {"Disks Added": disk_names}})
+            elif eligible and isinstance(eligible, str):
                 # If we have a string type in the eligible value, we don't
                 # have any VSAN-eligible disks. Pull the message through.
-                ret.update({host_name: {'Disks Added': eligible}})
+                ret.update({host_name: {"Disks Added": eligible}})
             elif error:
                 # If we hit an error, populate the Error return dict for state functions.
-                ret.update({host_name: {'Error': error}})
+                ret.update({host_name: {"Error": error}})
             else:
                 # If we made it this far, we somehow have eligible disks, but they didn't
                 # match the disk list and just got an empty list of matching disks.
-                ret.update({host_name: {'Disks Added': 'No new VSAN-eligible disks were found to add.'}})
+                ret.update(
+                    {host_name: {"Disks Added": "No new VSAN-eligible disks were found to add."}}
+                )
 
     return ret

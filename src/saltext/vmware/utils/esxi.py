@@ -394,23 +394,23 @@ def get_firewall_config(
 
 
 def get_host_ssds(host_reference):
-    '''
+    """
     Helper function that returns a list of ssd objects for a given host.
-    '''
-    return get_host_disks(host_reference).get('SSDs')
+    """
+    return get_host_disks(host_reference).get("SSDs")
 
 
 def get_host_non_ssds(host_reference):
-    '''
+    """
     Helper function that returns a list of Non-SSD objects for a given host.
-    '''
-    return get_host_disks(host_reference).get('Non-SSDs')
+    """
+    return get_host_disks(host_reference).get("Non-SSDs")
 
 
 def get_host_disks(host_reference):
-    '''
+    """
     Helper function that returns a dictionary containing a list of SSD and Non-SSD disks.
-    '''
+    """
     storage_system = host_reference.configManager.storageSystem
     disks = storage_system.storageDeviceInfo.scsiLun
     ssds = []
@@ -426,4 +426,4 @@ def get_host_disks(host_reference):
         else:
             non_ssds.append(disk)
 
-    return {'SSDs': ssds, 'Non-SSDs': non_ssds}
+    return {"SSDs": ssds, "Non-SSDs": non_ssds}
