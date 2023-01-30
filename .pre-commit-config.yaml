@@ -8,9 +8,9 @@ repos:
       - id: trailing-whitespace   # Trims trailing whitespace.
         args: [--markdown-linebreak-ext=md]
       - id: mixed-line-ending     # Replaces or checks mixed line ending.
-        args: [--fix=lf]
+        args: [--fix=auto]
       - id: end-of-file-fixer     # Makes sure files end in a newline and only a newline.
-        exclude: changelog/*
+        exclude: changelog/.*
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: check-ast             # Simply check whether files parse as valid python.
 

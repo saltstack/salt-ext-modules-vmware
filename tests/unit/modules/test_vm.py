@@ -7,9 +7,16 @@ import pytest
 import salt.exceptions
 import saltext.vmware.modules.vm as vm
 
+from tests.helpers import mock_with_name
+
 # TODO: why is `name` bad when it comes to Mock? Why do we need to use a namedtuple? -W. Werner, 2022-07-19
 PropSet = namedtuple("PropSet", "name,val")
 non_template_config = mock.Mock(template=None)
+
+
+@pytest.fixture
+def configure_loader_modules():
+    yield {vm: {}}
 
 
 @pytest.fixture
@@ -260,3 +267,48 @@ def test_when_vm_list_is_given_a_datacenter_name_but_no_cluster_name_then_it_sho
         assert fake_vmodl.query.PropertyCollector.FilterSpec.mock_calls[0].kwargs["objectSet"] == [
             fake_vmodl.query.PropertyCollector.ObjectSpec.return_value
         ]
+
+
+def test_when_vm_is_not_found_then_get_mks_ticket_should_return_empty_data(fake_service_instance):
+    fake_get_service_instance, service_instance = fake_service_instance
+    fake_get_service_instance.return_value.content.propertyCollector.RetrieveContents.return_value = (
+        []
+    )
+    with mock.patch(
+        "pyVmomi.vmodl.query.PropertyCollector.ObjectSpec", autospec=True
+    ) as fake_obj_spec:
+        result = vm.get_mks_ticket(
+            vm_name="fnord", ticket_type="fnord", service_instance=service_instance
+        )
+        assert result == {}
+
+
+def test_when_vm_is_found_then_expected_ticket_information_should_be_returned(
+    fake_service_instance,
+):
+    expected_ticket = {"foo": "bar", "bang": "quux"}
+    fake_vm_ref = mock.MagicMock()
+    fake_vm_ref.AcquireTicket.return_value = {"foo": "bar", "bang": "quux"}
+    fake_get_service_instance, service_instance = fake_service_instance
+    fake_get_service_instance.return_value.content.propertyCollector.RetrieveContents.return_value = [
+        mock.Mock(
+            propSet=[
+                mock_with_name(name="name", val="fnord", obj="something unimportant"),
+                mock_with_name(name="whatever", val="some other prop", obj="something unimportant"),
+                mock_with_name(
+                    name="coolprop", val="subzero or something", obj="something unimportant"
+                ),
+            ],
+            obj=fake_vm_ref,
+        )
+    ]
+    fake_get_service_instance.return_value.RetrieveContent.return_value.viewManager.CreateContainerView.return_value = mock.Mock(
+        view=mock_with_name(name="fnord"),
+    )
+    with mock.patch(
+        "pyVmomi.vmodl.query.PropertyCollector.ObjectSpec", autospec=True
+    ) as fake_obj_spec:
+        actual_ticket = vm.get_mks_ticket(
+            vm_name="fnord", ticket_type="fnord", service_instance=service_instance
+        )
+        assert actual_ticket == expected_ticket
