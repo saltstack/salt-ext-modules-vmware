@@ -66,16 +66,27 @@ def salt_call_cli(minion):
     return minion.salt_call_cli()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def integration_test_config():
-    pytest.skip("TODO stop using integration test config")
+    # Most of the values in the vcenter config are pulled using the vcenter
+    # credentials *in* the vcenter config, and are populated via a manual call
+    # to tools/test_value_scraper.py.
+    # This is not ideal.
+    default_path = Path(__file__).parent.parent.parent / "local" / "vcenter.conf"
+    config_path = Path(os.environ.get("VCENTER_CONFIG", default_path))
+
+    try:
+        with config_path.open() as f:
+            return json.load(f)
+    except Exception as e:  # pylint: disable=broad-except
+        return None
 
 
 @pytest.fixture(scope="session")
-def service_instance(salt_call_cli):
-    config = salt_call_cli.run("pillar.items").json
+def service_instance(integration_test_config):
+    config = integration_test_config
     try:
-        si = get_service_instance(config=config if config else None)
+        si = get_service_instance(config={"saltext.vmware": config.copy()} if config else None)
         return si
     except Exception as e:  # pylint: disable=broad-except
         pytest.skip(f"Unable to create service instance from config. Error = {e}")

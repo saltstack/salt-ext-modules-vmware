@@ -785,3 +785,46 @@ def test_lockdown_mode(service_instance):
 
     ret = esxi.in_lockdown_mode(host, service_instance)
     assert ret == dict(lockdownMode="normal")
+
+
+def test_get_vsan_enabled(service_instance):
+    ret = esxi.get_vsan_enabled(
+        service_instance=service_instance,
+    )
+    assert ret
+    for key in ret:
+        assert isinstance(ret[key], bool)
+
+
+def test_vsan_enabled(service_instance):
+    ret = esxi.vsan_enable(
+        service_instance=service_instance,
+    )
+    assert ret
+    for key in ret:
+        assert isinstance(ret[key], bool)
+    ret = esxi.vsan_enable(
+        enable=False,
+        service_instance=service_instance,
+    )
+    assert ret
+    for key in ret:
+        assert isinstance(ret[key], bool)
+
+
+def test_get_vsan_eligible_disks(service_instance):
+    ret = esxi.get_vsan_eligible_disks(
+        service_instance=service_instance,
+    )
+    assert ret
+    for key in ret:
+        assert ret[key].get("Eligible")
+
+
+def test_vsan_add_disks(service_instance):
+    ret = esxi.vsan_add_disks(
+        service_instance=service_instance,
+    )
+    assert ret
+    for key in ret:
+        assert ret[key].get("Disks Added")
