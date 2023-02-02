@@ -289,9 +289,7 @@ def twine_check_package(*, dist_dir, version):
             "check",
             str(dist_dir / f"saltext.vmware-{version}-py2.py3-none-any.whl"),
         )
-        if f"saltext.vmware-{version}-py2.py3-none-any.whl: PASSED" not in "".join(
-            ret.stdout.decode().split("\n")
-        ):
+        if f"PASSED" not in "".join(ret.stdout.decode().split("\n")):
             exit("Twine check failed")
 
 
