@@ -1601,6 +1601,7 @@ def vsan_config(
 
     Example:
     .. code-block:: yaml
+        
         configure-host-vsan:
           vmware_esxi.vsan_configured:
             - enabled: True
