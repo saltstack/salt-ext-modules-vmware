@@ -1556,3 +1556,127 @@ def password_present(
             return ret
     ret["comment"] = "Host password changed."
     return ret
+
+
+def vsan_config(
+    name,
+    enabled,
+    add_disks_to_vsan=False,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Configures a host's VSAN properties such as enabling or disabling VSAN, or
+    adding VSAN-eligible disks to the VSAN system for the host.
+
+    name
+        Name of the state.
+
+    enabled
+        Ensures whether or not VSAN should be enabled on a host as a boolean
+        value where ``True`` indicates that VSAN should be enabled and ``False``
+        indicates that VSAN should be disabled.
+
+    add_disks_to_vsan
+        If set to ``True``, any VSAN-eligible disks for the given host will be added
+        to the host's VSAN system. Default is ``False``.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    Example:
+    .. code-block:: yaml
+
+        configure-host-vsan:
+          vmware_esxi.vsan_configured:
+            - enabled: True
+            - add_disks_to_vsan: True
+    """
+    ret = {"name": name, "result": False, "changes": {}, "comment": ""}
+
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for host in hosts:
+        ret["changes"][host.name] = {}
+        current_vsan_enabled = __salt__["vmware_esxi.get_vsan_enabled"](
+            host_name=host.name, service_instance=service_instance
+        )
+        error = current_vsan_enabled.get("Error")
+        if error:
+            ret["comment"] = "Error: {}".format(error)
+            return ret
+        current_vsan_enabled = current_vsan_enabled.get(host.name)
+
+        # Configure VSAN Enabled state, if changed.
+        if enabled != current_vsan_enabled:
+            # Only run the command if not using test=True
+            if not __opts__["test"]:
+                response = __salt__["vmware_esxi.vsan_enable"](
+                    enable=enabled, host_name=host.name, service_instance=service_instance
+                )
+                error = response.get("Error")
+                if error:
+                    ret["comment"] = "Error: {}".format(error)
+                    return ret
+            ret["changes"][host.name].update(
+                {"enabled": {"old": current_vsan_enabled, "new": enabled}}
+            )
+
+        # Add any eligible disks to VSAN, if requested.
+        if add_disks_to_vsan:
+            current_eligible_disks = __salt__["vmware_esxi.get_vsan_eligible_disks"](
+                host_name=host.name, service_instance=service_instance
+            )
+            error = current_eligible_disks.get("Error")
+            if error:
+                ret["comment"] = "Error: {}".format(error)
+                return ret
+            disks = current_eligible_disks.get("Eligible")
+            if disks and isinstance(disks, list):
+                # Only run the command if not using test=True
+                if not __opts__["test"]:
+                    response = __salt__["vmware_esxi.vsan_add_disks"](
+                        host_name=host.name, service_instance=service_instance
+                    )
+                    error = response.get("Error")
+                    if error:
+                        ret["comment"] = "Error: {}".format(error)
+                        return ret
+
+                ret["changes"][host.name].update({"add_disks_to_vsan": {"old": "", "new": disks}})
+
+    ret["result"] = True
+    if ret["changes"] == {}:
+        ret["comment"] = "VSAN configuration is already in the desired state."
+        return ret
+
+    if __opts__["test"]:
+        ret["result"] = None
+        ret["comment"] = "VSAN configuration will change."
+
+    return ret

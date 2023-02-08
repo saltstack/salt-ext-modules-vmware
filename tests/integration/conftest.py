@@ -193,6 +193,10 @@ def patch_salt_globals(vmware_conf):
             "vmware_esxi.service_policy": esxi_mod.service_policy,
             "vmware_esxi.service_restart": esxi_mod.service_restart,
             "vmware_esxi.update_user": esxi_mod.update_user,
+            "vmware_esxi.get_vsan_enabled": esxi_mod.get_vsan_enabled,
+            "vmware_esxi.vsan_enable": esxi_mod.vsan_enable,
+            "vmware_esxi.get_vsan_eligible_disks": esxi_mod.get_vsan_eligible_disks,
+            "vmware_esxi.vsan_add_disks": esxi_mod.vsan_add_disks,
         },
     )
     setattr(
