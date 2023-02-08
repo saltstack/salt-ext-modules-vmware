@@ -1617,14 +1617,13 @@ def vsan_config(
         host_names=[host_name] if host_name else None,
         cluster_name=cluster_name,
         datacenter_name=datacenter_name,
-        get_all_hosts=host_name is None, 
+        get_all_hosts=host_name is None,
     )
 
     for host in hosts:
         ret["changes"][host.name] = {}
         current_vsan_enabled = __salt__["vmware_esxi.get_vsan_enabled"](
-            host_name=host.name,
-            service_instance=service_instance
+            host_name=host.name, service_instance=service_instance
         )
         error = current_vsan_enabled.get("Error")
         if error:
@@ -1637,9 +1636,7 @@ def vsan_config(
             # Only run the command if not using test=True
             if not __opts__["test"]:
                 response = __salt__["vmware_esxi.vsan_enable"](
-                    enable=enabled,
-                    host_name=host.name,
-                    service_instance=service_instance
+                    enable=enabled, host_name=host.name, service_instance=service_instance
                 )
                 error = response.get("Error")
                 if error:
@@ -1652,8 +1649,7 @@ def vsan_config(
         # Add any eligible disks to VSAN, if requested.
         if add_disks_to_vsan:
             current_eligible_disks = __salt__["vmware_esxi.get_vsan_eligible_disks"](
-                host_name=host.name,
-                service_instance=service_instance
+                host_name=host.name, service_instance=service_instance
             )
             error = current_eligible_disks.get("Error")
             if error:
@@ -1664,8 +1660,7 @@ def vsan_config(
                 # Only run the command if not using test=True
                 if not __opts__["test"]:
                     response = __salt__["vmware_esxi.vsan_add_disks"](
-                        host_name=host.name,
-                        service_instance=service_instance
+                        host_name=host.name, service_instance=service_instance
                     )
                     error = response.get("Error")
                     if error:

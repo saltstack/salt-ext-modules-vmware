@@ -485,7 +485,7 @@ def test_vsan_config(patch_salt_globals, service_instance):
     assert ret["changes"]
     for esxi_server in ret["changes"]:
         assert ret["changes"][esxi_server]["enabled"]["new"] is True
-    
+
     ret = esxi.vsan_config(
         name="test",
         enabled=False,
