@@ -460,3 +460,38 @@ def test_password_present_run(patch_salt_globals, service_instance):
     assert ret["result"] is True
     assert ret["comment"] == "Host password changed."
     esxi_mod.remove_user(user_name="test", service_instance=service_instance)
+
+
+def test_vsan_config_dry_run(patch_salt_globals, dry_run, service_instance):
+    ret = esxi.vsan_config(
+        name="test",
+        enabled=True,
+        service_instance=service_instance,
+    )
+    assert ret["result"] is None
+    assert ret["changes"]
+    assert ret["comment"] == "VSAN configuration will change."
+    for esxi_server in ret["changes"]:
+        assert ret["changes"][esxi_server]["enabled"]["new"] is True
+
+
+def test_vsan_config(patch_salt_globals, service_instance):
+    ret = esxi.vsan_config(
+        name="test",
+        enabled=True,
+        service_instance=service_instance,
+    )
+    assert ret["result"] is True
+    assert ret["changes"]
+    for esxi_server in ret["changes"]:
+        assert ret["changes"][esxi_server]["enabled"]["new"] is True
+    
+    ret = esxi.vsan_config(
+        name="test",
+        enabled=False,
+        service_instance=service_instance,
+    )
+    assert ret["result"] is True
+    assert ret["changes"]
+    for esxi_server in ret["changes"]:
+        assert ret["changes"][esxi_server]["enabled"]["new"] is False
