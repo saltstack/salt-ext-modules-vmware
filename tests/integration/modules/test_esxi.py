@@ -828,3 +828,14 @@ def test_vsan_add_disks(service_instance):
     assert ret
     for key in ret:
         assert ret[key].get("Disks Added")
+
+
+def test_list_disks(service_instance):
+    ret = esxi.list_disks(
+        service_instance=service_instance,
+    )
+    assert ret
+    for host_name in ret:
+        for disk in ret[host_name]:
+            assert disk.get("id")
+            assert disk.get("scsi_address")
