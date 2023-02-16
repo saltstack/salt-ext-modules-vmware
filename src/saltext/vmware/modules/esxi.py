@@ -3546,19 +3546,35 @@ def list_disks(
     Returns a list of dict representations of the disks in an ESXi host.
     The list of disks can be filtered by disk canonical names or
     scsi addresses.
+
     disk_ids:
         List of disk canonical names to be retrieved. Default is None.
+
     scsi_addresses
         List of scsi addresses of disks to be retrieved. Default is None
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
     service_instance
-        Service instance (vim.ServiceInstance) of the vCenter/ESXi host.
-        Default is None.
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
     CLI Example:
+
     .. code-block:: bash
-        salt '*' vsphere.list_disks
-        salt '*' vsphere.list_disks disk_ids='[naa.00, naa.001]'
-        salt '*' vsphere.list_disks
-            scsi_addresses='[vmhba0:C0:T0:L0, vmhba1:C0:T0:L0]'
+
+        salt '*' vmware_esxi.list_disks
+        salt '*' vmware_esxi.list_disks disk_ids='[naa.00, naa.001]'
+        salt '*' vmware_esxi.list_disks scsi_addresses='[vmhba0:C0:T0:L0, vmhba1:C0:T0:L0]'
     """
     log.debug("Running vmware_esxi.list_disks")
     ret = {}

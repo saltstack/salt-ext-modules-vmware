@@ -968,11 +968,13 @@ def _get_scsi_address_to_lun_key_map(
 def get_all_luns(host_ref, storage_system=None, hostname=None):
     """
     Returns a list of all vim.HostScsiDisk objects in a disk
+
     host_ref
-        The vim.HostSystem object representing the host that contains the
-        requested disks.
+        The vim.HostSystem object representing the host that contains the requested disks.
+
     storage_system
         The host's storage system. Default is None.
+
     hostname
         Name of the host. This argument is optional.
     """
@@ -1017,13 +1019,14 @@ def get_all_luns(host_ref, storage_system=None, hostname=None):
 
 def get_scsi_address_to_lun_map(host_ref, storage_system=None, hostname=None):
     """
-    Returns a map of all vim.ScsiLun objects on a ESXi host keyed by their
-    scsi address
+    Returns a map of all vim.ScsiLun objects on a ESXi host keyed by their scsi address
+
     host_ref
-        The vim.HostSystem object representing the host that contains the
-        requested disks.
+        The vim.HostSystem object representing the host that contains the requested disks.
+
     storage_system
         The host's storage system. Default is None.
+
     hostname
         Name of the host. This argument is optional.
     """
@@ -1046,15 +1049,19 @@ def get_disks(host_ref, disk_ids=None, scsi_addresses=None, get_all_disks=False)
     """
     Returns a list of vim.HostScsiDisk objects representing disks
     in a ESXi host, filtered by their cannonical names and scsi_addresses
+
     host_ref
         The vim.HostSystem object representing the host that contains the
         requested disks.
+
     disk_ids
         The list of canonical names of the disks to be retrieved. Default value
         is None
+
     scsi_addresses
         The list of scsi addresses of the disks to be retrieved. Default value
         is None
+
     get_all_disks
         Specifies whether to retrieve all disks in the host.
         Default value is False.
