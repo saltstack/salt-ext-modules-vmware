@@ -961,9 +961,7 @@ def _get_scsi_address_to_lun_key_map(
         # The vmware scsi_address may have multiple comma separated values
         # The first one is the actual scsi address
         lun_key_by_scsi_addr.update({p.name.split(",")[0]: l.lun for p in l.path})
-    log.trace(
-        "Scsi address to lun id map on host '%s': %s", hostname, lun_key_by_scsi_addr
-    )
+    log.trace("Scsi address to lun id map on host '%s': %s", hostname, lun_key_by_scsi_addr)
     return lun_key_by_scsi_addr
 
 
@@ -1037,9 +1035,7 @@ def get_scsi_address_to_lun_map(host_ref, storage_system=None, hostname=None):
     lun_ids_to_scsi_addr_map = _get_scsi_address_to_lun_key_map(
         si, host_ref, storage_system, hostname
     )
-    luns_to_key_map = {
-        d.key: d for d in get_all_luns(host_ref, storage_system, hostname)
-    }
+    luns_to_key_map = {d.key: d for d in get_all_luns(host_ref, storage_system, hostname)}
     return {
         scsi_addr: luns_to_key_map[lun_key]
         for scsi_addr, lun_key in lun_ids_to_scsi_addr_map.items()
@@ -1084,9 +1080,7 @@ def get_disks(host_ref, disk_ids=None, scsi_addresses=None, get_all_disks=False)
             si, host_ref, storage_system, hostname
         )
         disk_keys = [
-            key
-            for scsi_addr, key in lun_key_by_scsi_addr.items()
-            if scsi_addr in scsi_addresses
+            key for scsi_addr, key in lun_key_by_scsi_addr.items() if scsi_addr in scsi_addresses
         ]
         log.trace("disk_keys based on scsi_addresses = %s", disk_keys)
 

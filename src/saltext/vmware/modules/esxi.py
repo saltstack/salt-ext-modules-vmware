@@ -3572,19 +3572,15 @@ def list_disks(
         datacenter_name=datacenter_name,
         get_all_hosts=host_name is None,
     )
-    
+
     for host in hosts:
         get_all_disks = True if not (disk_ids or scsi_addresses) else False
         ret[host.name] = []
-        scsi_address_to_lun = utils_common.get_scsi_address_to_lun_map(
-            host, hostname=host.name
-        )
+        scsi_address_to_lun = utils_common.get_scsi_address_to_lun_map(host, hostname=host.name)
         canonical_name_to_scsi_address = {
             lun.canonicalName: scsi_addr for scsi_addr, lun in scsi_address_to_lun.items()
         }
-        for d in utils_common.get_disks(
-            host, disk_ids, scsi_addresses, get_all_disks
-        ):
+        for d in utils_common.get_disks(host, disk_ids, scsi_addresses, get_all_disks):
             ret[host.name].append(
                 {
                     "id": d.canonicalName,
