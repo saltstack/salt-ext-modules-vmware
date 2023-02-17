@@ -881,3 +881,234 @@ def deployment_resources(host_name, service_instance):
         "cluster": cluster_ref,
         "resource_pool": resource_pool,
     }
+
+
+def get_storage_system(service_instance, host_ref, hostname=None):
+    """
+    Returns a host's storage system
+    """
+
+    if not hostname:
+        hostname = get_managed_object_name(host_ref)
+
+    traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
+        path="configManager.storageSystem", type=vim.HostSystem, skip=False
+    )
+    objs = get_mors_with_properties(
+        service_instance,
+        vim.HostStorageSystem,
+        property_list=["systemFile"],
+        container_ref=host_ref,
+        traversal_spec=traversal_spec,
+    )
+    if not objs:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Host's '{}' storage system was not retrieved".format(hostname)
+        )
+    log.trace("[%s] Retrieved storage system", hostname)
+    return objs[0]["object"]
+
+
+def _get_scsi_address_to_lun_key_map(
+    service_instance, host_ref, storage_system=None, hostname=None
+):
+    """
+    Returns a map between the scsi addresses and the keys of all luns on an ESXi
+    host.
+        map[<scsi_address>] = <lun key>
+    service_instance
+        The Service Instance Object from which to obtain the hosts
+    host_ref
+        The vim.HostSystem object representing the host that contains the
+        requested disks.
+    storage_system
+        The host's storage system. Default is None.
+    hostname
+        Name of the host. Default is None.
+    """
+    if not hostname:
+        hostname = get_managed_object_name(host_ref)
+    if not storage_system:
+        storage_system = get_storage_system(service_instance, host_ref, hostname)
+    try:
+        device_info = storage_system.storageDeviceInfo
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    if not device_info:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Host's '{}' storage device info was not retrieved".format(hostname)
+        )
+    multipath_info = device_info.multipathInfo
+    if not multipath_info:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Host's '{}' multipath info was not retrieved".format(hostname)
+        )
+    if multipath_info.lun is None:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "No luns were retrieved from host '{}'".format(hostname)
+        )
+    lun_key_by_scsi_addr = {}
+    for l in multipath_info.lun:
+        # The vmware scsi_address may have multiple comma separated values
+        # The first one is the actual scsi address
+        lun_key_by_scsi_addr.update({p.name.split(",")[0]: l.lun for p in l.path})
+    log.trace("Scsi address to lun id map on host '%s': %s", hostname, lun_key_by_scsi_addr)
+    return lun_key_by_scsi_addr
+
+
+def get_all_luns(host_ref, storage_system=None, hostname=None):
+    """
+    Returns a list of all vim.HostScsiDisk objects in a disk
+
+    host_ref
+        The vim.HostSystem object representing the host that contains the requested disks.
+
+    storage_system
+        The host's storage system. Default is None.
+
+    hostname
+        Name of the host. This argument is optional.
+    """
+    if not hostname:
+        hostname = get_managed_object_name(host_ref)
+    if not storage_system:
+        si = get_service_instance_from_managed_object(host_ref, name=hostname)
+        storage_system = get_storage_system(si, host_ref, hostname)
+        if not storage_system:
+            raise salt.exceptions.VMwareObjectRetrievalError(
+                "Host's '{}' storage system was not retrieved".format(hostname)
+            )
+    try:
+        device_info = storage_system.storageDeviceInfo
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    if not device_info:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Host's '{}' storage device info was not retrieved".format(hostname)
+        )
+
+    scsi_luns = device_info.scsiLun
+    if scsi_luns:
+        log.trace(
+            "Retrieved scsi luns in host '%s': %s",
+            hostname,
+            [l.canonicalName for l in scsi_luns],
+        )
+        return scsi_luns
+    log.trace("Retrieved no scsi_luns in host '%s'", hostname)
+    return []
+
+
+def get_scsi_address_to_lun_map(host_ref, storage_system=None, hostname=None):
+    """
+    Returns a map of all vim.ScsiLun objects on a ESXi host keyed by their scsi address
+
+    host_ref
+        The vim.HostSystem object representing the host that contains the requested disks.
+
+    storage_system
+        The host's storage system. Default is None.
+
+    hostname
+        Name of the host. This argument is optional.
+    """
+    if not hostname:
+        hostname = get_managed_object_name(host_ref)
+    si = get_service_instance_from_managed_object(host_ref, name=hostname)
+    if not storage_system:
+        storage_system = get_storage_system(si, host_ref, hostname)
+    lun_ids_to_scsi_addr_map = _get_scsi_address_to_lun_key_map(
+        si, host_ref, storage_system, hostname
+    )
+    luns_to_key_map = {d.key: d for d in get_all_luns(host_ref, storage_system, hostname)}
+    return {
+        scsi_addr: luns_to_key_map[lun_key]
+        for scsi_addr, lun_key in lun_ids_to_scsi_addr_map.items()
+    }
+
+
+def get_disks(host_ref, disk_ids=None, scsi_addresses=None, get_all_disks=False):
+    """
+    Returns a list of vim.HostScsiDisk objects representing disks
+    in a ESXi host, filtered by their cannonical names and scsi_addresses
+
+    host_ref
+        The vim.HostSystem object representing the host that contains the
+        requested disks.
+
+    disk_ids
+        The list of canonical names of the disks to be retrieved. Default value
+        is None
+
+    scsi_addresses
+        The list of scsi addresses of the disks to be retrieved. Default value
+        is None
+
+    get_all_disks
+        Specifies whether to retrieve all disks in the host.
+        Default value is False.
+    """
+    hostname = get_managed_object_name(host_ref)
+    if get_all_disks:
+        log.trace("Retrieving all disks in host '%s'", hostname)
+    else:
+        log.trace(
+            "Retrieving disks in host '%s': ids = (%s); scsi addresses = (%s)",
+            hostname,
+            disk_ids,
+            scsi_addresses,
+        )
+        if not (disk_ids or scsi_addresses):
+            return []
+    si = get_service_instance_from_managed_object(host_ref, name=hostname)
+    storage_system = get_storage_system(si, host_ref, hostname)
+    disk_keys = []
+    if scsi_addresses:
+        # convert the scsi addresses to disk keys
+        lun_key_by_scsi_addr = _get_scsi_address_to_lun_key_map(
+            si, host_ref, storage_system, hostname
+        )
+        disk_keys = [
+            key for scsi_addr, key in lun_key_by_scsi_addr.items() if scsi_addr in scsi_addresses
+        ]
+        log.trace("disk_keys based on scsi_addresses = %s", disk_keys)
+
+    scsi_luns = get_all_luns(host_ref, storage_system)
+    scsi_disks = [
+        disk
+        for disk in scsi_luns
+        if isinstance(disk, vim.HostScsiDisk)
+        and (
+            get_all_disks
+            or
+            # Filter by canonical name
+            (disk_ids and (disk.canonicalName in disk_ids))
+            or
+            # Filter by disk keys from scsi addresses
+            (disk.key in disk_keys)
+        )
+    ]
+    log.trace(
+        "Retrieved disks in host '%s': %s",
+        hostname,
+        [d.canonicalName for d in scsi_disks],
+    )
+    return scsi_disks

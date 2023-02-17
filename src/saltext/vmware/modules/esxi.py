@@ -3531,3 +3531,76 @@ def vsan_add_disks(
                 )
 
     return ret
+
+
+def list_disks(
+    disk_ids=None,
+    scsi_addresses=None,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Returns a list of dict representations of the disks in an ESXi host.
+    The list of disks can be filtered by disk canonical names or
+    scsi addresses.
+
+    disk_ids:
+        List of disk canonical names to be retrieved. Default is None.
+
+    scsi_addresses
+        List of scsi addresses of disks to be retrieved. Default is None
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_disks
+        salt '*' vmware_esxi.list_disks disk_ids='[naa.00, naa.001]'
+        salt '*' vmware_esxi.list_disks scsi_addresses='[vmhba0:C0:T0:L0, vmhba1:C0:T0:L0]'
+    """
+    log.debug("Running vmware_esxi.list_disks")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for host in hosts:
+        get_all_disks = True if not (disk_ids or scsi_addresses) else False
+        ret[host.name] = []
+        scsi_address_to_lun = utils_common.get_scsi_address_to_lun_map(host, hostname=host.name)
+        canonical_name_to_scsi_address = {
+            lun.canonicalName: scsi_addr for scsi_addr, lun in scsi_address_to_lun.items()
+        }
+        for d in utils_common.get_disks(host, disk_ids, scsi_addresses, get_all_disks):
+            ret[host.name].append(
+                {
+                    "id": d.canonicalName,
+                    "scsi_address": canonical_name_to_scsi_address[d.canonicalName],
+                }
+            )
+    return ret
