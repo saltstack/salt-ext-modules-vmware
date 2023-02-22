@@ -2,10 +2,10 @@
 # SPDX-License: Apache-2.0
 import logging
 
+import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datastore as utils_datastore
 import saltext.vmware.utils.esxi as utils_esxi
-import saltext.vmware.utils.common as utils_common
 
 log = logging.getLogger(__name__)
 
@@ -99,8 +99,8 @@ def get(
     """
     Return info about datastores.
 
-    datacenter_name
-        Filter by this datacenter name (required when cluster is not specified)
+    datastore_name
+        Filter by this datastore name (required when cluster is not specified)
 
     datacenter_name
         Filter by this datacenter name (required when cluster is not specified)
@@ -166,15 +166,15 @@ def list_datastores(
 
     datastore_names
         List of the names of datastores to filter on
-    
+
     backing_disk_ids
         List of canonical names of the backing disks of the datastores to filer.
         Default is None.
-    
+
     backing_disk_scsi_addresses
         List of scsi addresses of the backing disks of the datastores to filter.
         Default is None.
-    
+
     datacenter_name
         Filter by this datacenter name (required when cluster is not specified)
 
@@ -218,19 +218,13 @@ def list_datastores(
         )
         # Get the ids of the disks with the scsi addresses
         if backing_disk_scsi_addresses:
-            log.debug(
-                "Retrieving disk ids for scsi addresses '%s'", backing_disk_scsi_addresses
-            )
+            log.debug("Retrieving disk ids for scsi addresses '%s'", backing_disk_scsi_addresses)
             disk_ids = [
                 d.canonicalName
-                for d in utils_common.get_disks(
-                    host, scsi_addresses=backing_disk_scsi_addresses
-                )
+                for d in utils_common.get_disks(host, scsi_addresses=backing_disk_scsi_addresses)
             ]
             log.debug("Found disk ids '%s'", disk_ids)
-            backing_disk_ids = (
-                backing_disk_ids.extend(disk_ids) if backing_disk_ids else disk_ids
-            )
+            backing_disk_ids = backing_disk_ids.extend(disk_ids) if backing_disk_ids else disk_ids
         datastores = utils_datastore.get_datastores_from_ref(
             service_instance, host, datastore_names, backing_disk_ids, get_all_datastores
         )
@@ -239,9 +233,7 @@ def list_datastores(
         # to be able to add the backing_disk_ids
         mount_infos = []
         if isinstance(host, vim.HostSystem):
-            storage_system = utils_common.get_storage_system(
-                service_instance, host, host.name
-            )
+            storage_system = utils_common.get_storage_system(service_instance, host, host.name)
             props = utils_common.get_properties_of_managed_object(
                 storage_system, ["fileSystemVolumeInfo.mountInfo"]
             )
