@@ -74,3 +74,16 @@ def test_get(service_instance, integration_test_config):
         assert isinstance(ds["type"], str) and len(ds["type"]) >= 1
         assert isinstance(ds["url"], str) and ds["url"].startswith("ds:///")
         assert isinstance(ds["uncommitted"], int)
+
+
+def test_list_datastores(service_instance):
+    ret = datastore.list_datastores(
+        service_instance=service_instance,
+    )
+    assert ret
+    for host in ret:
+        for ds in ret[host]:
+            assert isinstance(ds["name"], str) and len(ds["name"]) >= 1
+            assert isinstance(ds["type"], str) and len(ds["type"]) >= 1
+            assert isinstance(ds["free_space"], int)
+            assert isinstance(ds["capacity"], int)
