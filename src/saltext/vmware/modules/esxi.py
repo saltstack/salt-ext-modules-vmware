@@ -3665,9 +3665,7 @@ def list_diskgroups(
     get_all_diskgroups = True if not cache_disk_ids else False
     for host in hosts:
         ret[host.name] = []
-        for diskgroup in utils_common.get_diskgroups(
-            host, cache_disk_ids, get_all_diskgroups
-        ):
+        for diskgroup in utils_common.get_diskgroups(host, cache_disk_ids, get_all_diskgroups):
             ret[host.name].append(
                 {
                     "cache_disk": diskgroup.ssd.canonicalName,

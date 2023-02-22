@@ -1122,13 +1122,13 @@ def get_diskgroups(host_ref, cache_disk_ids=None, get_all_disk_groups=False):
     host_ref
         The vim.HostSystem object representing the host that contains the
         requested disks.
-    
+
     cache_disk_ids
         The list of cannonical names of the cache disks to be retrieved. The
         canonical name of the cache disk is enough to identify the disk group
         because it is guaranteed to have one and only one cache disk.
         Default is None.
-    
+
     get_all_disk_groups
         Specifies whether to retrieve all disks groups in the host.
         Default value is False.
