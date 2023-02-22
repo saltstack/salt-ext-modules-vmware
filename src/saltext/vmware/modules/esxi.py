@@ -3596,11 +3596,80 @@ def list_disks(
         canonical_name_to_scsi_address = {
             lun.canonicalName: scsi_addr for scsi_addr, lun in scsi_address_to_lun.items()
         }
-        for d in utils_common.get_disks(host, disk_ids, scsi_addresses, get_all_disks):
+        for disk in utils_common.get_disks(host, disk_ids, scsi_addresses, get_all_disks):
             ret[host.name].append(
                 {
-                    "id": d.canonicalName,
-                    "scsi_address": canonical_name_to_scsi_address[d.canonicalName],
+                    "id": disk.canonicalName,
+                    "scsi_address": canonical_name_to_scsi_address[disk.canonicalName],
+                }
+            )
+    return ret
+
+
+def list_diskgroups(
+    cache_disk_ids=None,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Returns a list of disk group dict representation on an ESXi host.
+    The list of disk groups can be filtered by the cache disks
+    canonical names. If no filtering is applied, all disk groups are returned.
+
+    cache_disk_ids
+        List of cache disk canonical names of the disk groups to be retrieved.
+        Default is None.
+
+    use_proxy_details
+        Specify whether to use the proxy minion's details instead of the
+        arguments
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_diskgroups
+        salt '*' vmware_esxi.list_diskgroups cache_disk_ids='[naa.000000000000001]'
+    """
+    log.debug("Running vmware_esxi.list_diskgroups")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    get_all_diskgroups = True if not cache_disk_ids else False
+    for host in hosts:
+        ret[host.name] = []
+        for diskgroup in utils_common.get_diskgroups(host, cache_disk_ids, get_all_diskgroups):
+            ret[host.name].append(
+                {
+                    "cache_disk": diskgroup.ssd.canonicalName,
+                    "capacity_disks": [d.canonicalName for d in diskgroup.nonSsd],
                 }
             )
     return ret

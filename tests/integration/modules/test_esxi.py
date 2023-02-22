@@ -839,3 +839,10 @@ def test_list_disks(service_instance):
         for disk in ret[host_name]:
             assert disk.get("id")
             assert disk.get("scsi_address")
+
+
+def test_list_diskgroups(service_instance):
+    ret = esxi.list_diskgroups(
+        service_instance=service_instance,
+    )
+    assert ret
