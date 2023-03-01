@@ -98,7 +98,7 @@ def test_list_disk_partitions(service_instance):
         for ds in ret[host]:
             if "backing_disk_ids" in ds:
                 for id in ds["backing_disk_ids"]:
-                    partition =datastore.list_disk_partitions(
+                    partition = datastore.list_disk_partitions(
                         disk_id=id,
                         service_instance=service_instance,
                     )

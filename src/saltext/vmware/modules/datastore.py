@@ -1,13 +1,13 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
 import logging
-import salt.exceptions
 
+import salt.exceptions
 import saltext.vmware.utils.common as utils_common
-import saltext.vmware.utils.vmware as utils_vmware
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datastore as utils_datastore
 import saltext.vmware.utils.esxi as utils_esxi
+import saltext.vmware.utils.vmware as utils_vmware
 
 log = logging.getLogger(__name__)
 
@@ -264,7 +264,7 @@ def list_datastores(
 
 def list_disk_partitions(
     disk_id=None,
-    scsi_address=None, 
+    scsi_address=None,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
@@ -347,9 +347,7 @@ def list_disk_partitions(
         #       2. The orders in the layout/partition views are not the same
         for part_spec in partition_info.spec.partition:
             part_layout = [
-                p
-                for p in partition_info.layout.partition
-                if p.partition == part_spec.partition
+                p for p in partition_info.layout.partition if p.partition == part_spec.partition
             ][0]
             part_dict = {
                 "hostname": host.name,
