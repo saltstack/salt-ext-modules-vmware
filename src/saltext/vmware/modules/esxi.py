@@ -3683,6 +3683,8 @@ def get_host_datetime(
     profile=None,
 ):
     """
+    .. versionadded:: <CODENAME>
+
     Get the date/time information for a given host or all hosts.
 
     host_name
