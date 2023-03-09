@@ -846,3 +846,15 @@ def test_list_diskgroups(service_instance):
         service_instance=service_instance,
     )
     assert ret
+
+
+def test_get_service_policy(service_instance):
+    ret = esxi.get_service_policy(
+        "ssh",
+        service_instance=service_instance,
+    )
+    assert ret
+    for host_name in ret:
+        for service in ret[host_name]:
+            assert service == "ssh"
+            assert isinstance(ret[host_name][service], str)
