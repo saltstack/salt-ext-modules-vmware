@@ -846,3 +846,13 @@ def test_list_diskgroups(service_instance):
         service_instance=service_instance,
     )
     assert ret
+
+
+def test_get_host_datetime(service_instance):
+    ret = esxi.get_host_datetime(
+        service_instance=service_instance,
+    )
+    assert ret
+    for host_name in ret:
+        for date in ret[host_name]:
+            assert isinstance(date, str)
