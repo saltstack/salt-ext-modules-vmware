@@ -417,6 +417,8 @@ def get_service_policy(
     profile=None,
 ):
     """
+    .. versionadded:: <CODENAME>
+    
     Get the service name's policy for a given host or list of hosts.
 
     service_name
