@@ -1180,3 +1180,10 @@ def get_diskgroups(host_ref, cache_disk_ids=None, get_all_disk_groups=False):
         [disk.ssd.canonicalName for disk in disk_groups],
     )
     return disk_groups
+
+
+def get_date_time_mgr(host_reference):
+    """
+    Helper function that returns a dateTimeManager object
+    """
+    return host_reference.configManager.dateTimeSystem

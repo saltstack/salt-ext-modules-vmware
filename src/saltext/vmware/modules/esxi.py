@@ -3788,3 +3788,57 @@ def list_diskgroups(
                 }
             )
     return ret
+
+
+def get_host_datetime(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: <CODENAME>
+
+    Get the date/time information for a given host or all hosts.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_host_datetime
+
+    """
+    log.debug("Running vmware_esxi.get_host_datetime")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    for host in hosts:
+        date_time_manager = utils_common.get_date_time_mgr(host)
+        date_time = date_time_manager.QueryDateTime()
+        ret.update({host.name: date_time.ctime()})
+
+    return ret
