@@ -868,3 +868,15 @@ def test_get_host_datetime(service_instance):
     for host_name in ret:
         for date in ret[host_name]:
             assert isinstance(date, str)
+
+
+def test_get_service_running(service_instance):
+    ret = esxi.get_service_running(
+        "ssh",
+        service_instance=service_instance,
+    )
+    assert ret
+    for host_name in ret:
+        for service in ret[host_name]:
+            assert service == "ssh"
+            assert isinstance(ret[host_name][service], bool)
