@@ -459,7 +459,7 @@ def get_service_policy(
         salt '*' vmware_esxi.get_service_policy 'ssh'
 
     """
-    log.debug("Running vmware_esxi.service_restart")
+    log.debug("Running vmware_esxi.get_service_policy")
     ret = {}
     service_instance = service_instance or utils_connect.get_service_instance(
         config=__opts__, profile=profile
@@ -519,6 +519,121 @@ def get_service_policy(
         # If we made it this far, something else has gone wrong.
         if ret.get(host.name) is None:
             msg = "'vsphere.get_service_policy' failed for host {}.".format(host.name)
+            log.debug(msg)
+            ret.update({host.name: {"Error": msg}})
+
+    return ret
+
+
+def get_service_running(
+    service_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: <CODENAME>
+
+    Get the service name's running state for a given host or list of hosts.
+
+    service_name
+        The name of the service for which to retrieve the policy. Supported service names are:
+          - DCUI
+          - TSM
+          - SSH
+          - lbtd
+          - lsassd
+          - lwiod
+          - netlogond
+          - ntpd
+          - sfcbd-watchdog
+          - snmpd
+          - vprobed
+          - vpxa
+          - xorg
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_service_running 'ntpd'
+    """
+    log.debug("Running vmware_esxi.get_service_running")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    valid_services = [
+        "DCUI",
+        "TSM",
+        "SSH",
+        "ssh",
+        "lbtd",
+        "lsassd",
+        "lwiod",
+        "netlogond",
+        "ntpd",
+        "sfcbd-watchdog",
+        "snmpd",
+        "vprobed",
+        "vpxa",
+        "xorg",
+    ]
+    for host in hosts:
+        # Check if the service_name provided is a valid one.
+        # If we don't have a valid service, return. The service will be invalid for all hosts.
+        if service_name not in valid_services:
+            ret.update(
+                {host.name: {"Error": "{} is not a valid service name.".format(service_name)}}
+            )
+            return ret
+
+        services = host.configManager.serviceSystem.serviceInfo.service
+
+        # Don't require users to know that VMware lists the ssh service as TSM-SSH
+        if service_name == "SSH" or service_name == "ssh":
+            temp_service_name = "TSM-SSH"
+        else:
+            temp_service_name = service_name
+
+        # Loop through services until we find a matching name
+        for service in services:
+            if service.key == temp_service_name:
+                ret.update({host.name: {service_name: service.running}})
+                # We've found a match - break out of the loop so we don't overwrite the
+                # Updated host.name value with an error message.
+                break
+            else:
+                msg = "Could not find service '{}' for host '{}'.".format(service_name, host.name)
+                ret.update({host.name: {"Error": msg}})
+
+        # If we made it this far, something else has gone wrong.
+        if ret.get(host.name) is None:
+            msg = "'vsphere.get_service_running' failed for host {}.".format(host.name)
             log.debug(msg)
             ret.update({host.name: {"Error": msg}})
 
