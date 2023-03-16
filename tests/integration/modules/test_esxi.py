@@ -878,3 +878,15 @@ def test_get_vmotion_enabled(service_instance):
     for host_name in ret:
         for vmotion in ret[host_name]:
             assert isinstance(ret[host_name][vmotion], bool)
+
+
+def test_get_service_running(service_instance):
+    ret = esxi.get_service_running(
+        "ssh",
+        service_instance=service_instance,
+    )
+    assert ret
+    for host_name in ret:
+        for service in ret[host_name]:
+            assert service == "ssh"
+            assert isinstance(ret[host_name][service], bool)
