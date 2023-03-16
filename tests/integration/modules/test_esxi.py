@@ -868,3 +868,13 @@ def test_get_host_datetime(service_instance):
     for host_name in ret:
         for date in ret[host_name]:
             assert isinstance(date, str)
+
+
+def test_get_vmotion_enabled(service_instance):
+    ret = esxi.get_vmotion_enabled(
+        service_instance=service_instance,
+    )
+    assert ret
+    for host_name in ret:
+        for vmotion in ret[host_name]:
+            assert isinstance(ret[host_name][vmotion], bool)

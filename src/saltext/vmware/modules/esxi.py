@@ -3844,3 +3844,59 @@ def get_host_datetime(
         ret.update({host.name: date_time.ctime()})
 
     return ret
+
+
+def get_vmotion_enabled(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: <CODENAME>
+
+    Get the VMotion enabled status for a given host or a list of host_names. Returns ``True``
+    if VMotion is enabled, ``False`` if it is not enabled.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_vmotion_enabled
+    """
+    log.debug("Running vmware_esxi.get_host_datetime")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    for host in hosts:
+        vmotion_vnic = host.configManager.vmotionSystem.netConfig.joey
+        if vmotion_vnic:
+            ret.update({host.name: {"VMotion Enabled": True}})
+        else:
+            ret.update({host.name: {"VMotion Enabled": False}})
+
+    return ret
