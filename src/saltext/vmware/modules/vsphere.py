@@ -46,7 +46,7 @@ def system_info(
 ):
     """
     .. versionadded:: <CODENAME>
-    
+
     Return system information about a VMware environment.
 
     service_instance
@@ -67,7 +67,5 @@ def system_info(
     ret = utils_common.get_inventory(service_instance).about.__dict__
     if "apiType" in ret:
         if ret["apiType"] == "HostAgent":
-            ret = dictupdate.update(
-                ret, utils_common.get_hardware_grains(service_instance)
-            )
+            ret = dictupdate.update(ret, utils_common.get_hardware_grains(service_instance))
     return ret
