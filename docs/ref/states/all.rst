@@ -14,6 +14,7 @@ State Modules
     saltext.vmware.states.folder
     saltext.vmware.states.license_mgr
     saltext.vmware.states.nsxt_compute_manager
+    saltext.vmware.states.nsxt_edge_clusters
     saltext.vmware.states.nsxt_ip_blocks
     saltext.vmware.states.nsxt_ip_pools
     saltext.vmware.states.nsxt_license
