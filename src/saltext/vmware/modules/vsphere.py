@@ -76,6 +76,8 @@ def list_resourcepools(
     profile=None,
 ):
     """
+    .. versionadded:: <CODENAME>
+
     Returns a list of resource pools for the specified host.
 
     service_instance
