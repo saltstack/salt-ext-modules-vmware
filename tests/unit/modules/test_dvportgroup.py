@@ -233,7 +233,7 @@ def test_dvportgroup_get_should_return_expected_data(
 
 def test_get_should_feed_results_through_VmomiJSONEncoder():
     expected_data = {"blerp": "lawl"}
-    with patch("saltext.vmware.utils.vmware._get_dvs", autospec=True) as fake_dvs, patch(
+    with patch("saltext.vmware.utils.vsphere._get_dvs", autospec=True) as fake_dvs, patch(
         "pyVmomi.VmomiSupport.VmomiJSONEncoder", autospec=True
     ) as fake_encoder:
         fake_dvs.return_value.portgroup = []

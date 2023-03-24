@@ -4,7 +4,7 @@ import json
 import logging
 
 import saltext.vmware.utils.connect as connect
-import saltext.vmware.utils.vmware as utils_vmware
+import saltext.vmware.utils.vsphere as utils_vmware
 
 log = logging.getLogger(__name__)
 
