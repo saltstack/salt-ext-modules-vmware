@@ -7,7 +7,7 @@ import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as utils_connect
 import saltext.vmware.utils.esxi as utils_esxi
-import saltext.vmware.utils.vmware as utils_vmware
+import saltext.vmware.utils.vsphere as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_config
 

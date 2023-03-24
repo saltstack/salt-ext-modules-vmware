@@ -17,3 +17,10 @@ def test_system_info(service_instance):
     assert ret
     assert isinstance(ret["apiType"], str)
     assert isinstance(ret["fullName"], str)
+
+
+def test_list_resourcepools(service_instance):
+    ret = vsphere.list_resourcepools(
+        service_instance=service_instance,
+    )
+    assert ret

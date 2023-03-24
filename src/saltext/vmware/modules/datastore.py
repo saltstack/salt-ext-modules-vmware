@@ -7,7 +7,7 @@ import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datastore as utils_datastore
 import saltext.vmware.utils.esxi as utils_esxi
-import saltext.vmware.utils.vmware as utils_vmware
+import saltext.vmware.utils.vsphere as utils_vmware
 
 log = logging.getLogger(__name__)
 
