@@ -108,3 +108,10 @@ def test_list_disk_partitions(service_instance):
                             assert isinstance(par["device"], str) and len(par["device"]) >= 1
                             assert isinstance(par["format"], str) and len(par["format"]) >= 1
                             assert isinstance(par["partition"], int)
+
+
+def test_list_datastore_clusters(service_instance):
+    ret = datastore.list_datastore_clusters(
+        service_instance=service_instance,
+    )
+    assert ret
