@@ -24,3 +24,12 @@ def test_list_resourcepools(service_instance):
         service_instance=service_instance,
     )
     assert ret
+
+
+def test_list_networks(service_instance):
+    ret = vsphere.list_networks(
+        service_instance=service_instance,
+    )
+    assert ret
+    for network in ret:
+        assert isinstance(network, str)
