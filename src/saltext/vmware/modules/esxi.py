@@ -417,7 +417,7 @@ def get_service_policy(
     profile=None,
 ):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.4.4.0rc1
 
     Get the service name's policy for a given host or list of hosts.
 
@@ -534,7 +534,7 @@ def get_service_running(
     profile=None,
 ):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.4.4.0rc1
 
     Get the service name's running state for a given host or list of hosts.
 
@@ -3915,7 +3915,7 @@ def get_host_datetime(
     profile=None,
 ):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.4.4.0rc1
 
     Get the date/time information for a given host or all hosts.
 
@@ -3969,7 +3969,7 @@ def get_vmotion_enabled(
     profile=None,
 ):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.4.4.0rc1
 
     Get the VMotion enabled status for a given host or a list of host_names. Returns ``True``
     if VMotion is enabled, ``False`` if it is not enabled.
