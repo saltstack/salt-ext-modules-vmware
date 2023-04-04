@@ -1191,7 +1191,7 @@ def get_date_time_mgr(host_reference):
 
 def get_inventory(service_instance):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.4.4.0rc1
 
     Return the inventory of a Service Instance Object.
 
@@ -1203,7 +1203,7 @@ def get_inventory(service_instance):
 
 def get_hardware_grains(service_instance):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.4.4.0rc1
 
     Return hardware info for standard minion grains if the service_instance is a HostAgent type
 

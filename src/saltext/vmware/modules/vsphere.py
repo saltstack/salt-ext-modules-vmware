@@ -45,7 +45,7 @@ def system_info(
     profile=None,
 ):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.4.4.0rc1
 
     Return system information about a VMware environment.
 
@@ -76,7 +76,7 @@ def list_resourcepools(
     profile=None,
 ):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.4.4.0rc1
 
     Returns a list of resource pools for the specified host.
 
@@ -104,6 +104,8 @@ def list_networks(
     profile=None,
 ):
     """
+    .. versionadded:: 23.4.4.0rc1
+
     Returns a list of networks for the specified host.
 
     service_instance
