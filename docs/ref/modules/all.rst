@@ -19,6 +19,7 @@ Execution Modules
     saltext.vmware.modules.folder
     saltext.vmware.modules.license_mgr
     saltext.vmware.modules.nsxt_compute_manager
+    saltext.vmware.modules.nsxt_edge_clusters
     saltext.vmware.modules.nsxt_ip_blocks
     saltext.vmware.modules.nsxt_ip_pools
     saltext.vmware.modules.nsxt_license
