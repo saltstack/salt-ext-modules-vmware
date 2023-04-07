@@ -78,3 +78,12 @@ def test_destroyed(patch_salt_globals_folder):
     folder.create("test_folder", "Datacenter", "vm")
     ret = folder.destroy("test_folder", "Datacenter", "vm")
     assert ret["status"] == "destroyed"
+
+
+def test_list(service_instance):
+    ret = folder.list_(
+        service_instance=service_instance,
+    )
+    assert ret
+    for f in ret:
+        assert isinstance(f, str)

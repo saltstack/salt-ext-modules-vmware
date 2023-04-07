@@ -6,6 +6,7 @@ import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as utils_datacenter
+import saltext.vmware.utils.vsphere as utils_vmware
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ except ImportError:
 
 
 __virtualname__ = "vmware_folder"
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -217,3 +219,21 @@ def move(folder_name, destination_folder_name, dc_name, type, service_instance=N
     task = destination.MoveIntoFolder_Task([folder])
     utils_common.wait_for_task(task, folder.name, "move folder")
     return {"status": "moved"}
+
+
+def list_(service_instance=None, profile=None):
+    """
+    .. versionadded:: <CODENAME>
+
+    Returns a list of folders.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+    """
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    return utils_vmware.list_folders(service_instance)
