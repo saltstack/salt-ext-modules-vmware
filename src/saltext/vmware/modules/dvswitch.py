@@ -20,6 +20,7 @@ except ImportError:
 
 __virtualname__ = "vmware_dvswitch"
 __proxyenabled__ = ["vmware_dvswitch"]
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -531,3 +532,31 @@ def update_hosts(
         salt.exceptions.VMwareApiError,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
+
+
+def list_(
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: <<VERSION>>
+
+    Returns a list of distributed virtual switches for the specified host.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_dvswitch.list
+    """
+    log.debug("Running vmware_dvswitch.list")
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    return utils_vmware.list_dvs(service_instance)
