@@ -33,3 +33,12 @@ def test_list_networks(service_instance):
     assert ret
     for network in ret:
         assert isinstance(network, str)
+
+
+def test_list_vapps(service_instance):
+    ret = vsphere.list_vapps(
+        service_instance=service_instance,
+    )
+    assert ret
+    for app in ret:
+        assert isinstance(app, str)
