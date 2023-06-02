@@ -125,3 +125,32 @@ def list_networks(
         config=__opts__, profile=profile
     )
     return utils_vsphere.list_networks(service_instance)
+
+
+def list_vapps(
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: <<VERSION>>
+
+    Returns a list of vApps for the specified host.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        # List vapps from all minions
+        salt '*' vmware_vsphere.list_vapps
+    """
+    log.debug("Running vmware_vsphere.list_vapps")
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    return utils_vsphere.list_vapps(service_instance)
