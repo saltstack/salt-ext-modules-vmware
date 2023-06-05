@@ -218,7 +218,7 @@ def list_ssds(
 
         salt '*' vmware_vsphere.list_ssds
     """
-    log.debug("Running vmware_vsphere.remove_hosts")
+    log.debug("Running vmware_vsphere.list_ssds")
     ret = {}
     service_instance = service_instance or utils_connect.get_service_instance(
         config=__opts__, profile=profile
