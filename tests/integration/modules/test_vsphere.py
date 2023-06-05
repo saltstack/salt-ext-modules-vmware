@@ -42,3 +42,13 @@ def test_list_vapps(service_instance):
     assert ret
     for app in ret:
         assert isinstance(app, str)
+
+
+def test_list_ssds(service_instance):
+    ret = vsphere.list_ssds(
+        service_instance=service_instance,
+    )
+    assert ret
+    for host_name in ret:
+        for ssd in ret[host_name]:
+            assert isinstance(ssd, str)
