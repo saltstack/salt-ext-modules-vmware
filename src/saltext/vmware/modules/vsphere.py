@@ -6,7 +6,9 @@ import os
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as utils_connect
+import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vsphere as utils_vsphere
+
 
 log = logging.getLogger(__name__)
 
@@ -154,3 +156,85 @@ def list_vapps(
         config=__opts__, profile=profile
     )
     return utils_vsphere.list_vapps(service_instance)
+
+
+def _get_host_disks(host_reference):
+    """
+    Helper function that returns a dictionary containing a list of SSD and Non-SSD disks.
+    """
+    storage_system = host_reference.configManager.storageSystem
+    disks = storage_system.storageDeviceInfo.scsiLun
+    ssds = []
+    non_ssds = []
+
+    for disk in disks:
+        try:
+            has_ssd_attr = disk.ssd
+        except AttributeError:
+            has_ssd_attr = False
+        if has_ssd_attr:
+            ssds.append(disk)
+        else:
+            non_ssds.append(disk)
+
+    return {"SSDs": ssds, "Non-SSDs": non_ssds}
+
+
+def _get_host_ssds(host_reference):
+    """
+    Helper function that returns a list of ssd objects for a given host.
+    """
+    return _get_host_disks(host_reference).get("SSDs")
+
+
+def list_ssds(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Returns a list of SSDs for the given host or list of host_names.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vsphere.list_ssds
+    """
+    log.debug("Running vmware_vsphere.remove_hosts")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    for host in hosts:
+        disks = _get_host_ssds(host)
+        names = []
+        for disk in disks:
+            names.append(disk.canonicalName)
+        ret.update({host.name: names})
+
+    return ret
