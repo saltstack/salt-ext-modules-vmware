@@ -62,9 +62,9 @@ def test_list_non_ssds(service_instance):
     )
     assert ret
     for host_name in ret:
-        for ssd in ret[host_name]:
-            assert isinstance(ssd, str)
-            if re.match(pattern, ssd):
+        for non_ssd in ret[host_name]:
+            assert isinstance(non_ssd, str)
+            if re.match(pattern, non_ssd):
                 assert True
             else:
                 assert False

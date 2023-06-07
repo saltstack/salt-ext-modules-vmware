@@ -180,13 +180,6 @@ def _get_host_disks(host_reference):
     return {"SSDs": ssds, "Non-SSDs": non_ssds}
 
 
-def _get_host_ssds(host_reference):
-    """
-    Helper function that returns a list of ssd objects for a given host.
-    """
-    return _get_host_disks(host_reference).get("SSDs")
-
-
 def list_ssds(
     host_name=None,
     datacenter_name=None,
@@ -233,7 +226,7 @@ def list_ssds(
         get_all_hosts=host_name is None,
     )
     for host in hosts:
-        disks = _get_host_ssds(host)
+        disks = _get_host_disks(host).get("SSDs")
         names = []
         for disk in disks:
             names.append(disk.canonicalName)
