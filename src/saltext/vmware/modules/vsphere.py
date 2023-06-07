@@ -242,13 +242,6 @@ def list_ssds(
     return ret
 
 
-def _get_host_non_ssds(host_reference):
-    """
-    Helper function that returns a list of Non-SSD objects for a given host.
-    """
-    return _get_host_disks(host_reference).get("Non-SSDs")
-
-
 def list_non_ssds(
     host_name=None,
     datacenter_name=None,

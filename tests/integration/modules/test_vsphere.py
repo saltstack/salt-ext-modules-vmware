@@ -1,6 +1,7 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License-Identifier: Apache-2.0
 import os
+import re
 import uuid
 from unittest.mock import MagicMock
 
@@ -55,6 +56,7 @@ def test_list_ssds(service_instance):
 
 
 def test_list_non_ssds(service_instance):
+    pattern = r"^[a-zA-Z0-9]{3}\."
     ret = vsphere.list_non_ssds(
         service_instance=service_instance,
     )
@@ -62,3 +64,7 @@ def test_list_non_ssds(service_instance):
     for host_name in ret:
         for ssd in ret[host_name]:
             assert isinstance(ssd, str)
+            if re.match(pattern, ssd):
+                assert True
+            else:
+                assert False
