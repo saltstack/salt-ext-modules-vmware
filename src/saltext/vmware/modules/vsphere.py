@@ -195,6 +195,8 @@ def list_ssds(
     profile=None,
 ):
     """
+    .. versionadded:: <<VERSION>>
+
     Returns a list of SSDs for the given host or list of host_names.
 
     datacenter_name
@@ -233,6 +235,75 @@ def list_ssds(
     for host in hosts:
         disks = _get_host_ssds(host)
         names = []
+        for disk in disks:
+            names.append(disk.canonicalName)
+        ret.update({host.name: names})
+
+    return ret
+
+
+def _get_host_non_ssds(host_reference):
+    """
+    Helper function that returns a list of Non-SSD objects for a given host.
+    """
+    return _get_host_disks(host_reference).get("Non-SSDs")
+
+
+def list_non_ssds(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: <<VERSION>>
+
+    Returns a list of Non-SSD disks for the given host or list of host_names.
+
+    .. note::
+
+        In the pyVmomi StorageSystem, ScsiDisks may, or may not have an ``ssd`` attribute.
+        This attribute indicates if the ScsiDisk is SSD backed. As this option is optional,
+        if a relevant disk in the StorageSystem does not have ``ssd = true``, it will end
+        up in the ``non_ssds`` list here.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vsphere.list_non_ssds
+    """
+    log.debug("Running vmware_vsphere.list_non_ssds")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    for host in hosts:
+        names = []
+        disks = _get_host_non_ssds(host)
         for disk in disks:
             names.append(disk.canonicalName)
         ret.update({host.name: names})
