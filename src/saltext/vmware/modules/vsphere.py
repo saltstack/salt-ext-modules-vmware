@@ -303,7 +303,7 @@ def list_non_ssds(
     )
     for host in hosts:
         names = []
-        disks = _get_host_non_ssds(host)
+        disks = _get_host_disks(host).get("Non-SSDs")
         for disk in disks:
             names.append(disk.canonicalName)
         ret.update({host.name: names})
