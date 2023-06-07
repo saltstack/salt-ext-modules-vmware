@@ -55,7 +55,7 @@ def test_list_ssds(service_instance):
 
 
 def test_list_non_ssds(service_instance):
-    ret = vsphere.list_ssds(
+    ret = vsphere.list_non_ssds(
         service_instance=service_instance,
     )
     assert ret
