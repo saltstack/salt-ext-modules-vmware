@@ -223,7 +223,7 @@ def move(folder_name, destination_folder_name, dc_name, type, service_instance=N
 
 def list_(service_instance=None, profile=None):
     """
-    .. versionadded:: <CODENAME>
+    .. versionadded:: 23.6.29.0rc1
 
     Returns a list of folders.
 
