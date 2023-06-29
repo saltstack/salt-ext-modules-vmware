@@ -134,7 +134,7 @@ def list_vapps(
     profile=None,
 ):
     """
-    .. versionadded:: <<VERSION>>
+    .. versionadded:: 23.6.29.0rc1
 
     Returns a list of vApps for the specified host.
 
@@ -188,7 +188,7 @@ def list_ssds(
     profile=None,
 ):
     """
-    .. versionadded:: <<VERSION>>
+    .. versionadded:: 23.6.29.0rc1
 
     Returns a list of SSDs for the given host or list of host_names.
 
@@ -243,7 +243,7 @@ def list_non_ssds(
     profile=None,
 ):
     """
-    .. versionadded:: <<VERSION>>
+    .. versionadded:: 23.6.29.0rc1
 
     Returns a list of Non-SSD disks for the given host or list of host_names.
 
