@@ -48,7 +48,7 @@ def _vc_vmomi_client():
     return VcenterConfig(esx_context)
 
 
-def get_current_config():
+def get_current_state():
     """
     Get current config.
     """
@@ -56,7 +56,7 @@ def get_current_config():
     return vc_appliance_client.extract_current_config()
 
 
-def create_desired_state_profile():
+def set_desired_state():
     """
     Create desired state profile.
     """
@@ -75,7 +75,7 @@ def create_desired_state_profile():
     return vc_appliance_client.create_desired_state_profile(json_payload)
 
 
-def get_desired_config():
+def get_desired_state():
     """
     Get desired config profile configured in the system.
     """
