@@ -1,1 +1,1 @@
-include src/archive/*
+include src/saltext/vmware/archive/*
