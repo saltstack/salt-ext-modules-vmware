@@ -2,17 +2,21 @@
 Salt execution module for VC APIs
 Provides methods to get cpu or memory related settings of a virtual machine
 """
-import logging
-import time
 import json
-import salt.minion
-import salt.fileclient
+import logging
 import os
+import time
 
+import salt.fileclient
+import salt.minion
+import salt.utils.yaml
+import yaml
+from config_modules_vmware.esxi.esx_context import EsxContext
 from config_modules_vmware.lib.common.credentials import VcenterCredentials, SddcCredentials
 from config_modules_vmware.lib.vcenter.vc_appliance_client import VcApplianceClient
 from config_modules_vmware.lib.vcenter.vc_cis_client import VcCisClient
-from config_modules_vmware.esxi.esx_context import EsxContext
+from config_modules_vmware.lib.vcenter.vc_vcenter_client import VcVcenterClient
+from config_modules_vmware.lib.vcenter.vc_vlcm_client import VcVlcmClient
 from config_modules_vmware.vcenter.vcenter_config import VcenterConfig
 from jproperties import Properties
 
@@ -27,18 +31,29 @@ def __virtual__():
     return __virtualname__
 
 
-def _get_vc_credential():
+def _get_vc_credential(conf=None):
     config = __opts__
-    conf = get_config(config)
+    if not conf:
+        conf = get_config(config)
     log.info("connection properties %s", conf)
     log.info("Retrieving current config for VC host %s", conf["host"])
     return VcenterCredentials(hostname=conf["host"], username=conf["user"], password=conf["password"],
                               ssl_thumbprint=conf["ssl_thumbprint"])
 
 
-def _vc_appliance_client():
-    vc_creds = _get_vc_credential()
+def _vc_appliance_client(conf=None):
+    vc_creds = _get_vc_credential(conf)
     return VcApplianceClient(vc_access=vc_creds)
+
+
+def _vc_vcenter_client(conf=None):
+    vc_creds = _get_vc_credential(conf)
+    return VcVcenterClient(vc_access=vc_creds)
+
+
+def _vc_vlcm_client(conf=None):
+    vc_creds = _get_vc_credential(conf)
+    return VcVlcmClient(vc_access=vc_creds)
 
 
 def _vc_vmomi_client():
@@ -54,6 +69,50 @@ def get_current_state():
     """
     vc_appliance_client = _vc_appliance_client()
     return vc_appliance_client.extract_current_config()
+
+
+def create_desired_state_template(reference_vc=None, vc=None, include_vc=True, include_esx=True, target_root=None):
+    """
+    Create desired state template by copying config from another vc.
+    """
+    config = __opts__
+
+    vmw_configs = config.get("pillar", {}).get("saltext.vmware")
+    vc_configs = vmw_configs.get("vcenters")
+    ref_vc_creds = vc_configs.get(reference_vc)
+    host = ref_vc_creds.get("host")
+    password = ref_vc_creds.get("password")
+    user = ref_vc_creds.get("user")
+    ssl_thumbprint = ref_vc_creds.get("ssl_thumbprint")
+    connection = {"host": host, "user": user, "password": password, "ssl_thumbprint": ssl_thumbprint}
+    vc_appliance_client = _vc_appliance_client(connection)
+    content = vc_appliance_client.extract_current_config()
+    # APPLY VC specific update. Skip as we are exporting from same vc
+    content_yaml = yaml.safe_dump(content)
+
+    __salt__["file.mkdir"]("/srv/salt/" + target_root + "config/global/defaults/" + vc + "/vc/")
+    __salt__["file.write"](
+        "/srv/salt/" + target_root + "config/global/defaults/" + vc + "/vc/" + "vc-desired-state.yaml", content_yaml)
+
+    vcenter_client = _vc_vcenter_client(connection)
+    vlcm_client = _vc_vlcm_client(connection)
+    clusters = vcenter_client.get_clusters()
+
+    for cluster in clusters:
+        log.info("Cluster %s", cluster)
+        if vlcm_client.is_vlcm_config_manager_enabled_on_cluster(cluster["cluster"]):
+            vlcm_content = vlcm_client.export_desired_state_cluster_configuration(cluster)
+            vlcm_content_yaml = yaml.safe_dump(vlcm_content)
+            __salt__["file.mkdir"](
+                "/srv/salt/" + target_root + "config/global/defaults/" + vc + "/" + cluster)
+            __salt__["file.write"](
+                "/srv/salt/" + target_root + "config/global/defaults/" + vc + "/" + cluster + "cluster-host-desired-state.yaml",
+                vlcm_content_yaml)
+    return "Desired State Template created."
+
+
+def validate_desired_state():
+    return True
 
 
 def set_desired_state():
