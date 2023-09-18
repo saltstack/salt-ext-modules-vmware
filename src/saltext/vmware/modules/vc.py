@@ -63,15 +63,49 @@ def _vc_vmomi_client():
     return VcenterConfig(esx_context)
 
 
-def get_current_state():
+def get_current_config():
     """
     Get current config.
     """
     vc_appliance_client = _vc_appliance_client()
-    return vc_appliance_client.extract_current_config()
+
+    """
+        Get desired config profile configured in the system.
+        """
+
+    config = __opts__
+
+    vmw_configs = config.get("pillar", {}).get("saltext.vmware")
+    vc_configs = vmw_configs.get("vcenters")
+    vc_list = vc_configs.keys()
+    out = {}
+    for vc in vc_list:
+        vc_cred = vc_configs.get(vc)
+        host = vc_cred.get("host")
+        password = vc_cred.get("password")
+        user = vc_cred.get("user")
+        ssl_thumbprint = vc_cred.get("ssl_thumbprint")
+        connection = {"host": host, "user": user, "password": password, "ssl_thumbprint": ssl_thumbprint}
+        vc_appliance_client = _vc_appliance_client(connection)
+        vc_config = vc_appliance_client.extract_current_config()
+        out[vc] = {"vc": vc_config}
+
+        # add logic for vlcm
+        vcenter_client = _vc_vcenter_client(connection)
+        vlcm_client = _vc_vlcm_client(connection)
+        clusters = vcenter_client.get_clusters()
+        esx = {}
+        for cluster in clusters:
+            log.info("Cluster %s", cluster)
+            if vlcm_client.is_vlcm_config_manager_enabled_on_cluster(cluster["cluster"]):
+                vlcm_content = vlcm_client.extract_cluster_current_config(cluster["cluster"])
+                esx[cluster["name"]] = vlcm_content
+        out[vc]["esx"] = esx
+
+    return out
 
 
-def create_desired_state_template(reference_vc=None, vc=None, include_vc=True, include_esx=True, target_root=None):
+def create_config_template(reference_vc=None, vc=None, include_vc=True, include_esx=True, target_dir=None):
     """
     Create desired state template by copying config from another vc.
     """
@@ -90,48 +124,86 @@ def create_desired_state_template(reference_vc=None, vc=None, include_vc=True, i
     # APPLY VC specific update. Skip as we are exporting from same vc
     content_yaml = yaml.safe_dump(content)
 
-    __salt__["file.mkdir"]("/srv/salt/" + target_root + "config/global/defaults/" + vc + "/vc/")
+    __salt__["file.mkdir"]("/srv/salt/" + target_dir + "config/global/defaults/" + vc + "/vc/")
     __salt__["file.write"](
-        "/srv/salt/" + target_root + "config/global/defaults/" + vc + "/vc/" + "vc-desired-state.yaml", content_yaml)
+        "/srv/salt/" + target_dir + "config/global/defaults/" + vc + "/vc/" + "vc-desired-state.yaml", content_yaml)
 
     vcenter_client = _vc_vcenter_client(connection)
     vlcm_client = _vc_vlcm_client(connection)
     clusters = vcenter_client.get_clusters()
-
+    vc_config = {vc: "/srv/salt/" + target_dir + "config/global/defaults/" + vc + "/vc/" + "vc-desired-state.yaml"}
+    esx_config = []
     for cluster in clusters:
         log.info("Cluster %s", cluster)
         if vlcm_client.is_vlcm_config_manager_enabled_on_cluster(cluster["cluster"]):
-            vlcm_content = vlcm_client.export_desired_state_cluster_configuration(cluster)
+            vlcm_content = vlcm_client.export_desired_state_cluster_configuration(cluster["cluster"])
             vlcm_content_yaml = yaml.safe_dump(vlcm_content)
             __salt__["file.mkdir"](
-                "/srv/salt/" + target_root + "config/global/defaults/" + vc + "/" + cluster)
+                "/srv/salt/" + target_dir + "config/global/defaults/" + vc + "/" + cluster["name"])
             __salt__["file.write"](
-                "/srv/salt/" + target_root + "config/global/defaults/" + vc + "/" + cluster + "cluster-host-desired-state.yaml",
+                "/srv/salt/" + target_dir + "config/global/defaults/" + vc + "/" + cluster[
+                    "name"] + "/cluster-host-desired-state.yaml",
                 vlcm_content_yaml)
-    return "Desired State Template created."
+            esx_config.append({cluster["name"]: "/srv/salt/" + target_dir + "config/global/defaults/" + vc + "/" + cluster[
+                    "name"] + "/cluster-host-desired-state.yaml"})
+    out = {"vc": vc_config, "esx": esx_config}
+    return out
 
 
-def validate_desired_state():
-    return True
-
-
-def set_desired_state():
+def import_config():
     """
     Create desired state profile.
     """
     config = __opts__
-    vc_appliance_client = _vc_appliance_client()
 
-    profile_file_path = config.get("grains", {}).get("vmware_config")["profile_file_path"]
+    vmw_configs = config.get("pillar", {}).get("saltext.vmware")
+    vc_configs = vmw_configs.get("vcenters")
+    vc_list = vc_configs.keys()
+    out = {}
+    for vc in vc_list:
+        vc_cred = vc_configs.get(vc)
+        host = vc_cred.get("host")
+        password = vc_cred.get("password")
+        user = vc_cred.get("user")
+        ssl_thumbprint = vc_cred.get("ssl_thumbprint")
+        connection = {"host": host, "user": user, "password": password, "ssl_thumbprint": ssl_thumbprint}
+        vc_appliance_client = _vc_appliance_client(connection)
 
-    client = salt.fileclient.get_file_client(__opts__)
-    profile_file_path = client.get_file(profile_file_path, "/tmp", True)
-    log.info("downloaded desired spec from master %s", profile_file_path)
-    with open(profile_file_path, 'rb') as payload_file:
-        json_payload = json.load(payload_file)
-    os.remove(profile_file_path)
-    log.info("deleted desired spec in minion %s", profile_file_path)
-    return vc_appliance_client.create_desired_state_profile(json_payload)
+        file_path = str(vc_cred.get("vc_desired_state_file")).format(vc)
+        log.info("PATH: %s", file_path)
+        # if __salt__["file.file_exists"](file_path): Add logic to handle file missing.
+        client = salt.fileclient.get_file_client(__opts__)
+        profile_file_path = client.get_file(file_path, "/tmp", True)
+        log.info("downloaded desired spec from master %s", profile_file_path)
+        with open(profile_file_path, 'rb') as payload_file:
+            json_payload = json.load(payload_file)
+        os.remove(profile_file_path)
+        log.info("deleted desired spec in minion %s", profile_file_path)
+        vc_config = vc_appliance_client.create_desired_state_profile(
+            {"description": "Import desired state", "desired_state": json_payload, "name": "PoC_Payload"})
+
+        out[vc] = {"vc": vc_config}
+
+        # add logic for vlcm
+        vcenter_client = _vc_vcenter_client(connection)
+        vlcm_client = _vc_vlcm_client(connection)
+        clusters = vcenter_client.get_clusters()
+        esx = {}
+        for cluster in clusters:
+            log.info("Cluster %s", cluster)
+            if vlcm_client.is_vlcm_config_manager_enabled_on_cluster(cluster["cluster"]):
+                esx_file_path = str(vc_cred.get("esx_desired_state_file")).format(vc, cluster["name"])
+                vlcm_file_path = client.get_file(esx_file_path, "/tmp", True)
+                log.info("downloaded desired spec from master %s", vlcm_file_path)
+                with open(vlcm_file_path, 'rb') as vlcm_payload_file:
+                    vlcm_payload = json.load(vlcm_payload_file)
+                os.remove(vlcm_file_path)
+                log.info("deleted desired spec in minion %s", vlcm_file_path)
+                vlcm_content = vlcm_client.import_desired_state_cluster_configuration(cluster["cluster"],
+                                                                                      payload=vlcm_payload)
+                esx[cluster["name"]] = vlcm_content
+        out[vc]["esx"] = esx
+    return out
 
 
 def get_desired_state():
@@ -139,8 +211,35 @@ def get_desired_state():
     Get desired config profile configured in the system.
     """
 
-    vc_appliance_client = _vc_appliance_client()
-    return vc_appliance_client.get_desired_state()
+    config = __opts__
+
+    vmw_configs = config.get("pillar", {}).get("saltext.vmware")
+    vc_configs = vmw_configs.get("vcenters")
+    vc_list = vc_configs.keys()
+    out = {}
+    for vc in vc_list:
+        vc_cred = vc_configs.get(vc)
+        host = vc_cred.get("host")
+        password = vc_cred.get("password")
+        user = vc_cred.get("user")
+        ssl_thumbprint = vc_cred.get("ssl_thumbprint")
+        connection = {"host": host, "user": user, "password": password, "ssl_thumbprint": ssl_thumbprint}
+        vc_appliance_client = _vc_appliance_client(connection)
+        vc_config = vc_appliance_client.get_desired_state()
+        out[vc] = {"vc": vc_config}
+
+        # add logic for vlcm
+        vcenter_client = _vc_vcenter_client(connection)
+        vlcm_client = _vc_vlcm_client(connection)
+        clusters = vcenter_client.get_clusters()
+        esx = {}
+        for cluster in clusters:
+            log.info("Cluster %s", cluster)
+            if vlcm_client.is_vlcm_config_manager_enabled_on_cluster(cluster["cluster"]):
+                vlcm_content = vlcm_client.export_desired_state_cluster_configuration(cluster["cluster"])
+                esx[cluster["name"]] = vlcm_content
+        out[vc]["esx"] = esx
+    return out
 
 
 def check_compliance():
@@ -148,15 +247,45 @@ def check_compliance():
     Check complaince against profile. Set profile is in grain
     """
 
+    # profile_id = config.get("grains", {}).get("vmware_config")["complaince_check_profile_id"]
+    # log.info("profile ID %s", profile_id)
+
     config = __opts__
-    vc_appliance_client = _vc_appliance_client()
-    profile_id = config.get("grains", {}).get("vmware_config")["complaince_check_profile_id"]
-    log.info("profile ID %s", profile_id)
-    task_id = vc_appliance_client.check_for_drift(profile_id)
-    log.info("Compliance check initiated. Task Id %s", task_id)
-    time.sleep(10)
-    vc_cis_client = VcCisClient(vc_access=_get_vc_credential())
-    return vc_cis_client.get_task(task_id)
+
+    vmw_configs = config.get("pillar", {}).get("saltext.vmware")
+    vc_configs = vmw_configs.get("vcenters")
+    vc_list = vc_configs.keys()
+    out = {}
+    for vc in vc_list:
+        vc_cred = vc_configs.get(vc)
+        host = vc_cred.get("host")
+        password = vc_cred.get("password")
+        user = vc_cred.get("user")
+        ssl_thumbprint = vc_cred.get("ssl_thumbprint")
+        connection = {"host": host, "user": user, "password": password, "ssl_thumbprint": ssl_thumbprint}
+        vc_appliance_client = _vc_appliance_client(connection)
+
+        task_id = vc_appliance_client.check_for_drift(1)
+        log.info("Compliance check initiated. Task Id %s", task_id)
+        time.sleep(10)
+        vc_cis_client = VcCisClient(vc_access=_get_vc_credential())
+        vc_check = vc_cis_client.get_task(task_id)
+
+        out[vc] = {"vc": vc_check}
+
+        # add logic for vlcm
+        vcenter_client = _vc_vcenter_client(connection)
+        vlcm_client = _vc_vlcm_client(connection)
+        clusters = vcenter_client.get_clusters()
+        esx = {}
+        for cluster in clusters:
+            log.info("Cluster %s", cluster)
+            if vlcm_client.is_vlcm_config_manager_enabled_on_cluster(cluster["cluster"]):
+                vlcm_content = vlcm_client.check_compliance_cluster_configuration(cluster["cluster"])
+                esx[cluster["name"]] = vlcm_content
+        out[vc]["esx"] = esx
+
+    return out
 
 
 def get_content_library_settings():
@@ -195,3 +324,34 @@ def advanced_settings_log_config():
 
 def advanced_settings_vpxd_events():
     return _vc_vmomi_client().get_advanced_settings_vpxd_events()
+
+
+def delete_desired_state():
+    """
+    Get desired config profile configured in the system.
+    """
+
+    config = __opts__
+
+    vmw_configs = config.get("pillar", {}).get("saltext.vmware")
+    vc_configs = vmw_configs.get("vcenters")
+    vc_list = vc_configs.keys()
+    out = {}
+    for vc in vc_list:
+        vc_cred = vc_configs.get(vc)
+        host = vc_cred.get("host")
+        password = vc_cred.get("password")
+        user = vc_cred.get("user")
+        ssl_thumbprint = vc_cred.get("ssl_thumbprint")
+        connection = {"host": host, "user": user, "password": password, "ssl_thumbprint": ssl_thumbprint}
+        vc_appliance_client = _vc_appliance_client(connection)
+        vc_config = vc_appliance_client.delete_desired_state()
+        out[vc] = {"vc": vc_config}
+
+        # add logic for vlcm
+    return out
+
+
+def get_task(task_id):
+    vc_cis_client = VcCisClient(vc_access=_get_vc_credential())
+    return vc_cis_client.get_task(task_id)
