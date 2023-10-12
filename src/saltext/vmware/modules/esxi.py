@@ -10,6 +10,9 @@ import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vsphere as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_config
+from config_modules_vmware.esxi.esx_context import EsxContext
+from config_modules_vmware.esxi.esx_config import EsxConfig
+from config_modules_vmware.lib.common.credentials import SddcCredentials, VcenterCredentials
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +22,6 @@ try:
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
-
 
 __virtualname__ = "vmware_esxi"
 
@@ -101,14 +103,14 @@ def get_capabilities(service_instance=None, profile=None):
 
 
 def power_state(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    state=None,
-    timeout=600,
-    force=True,
-    profile=None,
-    service_instance=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        state=None,
+        timeout=600,
+        force=True,
+        profile=None,
+        service_instance=None,
 ):
     """
     Manage the power state of the ESXi host.
@@ -170,12 +172,12 @@ def power_state(
 
 
 def service_start(
-    service_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        service_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Start service on the ESXi host.
@@ -227,12 +229,12 @@ def service_start(
 
 
 def service_stop(
-    service_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        service_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Stop service on the ESXi host.
@@ -284,12 +286,12 @@ def service_stop(
 
 
 def service_restart(
-    service_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        service_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Restart service on the ESXi host.
@@ -341,13 +343,13 @@ def service_restart(
 
 
 def service_policy(
-    service_name,
-    startup_policy,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        service_name,
+        startup_policy,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Manage service policy on the ESXi host.
@@ -409,12 +411,12 @@ def service_policy(
 
 
 def get_service_policy(
-    service_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        service_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     .. versionadded:: 23.4.4.0rc1
@@ -526,12 +528,12 @@ def get_service_policy(
 
 
 def get_service_running(
-    service_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        service_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     .. versionadded:: 23.4.4.0rc1
@@ -641,14 +643,14 @@ def get_service_running(
 
 
 def list_services(
-    service_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    state=None,
-    startup_policy=None,
-    service_instance=None,
-    profile=None,
+        service_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        state=None,
+        startup_policy=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     List the state of services running on matching ESXi hosts.
@@ -726,12 +728,12 @@ def list_services(
 
 
 def get_acceptance_level(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    acceptance_level=None,
-    service_instance=None,
-    profile=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        acceptance_level=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Get acceptance level on matching ESXi hosts.
@@ -797,12 +799,12 @@ def get_acceptance_level(
 
 
 def set_acceptance_level(
-    acceptance_level,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        acceptance_level,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Set acceptance level on matching ESXi hosts.
@@ -866,12 +868,12 @@ def set_acceptance_level(
 
 
 def get_advanced_config(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    config_name=None,
-    service_instance=None,
-    profile=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        config_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Get advanced config on matching ESXi hosts.
@@ -926,12 +928,12 @@ def get_advanced_config(
 
 
 def set_advanced_configs(
-    config_dict,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        config_dict,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Set multiple advanced configurations on matching ESXi hosts.
@@ -1014,13 +1016,13 @@ def set_advanced_configs(
 
 
 def set_advanced_config(
-    config_name,
-    config_value,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        config_name,
+        config_value,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Set a single advanced configuration on matching ESXi hosts.
@@ -1073,7 +1075,7 @@ def set_advanced_config(
 
 
 def get_all_firewall_configs(
-    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
+        datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     Get Firewall configurations on matching ESXi hosts.
@@ -1147,12 +1149,12 @@ def get_all_firewall_configs(
 
 
 def get_firewall_config(
-    ruleset_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        ruleset_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Get Firewall a rule configuration on matching ESXi hosts.
@@ -1230,12 +1232,12 @@ def get_firewall_config(
 
 
 def set_firewall_config(
-    firewall_config,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        firewall_config,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Set Firewall rule configuration on matching ESXi hosts.
@@ -1314,11 +1316,11 @@ def set_firewall_config(
 
 
 def set_all_firewall_configs(
-    firewall_configs,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
+        firewall_configs,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
 ):
     """
     Set Firewall rule configurations on matching ESXi hosts.
@@ -1364,13 +1366,13 @@ def set_all_firewall_configs(
 
 
 def backup_config(
-    push_file_to_master=False,
-    http_opts=None,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        push_file_to_master=False,
+        http_opts=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Backup configuration for matching ESXi hosts.
@@ -1437,14 +1439,14 @@ def backup_config(
 
 
 def restore_config(
-    source_file,
-    saltenv=None,
-    http_opts=None,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        source_file,
+        saltenv=None,
+        http_opts=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Restore configuration for matching ESXi hosts.
@@ -1541,7 +1543,7 @@ def restore_config(
 
 
 def reset_config(
-    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
+        datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     Reset configuration for matching ESXi hosts.
@@ -1603,7 +1605,7 @@ def reset_config(
 
 
 def get_dns_config(
-    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
+        datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     Get DNS configuration on matching ESXi hosts.
@@ -1657,7 +1659,7 @@ def get_dns_config(
 
 
 def get_ntp_config(
-    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
+        datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     Get NTP configuration on matching ESXi hosts.
@@ -1714,12 +1716,12 @@ def get_ntp_config(
 
 
 def set_ntp_config(
-    ntp_servers,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        ntp_servers,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Set NTP configuration on matching ESXi hosts.
@@ -1783,7 +1785,7 @@ def set_ntp_config(
 
 
 def list_hosts(
-    datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
+        datacenter_name=None, cluster_name=None, host_name=None, service_instance=None, profile=None
 ):
     """
     List ESXi hosts.
@@ -1829,14 +1831,14 @@ def list_hosts(
 
 
 def add_user(
-    user_name,
-    password,
-    description=None,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        user_name,
+        password,
+        description=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Add local user on matching ESXi hosts.
@@ -1896,14 +1898,14 @@ def add_user(
 
 
 def update_user(
-    user_name,
-    password,
-    description=None,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        user_name,
+        password,
+        description=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Update local user on matching ESXi hosts.
@@ -1963,12 +1965,12 @@ def update_user(
 
 
 def remove_user(
-    user_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        user_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Remove local user on matching ESXi hosts.
@@ -2018,12 +2020,12 @@ def remove_user(
 
 
 def get_user(
-    user_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        user_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Get local user on matching ESXi hosts.
@@ -2086,27 +2088,27 @@ def _get_net_stack(network_tcpip_stack):
 
 
 def create_vmkernel_adapter(
-    port_group_name,
-    dvswitch_name=None,
-    vswitch_name=None,
-    enable_fault_tolerance=None,
-    enable_management_traffic=None,
-    enable_provisioning=None,
-    enable_replication=None,
-    enable_replication_nfc=None,
-    enable_vmotion=None,
-    enable_vsan=None,
-    mtu=1500,
-    network_default_gateway=None,
-    network_ip_address=None,
-    network_subnet_mask=None,
-    network_tcp_ip_stack="default",
-    network_type="static",
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        port_group_name,
+        dvswitch_name=None,
+        vswitch_name=None,
+        enable_fault_tolerance=None,
+        enable_management_traffic=None,
+        enable_provisioning=None,
+        enable_replication=None,
+        enable_replication_nfc=None,
+        enable_vmotion=None,
+        enable_vsan=None,
+        mtu=1500,
+        network_default_gateway=None,
+        network_ip_address=None,
+        network_subnet_mask=None,
+        network_tcp_ip_stack="default",
+        network_type="static",
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Create VMKernel Adapter on matching ESXi hosts.
@@ -2224,26 +2226,26 @@ def create_vmkernel_adapter(
 
 
 def _save_vmkernel_adapter(
-    host,
-    service_instance,
-    action,
-    port_group_name,
-    dvswitch_name,
-    vswitch_name,
-    adapter_name,
-    enable_fault_tolerance,
-    enable_management_traffic,
-    enable_provisioning,
-    enable_replication,
-    enable_replication_nfc,
-    enable_vmotion,
-    enable_vsan,
-    mtu,
-    network_default_gateway,
-    network_ip_address,
-    network_subnet_mask,
-    network_tcp_ip_stack,
-    network_type,
+        host,
+        service_instance,
+        action,
+        port_group_name,
+        dvswitch_name,
+        vswitch_name,
+        adapter_name,
+        enable_fault_tolerance,
+        enable_management_traffic,
+        enable_provisioning,
+        enable_replication,
+        enable_replication_nfc,
+        enable_vmotion,
+        enable_vsan,
+        mtu,
+        network_default_gateway,
+        network_ip_address,
+        network_subnet_mask,
+        network_tcp_ip_stack,
+        network_type,
 ):
     vnic_config = vim.host.VirtualNic.Specification()
     ip_spec = vim.host.IpConfig()
@@ -2318,12 +2320,12 @@ def _save_vmkernel_adapter(
 
 
 def get_vmkernel_adapters(
-    adapter_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        adapter_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Update VMKernel Adapter on matching ESXi hosts.
@@ -2377,28 +2379,28 @@ def get_vmkernel_adapters(
 
 
 def update_vmkernel_adapter(
-    adapter_name,
-    port_group_name,
-    dvswitch_name=None,
-    vswitch_name=None,
-    enable_fault_tolerance=None,
-    enable_management_traffic=None,
-    enable_provisioning=None,
-    enable_replication=None,
-    enable_replication_nfc=None,
-    enable_vmotion=None,
-    enable_vsan=None,
-    mtu=1500,
-    network_default_gateway=None,
-    network_ip_address=None,
-    network_subnet_mask=None,
-    network_tcp_ip_stack="default",
-    network_type="static",
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        adapter_name,
+        port_group_name,
+        dvswitch_name=None,
+        vswitch_name=None,
+        enable_fault_tolerance=None,
+        enable_management_traffic=None,
+        enable_provisioning=None,
+        enable_replication=None,
+        enable_replication_nfc=None,
+        enable_vmotion=None,
+        enable_vsan=None,
+        mtu=1500,
+        network_default_gateway=None,
+        network_ip_address=None,
+        network_subnet_mask=None,
+        network_tcp_ip_stack="default",
+        network_type="static",
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Update VMKernel Adapter on matching ESXi hosts.
@@ -2516,12 +2518,12 @@ def update_vmkernel_adapter(
 
 
 def delete_vmkernel_adapter(
-    adapter_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        adapter_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Delete VMKernel Adapter on matching ESXi hosts.
@@ -2574,12 +2576,12 @@ def delete_vmkernel_adapter(
 
 
 def get_user(
-    user_name,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        user_name,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Get local user on matching ESXi hosts.
@@ -2646,10 +2648,10 @@ def get_user(
 
 
 def add_role(
-    role_name,
-    privilege_ids,
-    esxi_host_name=None,
-    service_instance=None,
+        role_name,
+        privilege_ids,
+        esxi_host_name=None,
+        service_instance=None,
 ):
     """
     Add local role to service instance, which may be an ESXi host or vCenter instance.
@@ -2689,10 +2691,10 @@ def add_role(
 
 
 def update_role(
-    role_name,
-    privilege_ids,
-    esxi_host_name=None,
-    service_instance=None,
+        role_name,
+        privilege_ids,
+        esxi_host_name=None,
+        service_instance=None,
 ):
     """
     Update local role on service instance, which may be an ESXi host or vCenter instance.
@@ -2734,10 +2736,10 @@ def update_role(
 
 
 def remove_role(
-    role_name,
-    force=False,
-    esxi_host_name=None,
-    service_instance=None,
+        role_name,
+        force=False,
+        esxi_host_name=None,
+        service_instance=None,
 ):
     """
     Remove local role on service instance, which may be an ESXi host or vCenter instance.
@@ -2922,15 +2924,15 @@ def move(host, cluster_name, service_instance=None, profile=None):
 
 
 def add(
-    host,
-    root_user,
-    password,
-    cluster_name,
-    datacenter_name,
-    verify_host_cert=True,
-    connect=True,
-    service_instance=None,
-    profile=None,
+        host,
+        root_user,
+        password,
+        cluster_name,
+        datacenter_name,
+        verify_host_cert=True,
+        connect=True,
+        service_instance=None,
+        profile=None,
 ):
     """
     Add an ESXi instance to a vCenter instance.
@@ -2984,12 +2986,12 @@ def add(
 
 
 def list_pkgs(
-    pkg_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    service_instance=None,
-    profile=None,
+        pkg_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     List the packages installed on matching ESXi hosts.
@@ -3055,14 +3057,14 @@ def list_pkgs(
 
 
 def get(
-    datacenter_name=None,
-    cluster_name=None,
-    host_name=None,
-    key=None,
-    default="",
-    delimiter=DEFAULT_TARGET_DELIM,
-    service_instance=None,
-    profile=None,
+        datacenter_name=None,
+        cluster_name=None,
+        host_name=None,
+        key=None,
+        default="",
+        delimiter=DEFAULT_TARGET_DELIM,
+        service_instance=None,
+        profile=None,
 ):
     """
     Get configuration information for matching ESXi hosts.
@@ -3213,13 +3215,13 @@ def in_maintenance_mode(host, service_instance=None, profile=None):
 
 
 def maintenance_mode(
-    host,
-    timeout=0,
-    evacuate_powered_off_vms=False,
-    maintenance_spec=None,
-    catch_task_error=True,
-    service_instance=None,
-    profile=None,
+        host,
+        timeout=0,
+        evacuate_powered_off_vms=False,
+        maintenance_spec=None,
+        catch_task_error=True,
+        service_instance=None,
+        profile=None,
 ):
     """
     Put host into maintenance mode.
@@ -3276,7 +3278,7 @@ def maintenance_mode(
 
 
 def exit_maintenance_mode(
-    host, timeout=0, catch_task_error=True, service_instance=None, profile=None
+        host, timeout=0, catch_task_error=True, service_instance=None, profile=None
 ):
     """
     Put host out of maintenance mode.
@@ -3435,11 +3437,11 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None, profi
 
 
 def get_vsan_enabled(
-    host_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    service_instance=None,
-    profile=None,
+        host_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Get the VSAN enabled status for a given host or all hosts. Returns ``True``
@@ -3483,12 +3485,12 @@ def get_vsan_enabled(
 
 
 def vsan_enable(
-    enable=True,
-    host_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    service_instance=None,
-    profile=None,
+        enable=True,
+        host_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Enable VSAN for a given host or all hosts.
@@ -3596,11 +3598,11 @@ def _get_vsan_eligible_disks(hosts):
 
 
 def get_vsan_eligible_disks(
-    host_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    service_instance=None,
-    profile=None,
+        host_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Returns a list of VSAN-eligible disks for a given host or list of host_names.
@@ -3663,11 +3665,11 @@ def get_vsan_eligible_disks(
 
 
 def vsan_add_disks(
-    host_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    service_instance=None,
-    profile=None,
+        host_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Add any VSAN-eligible disks to the VSAN System for the given host or list of host_names.
@@ -3766,13 +3768,13 @@ def vsan_add_disks(
 
 
 def list_disks(
-    disk_ids=None,
-    scsi_addresses=None,
-    host_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    service_instance=None,
-    profile=None,
+        disk_ids=None,
+        scsi_addresses=None,
+        host_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Returns a list of dict representations of the disks in an ESXi host.
@@ -3839,12 +3841,12 @@ def list_disks(
 
 
 def list_diskgroups(
-    cache_disk_ids=None,
-    host_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    service_instance=None,
-    profile=None,
+        cache_disk_ids=None,
+        host_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     Returns a list of disk group dict representation on an ESXi host.
@@ -3908,11 +3910,11 @@ def list_diskgroups(
 
 
 def get_host_datetime(
-    host_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    service_instance=None,
-    profile=None,
+        host_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     .. versionadded:: 23.4.4.0rc1
@@ -3962,11 +3964,11 @@ def get_host_datetime(
 
 
 def get_vmotion_enabled(
-    host_name=None,
-    datacenter_name=None,
-    cluster_name=None,
-    service_instance=None,
-    profile=None,
+        host_name=None,
+        datacenter_name=None,
+        cluster_name=None,
+        service_instance=None,
+        profile=None,
 ):
     """
     .. versionadded:: 23.4.4.0rc1
@@ -4015,3 +4017,93 @@ def get_vmotion_enabled(
             ret.update({host.name: {"VMotion Enabled": False}})
 
     return ret
+
+
+def draft_create(
+        desired_config,
+        cluster_path,
+        profile=None,
+        esx_config=None
+):
+    log.debug("Running vmware_esxi.create_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(profile)
+    return esx_config.draft_create(cluster_configs=desired_config, cluster_path=cluster_path)
+
+
+def draft_precheck(
+        desired_config,
+        cluster_path,
+        profile=None,
+        esx_config=None
+):
+    log.debug("Running vmware_esxi.create_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(profile)
+    return esx_config.draft_precheck(draft_configs=desired_config, cluster_path=cluster_path)
+
+
+def draft_check_compliance(
+        desired_config,
+        cluster_path,
+        profile=None,
+        esx_config=None
+):
+    log.debug("Running vmware_esxi.create_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(profile)
+    return esx_config.draft_check_compliance(draft_configs=desired_config, cluster_path=cluster_path)
+
+
+def draft_show_changes(
+        desired_config,
+        cluster_path,
+        profile=None,
+        esx_config=None
+):
+    log.debug("Running vmware_esxi.create_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(profile)
+    return esx_config.draft_show_changes(draft_configs=desired_config, cluster_path=cluster_path)
+
+
+def draft_apply(
+        desired_config,
+        cluster_path,
+        profile=None,
+        esx_config=None
+):
+    log.debug("Running vmware_esxi.create_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(profile)
+    return esx_config.draft_apply(draft_configs=desired_config, cluster_path=cluster_path)
+
+
+def draft_delete(
+        draft_id,
+        cluster_path,
+        profile=None,
+        esx_config=None
+):
+    log.debug("Running vmware_esxi.create_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(profile)
+    vlcm_client = esx_config.context.vc_vlcm_client()
+    cluster_moid = utils_esxi.get_cluster_moid(cluster_path, esx_context=esx_config.context)
+    return vlcm_client.draft_delete(cluster_moid=cluster_moid, draft_id=draft_id)
+
+
+def get_desired_config(
+        profile=None,
+        cluster_path=None,
+        esx_config=None):
+    log.debug("Running vmware_esxi.get_desired_config")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(profile)
+
+    # TODO: INVOKE CONFIG MODULE GET DESIRED CONFIGURATION WHEN READY
+
+    vc_vlcm_client = esx_config.context.vc_vlcm_client()
+    cluster_moid = utils_esxi.get_cluster_moid(cluster_path, esx_context=esx_config.context)
+    cluster_config = vc_vlcm_client.export_desired_state_cluster_configuration(cluster_moid=cluster_moid)
+    return {cluster_path: {"config": cluster_config}}

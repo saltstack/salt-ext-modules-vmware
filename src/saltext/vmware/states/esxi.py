@@ -1680,3 +1680,64 @@ def vsan_config(
         ret["comment"] = "VSAN configuration will change."
 
     return ret
+
+    def apply_config(
+            name,
+            desired_config,
+            cluster_path,
+            show_changes=False,
+            check_compliance=False,
+            profile=None
+    ):
+        """
+        VCP
+        """
+
+        # Keep this structure
+        ret = {"name": name,
+               "result": True,
+               "changes": {},
+               "comment": "Configuration applied successfully"}
+
+        esx_config = utils_esxi.create_esx_config(profile)
+
+        # CREATE DRAFT
+        draft_create_response = vmware_esxi.draft_create(desired_config=desired_config,
+                                                         cluster_path=cluster_path,
+                                                         esx_config=esx_config)
+        draft_id = draft_create_response.get(cluster_path).keys()[0]
+
+        # CHECK COMPLIANCE
+        if check_compliance:
+            check_compliance = vmware_esxi.draft_check_compliance(draft_create_response,
+                                                                  cluster_path=cluster_path,
+                                                                  esx_config=esx_config)
+
+        # SHOW CHANGES
+        if show_changes:
+            show_changes = vmware_esxi.draft_show_changes(draft_create_response,
+                                                          cluster_path=cluster_path,
+                                                          esx_config=esx_config)
+
+        # PRECHECK DRAFT
+        precheck_response = vmware_esxi.draft_precheck(draft_create_response,
+                                                       cluster_path=cluster_path,
+                                                       esx_config=esx_config)
+        if precheck_response is None:
+
+
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = "Validate precheck response."
+            ret["changes"] = precheck_response
+            # DELETE DRAFT
+            vmware_esxi.draft_delete(draft_id=draft_id, cluster_path=cluster_path, esx_config=esx_config)
+        else:
+            # APPLY
+            apply_response = vmware_esxi.draft_apply(draft_create_response,
+                                                     cluster_path=cluster_path,
+                                                     esx_config=esx_config)
+            ret["result"] = True
+            ret["changes"] = apply_response
+
+        return ret
