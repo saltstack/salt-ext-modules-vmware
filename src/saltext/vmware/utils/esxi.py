@@ -443,8 +443,7 @@ def get_missing_firewall_rules(rules, hosts):
     return missing
 
 
-def _get_vc_credential(profile=None):
-    config = __opts__
+def _get_vc_credential(config, profile=None):
     conf = get_config(config, profile)
     log.info("connection properties %s", conf)
     log.info("Retrieving current config for VC host %s", conf["host"])
@@ -452,14 +451,14 @@ def _get_vc_credential(profile=None):
                               ssl_thumbprint=conf["ssl_thumbprint"])
 
 
-def create_esx_context(profile=None):
-    return EsxContext(SddcCredentials(vc_creds=_get_vc_credential(profile)))
+def create_esx_context(config, profile=None):
+    return EsxContext(SddcCredentials(vc_creds=_get_vc_credential(config, profile)))
 
 
-def create_esx_config(profile=None, esx_context=None):
+def create_esx_config(config, profile=None, esx_context=None):
     if esx_context:
         return EsxConfig(esx_context)
-    return EsxConfig(create_esx_context(profile))
+    return EsxConfig(create_esx_context(config, profile))
 
 
 def get_cluster_path_moid_mappings(profile=None, esx_context=None):
@@ -468,7 +467,9 @@ def get_cluster_path_moid_mappings(profile=None, esx_context=None):
     return esx_context.vc_vmomi_client().retrieve_cluster_path_moid_mapping()
 
 
-def get_cluster_moid(cluster_path, profile=None, esx_context=None):
+def get_cluster_moid(cluster_path, profile=None, esx_context=None, config=None):
     if not esx_context:
-        esx_context = create_esx_context(profile)
-    return esx_context.vc_vmomi_client().retrieve_cluster_path_moid_mapping().get(cluster_path)
+        esx_context = create_esx_context(config, profile)
+    mappings = esx_context.vc_vmomi_client().retrieve_cluster_path_moid_mapping()
+    log.info("CLUSETER MAPPINGS: %s", mappings)
+    return mappings.get(cluster_path)
