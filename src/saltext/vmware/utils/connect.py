@@ -51,6 +51,7 @@ def get_config(config, profile=None, esxi_host=None):
         credentials = credentials.get("esxi_host", {}).get(esxi_host)
         password = credentials.get("password")
         user = credentials.get("user")
+        ssl_thumbprint = credentials.get("ssl_thumbprint")
     else:
         host = os.environ.get("SALTEXT_VMWARE_HOST") or credentials.get("host")
         password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
