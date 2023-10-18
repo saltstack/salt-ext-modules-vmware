@@ -21,6 +21,7 @@ try:
 except ImportError:
     HAS_PYVMOMI = False
 
+
 __virtualname__ = "vmware_esxi"
 __proxyenabled__ = ["vmware_esxi"]
 
@@ -147,28 +148,28 @@ def role_absent(name, esxi_host_name=None, service_instance=None, profile=None):
 
 
 def vmkernel_adapter_present(
-        name,
-        port_group_name,
-        dvswitch_name=None,
-        vswitch_name=None,
-        enable_fault_tolerance=None,
-        enable_management_traffic=None,
-        enable_provisioning=None,
-        enable_replication=None,
-        enable_replication_nfc=None,
-        enable_vmotion=None,
-        enable_vsan=None,
-        mtu=1500,
-        network_default_gateway=None,
-        network_ip_address=None,
-        network_subnet_mask=None,
-        network_tcp_ip_stack="default",
-        network_type="static",
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
+    name,
+    port_group_name,
+    dvswitch_name=None,
+    vswitch_name=None,
+    enable_fault_tolerance=None,
+    enable_management_traffic=None,
+    enable_provisioning=None,
+    enable_replication=None,
+    enable_replication_nfc=None,
+    enable_vmotion=None,
+    enable_vsan=None,
+    mtu=1500,
+    network_default_gateway=None,
+    network_ip_address=None,
+    network_subnet_mask=None,
+    network_tcp_ip_stack="default",
+    network_type="static",
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Ensure VMKernel Adapter exists on matching ESXi hosts.
@@ -342,12 +343,12 @@ def vmkernel_adapter_present(
 
 
 def vmkernel_adapter_absent(
-        name,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
+    name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Ensure VMKernel Adapter exists on matching ESXi hosts.
@@ -433,14 +434,14 @@ def vmkernel_adapter_absent(
 
 
 def user_present(
-        name,
-        password,
-        description=None,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
+    name,
+    password,
+    description=None,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Add local users_by_host on matching ESXi hosts.
@@ -581,12 +582,12 @@ def user_present(
 
 
 def user_absent(
-        name,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
+    name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Remove local users_by_host on matching ESXi hosts.
@@ -681,12 +682,12 @@ def user_absent(
 
 
 def maintenance_mode(
-        name,
-        enter_maintenance_mode,
-        timeout=0,
-        evacuate_powered_off_vms=False,
-        maintenance_spec=None,
-        service_instance=None,
+    name,
+    enter_maintenance_mode,
+    timeout=0,
+    evacuate_powered_off_vms=False,
+    maintenance_spec=None,
+    service_instance=None,
 ):
     """
     Put host into or out of maintenance mode.
@@ -769,13 +770,13 @@ def maintenance_mode(
 
 
 def lockdown_mode(
-        name,
-        enter_lockdown_mode,
-        datacenter_name=None,
-        cluster_name=None,
-        get_all_hosts=False,
-        service_instance=None,
-        profile=None,
+    name,
+    enter_lockdown_mode,
+    datacenter_name=None,
+    cluster_name=None,
+    get_all_hosts=False,
+    service_instance=None,
+    profile=None,
 ):
     """
     Pust a hosts into or out of lockdown.
@@ -880,13 +881,13 @@ def lockdown_mode(
 
 
 def advanced_configs(
-        name,
-        configs,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
+    name,
+    configs,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Set advanced configuration on matching ESXi hosts.
@@ -968,14 +969,14 @@ def advanced_configs(
 
 
 def firewall_config(
-        name,
-        value,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
-        less=False,
+    name,
+    value,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+    less=False,
 ):
     """
     Set firewall configuration on matching ESXi hosts.
@@ -1124,16 +1125,16 @@ def firewall_config(
 
 
 def ntp_config(
-        name,
-        service_running,
-        ntp_servers=None,
-        service_policy=None,
-        service_restart=False,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
+    name,
+    service_running,
+    ntp_servers=None,
+    service_policy=None,
+    service_restart=False,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Set ntp configuration on matching ESXi hosts.
@@ -1293,14 +1294,14 @@ def ntp_config(
 
 
 def firewall_configs(
-        name,
-        config,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
-        drift_level=0,
+    name,
+    config,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+    drift_level=0,
 ):
     """
     Get/Set firewall configuration on matching ESXi hosts based on drift report.
@@ -1487,13 +1488,13 @@ def firewall_configs(
 
 
 def password_present(
-        name,
-        password,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
+    name,
+    password,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Update the password for a given host.
@@ -1558,14 +1559,14 @@ def password_present(
 
 
 def vsan_config(
-        name,
-        enabled,
-        add_disks_to_vsan=False,
-        datacenter_name=None,
-        cluster_name=None,
-        host_name=None,
-        service_instance=None,
-        profile=None,
+    name,
+    enabled,
+    add_disks_to_vsan=False,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
 ):
     """
     Configures a host's VSAN properties such as enabling or disabling VSAN, or
@@ -1680,79 +1681,59 @@ def vsan_config(
 
     return ret
 
-
-def apply_configuration(
-        name,
-        cluster_path,
-        desired_config,
-        show_changes=False,
-        check_compliance=False,
-        profile=None
-):
-    """
+    def apply_config(
+        name, desired_config, cluster_path, show_changes=False, check_compliance=False, profile=None
+    ):
+        """
         VCP
         """
 
-    # Keep this structure
-    ret = {"name": name,
-           "result": True,
-           "changes": {},
-           "comment": "Configuration applied successfully"}
+        # Keep this structure
+        ret = {
+            "name": name,
+            "result": True,
+            "changes": {},
+            "comment": "Configuration applied successfully",
+        }
 
-    config = __opts__
-    esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(profile)
 
-    # CREATE DRAFT
-    draft_create_response = vmware_esxi.draft_create(desired_config=desired_config,
-                                                     cluster_path=cluster_path,
-                                                     esx_config=esx_config)
-    draft_id = draft_create_response.get(cluster_path)["draft_id"]
+        # CREATE DRAFT
+        draft_create_response = vmware_esxi.draft_create(
+            desired_config=desired_config, cluster_path=cluster_path, esx_config=esx_config
+        )
+        draft_id = draft_create_response.get(cluster_path).keys()[0]
 
-    if __opts__["test"]:
         # CHECK COMPLIANCE
         if check_compliance:
             check_compliance = vmware_esxi.draft_check_compliance(
-                draft_create_response,
-                cluster_path=cluster_path,
-                esx_config=esx_config)
+                draft_create_response, cluster_path=cluster_path, esx_config=esx_config
+            )
 
         # SHOW CHANGES
         if show_changes:
-            show_changes = vmware_esxi.draft_show_changes(draft_create_response,
-                                                          cluster_path=cluster_path,
-                                                          esx_config=esx_config)
+            show_changes = vmware_esxi.draft_show_changes(
+                draft_create_response, cluster_path=cluster_path, esx_config=esx_config
+            )
 
         # PRECHECK DRAFT
         precheck_response = vmware_esxi.draft_precheck(
-            cluster_path=cluster_path,
-            desired_config=desired_config,
-            draft_id=draft_id,
-            esx_config=esx_config)
+            draft_create_response, cluster_path=cluster_path, esx_config=esx_config
+        )
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = "Validate precheck response."
+            ret["changes"] = precheck_response
+            # DELETE DRAFT
+            vmware_esxi.draft_delete(
+                draft_id=draft_id, cluster_path=cluster_path, esx_config=esx_config
+            )
+        else:
+            # APPLY
+            apply_response = vmware_esxi.draft_apply(
+                draft_create_response, cluster_path=cluster_path, esx_config=esx_config
+            )
+            ret["result"] = True
+            ret["changes"] = apply_response
 
-        ret["result"] = None
-        ret["comment"] = "Validate precheck response."
-        ret["changes"] = precheck_response
-        # DELETE DRAFT
-        vmware_esxi.draft_delete(
-            cluster_path=cluster_path,
-            draft_id=draft_id,
-            esx_config=esx_config)
-    else:
-        # PRECHECK DRAFT
-        precheck_response = vmware_esxi.draft_precheck(
-            cluster_path=cluster_path,
-            desired_config=desired_config,
-            draft_id=draft_id,
-            esx_config=esx_config)
-
-        # APPLY
-        apply_response = vmware_esxi.draft_apply(
-            cluster_path=cluster_path,
-            desired_config=desired_config,
-            draft_id=draft_id,
-            esx_config=esx_config)
-
-        ret["result"] = True
-        ret["changes"] = apply_response
-
-    return ret
+        return ret

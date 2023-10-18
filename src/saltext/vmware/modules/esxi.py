@@ -2,17 +2,12 @@
 # SPDX-License: Apache-2.0
 import logging
 import os
-from typing import List
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as utils_connect
 import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vsphere as utils_vmware
-from config_modules_vmware.esxi.esx_config import EsxConfig
-from config_modules_vmware.esxi.esx_context import EsxContext
-from config_modules_vmware.lib.common.credentials import SddcCredentials
-from config_modules_vmware.lib.common.credentials import VcenterCredentials
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_config
 
@@ -24,6 +19,7 @@ try:
     HAS_PYVMOMI = True
 except ImportError:
     HAS_PYVMOMI = False
+
 
 __virtualname__ = "vmware_esxi"
 
@@ -4019,77 +4015,3 @@ def get_vmotion_enabled(
             ret.update({host.name: {"VMotion Enabled": False}})
 
     return ret
-
-
-def draft_create(cluster_path: str, desired_config: dict = None, profile=None, esx_config=None):
-    log.debug("Running vmware_esxi.draft_create")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
-    return esx_config.draft_create(cluster_path=cluster_path, cluster_configs=desired_config)
-
-
-def draft_precheck(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
-):
-    log.debug("Running vmware_esxi.draft_precheck")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_precheck(
-        cluster_path=cluster_path, draft_id=draft_id, draft_configs=desired_config
-    )
-
-
-def draft_check_compliance(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
-):
-    log.debug("Running vmware_esxi.draft_check_compliance")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_check_compliance(cluster_path, draft_id, desired_config)
-
-
-def draft_show_changes(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
-):
-    log.debug("Running vmware_esxi.draft_show_changes")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_show_changes(cluster_path, draft_id, desired_config)
-
-
-def draft_apply(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
-):
-    log.debug("Running vmware_esxi.draft_apply")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_apply(cluster_path, draft_id, desired_config)
-
-
-def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None):
-    log.debug("Running vmware_esxi.draft_delete")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    vlcm_client = esx_config._context.vc_vlcm_client()
-    cluster_moid = utils_esxi.get_cluster_moid(
-        cluster_path=cluster_path, esx_context=esx_config._context
-    )
-    return vlcm_client.draft_delete(cluster_moid=cluster_moid, draft_id=draft_id)
-
-
-def get_desired_config(profile=None, cluster_path=None, esx_config=None):
-    log.debug("Running vmware_esxi.get_desired_config")
-    config = __opts__
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
-
-    # TODO: INVOKE CONFIG MODULE GET DESIRED CONFIGURATION WHEN READY
-
-    vc_vlcm_client = esx_config._context.vc_vlcm_client()
-    cluster_moid = utils_esxi.get_cluster_moid(
-        config, cluster_path, esx_context=esx_config._context
-    )
-    cluster_config = vc_vlcm_client.export_desired_state_cluster_configuration(
-        cluster_moid=cluster_moid
-    )
-    return {cluster_path: cluster_config}
