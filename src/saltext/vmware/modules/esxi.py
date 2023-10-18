@@ -2,12 +2,17 @@
 # SPDX-License: Apache-2.0
 import logging
 import os
+from typing import List
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as utils_connect
 import saltext.vmware.utils.esxi as utils_esxi
 import saltext.vmware.utils.vsphere as utils_vmware
+from config_modules_vmware.esxi.esx_config import EsxConfig
+from config_modules_vmware.esxi.esx_context import EsxContext
+from config_modules_vmware.lib.common.credentials import SddcCredentials
+from config_modules_vmware.lib.common.credentials import VcenterCredentials
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_config
 

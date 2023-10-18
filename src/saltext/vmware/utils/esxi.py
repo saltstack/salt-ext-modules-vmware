@@ -7,6 +7,11 @@ import salt.exceptions
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
+from config_modules_vmware.esxi.esx_config import EsxConfig
+from config_modules_vmware.esxi.esx_context import EsxContext
+from config_modules_vmware.lib.common.credentials import SddcCredentials
+from config_modules_vmware.lib.common.credentials import VcenterCredentials
+from saltext.vmware.utils.connect import get_config
 
 # pylint: disable=no-name-in-module
 try:
