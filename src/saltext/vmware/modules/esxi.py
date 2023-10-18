@@ -4079,7 +4079,6 @@ def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None
 
 def get_desired_config(profile=None, cluster_path=None, esx_config=None):
     log.debug("Running vmware_esxi.get_desired_config")
-    log.debug("Running vmware_esxi.get_desired_config")
     config = __opts__
     if not esx_config:
         esx_config = utils_esxi.create_esx_config(config, profile)
