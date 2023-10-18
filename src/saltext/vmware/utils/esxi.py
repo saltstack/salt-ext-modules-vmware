@@ -7,10 +7,6 @@ import salt.exceptions
 import saltext.vmware.utils.cluster as utils_cluster
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.datacenter as utils_datacenter
-from config_modules_vmware.esxi.esx_context import EsxContext
-from config_modules_vmware.esxi.esx_config import EsxConfig
-from config_modules_vmware.lib.common.credentials import SddcCredentials, VcenterCredentials
-from saltext.vmware.utils.connect import get_config
 
 # pylint: disable=no-name-in-module
 try:
@@ -24,11 +20,11 @@ log = logging.getLogger(__name__)
 
 
 def get_hosts(
-        service_instance,
-        datacenter_name=None,
-        host_names=None,
-        cluster_name=None,
-        get_all_hosts=False,
+    service_instance,
+    datacenter_name=None,
+    host_names=None,
+    cluster_name=None,
+    get_all_hosts=False,
 ):
     """
     Returns a list of vim.HostSystem objects representing ESXi hosts
@@ -276,6 +272,7 @@ def _get_host_thumbprint(ip, verify_host_cert=True):
     with socket.create_connection((ip, 443)) as _socket:
         _socket.settimeout(1)
         with ctx.wrap_socket(_socket, server_hostname=ip) as wrappedSocket:
+
             cert = wrappedSocket.getpeercert(True)
             sha1 = hashlib.sha1(cert).hexdigest()
             response = _format_ssl_thumbprint(sha1)
@@ -283,14 +280,14 @@ def _get_host_thumbprint(ip, verify_host_cert=True):
 
 
 def add_host(
-        host,
-        root_user,
-        password,
-        cluster_name,
-        datacenter_name,
-        verify_host_cert,
-        connect,
-        service_instance,
+    host,
+    root_user,
+    password,
+    cluster_name,
+    datacenter_name,
+    verify_host_cert,
+    connect,
+    service_instance,
 ):
     """
     Adds host from vCenter instance
@@ -340,9 +337,9 @@ def get_host(host, service_instance):
 
 
 def get_firewall_config(
-        ruleset_name,
-        host_name,
-        service_instance,
+    ruleset_name,
+    host_name,
+    service_instance,
 ):
     """
     Get Firewall a rule configuration on matching ESXi hosts.
@@ -447,8 +444,12 @@ def _get_vc_credential(config, profile=None):
     conf = get_config(config, profile)
     log.info("connection properties %s", conf)
     log.info("Retrieving current config for VC host %s", conf["host"])
-    return VcenterCredentials(hostname=conf["host"], username=conf["user"], password=conf["password"],
-                              ssl_thumbprint=conf["ssl_thumbprint"])
+    return VcenterCredentials(
+        hostname=conf["host"],
+        username=conf["user"],
+        password=conf["password"],
+        ssl_thumbprint=conf["ssl_thumbprint"],
+    )
 
 
 def create_esx_context(config, profile=None):
@@ -471,5 +472,4 @@ def get_cluster_moid(cluster_path, profile=None, esx_context=None, config=None):
     if not esx_context:
         esx_context = create_esx_context(config, profile)
     mappings = esx_context.vc_vmomi_client().retrieve_cluster_path_moid_mapping()
-    log.info("CLUSETER MAPPINGS: %s", mappings)
     return mappings.get(cluster_path)
