@@ -13,6 +13,8 @@ from config_modules_vmware.esxi.esx_config import EsxConfig
 from config_modules_vmware.esxi.esx_context import EsxContext
 from config_modules_vmware.lib.common.credentials import SddcCredentials
 from config_modules_vmware.lib.common.credentials import VcenterCredentials
+from config_modules_vmware.schema.schema_utility import Product
+from config_modules_vmware.schema.schema_utility import retrieve_reference_schema
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_config
 
@@ -4094,3 +4096,14 @@ def get_desired_config(profile=None, cluster_path=None, esx_config=None):
         cluster_moid=cluster_moid
     )
     return {cluster_path: cluster_config}
+
+
+def get_reference_schema():
+    """
+    Retrieve reference schema for ESXi.
+
+    :return: reference schema for ESXi.
+    :rtype: dict
+    """
+    log.debug("Running vmware_esxi.retrieve_reference_schema")
+    return retrieve_reference_schema(Product.ESX)

@@ -10,6 +10,8 @@ from unittest.mock import patch
 import pytest
 import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.utils.connect
+from config_modules_vmware.schema.schema_utility import Product
+from config_modules_vmware.schema.schema_utility import retrieve_reference_schema
 
 log = logging.getLogger(__name__)
 
@@ -312,3 +314,11 @@ def test_ntp_config(hosts, fake_service_instance):
             ntp_servers=["192.174.1.100", "192.174.1.200"], service_instance=service_instance
         )
         assert ret
+
+
+def test_get_reference_schema():
+    """
+    Test to retrieve reference schema
+    """
+    reference_schema = esxi.retrieve_reference_schema(Product.ESX)
+    assert reference_schema is not None
