@@ -4026,7 +4026,7 @@ def get_vmotion_enabled(
 def draft_create(cluster_path: str, desired_config: dict = None, profile=None, esx_config=None):
     log.debug("Running vmware_esxi.draft_create")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     return esx_config.draft_create(cluster_path=cluster_path, cluster_configs=desired_config)
 
 
@@ -4035,7 +4035,7 @@ def draft_precheck(
 ):
     log.debug("Running vmware_esxi.draft_precheck")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     return esx_config.draft_precheck(
         cluster_path=cluster_path, draft_id=draft_id, draft_configs=desired_config
     )
@@ -4046,7 +4046,7 @@ def draft_check_compliance(
 ):
     log.debug("Running vmware_esxi.draft_check_compliance")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     return esx_config.draft_check_compliance(cluster_path, draft_id, desired_config)
 
 
@@ -4055,7 +4055,7 @@ def draft_show_changes(
 ):
     log.debug("Running vmware_esxi.draft_show_changes")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     return esx_config.draft_show_changes(cluster_path, draft_id, desired_config)
 
 
@@ -4064,14 +4064,14 @@ def draft_apply(
 ):
     log.debug("Running vmware_esxi.draft_apply")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     return esx_config.draft_apply(cluster_path, draft_id, desired_config)
 
 
 def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None):
     log.debug("Running vmware_esxi.draft_delete")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     vlcm_client = esx_config._context.vc_vlcm_client()
     cluster_moid = utils_esxi.get_cluster_moid(
         cluster_path=cluster_path, esx_context=esx_config._context
@@ -4081,19 +4081,17 @@ def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None
 
 def get_configuration(profile=None, cluster_paths=None, esx_config=None):
     log.debug("Running vmware_esxi.get_configuration")
-    config = __opts__
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     current_config = esx_config.get_configuration(cluster_paths=cluster_paths)
     return current_config
 
 
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     log.debug("Running vmware_esxi.check_compliance")
-    config = __opts__
     desired_state_spec = json.loads(json.dumps(desired_state_spec))
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     check_compliance_response = esx_config.check_compliance(
         cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
     )
@@ -4103,7 +4101,7 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
 def pre_check(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     log.debug("Running vmware_esxi.check_compliance")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     check_compliance_response = esx_config.precheck_desired_state(
         cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
     )
@@ -4113,7 +4111,7 @@ def pre_check(profile=None, cluster_paths=None, desired_state_spec=None, esx_con
 def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     log.debug("Running vmware_esxi.check_compliance")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     check_compliance_response = esx_config.remediate_with_desired_state(
         cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
     )
@@ -4122,8 +4120,7 @@ def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_con
 
 def get_desired_configuration(profile=None, cluster_path=None, esx_config=None):
     log.debug("Running vmware_esxi.get_desired_configuration")
-    config = __opts__
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(config=__opts__, profile=profile)
     current_config = esx_config.get_desired_configuration(cluster_path)
     return current_config
