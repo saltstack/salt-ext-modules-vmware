@@ -4079,13 +4079,13 @@ def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None
     return vlcm_client.draft_delete(cluster_moid=cluster_moid, draft_id=draft_id)
 
 
-def get_configuration(profile=None, cluster_path=None, esx_config=None):
+def get_configuration(profile=None, cluster_paths=None, esx_config=None):
     log.debug("Running vmware_esxi.get_configuration")
     config = __opts__
     if not esx_config:
         esx_config = utils_esxi.create_esx_config(config, profile)
-    current_config = esx_config.get_configuration(cluster_path)
-    return {cluster_path: current_config}
+    current_config = esx_config.get_configuration(cluster_paths=cluster_paths)
+    return current_config
 
 
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
