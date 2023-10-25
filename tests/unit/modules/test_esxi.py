@@ -63,6 +63,28 @@ def fake_http_query():
         yield fake_query
 
 
+@pytest.fixture
+def dummy_cluster_paths():
+    return ["path/to/cluster"]
+
+
+@pytest.fixture
+def dummy_configs():
+    return ["config.module.submodule"]
+
+
+@pytest.fixture
+def fake_esx_config():
+    fake = MagicMock()
+    fake.get_configuration.return_value = {
+        "path/to/cluster": {"config.module.submodule": "current"}
+    }
+    fake.get_desired_configuration.return_value = {
+        "path/to/cluster": {"config.module.submodule": "desired"}
+    }
+    return fake
+
+
 def get_host(in_maintenance_mode=None):
     host = MagicMock()
     host.name = uuid.uuid4().hex
@@ -322,3 +344,13 @@ def test_get_reference_schema():
     """
     reference_schema = esxi.retrieve_reference_schema(Product.ESX)
     assert reference_schema is not None
+
+
+def test_get_configuration_all(fake_esx_config):
+    configuration = esxi.get_configuration(esx_config=fake_esx_config)
+    assert configuration == {"path/to/cluster": {"config.module.submodule": "current"}}
+
+
+def test_get_desired_configuration_all(fake_esx_config):
+    configuration = esxi.get_desired_configuration(esx_config=fake_esx_config)
+    assert configuration == {"path/to/cluster": {"config.module.submodule": "desired"}}

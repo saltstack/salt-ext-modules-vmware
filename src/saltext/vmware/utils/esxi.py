@@ -462,9 +462,9 @@ def create_esx_context(config, profile=None):
 
 
 def create_esx_config(config, profile=None, esx_context=None):
-    if esx_context:
-        return EsxConfig(esx_context)
-    return EsxConfig(create_esx_context(config, profile))
+    if not esx_context:
+        esx_context = create_esx_context(config, profile)
+    return EsxConfig(esx_context)
 
 
 def get_cluster_path_moid_mappings(profile=None, esx_context=None):

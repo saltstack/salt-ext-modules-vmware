@@ -4080,22 +4080,71 @@ def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None
     return vlcm_client.draft_delete(cluster_moid=cluster_moid, draft_id=draft_id)
 
 
-def get_desired_config(profile=None, cluster_path=None, esx_config=None):
-    log.debug("Running vmware_esxi.get_desired_config")
-    config = __opts__
+def get_configuration(cluster_paths=None, configs=None, esx_config=None, profile=None):
+    """
+    Gets the current configuration of ESXi clusters using VLCM. IF they are not available, it will fallback to use pyvmomi.
+
+    cluster_paths
+        Filter by this cluster path (optional)
+
+    configs
+        Filter by these set of configs (optional)
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To get all configurations on every cluster
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_configuration
+
+    To get all configurations on a set of clusters
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_configuration cluster_path='["/SDDC-Datacenter/vlcm"]'
+
+    To get specific configurations on a set of clusters
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_configuration cluster_path='["/SDDC-Datacenter/vlcm"]' configs='["extended_config.profile.esx.services.cim_service_enabled"]'
+    """
+    log.debug("Running vmware_esxi.get_configuration")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    current_config = esx_config.get_configuration(cluster_paths=cluster_paths, configs=configs)
+    return current_config
 
-    # TODO: INVOKE CONFIG MODULE GET DESIRED CONFIGURATION WHEN READY
 
-    vc_vlcm_client = esx_config._context.vc_vlcm_client()
-    cluster_moid = utils_esxi.get_cluster_moid(
-        config, cluster_path, esx_context=esx_config._context
-    )
-    cluster_config = vc_vlcm_client.export_desired_state_cluster_configuration(
-        cluster_moid=cluster_moid
-    )
-    return {cluster_path: cluster_config}
+def get_desired_configuration(cluster_paths=None, esx_config=None, profile=None):
+    """
+    Gets the desired configuration using VLCM.
+
+    cluster_paths
+        Gets the configuration from the cluster paths specified
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_desired_configuration cluster_path='["/SDDC-Datacenter/vlcm"]'
+    """
+    log.debug("Running vmware_esxi.get_desired_configuration")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    current_config = esx_config.get_desired_configuration(cluster_paths=cluster_paths)
+    return current_config
 
 
 def get_reference_schema():
