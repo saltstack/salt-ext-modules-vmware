@@ -1,5 +1,6 @@
 # Copyright 2021 VMware, Inc.
 # SPDX-License: Apache-2.0
+import json
 import logging
 import os
 from typing import List
@@ -4078,19 +4079,51 @@ def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None
     return vlcm_client.draft_delete(cluster_moid=cluster_moid, draft_id=draft_id)
 
 
-def get_desired_config(profile=None, cluster_path=None, esx_config=None):
-    log.debug("Running vmware_esxi.get_desired_config")
+def get_configuration(profile=None, cluster_path=None, esx_config=None):
+    log.debug("Running vmware_esxi.get_configuration")
     config = __opts__
     if not esx_config:
         esx_config = utils_esxi.create_esx_config(config, profile)
+    current_config = esx_config.get_configuration(cluster_path)
+    return {cluster_path: current_config}
 
-    # TODO: INVOKE CONFIG MODULE GET DESIRED CONFIGURATION WHEN READY
 
-    vc_vlcm_client = esx_config._context.vc_vlcm_client()
-    cluster_moid = utils_esxi.get_cluster_moid(
-        config, cluster_path, esx_context=esx_config._context
+def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
+    log.debug("Running vmware_esxi.check_compliance")
+    config = __opts__
+    desired_state_spec = json.loads(json.dumps(desired_state_spec))
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(config, profile)
+    check_compliance_response = esx_config.check_compliance(
+        cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
     )
-    cluster_config = vc_vlcm_client.export_desired_state_cluster_configuration(
-        cluster_moid=cluster_moid
+    return check_compliance_response
+
+
+def pre_check(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
+    log.debug("Running vmware_esxi.check_compliance")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(config, profile)
+    check_compliance_response = esx_config.precheck_desired_state(
+        cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
     )
-    return {cluster_path: cluster_config}
+    return check_compliance_response
+
+
+def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
+    log.debug("Running vmware_esxi.check_compliance")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(config, profile)
+    check_compliance_response = esx_config.remediate_with_desired_state(
+        cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
+    )
+    return check_compliance_response
+
+
+def get_desired_configuration(profile=None, cluster_path=None, esx_config=None):
+    log.debug("Running vmware_esxi.get_desired_configuration")
+    config = __opts__
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(config, profile)
+    current_config = esx_config.get_desired_configuration(cluster_path)
+    return current_config

@@ -1682,6 +1682,49 @@ def vsan_config(
     return ret
 
 
+def remediate(name, cluster_path, desired_config, profile=None):
+    """
+    Sample remediate configuration.
+    """
+
+    # Keep this structure
+    ret = {
+        "name": name,
+        "result": True,
+        "changes": {},
+        "comment": "Configuration applied successfully",
+    }
+
+    config = __opts__
+    esx_config = utils_esxi.create_esx_config(config, profile)
+    desired_config = json.loads(json.dumps(desired_config))
+
+    if __opts__["test"]:
+        # PRECHECK DRAFT
+        precheck_response = vmware_esxi.pre_check(
+            cluster_paths=[cluster_path], desired_state_spec=desired_config, esx_config=esx_config
+        )
+
+        ret["result"] = None
+        ret["comment"] = "Validate precheck response."
+        ret["changes"] = precheck_response
+    else:
+        # PRECHECK DRAFT
+        precheck_response = vmware_esxi.pre_check(
+            cluster_paths=[cluster_path], desired_state_spec=desired_config, esx_config=esx_config
+        )
+
+        # APPLY
+        apply_response = vmware_esxi.remediate(
+            cluster_paths=cluster_path, desired_state_spec=desired_config, esx_config=esx_config
+        )
+
+        ret["result"] = True
+        ret["changes"] = apply_response
+
+    return ret
+
+
 def apply_configuration(
     name, cluster_path, desired_config, show_changes=False, check_compliance=False, profile=None
 ):
@@ -1699,26 +1742,33 @@ def apply_configuration(
 
     config = __opts__
     esx_config = utils_esxi.create_esx_config(config, profile)
-
+    desired_config = json.loads(json.dumps(desired_config))
     # CREATE DRAFT
     draft_create_response = vmware_esxi.draft_create(
         desired_config=desired_config, cluster_path=cluster_path, esx_config=esx_config
     )
     draft_id = draft_create_response.get(cluster_path)["draft_id"]
-
     if __opts__["test"]:
+        result = {}
         # CHECK COMPLIANCE
         if check_compliance:
             check_compliance = vmware_esxi.draft_check_compliance(
-                draft_create_response, cluster_path=cluster_path, esx_config=esx_config
+                draft_id=draft_id,
+                desired_config=desired_config,
+                cluster_path=cluster_path,
+                esx_config=esx_config,
             )
-
+            result["check_compliance"] = check_compliance
         # SHOW CHANGES
         if show_changes:
             show_changes = vmware_esxi.draft_show_changes(
-                draft_create_response, cluster_path=cluster_path, esx_config=esx_config
+                draft_id=draft_id,
+                desired_config=desired_config,
+                cluster_path=cluster_path,
+                esx_config=esx_config,
             )
-
+            log.info("CHANGES %s", show_changes)
+            result["changes"] = show_changes
         # PRECHECK DRAFT
         precheck_response = vmware_esxi.draft_precheck(
             cluster_path=cluster_path,
@@ -1726,10 +1776,10 @@ def apply_configuration(
             draft_id=draft_id,
             esx_config=esx_config,
         )
-
+        result["pre-check"] = precheck_response
         ret["result"] = None
         ret["comment"] = "Validate precheck response."
-        ret["changes"] = precheck_response
+        ret["changes"] = result
         # DELETE DRAFT
         vmware_esxi.draft_delete(
             cluster_path=cluster_path, draft_id=draft_id, esx_config=esx_config
