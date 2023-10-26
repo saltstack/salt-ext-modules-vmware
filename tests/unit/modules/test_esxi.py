@@ -86,6 +86,15 @@ def fake_esx_config():
     fake.get_desired_configuration.return_value = {
         "path/to/cluster": {"config.module.submodule": "desired"}
     }
+    fake.draft_create.return_value = {"path/to/cluster": {"draft_id": "draft-0"}}
+    fake.draft_get.return_value = {"metadata": {"state": "VALID"}}
+    fake.draft_check_compliance.return_value = {
+        "path/to/cluster": {"cluster_status": "NON COMPLIANT"}
+    }
+    fake.draft_precheck.return_value = {"path/to/cluster": {"status": "OK"}}
+    fake.draft_apply.return_value = {"path/to/cluster": {"status": "OK"}}
+    fake.draft_delete.return_value = {"path/to/cluster": {"status": "OK"}}
+    fake.draft_show_changes.return_value = {"path/to/cluster": {"status": "OK"}}
     return fake
 
 
@@ -561,3 +570,58 @@ def test_precheck_failure(mock_create_esx_config):
     # Assert
     assert not result["status"]
     assert "details" in result
+
+    
+def test_create_draft(fake_esx_config):
+    response = esxi.create_draft(cluster_path="path/to/cluster", esx_config=fake_esx_config)
+    fake_esx_config.draft_create.assert_called_once()
+    assert response == {"path/to/cluster": {"draft_id": "draft-0"}}
+
+
+def test_get_draft(fake_esx_config):
+    response = esxi.get_draft(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_get.assert_called_once()
+    assert response == {"metadata": {"state": "VALID"}}
+
+
+def test_check_draft_compliance(fake_esx_config):
+    response = esxi.check_draft_compliance(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_check_compliance.assert_called_once()
+    assert response == {"path/to/cluster": {"cluster_status": "NON COMPLIANT"}}
+
+
+def test_precheck_draft(fake_esx_config):
+    response = esxi.precheck_draft(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_precheck.assert_called_once()
+    assert response == {"path/to/cluster": {"status": "OK"}}
+
+
+def test_apply_draft(fake_esx_config):
+    with patch.dict(esxi.__opts__, {"test": False}):
+        response = esxi.apply_draft(
+            cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+        )
+        fake_esx_config.draft_apply.assert_called_once()
+        assert response == {"path/to/cluster": {"status": "OK"}}
+
+
+def test_delete_draft(fake_esx_config):
+    response = esxi.precheck_draft(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_precheck.assert_called_once()
+    assert response == {"path/to/cluster": {"status": "OK"}}
+
+
+def test_show_draft_changes(fake_esx_config):
+    response = esxi.show_draft_changes(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_show_changes.assert_called_once()
+    assert response == {"path/to/cluster": {"status": "OK"}}
