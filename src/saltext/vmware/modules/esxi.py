@@ -4,6 +4,7 @@ import logging
 import os
 from typing import List
 
+
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as utils_connect
@@ -4156,6 +4157,7 @@ def get_reference_schema():
     """
     log.debug("Running vmware_esxi.retrieve_reference_schema")
     return retrieve_reference_schema(Product.ESX)
+
 
 def pre_check(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
