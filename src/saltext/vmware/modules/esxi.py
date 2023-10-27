@@ -4,7 +4,6 @@ import logging
 import os
 from typing import List
 
-
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
 import saltext.vmware.utils.connect as utils_connect
