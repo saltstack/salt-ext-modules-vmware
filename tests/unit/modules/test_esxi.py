@@ -86,26 +86,31 @@ def fake_esx_config():
     }
     return fake
 
+
 @pytest.fixture
 def mock_esx_config(monkeypatch):
     # Define a mock for create_esx_config
     def mock_create_esx_config(config, profile):
         return mock_esx_config
 
-    monkeypatch.setattr(esxi, 'create_esx_config', mock_create_esx_config)
+    monkeypatch.setattr(esxi, "create_esx_config", mock_create_esx_config)
     return mock_esx_config
+
 
 @pytest.fixture
 def mock_desired_state_spec():
-    return {'example_key': 'example_value'}
+    return {"example_key": "example_value"}
+
 
 @pytest.fixture
 def mock_cluster_paths():
-    return ['example_path']
+    return ["example_path"]
+
 
 @pytest.fixture
 def mock_config():
-    return {'example_config_key': 'example_config_value'}
+    return {"example_config_key": "example_config_value"}
+
 
 def get_host(in_maintenance_mode=None):
     host = MagicMock()
@@ -377,48 +382,80 @@ def test_get_desired_configuration_all(fake_esx_config):
     configuration = esxi.get_desired_configuration(esx_config=fake_esx_config)
     assert configuration == {"path/to/cluster": {"config.module.submodule": "desired"}}
 
-def test_pre_check_success(mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch):
-    
+
+def test_pre_check_success(
+    mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch
+):
     # Define a mock for precheck_desired_state
     def mock_precheck_desired_state(desired_state_spec, cluster_paths):
-        return {'success_key': 'success_value'}
+        return {"success_key": "success_value"}
 
-    monkeypatch.setattr(mock_esx_config, 'precheck_desired_state', mock_precheck_desired_state)
+    monkeypatch.setattr(mock_esx_config, "precheck_desired_state", mock_precheck_desired_state)
 
-    result = esxi.pre_check(profile='example_profile', cluster_paths=mock_cluster_paths, desired_state_spec=mock_desired_state_spec, esx_config=mock_esx_config)
+    result = esxi.pre_check(
+        profile="example_profile",
+        cluster_paths=mock_cluster_paths,
+        desired_state_spec=mock_desired_state_spec,
+        esx_config=mock_esx_config,
+    )
 
-    assert result == {'success_key': 'success_value'}
+    assert result == {"success_key": "success_value"}
 
-def test_pre_check_exception(mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch):
-    
+
+def test_pre_check_exception(
+    mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch
+):
     # Define a mock for precheck_desired_state that raises an exception
     def mock_precheck_desired_state(desired_state_spec, cluster_paths):
-        raise Exception('Example Exception')
+        raise Exception("Example Exception")
 
-    monkeypatch.setattr(mock_esx_config, 'precheck_desired_state', mock_precheck_desired_state)
+    monkeypatch.setattr(mock_esx_config, "precheck_desired_state", mock_precheck_desired_state)
 
     with pytest.raises(SaltException):
-        esxi.pre_check(profile='example_profile', cluster_paths=mock_cluster_paths, desired_state_spec=mock_desired_state_spec, esx_config=mock_esx_config)
+        esxi.pre_check(
+            profile="example_profile",
+            cluster_paths=mock_cluster_paths,
+            desired_state_spec=mock_desired_state_spec,
+            esx_config=mock_esx_config,
+        )
 
-def test_remediate_success(mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch):
-    
+
+def test_remediate_success(
+    mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch
+):
     # Define a mock for remediate_with_desired_state
     def mock_remediate_with_desired_state(desired_state_spec, cluster_paths):
-        return {'success_key': 'success_value'}
+        return {"success_key": "success_value"}
 
-    monkeypatch.setattr(mock_esx_config, 'remediate_with_desired_state', mock_remediate_with_desired_state)
+    monkeypatch.setattr(
+        mock_esx_config, "remediate_with_desired_state", mock_remediate_with_desired_state
+    )
 
-    result = esxi.remediate(profile='example_profile', cluster_paths=mock_cluster_paths, desired_state_spec=mock_desired_state_spec, esx_config=mock_esx_config)
+    result = esxi.remediate(
+        profile="example_profile",
+        cluster_paths=mock_cluster_paths,
+        desired_state_spec=mock_desired_state_spec,
+        esx_config=mock_esx_config,
+    )
 
-    assert result == {'success_key': 'success_value'}
+    assert result == {"success_key": "success_value"}
 
-def test_remediate_exception(mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch):
-    
+
+def test_remediate_exception(
+    mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch
+):
     # Define a mock for remediate_with_desired_state that raises an exception
     def mock_remediate_with_desired_state(desired_state_spec, cluster_paths):
-        raise Exception('Example Exception')
+        raise Exception("Example Exception")
 
-    monkeypatch.setattr(mock_esx_config, 'remediate_with_desired_state', mock_remediate_with_desired_state)
+    monkeypatch.setattr(
+        mock_esx_config, "remediate_with_desired_state", mock_remediate_with_desired_state
+    )
 
     with pytest.raises(SaltException):
-        esxi.remediate(profile='example_profile', cluster_paths=mock_cluster_paths, desired_state_spec=mock_desired_state_spec, esx_config=mock_esx_config)
+        esxi.remediate(
+            profile="example_profile",
+            cluster_paths=mock_cluster_paths,
+            desired_state_spec=mock_desired_state_spec,
+            esx_config=mock_esx_config,
+        )

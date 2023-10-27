@@ -4162,7 +4162,7 @@ def get_reference_schema():
 def pre_check(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Perform a pre-check for desired state compliance.
-    
+
     :param profile: Profile name (optional)
     :param cluster_paths: List of cluster paths (optional)
     :param desired_state_spec: Desired state specification
@@ -4170,27 +4170,29 @@ def pre_check(profile=None, cluster_paths=None, desired_state_spec=None, esx_con
     :return: Pre-check response
     """
     log.debug("Precheck %s", desired_state_spec)
-    
+
     # Ensure esx_config is provided or create a new one
     if not esx_config:
-        config = __opts__  
+        config = __opts__
         esx_config = utils_esxi.create_esx_config(config, profile)
 
     log.debug("esx_config %s", esx_config)
 
     try:
-        precheckresponse = esx_config.precheck_desired_state(desired_state_spec=desired_state_spec, cluster_paths=cluster_paths)        
+        precheckresponse = esx_config.precheck_desired_state(
+            desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+        )
         return precheckresponse
-    
-    except Exception as e:        
-        log.error("Pre-check failed: %s", str(e))        
+
+    except Exception as e:
+        log.error("Pre-check failed: %s", str(e))
         raise salt.exceptions.SaltException(str(e))
-        
+
 
 def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Remediate the desired state compliance.
-    
+
     :param profile: Profile name (optional)
     :param cluster_paths: List of cluster paths (optional)
     :param desired_state_spec: Desired state specification
@@ -4201,15 +4203,17 @@ def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_con
 
     # Ensure esx_config is provided or create a new one
     if not esx_config:
-        config = __opts__  
+        config = __opts__
         esx_config = utils_esxi.create_esx_config(config, profile)
 
     log.debug("esx_config %s", esx_config)
 
     try:
-        remediateresponse = esx_config.remediate_with_desired_state(desired_state_spec=desired_state_spec, cluster_paths=cluster_paths)        
+        remediateresponse = esx_config.remediate_with_desired_state(
+            desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+        )
         return remediateresponse
-    
+
     except Exception as e:
         log.error("Remediation failed: %s", str(e))
         raise salt.exceptions.SaltException(str(e))
