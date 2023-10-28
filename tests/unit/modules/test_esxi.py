@@ -13,6 +13,7 @@ import saltext.vmware.utils.connect
 from config_modules_vmware.schema.schema_utility import Product
 from config_modules_vmware.schema.schema_utility import retrieve_reference_schema
 from salt.exceptions import SaltException
+from saltext.vmware.utils.esxi import create_esx_config
 
 log = logging.getLogger(__name__)
 
