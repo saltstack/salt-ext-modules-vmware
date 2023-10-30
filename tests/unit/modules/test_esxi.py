@@ -386,13 +386,15 @@ def test_get_desired_configuration_all(fake_esx_config):
 
 @patch("saltext.vmware.modules.esxi.log")
 @patch("saltext.vmware.modules.esxi.salt.exceptions.SaltException")
-def test_pre_check_success(salt_exception_mock, log_mock, pre_check_deps):
-    pre_check_deps.precheck_desired_state.return_value = "Pre-check response"
+def test_pre_check_success(salt_exception_mock, log_mock, create_esx_config_mock):
+    esx_config_mock = Mock()
+    create_esx_config_mock.return_value = esx_config_mock
+    esx_config_mock.precheck_desired_state.return_value = "Pre-check response"
 
-    result = esxi.pre_check(profile, cluster_paths, desired_state_spec, pre_check_deps)
+    result = esxi.pre_check(profile, cluster_paths, desired_state_spec, esx_config_mock)
 
     log_mock.debug.assert_called_with("Precheck %s", desired_state_spec)
-    pre_check_deps.precheck_desired_state.assert_called_with(
+    esx_config_mock.precheck_desired_state.assert_called_with(
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
     assert result == "Pre-check response"
@@ -401,14 +403,16 @@ def test_pre_check_success(salt_exception_mock, log_mock, pre_check_deps):
 
 @patch("saltext.vmware.modules.esxi.log")
 @patch("saltext.vmware.modules.esxi.salt.exceptions.SaltException")
-def test_pre_check_failure(salt_exception_mock, log_mock, pre_check_deps):
-    pre_check_deps.precheck_desired_state.side_effect = Exception("Test error")
+def test_pre_check_failure(salt_exception_mock, log_mock, create_esx_config_mock):
+    esx_config_mock = Mock()
+    create_esx_config_mock.return_value = esx_config_mock
+    esx_config_mock.precheck_desired_state.side_effect = Exception("Test error")
 
     with pytest.raises(salt_exception_mock):
-        esxi.pre_check(profile, cluster_paths, desired_state_spec, pre_check_deps)
+        esxi.pre_check(profile, cluster_paths, desired_state_spec, esx_config_mock)
 
     log_mock.debug.assert_called_with("Precheck %s", desired_state_spec)
-    pre_check_deps.precheck_desired_state.assert_called_with(
+    esx_config_mock.precheck_desired_state.assert_called_with(
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
     log_mock.error.assert_called_with("Pre-check failed: %s", "Test error")
@@ -416,13 +420,15 @@ def test_pre_check_failure(salt_exception_mock, log_mock, pre_check_deps):
 
 @patch("saltext.vmware.modules.esxi.log")
 @patch("saltext.vmware.modules.esxi.salt.exceptions.SaltException")
-def test_remediate_success(salt_exception_mock, log_mock, remediate_deps):
-    remediate_deps.remediate_with_desired_state.return_value = "Remediation response"
+def test_remediate_success(salt_exception_mock, log_mock, create_esx_config_mock):
+    esx_config_mock = Mock()
+    create_esx_config_mock.return_value = esx_config_mock
+    esx_config_mock.remediate_with_desired_state.return_value = "Remediation response"
 
-    result = esxi.remediate(profile, cluster_paths, desired_state_spec, remediate_deps)
+    result = esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
 
     log_mock.debug.assert_called_with("Remediate %s", desired_state_spec)
-    remediate_deps.remediate_with_desired_state.assert_called_with(
+    esx_config_mock.remediate_with_desired_state.assert_called_with(
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
     assert result == "Remediation response"
@@ -431,14 +437,16 @@ def test_remediate_success(salt_exception_mock, log_mock, remediate_deps):
 
 @patch("saltext.vmware.modules.esxi.log")
 @patch("saltext.vmware.modules.esxi.salt.exceptions.SaltException")
-def test_remediate_failure(salt_exception_mock, log_mock, remediate_deps):
-    remediate_deps.remediate_with_desired_state.side_effect = Exception("Test error")
+def test_remediate_failure(salt_exception_mock, log_mock, create_esx_config_mock):
+    esx_config_mock = Mock()
+    create_esx_config_mock.return_value = esx_config_mock
+    esx_config_mock.remediate_with_desired_state.side_effect = Exception("Test error")
 
     with pytest.raises(salt_exception_mock):
-        esxi.remediate(profile, cluster_paths, desired_state_spec, remediate_deps)
+        esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
 
     log_mock.debug.assert_called_with("Remediate %s", desired_state_spec)
-    remediate_deps.remediate_with_desired_state.assert_called_with(
+    esx_config_mock.remediate_with_desired_state.assert_called_with(
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
     log_mock.error.assert_called_with("Remediation failed: %s", "Test error")
