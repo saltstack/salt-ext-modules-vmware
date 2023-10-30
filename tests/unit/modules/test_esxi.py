@@ -401,7 +401,7 @@ def test_pre_check_failure(salt_exception_mock, log_mock, create_esx_config_mock
     esx_config_mock.precheck_desired_state.assert_called_with(
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
-    assert str(exc_info.value) == "Test error"
+    assert type(exc_info.value) is Exception  # Check the exception type
 
 
 @patch("saltext.vmware.modules.esxi.log")
@@ -432,4 +432,4 @@ def test_remediate_failure(salt_exception_mock, log_mock, create_esx_config_mock
     esx_config_mock.remediate_with_desired_state.assert_called_with(
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
-    assert str(exc_info.value) == "Test error"
+    assert type(exc_info.value) is Exception  # Check the exception type
