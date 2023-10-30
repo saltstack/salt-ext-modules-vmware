@@ -101,18 +101,6 @@ def create_esx_config_mock():
         yield create_esx_config_mock
 
 
-@pytest.fixture
-def pre_check_deps(esx_config_mock, create_esx_config_mock):
-    create_esx_config_mock.return_value = esx_config_mock
-    return esx_config_mock
-
-
-@pytest.fixture
-def remediate_deps(esx_config_mock, create_esx_config_mock):
-    create_esx_config_mock.return_value = esx_config_mock
-    return esx_config_mock
-
-
 def get_host(in_maintenance_mode=None):
     host = MagicMock()
     host.name = uuid.uuid4().hex
@@ -408,7 +396,7 @@ def test_pre_check_failure(salt_exception_mock, log_mock, create_esx_config_mock
     create_esx_config_mock.return_value = esx_config_mock
     esx_config_mock.precheck_desired_state.side_effect = Exception("Test error")
 
-    with pytest.raises(salt_exception_mock):
+    with pytest.raises(Exception) as exc_info:
         esxi.pre_check(profile, cluster_paths, desired_state_spec, esx_config_mock)
 
     log_mock.debug.assert_called_with("Precheck %s", desired_state_spec)
@@ -416,6 +404,7 @@ def test_pre_check_failure(salt_exception_mock, log_mock, create_esx_config_mock
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
     log_mock.error.assert_called_with("Pre-check failed: %s", "Test error")
+    assert str(exc_info.value) == "Test error"
 
 
 @patch("saltext.vmware.modules.esxi.log")
@@ -442,7 +431,7 @@ def test_remediate_failure(salt_exception_mock, log_mock, create_esx_config_mock
     create_esx_config_mock.return_value = esx_config_mock
     esx_config_mock.remediate_with_desired_state.side_effect = Exception("Test error")
 
-    with pytest.raises(salt_exception_mock):
+    with pytest.raises(Exception) as exc_info:
         esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
 
     log_mock.debug.assert_called_with("Remediate %s", desired_state_spec)
@@ -450,3 +439,4 @@ def test_remediate_failure(salt_exception_mock, log_mock, create_esx_config_mock
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
     log_mock.error.assert_called_with("Remediation failed: %s", "Test error")
+    assert str(exc_info.value) == "Test error"
