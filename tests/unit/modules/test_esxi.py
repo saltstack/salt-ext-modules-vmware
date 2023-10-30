@@ -10,10 +10,10 @@ from unittest.mock import patch
 import pytest
 import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.utils.connect
+import saltext.vmware.utils.esxi as esxi_utils
 from config_modules_vmware.schema.schema_utility import Product
 from config_modules_vmware.schema.schema_utility import retrieve_reference_schema
 from salt.exceptions import SaltException
-from saltext.vmware.utils.esxi import create_esx_config
 
 log = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ def mock_esx_config(monkeypatch):
     def mock_create_esx_config(config, profile):
         return mock_esx_config
 
-    monkeypatch.setattr(esxi, "create_esx_config", mock_create_esx_config)
+    monkeypatch.setattr(esxi_utils, "create_esx_config", mock_create_esx_config)
     return mock_esx_config
 
 
