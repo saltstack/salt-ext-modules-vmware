@@ -88,28 +88,31 @@ def fake_esx_config():
 
 
 @pytest.fixture
-def mock_esx_config(monkeypatch):
-    # Define a mock for create_esx_config
-    def mock_create_esx_config(config, profile):
+def mock_esx_config():
+    mock = pytest.mock.Mock()
+    return mock
+
+
+@pytest.fixture
+def mock_create_esx_config(monkeypatch, mock_esx_config):
+    def create_esx_config(config, profile):
         return mock_esx_config
 
-    monkeypatch.setattr(esxi_utils, "create_esx_config", mock_create_esx_config)
-    return mock_esx_config
+    monkeypatch.setattr(esxi_utils, "create_esx_config", create_esx_config)
 
 
 @pytest.fixture
-def mock_desired_state_spec():
-    return {"example_key": "example_value"}
+def mock_precheck_desired_state(mock_esx_config):
+    mock = pytest.mock.Mock()
+    mock_esx_config.precheck_desired_state = mock
+    return mock
 
 
 @pytest.fixture
-def mock_cluster_paths():
-    return ["example_path"]
-
-
-@pytest.fixture
-def mock_config():
-    return {"example_config_key": "example_config_value"}
+def mock_remediate_with_desired_state(mock_esx_config):
+    mock = pytest.mock.Mock()
+    mock_esx_config.remediate_with_desired_state = mock
+    return mock
 
 
 def get_host(in_maintenance_mode=None):
@@ -383,79 +386,65 @@ def test_get_desired_configuration_all(fake_esx_config):
     assert configuration == {"path/to/cluster": {"config.module.submodule": "desired"}}
 
 
-def test_pre_check_success(
-    mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch
-):
-    # Define a mock for precheck_desired_state
-    def mock_precheck_desired_state(desired_state_spec, cluster_paths):
-        return {"success_key": "success_value"}
-
-    monkeypatch.setattr(mock_esx_config, "precheck_desired_state", mock_precheck_desired_state)
+def test_pre_check_success(mock_create_esx_config, mock_precheck_desired_state):
+    # Your test data
+    profile = "example_profile"
+    cluster_paths = ["example_path"]
+    desired_state_spec = {}  # Your desired state specification
 
     result = esxi.pre_check(
-        profile="example_profile",
-        cluster_paths=mock_cluster_paths,
-        desired_state_spec=mock_desired_state_spec,
-        esx_config=mock_esx_config,
+        profile=profile, cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
+    )
+
+    # Assert that the precheck method was called with the correct arguments
+    mock_precheck_desired_state.assert_called_with(
+        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
 
     assert result == {"success_key": "success_value"}
 
 
-def test_pre_check_exception(
-    mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch
-):
-    # Define a mock for precheck_desired_state that raises an exception
-    def mock_precheck_desired_state(desired_state_spec, cluster_paths):
-        raise Exception("Example Exception")
+def test_pre_check_exception(mock_create_esx_config, mock_precheck_desired_state):
+    # Your test data
+    profile = "example_profile"
+    cluster_paths = ["example_path"]
+    desired_state_spec = {}  # Your desired state specification
 
-    monkeypatch.setattr(mock_esx_config, "precheck_desired_state", mock_precheck_desired_state)
+    mock_precheck_desired_state.side_effect = Exception("Example Exception")
 
-    with pytest.raises(SaltException):
+    with pytest.raises(esxi.SaltException):
         esxi.pre_check(
-            profile="example_profile",
-            cluster_paths=mock_cluster_paths,
-            desired_state_spec=mock_desired_state_spec,
-            esx_config=mock_esx_config,
+            profile=profile, cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
         )
 
 
-def test_remediate_success(
-    mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch
-):
-    # Define a mock for remediate_with_desired_state
-    def mock_remediate_with_desired_state(desired_state_spec, cluster_paths):
-        return {"success_key": "success_value"}
-
-    monkeypatch.setattr(
-        mock_esx_config, "remediate_with_desired_state", mock_remediate_with_desired_state
-    )
+def test_remediate_success(mock_create_esx_config, mock_remediate_with_desired_state):
+    # Your test data
+    profile = "example_profile"
+    cluster_paths = ["example_path"]
+    desired_state_spec = {}  # Your desired state specification
 
     result = esxi.remediate(
-        profile="example_profile",
-        cluster_paths=mock_cluster_paths,
-        desired_state_spec=mock_desired_state_spec,
-        esx_config=mock_esx_config,
+        profile=profile, cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
+    )
+
+    # Assert that the remediate method was called with the correct arguments
+    mock_remediate_with_desired_state.assert_called_with(
+        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
 
     assert result == {"success_key": "success_value"}
 
 
-def test_remediate_exception(
-    mock_esx_config, mock_desired_state_spec, mock_cluster_paths, monkeypatch
-):
-    # Define a mock for remediate_with_desired_state that raises an exception
-    def mock_remediate_with_desired_state(desired_state_spec, cluster_paths):
-        raise Exception("Example Exception")
+def test_remediate_exception(mock_create_esx_config, mock_remediate_with_desired_state):
+    # Your test data
+    profile = "example_profile"
+    cluster_paths = ["example_path"]
+    desired_state_spec = {}  # Your desired state specification
 
-    monkeypatch.setattr(
-        mock_esx_config, "remediate_with_desired_state", mock_remediate_with_desired_state
-    )
+    mock_remediate_with_desired_state.side_effect = Exception("Example Exception")
 
-    with pytest.raises(SaltException):
+    with pytest.raises(esxi.SaltException):
         esxi.remediate(
-            profile="example_profile",
-            cluster_paths=mock_cluster_paths,
-            desired_state_spec=mock_desired_state_spec,
-            esx_config=mock_esx_config,
+            profile=profile, cluster_paths=cluster_paths, desired_state_spec=desired_state_spec
         )
