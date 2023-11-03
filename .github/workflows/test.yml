@@ -11,7 +11,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10
+        python-version: "3.10"
     - name: Set Cache Key
       run: echo "PY=$(python --version --version | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
     - name: Install System Deps
@@ -36,7 +36,7 @@ jobs:
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10
+        python-version: "3.10"
 
     - name: Install Nox
       run: |
@@ -67,7 +67,7 @@ jobs:
           - 3.7
           - 3.8
           - 3.9
-          - 3.10
+          - "3.10"
         salt-version:
           - 3005.1
 
@@ -185,7 +185,7 @@ jobs:
       max-parallel: 3
       matrix:
         python-version:
-          - 3.10
+          - "3.10"
         salt-version:
           - 3005.1
 
@@ -308,7 +308,7 @@ jobs:
       max-parallel: 3
       matrix:
         python-version:
-          - 3.10
+          - "3.10"
         salt-version:
           - 3005.1
 
