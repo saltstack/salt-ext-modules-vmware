@@ -4187,15 +4187,5 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
     response_check_compliance = esx_config.check_compliance(desired_state_spec= desired_state_spec, cluster_paths= cluster_paths)
     return response_check_compliance
 
-def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
-    log.debug("Running vmware_esxi.remediate")
-    if desired_state_spec == None:
-        with open("/home/vcf/test_ruta/desired_state.json", "r") as f:
-            desired_state_spec = json.load(f)
-    log.info("desired spec %s", desired_state_spec)
 
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
-    check_compliance_response = esx_config.remediate_with_desired_state(cluster_paths=cluster_paths, desired_state_spec=desired_state_spec)
-    return check_compliance_response
 
