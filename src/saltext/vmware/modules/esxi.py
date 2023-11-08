@@ -4157,15 +4157,6 @@ def get_reference_schema():
     log.debug("Running vmware_esxi.retrieve_reference_schema")
     return retrieve_reference_schema(Product.ESX)
 
-def convert_ordered_dict_to_dict(obj):
-    if isinstance(obj, dict):
-        return {key: convert_ordered_dict_to_dict(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_ordered_dict_to_dict(element) for element in obj]
-    elif isinstance(obj, OrderedDict):
-        return convert_ordered_dict_to_dict(dict(obj))
-    else:
-        return obj
 
 def convert_ordered_dict_to_dict(obj):
     if isinstance(obj, dict):
@@ -4176,6 +4167,18 @@ def convert_ordered_dict_to_dict(obj):
         return convert_ordered_dict_to_dict(dict(obj))
     else:
         return obj
+
+
+def convert_ordered_dict_to_dict(obj):
+    if isinstance(obj, dict):
+        return {key: convert_ordered_dict_to_dict(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_ordered_dict_to_dict(element) for element in obj]
+    elif isinstance(obj, OrderedDict):
+        return convert_ordered_dict_to_dict(dict(obj))
+    else:
+        return obj
+
 
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
@@ -4205,9 +4208,9 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
         esx_config = utils_esxi.create_esx_config(config, profile)
     try:
         response_check_compliance = esx_config.check_compliance(
-            desired_state_spec= desired_state_spec, cluster_paths= cluster_paths
+            desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
         )
         return {"details": response_check_compliance}
     except Exception as e:
         log.error("Check Compliance encountered an error: %s", str(e))
-        return {"details": str(e)}  
+        return {"details": str(e)}
