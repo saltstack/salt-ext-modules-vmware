@@ -4170,43 +4170,33 @@ def convert_ordered_dict_to_dict(obj):
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Checks compliance of cluster.
-
-    desired_state_spec
-       
+    desired_state_spec       
 	Gets the desired spec from sls file 
 
-    cluster_paths
-        
+    cluster_paths        
 	Gets the configuration from the cluster paths specified
 
-    esx_config
-       
+    esx_config       
 	If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
 
-    profile
-        
+    profile        
 	Profile to use (optional)
 
     .. code-block:: bash
-
        
 	salt-call vmware_esxi.check_compliance cluster_paths="SDDC-Datacenter/vlcm_cluster1" 
-    """
-    
+    """    
     log.info("Checking complaince %s", desired_state_spec)
     desired_state_spec = convert_ordered_dict_to_dict(desired_state_spec)    
     config = __opts__
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
-  
-	try:
+        esx_config = utils_esxi.create_esx_config(config, profile)  
+    try:
         response_check_compliance = esx_config.check_compliance(
             desired_state_spec= desired_state_spec, cluster_paths= cluster_paths
         )
         return {"details": response_check_compliance}
-
-	except Exception as e:
-        #  including exception details
+     except Exception as e:        
         log.error("Check Compliance encountered an error: %s", str(e))
         return {"status": False, "details": str(e)}
 
