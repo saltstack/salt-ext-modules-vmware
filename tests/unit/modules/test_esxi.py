@@ -375,6 +375,7 @@ def test_get_configuration_all(fake_esx_config):
     configuration = esxi.get_configuration(esx_config=fake_esx_config)
     assert configuration == {"path/to/cluster": {"config.module.submodule": "current"}}
 
+
 def test_get_desired_configuration_all(fake_esx_config):
     configuration = esxi.get_desired_configuration(esx_config=fake_esx_config)
     assert configuration == {"path/to/cluster": {"config.module.submodule": "desired"}}
