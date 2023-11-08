@@ -628,5 +628,8 @@ def test_show_draft_changes(fake_esx_config):
 
     
 def test_check_compliance(fake_esx_config, fake_desired_state_spec):
-    configuration = esxi.check_compliance(esx_config=fake_esx_config, desired_config = fake_desired_state_spec)
+    
+    configuration = esxi.check_compliance(
+        esx_config=fake_esx_config, desired_config = fake_desired_state_spec
+    )
     assert configuration == {"path/to/cluster": {"config.module.submodule": "desired"}}
