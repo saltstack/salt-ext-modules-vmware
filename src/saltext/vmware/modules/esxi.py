@@ -4324,7 +4324,6 @@ def get_desired_configuration(cluster_paths=None, esx_config=None, profile=None)
     current_config = esx_config.get_desired_configuration(cluster_paths=cluster_paths)
     return current_config
 
-
 def get_reference_schema():
     """
     Retrieve reference schema for ESXi.
