@@ -4146,7 +4146,6 @@ def get_desired_configuration(cluster_paths=None, esx_config=None, profile=None)
     current_config = esx_config.get_desired_configuration(cluster_paths=cluster_paths)
     return current_config
 
-
 def get_reference_schema():
     """
     Retrieve reference schema for ESXi.
@@ -4157,7 +4156,6 @@ def get_reference_schema():
     log.debug("Running vmware_esxi.retrieve_reference_schema")
     return retrieve_reference_schema(Product.ESX)
 
-
 def convert_ordered_dict_to_dict(obj):
     if isinstance(obj, dict):
         return {key: convert_ordered_dict_to_dict(value) for key, value in obj.items()}
@@ -4167,18 +4165,6 @@ def convert_ordered_dict_to_dict(obj):
         return convert_ordered_dict_to_dict(dict(obj))
     else:
         return obj
-
-
-def convert_ordered_dict_to_dict(obj):
-    if isinstance(obj, dict):
-        return {key: convert_ordered_dict_to_dict(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_ordered_dict_to_dict(element) for element in obj]
-    elif isinstance(obj, OrderedDict):
-        return convert_ordered_dict_to_dict(dict(obj))
-    else:
-        return obj
-
 
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
