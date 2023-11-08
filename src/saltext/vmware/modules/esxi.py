@@ -4478,6 +4478,8 @@ def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_con
         # Handle exceptions by setting status as false and including exception details
         log.error("Remediation encountered an error: %s", str(e))
         return {"status": False, "details": str(e)}
+    
+    
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Checks compliance of cluster.
@@ -4497,16 +4499,22 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
     .. code-block:: bash
 
         salt-call vmware_esxi.check_compliance cluster_paths="SDDC-Datacenter/vlcm_cluster1" 
-    """
-    
+    """     
     log.info("Checking complaince %s", desired_state_spec)
+    desired_state_spec = convert_ordered_dict_to_dict(desired_state_spec)    
     config = __opts__
-    if desired_state_spec == None:
-        desired_state_spec = json.loads(json.dumps(desired_state_spec))
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
-    response_check_compliance = esx_config.check_compliance(desired_state_spec= desired_state_spec, cluster_paths= cluster_paths)
-    return response_check_compliance
+            esx_config = utils_esxi.create_esx_config(config, profile)  
+    try:
+            response_check_compliance = esx_config.check_compliance(
+                desired_state_spec= desired_state_spec, cluster_paths= cluster_paths
+            )
+            return { "details": response_check_compliance}
+    
+    except Exception as e:
+        #  including exception details
+            log.error("Check Compliance encountered an error: %s", str(e))
+    return {"status": False, "details": str(e)}
 
 def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     log.debug("Running vmware_esxi.remediate")
