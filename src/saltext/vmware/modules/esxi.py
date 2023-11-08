@@ -4483,21 +4483,16 @@ def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_con
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Checks compliance of cluster.
-
-    desired_state_spec
-       
+    desired_state_spec       
 	Gets the desired spec from sls file 
 
-    cluster_paths
-        
+    cluster_paths        
 	Gets the configuration from the cluster paths specified
 
-    esx_config
-       
+    esx_config       
 	If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
 
-    profile
-        
+    profile        
 	Profile to use (optional)
 
     .. code-block:: bash
