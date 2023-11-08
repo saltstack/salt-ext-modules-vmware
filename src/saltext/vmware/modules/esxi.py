@@ -4196,7 +4196,7 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
             desired_state_spec= desired_state_spec, cluster_paths= cluster_paths
         )
         return {"details": response_check_compliance}
-     except Exception as e:        
+    except Exception as e:        
         log.error("Check Compliance encountered an error: %s", str(e))
         return {"status": False, "details": str(e)}
 
