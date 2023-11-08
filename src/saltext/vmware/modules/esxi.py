@@ -4167,27 +4167,37 @@ def convert_ordered_dict_to_dict(obj):
     else:
         return obj
 
+def convert_ordered_dict_to_dict(obj):
+    if isinstance(obj, dict):
+        return {key: convert_ordered_dict_to_dict(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_ordered_dict_to_dict(element) for element in obj]
+    elif isinstance(obj, OrderedDict):
+        return convert_ordered_dict_to_dict(dict(obj))
+    else:
+        return obj
+
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Checks compliance of cluster.
+    desired_state_spec       
+	Gets the desired spec from sls file 
 
-    desired_state_spec
-        Gets the desired spec from sls file 
+    cluster_paths        
+	Gets the configuration from the cluster paths specified
 
-    cluster_paths
-        Gets the configuration from the cluster paths specified
+    esx_config       
+	If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
 
-    esx_config
-        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
-
-    profile
-        Profile to use (optional)
+    profile        
+	Profile to use (optional)
 
     .. code-block:: bash
 
         salt-call vmware_esxi.check_compliance cluster_paths="SDDC-Datacenter/vlcm_cluster1" 
     """     
     log.info("Checking complaince %s", desired_state_spec)
+    desired_state_spec = convert_ordered_dict_to_dict(desired_state_spec)    
     desired_state_spec = convert_ordered_dict_to_dict(desired_state_spec)    
     config = __opts__
     if not esx_config:
@@ -4203,15 +4213,5 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
             log.error("Check Compliance encountered an error: %s", str(e))
     return {"status": False, "details": str(e)}
 
-def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
-    log.debug("Running vmware_esxi.remediate")
-    if desired_state_spec == None:
-        with open("/home/vcf/test_ruta/desired_state.json", "r") as f:
-            desired_state_spec = json.load(f)
-    log.info("desired spec %s", desired_state_spec)
 
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
-    check_compliance_response = esx_config.remediate_with_desired_state(cluster_paths=cluster_paths, desired_state_spec=desired_state_spec)
-    return check_compliance_response
 
