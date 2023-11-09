@@ -98,6 +98,7 @@ def fake_esx_config():
     return fake
 
 
+<<<<<<< HEAD
 # Define some example test data
 profile = "example_profile"
 cluster_paths = ["cluster1", "cluster2"]
@@ -108,6 +109,15 @@ desired_state_spec = {"key": "value"}
 def create_esx_config_mock():
     with patch("saltext.vmware.utils.esxi.create_esx_config") as create_esx_config_mock:
         yield create_esx_config_mock
+=======
+@pytest.fixture
+def fake_desired_state_spec():
+    fake = MagicMock()
+    fake.get_desired_configuration.return_value = {
+        "path/to/cluster": {"config.module.submodule": "desired"}
+    }
+    return fake
+>>>>>>> 38c19db (Added tests)
 
 
 def get_host(in_maintenance_mode=None):
@@ -626,8 +636,6 @@ def test_show_draft_changes(fake_esx_config):
     fake_esx_config.draft_show_changes.assert_called_once()
     assert response == {"path/to/cluster": {"status": "OK"}}
 
-    
-def test_check_compliance(fake_esx_config, fake_desired_state_spec):
     
 def test_check_compliance(fake_esx_config, fake_desired_state_spec):
     configuration = esxi.check_compliance(
