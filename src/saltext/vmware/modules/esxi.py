@@ -4163,8 +4163,6 @@ def convert_ordered_dict_to_dict(obj):
         return {key: convert_ordered_dict_to_dict(value) for key, value in obj.items()}
     elif isinstance(obj, list):
         return [convert_ordered_dict_to_dict(element) for element in obj]
-    elif isinstance(obj, OrderedDict):
-        return convert_ordered_dict_to_dict(dict(obj))
     else:
         return obj
 

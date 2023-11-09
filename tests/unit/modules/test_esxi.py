@@ -85,6 +85,15 @@ def fake_esx_config():
     return fake
 
 
+@pytest.fixture
+def fake_desired_state_spec():
+    fake = MagicMock()
+    fake.get_desired_configuration.return_value = {
+        "path/to/cluster": {"config.module.submodule": "desired"}
+    }
+    return fake
+
+
 def get_host(in_maintenance_mode=None):
     host = MagicMock()
     host.name = uuid.uuid4().hex
@@ -354,3 +363,10 @@ def test_get_configuration_all(fake_esx_config):
 def test_get_desired_configuration_all(fake_esx_config):
     configuration = esxi.get_desired_configuration(esx_config=fake_esx_config)
     assert configuration == {"path/to/cluster": {"config.module.submodule": "desired"}}
+
+
+def test_check_compliance(fake_esx_config, fake_desired_state_spec):
+    configuration = esxi.check_compliance(
+        esx_config=fake_esx_config, desired_state_spec=fake_desired_state_spec
+    )
+    assert configuration is not None
