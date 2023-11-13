@@ -4234,7 +4234,6 @@ def calculate_remediatestatus(data):
                 status["successful_hosts"] += child_status["successful_hosts"]
                 status["failed_hosts"] += child_status["failed_hosts"]
                 status["skipped_hosts"] += child_status["skipped_hosts"]
-
     return status
 
 
