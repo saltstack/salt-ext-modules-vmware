@@ -372,64 +372,192 @@ def test_get_desired_configuration_all(fake_esx_config):
     assert configuration == {"path/to/cluster": {"config.module.submodule": "desired"}}
 
 
-@patch("saltext.vmware.modules.esxi.log")
-@patch("saltext.vmware.modules.esxi.salt.exceptions.SaltException")
-def test_pre_check_success(salt_exception_mock, log_mock, create_esx_config_mock):
+@pytest.fixture
+def mock_create_esx_config():
+    with patch.object(
+        esxi.utils_esxi, "create_esx_config", return_value={"some-key": "some-value"}
+    ) as mock:
+        yield mock
+
+
+def test_calculate_precheck_status_success():
+    # Arrange
+    data = {"host1": {"status": "OK"}, "host2": {"status": "OK"}}
+
+    # Act
+    result = esxi.calculate_precheck_status(data)
+
+    # Assert
+    assert result == {"status": True}
+
+
+def test_calculate_precheck_status_failure():
+    # Arrange
+    data = {"host1": {"status": "OK"}, "host2": {"status": "ERROR"}}
+
+    # Act
+    result = esxi.calculate_precheck_status(data)
+
+    # Assert
+    assert result == {"status": False}
+
+
+def test_calculate_remediate_status_success():
+    # Arrange
+    data = {
+        "/SDDC-Datacenter/vlcm_cluster1": {
+            "hosts": {
+                "host-46": {"name": "esxi-6.vrack.vsphere.local"},
+                "host-51": {"name": "esxi-7.vrack.vsphere.local"},
+            },
+            "successful_hosts": ["host-46", "host-51"],
+            "failed_hosts": [],
+            "skipped_hosts": [],
+        }
+    }
+
+    # Act
+    result = esxi.calculate_remediatestatus(data)
+
+    # Assert
+    assert result == {
+        "status": True,
+        "successful_hosts": ["host-46", "host-51"],
+        "failed_hosts": [],
+        "skipped_hosts": [],
+    }
+
+
+def test_calculate_remediate_status_failure():
+    # Arrange
+    data = {"successful_hosts": [], "failed_hosts": ["host1"], "skipped_hosts": []}
+
+    # Act
+    result = esxi.calculate_remediatestatus(data)
+
+    # Assert
+    assert result == {
+        "status": False,
+        "successful_hosts": [],
+        "failed_hosts": ["host1"],
+        "skipped_hosts": [],
+    }
+
+
+def test_remediate_success(create_esx_config_mock):
+    # Arrange
     esx_config_mock = Mock()
     create_esx_config_mock.return_value = esx_config_mock
-    esx_config_mock.precheck_desired_state.return_value = "Pre-check response"
 
+    # Set up the response sample
+    response_sample = {
+        "/SDDC-Datacenter/vlcm_cluster1": {
+            "hosts": {
+                "host-46": {"name": "esxi-6.vrack.vsphere.local"},
+                "host-51": {"name": "esxi-7.vrack.vsphere.local"},
+            },
+            "successful_hosts": ["host-46", "host-51"],
+            "failed_hosts": [],
+            "skipped_hosts": [],
+        }
+    }
+
+    # Set the return value of remediate_with_desired_state to the response sample
+    esx_config_mock.remediate_with_desired_state.return_value = response_sample
+
+    # Act
+    result = esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
+
+    # Assert
+    assert result["status"]
+    assert "details" in result
+    assert result["details"] == response_sample
+    esx_config_mock.remediate_with_desired_state.assert_called_once_with(
+        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+    )
+
+
+def test_remediate_failure(create_esx_config_mock):
+    # Arrange
+    esx_config_mock = Mock()
+    esx_config_mock.remediate_with_desired_state.side_effect = Exception(
+        "Mocked remediate_with_desired_state failure"
+    )
+    create_esx_config_mock.return_value = esx_config_mock
+
+    # Act
+    result = esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
+
+    # Assert
+    assert not result["status"]
+    assert "details" in result
+
+    # Ensure remediate_with_desired_state is called
+    esx_config_mock.remediate_with_desired_state.assert_called_once_with(
+        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+    )
+
+
+def test_precheck_success(create_esx_config_mock):
+    # Arrange
+    esx_config_mock = Mock()
+    create_esx_config_mock.return_value = esx_config_mock
+
+    # Set up the response sample
+    response_sample = {
+        "/SDDC-Datacenter/vlcm_cluster1": {
+            "status": "OK",
+            "summary": "Pre-check completed successfully.",
+            "hosts": {
+                "host-46": {
+                    "name": "esxi-6.vrack.vsphere.local",
+                    "summary": "Host is in compliance with desired configuration.",
+                },
+                "host-51": {
+                    "name": "esxi-7.vrack.vsphere.local",
+                    "summary": "Host is in compliance with desired configuration.",
+                },
+            },
+            "successful_hosts": ["host-46", "host-51"],
+            "failed_hosts": [],
+            "skipped_hosts": [],
+        }
+    }
+
+    # Set the return value of precheck_with_desired_state to the response sample
+    esx_config_mock.precheck_desired_state.return_value = response_sample
+
+    # Act
     result = esxi.pre_check(profile, cluster_paths, desired_state_spec, esx_config_mock)
 
-    esx_config_mock.precheck_desired_state.assert_called_with(
+    # Assert
+    assert result["status"]
+    assert "details" in result
+    assert result["details"] == response_sample
+    esx_config_mock.precheck_desired_state.assert_called_once_with(
         desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
     )
-    assert result == "Pre-check response"
-    salt_exception_mock.assert_not_called()
 
 
-@patch("saltext.vmware.modules.esxi.log")
-@patch("saltext.vmware.modules.esxi.salt.exceptions.SaltException")
-def test_pre_check_failure(salt_exception_mock, log_mock, create_esx_config_mock):
-    esx_config_mock = Mock()
-    create_esx_config_mock.return_value = esx_config_mock
-    esx_config_mock.precheck_desired_state.side_effect = Exception("Test error")
+def test_precheck_failure(mock_create_esx_config):
+    # Arrange
+    name = "test_name"
+    cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
+    desired_config = {"some_key": "some_value"}
+    profile = "my_profile"
 
-    with pytest.raises(Exception) as exc_info:
-        esxi.pre_check(profile, cluster_paths, desired_state_spec, esx_config_mock)
+    # Mock the returned value of create_esx_config to be a Mock
+    mock_esx_config = Mock()
+    mock_create_esx_config.return_value = mock_esx_config
 
-    esx_config_mock.precheck_desired_state.assert_called_with(
-        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+    # Set up the necessary attributes and methods on mock_esx_config
+    mock_esx_config.precheck_desired_state.side_effect = Exception(
+        "Mocked precheck_desired_state failure"
     )
-    assert isinstance(exc_info.value, Exception)  # Check the exception type
 
+    # Act
+    result = esxi.pre_check(name, cluster_paths, desired_config, profile)
 
-@patch("saltext.vmware.modules.esxi.log")
-@patch("saltext.vmware.modules.esxi.salt.exceptions.SaltException")
-def test_remediate_success(salt_exception_mock, log_mock, create_esx_config_mock):
-    esx_config_mock = Mock()
-    create_esx_config_mock.return_value = esx_config_mock
-    esx_config_mock.remediate_with_desired_state.return_value = "Remediation response"
-
-    result = esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
-    esx_config_mock.remediate_with_desired_state.assert_called_with(
-        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
-    )
-    assert result == "Remediation response"
-    salt_exception_mock.assert_not_called()
-
-
-@patch("saltext.vmware.modules.esxi.log")
-@patch("saltext.vmware.modules.esxi.salt.exceptions.SaltException")
-def test_remediate_failure(salt_exception_mock, log_mock, create_esx_config_mock):
-    esx_config_mock = Mock()
-    create_esx_config_mock.return_value = esx_config_mock
-    esx_config_mock.remediate_with_desired_state.side_effect = Exception("Test error")
-
-    with pytest.raises(Exception) as exc_info:
-        esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
-
-    esx_config_mock.remediate_with_desired_state.assert_called_with(
-        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
-    )
-    assert isinstance(exc_info.value, Exception)  # Check the exception type
+    # Assert
+    assert not result["status"]
+    assert "details" in result

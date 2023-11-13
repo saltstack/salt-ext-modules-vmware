@@ -4024,62 +4024,6 @@ def get_vmotion_enabled(
     return ret
 
 
-def draft_create(cluster_path: str, desired_config: dict = None, profile=None, esx_config=None):
-    log.debug("Running vmware_esxi.draft_create")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
-    return esx_config.draft_create(cluster_path=cluster_path, cluster_configs=desired_config)
-
-
-def draft_precheck(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
-):
-    log.debug("Running vmware_esxi.draft_precheck")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_precheck(
-        cluster_path=cluster_path, draft_id=draft_id, draft_configs=desired_config
-    )
-
-
-def draft_check_compliance(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
-):
-    log.debug("Running vmware_esxi.draft_check_compliance")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_check_compliance(cluster_path, draft_id, desired_config)
-
-
-def draft_show_changes(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
-):
-    log.debug("Running vmware_esxi.draft_show_changes")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_show_changes(cluster_path, draft_id, desired_config)
-
-
-def draft_apply(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
-):
-    log.debug("Running vmware_esxi.draft_apply")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_apply(cluster_path, draft_id, desired_config)
-
-
-def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None):
-    log.debug("Running vmware_esxi.draft_delete")
-    if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    vlcm_client = esx_config._context.vc_vlcm_client()
-    cluster_moid = utils_esxi.get_cluster_moid(
-        cluster_path=cluster_path, esx_context=esx_config._context
-    )
-    return vlcm_client.draft_delete(cluster_moid=cluster_moid, draft_id=draft_id)
-
-
 def get_configuration(cluster_paths=None, configs=None, esx_config=None, profile=None):
     """
     Gets the current configuration of ESXi clusters using VLCM. IF they are not available, it will fallback to use pyvmomi.

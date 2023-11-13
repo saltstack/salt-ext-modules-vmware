@@ -129,7 +129,7 @@ def test_get_advanced_config_verbose_changes():
     mock_set_advanced_config.assert_called()
 
 
-def test_salt_remediate_success():
+def test_remediate_success():
     # Assign
     name = "test_name"
     cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
@@ -169,7 +169,7 @@ def test_salt_remediate_success():
     )
 
 
-def test_salt_remediate_test_mode():
+def test_remediate_test_mode():
     # Assign
     name = "test_name"
     cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
@@ -206,7 +206,7 @@ def test_salt_remediate_test_mode():
     mock_remediate.assert_not_called()
 
 
-def test_salt_remediate_precheck_fail():
+def test_remediate_precheck_fail():
     # Assign
     name = "test_name"
     cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
@@ -240,7 +240,7 @@ def test_salt_remediate_precheck_fail():
     mock_remediate.assert_not_called()
 
 
-def test_salt_remediate_remediation_fail():
+def test_remediate_remediation_fail():
     # Assign
     name = "test_name"
     cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
@@ -278,7 +278,7 @@ def test_salt_remediate_remediation_fail():
     )
 
 
-def test_salt_remediate_exception():
+def test_remediate_exception():
     # Assign
     name = "test_name"
     cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
