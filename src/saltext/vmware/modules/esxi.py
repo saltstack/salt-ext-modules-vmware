@@ -4158,45 +4158,19 @@ def calculate_remediatestatus(data):
     """
     Recursively calculates the remediation status based on a nested dictionary or list structure.
 
-    This function analyzes the input data structure to determine if any remediation actions were successful,
-    and updates the status accordingly. The function recursively traverses the data structure to find
-    successful, failed, and skipped hosts, and aggregates this information to determine the overall remediation status.
-
-    Args:
-        data (dict or list): The data structure to be analyzed for remediation status. It can be a nested
-        dictionary or a list containing dictionaries.
+    param:
+        data (dict or list): The data structure to be analyzed for remediation status.
 
     Returns:
-        dict: A dictionary containing the remediation status and lists of successful, failed, and skipped hosts.
+        dict: A dictionary with the remediation status and lists of successful, failed, and skipped hosts.
 
-    Example:
-        data = {
-            "successful_hosts": ["host1", "host2"],
-            "failed_hosts": ["host3"],
-            "skipped_hosts": ["host4", "host5"],
-            "nested_data": [
-                {
-                    "successful_hosts": ["host6"],
-                    "failed_hosts": [],
-                    "skipped_hosts": []
-                },
-                {
-                    "successful_hosts": [],
-                    "failed_hosts": ["host7"],
-                    "skipped_hosts": []
-                }
-            ]
-        }
+    The function recursively processes a nested data structure, updating the remediation status based on the
+    presence of successful, failed, and skipped hosts. The resulting dictionary includes:
 
-        status = calculate_remediatestatus(data)
-
-        # Resulting status dictionary:
-        # {
-        #     "status": True,
-        #     "successful_hosts": ["host1", "host2", "host6"],
-        #     "failed_hosts": ["host3", "host7"],
-        #     "skipped_hosts": ["host4", "host5"]
-        # }
+    - 'status' (bool): Indicates whether any remediation action was successful at any level.
+    - 'successful_hosts' (list): Hosts that were successfully remediated.
+    - 'failed_hosts' (list): Hosts that failed remediation.
+    - 'skipped_hosts' (list): Hosts that were skipped during remediation.
     """
     status = {"status": False, "successful_hosts": [], "failed_hosts": [], "skipped_hosts": []}
 
