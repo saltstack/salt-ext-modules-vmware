@@ -3,7 +3,7 @@ default_language_version:
   python: python3
 
 exclude: ^(doc/_static/.*|doc/_themes/.*)$
-minimum_pre_commit_version: 1.15.2
+minimum_pre_commit_version: 2.4.0
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -77,7 +77,7 @@ repos:
 
   - repo: https://github.com/s0undt3ch/salt-rewrite
     # Automatically rewrite code with known rules
-    rev: 2.4.4
+    rev: "2.2.0"
     hooks:
       - id: salt-rewrite
         alias: rewrite-docstrings
@@ -92,7 +92,7 @@ repos:
         args: [--silent, -E, fix_asserts, -E, fix_docstrings]
 
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v2.4.0
+    rev: v3.10.0
     hooks:
       - id: reorder-python-imports
         args: [
@@ -128,7 +128,7 @@ repos:
 
   # ----- Security ------------------------------------------------------------------------------>
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.0"
+    rev: "1.7.4"
     hooks:
       - id: bandit
         alias: bandit-salt
@@ -137,7 +137,7 @@ repos:
         exclude: src/saltext/vcenter/version.py
         additional_dependencies: ['importlib_metadata<5']
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.0"
+    rev: "1.7.4"
     hooks:
       - id: bandit
         alias: bandit-tests
@@ -156,6 +156,7 @@ repos:
 #        alias: lint-src
 #        name: Lint Source Code
 #        files: ^((setup|noxfile)|src/.*)\.py$
+#        require_serial: True
 #        args:
 #          - -e
 #          - lint-code-pre-commit
@@ -168,6 +169,7 @@ repos:
 #        alias: lint-tests
 #        name: Lint Tests
 #        files: ^tests/.*\.py$
+#        require_serial: True
 #        args:
 #          - -e
 #          - lint-tests-pre-commit
@@ -176,7 +178,7 @@ repos:
 
   # ----- Static Test Requirements -------------------------------------------------------------->
   - repo: https://github.com/saltstack/pip-tools-compile-impersonate
-    rev: dff9089c1003af49665064067ff63c75b9b69dcd
+    rev: '4.8'
     hooks:
       - id: pip-tools-compile
         alias: compile-3.7-test-requirements
