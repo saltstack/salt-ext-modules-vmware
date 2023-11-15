@@ -4158,15 +4158,6 @@ def get_reference_schema():
     return retrieve_reference_schema(Product.ESX)
 
 
-def convert_ordered_dict_to_dict(obj):
-    if isinstance(obj, dict):
-        return {key: convert_ordered_dict_to_dict(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_ordered_dict_to_dict(element) for element in obj]
-    else:
-        return obj
-
-
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Checks compliance of cluster.
@@ -4187,8 +4178,6 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
 
         salt-call vmware_esxi.check_compliance cluster_paths="SDDC-Datacenter/vlcm_cluster1"
     """
-    log.info("Checking complaince %s", desired_state_spec)
-    desired_state_spec = convert_ordered_dict_to_dict(desired_state_spec)
     config = __opts__
     if not esx_config:
         esx_config = utils_esxi.create_esx_config(config, profile)
