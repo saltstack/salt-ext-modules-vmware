@@ -1682,6 +1682,134 @@ def vsan_config(
     return ret
 
 
+def remediate(name, cluster_paths, desired_config, profile=None):
+    """
+    Sample remediate configuration.
+
+    :param name: Name of the state.
+    :param cluster_paths: Path to the ESXi cluster.
+    :param desired_config: A dictionary containing the desired configuration.
+    :param profile: Profile to use (optional).
+
+    Example Usage in a SaltStack state file:
+
+    remediate_example:
+      vmware_esxi.remediate:
+        - cluster_paths: /SDDC-Datacenter/vlcm_cluster1
+        - desired_config:
+            # Define your desired configuration here
+        - profile: my_profile
+
+    To invoke this state using the Salt command line, use a command like:
+
+    salt 'minion-id' state.apply your_state_file.sls
+
+    Replace 'minion-id' with the target minion's ID and 'your_state_file.sls' with the path to your state file.
+    """
+    ret = {
+        "name": name,
+        "result": None,
+        "changes": {},
+        "comment": "Configuration remediation not determined yet",
+    }
+
+    log.debug("Starting remediation for %s", name)
+
+    # Create ESXi configuration
+    config = __opts__
+    esx_config = utils_esxi.create_esx_config(config, profile)
+    desired_config = json.loads(json.dumps(desired_config))
+    log.debug("Opts: %s", __opts__)
+
+    try:
+        # Perform pre-check
+        precheck_response = __salt__["vmware_esxi.pre_check"](
+            cluster_paths=cluster_paths,
+            desired_state_spec=desired_config,
+            esx_config=esx_config,
+        )
+
+        if __opts__["test"]:
+            # If in test mode, perform pre-check
+            log.debug("Running in test mode. Performing pre-check.")
+            if precheck_response["status"] is True:
+                log.debug("Pre-check completed successfully. You can continue with remediation.")
+                # Update return data
+                ret = {
+                    "name": name,
+                    "result": None,
+                    "comment": "Pre-check completed successfully. You can continue with remediation.",
+                    "changes": {
+                        "pre_check": precheck_response.get("details", "No details available"),
+                    },
+                }
+            else:
+                # Pre-check failed in test mode
+                ret = {
+                    "name": name,
+                    "result": False,
+                    "comment": "Pre-check failed.",
+                    "changes": {
+                        "pre_check": precheck_response.get("details", "No details available"),
+                    },
+                }
+        else:
+            # Not in test mode, proceed with pre-check and remediation
+            log.debug("Performing pre-check and remediation.")
+            if precheck_response["status"] is True:
+                log.debug("Pre-check completed successfully. Proceeding with remediation.")
+                # Execute remediation
+                remediate_response = __salt__["vmware_esxi.remediate"](
+                    cluster_paths=cluster_paths,
+                    desired_state_spec=desired_config,
+                    esx_config=esx_config,
+                )
+
+                if remediate_response["status"] is True:
+                    log.debug("Remediation completed successfully.")
+                    # Update return data for successful remediation
+                    ret = {
+                        "name": name,
+                        "result": True,
+                        "comment": "Configuration remediated successfully",
+                        "changes": {
+                            "remediate": remediate_response.get("details", "No details available"),
+                        },
+                    }
+                else:
+                    # Remediation failed
+                    ret = {
+                        "name": name,
+                        "result": False,
+                        "comment": "Remediation failed.",
+                        "changes": {
+                            "remediate": remediate_response.get("details", "No details available"),
+                        },
+                    }
+            else:
+                # Pre-check failed outside of test mode
+                ret = {
+                    "name": name,
+                    "result": False,
+                    "comment": "Pre-check failed.",
+                    "changes": {
+                        "pre_check": precheck_response.get("details", "No details available"),
+                    },
+                }
+
+    except Exception as e:
+        # Exception occurred during remediation
+        log.error("An error occurred during remediation: %s", str(e))
+        ret = {
+            "name": name,
+            "result": False,
+            "comment": f"An error occurred during remediation: {str(e)}",
+        }
+
+    log.debug("Completed remediation for %s", name)
+    return ret
+
+
 def apply_configuration(
     name, cluster_path, desired_config, show_changes=False, check_compliance=False, profile=None
 ):

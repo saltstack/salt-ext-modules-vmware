@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
+import saltext.vmware.utils.esxi
 from saltext.vmware.states import esxi
 
 dummy_advanced_config = {
@@ -126,3 +127,190 @@ def test_get_advanced_config_verbose_changes():
     assert result is not None
     assert result["result"]
     mock_set_advanced_config.assert_called()
+
+
+def test_remediate_success():
+    # Assign
+    name = "test_name"
+    cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
+    desired_config = {"some_key": "some_value"}
+    profile = "my_profile"
+
+    # Mock required functions
+    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    mock_pre_check = MagicMock(return_value={"status": True})
+    mock_remediate = MagicMock(return_value={"status": True})
+
+    # Act
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.pre_check": mock_pre_check,
+            "vmware_esxi.remediate": mock_remediate,
+        },
+    ):
+        with patch.dict(esxi.__opts__, {"test": False}):
+            result = esxi.remediate(name, cluster_paths, desired_config, profile)
+
+    # Assertions
+    assert result["result"]
+    assert result["comment"] == "Configuration remediated successfully"
+    assert "remediate" in result["changes"]
+
+    mock_pre_check.assert_called_once_with(
+        cluster_paths=cluster_paths,
+        desired_state_spec=desired_config,
+        esx_config={"some-key": "some-value"},
+    )
+    mock_remediate.assert_called_once_with(
+        cluster_paths=cluster_paths,
+        desired_state_spec=desired_config,
+        esx_config={"some-key": "some-value"},
+    )
+
+
+def test_remediate_test_mode():
+    # Assign
+    name = "test_name"
+    cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
+    desired_config = {"some_key": "some_value"}
+    profile = "my_profile"
+
+    # Mock required functions
+    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    mock_pre_check = MagicMock(return_value={"status": True})
+    mock_remediate = MagicMock(return_value={"status": True})
+
+    # Act
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.pre_check": mock_pre_check,
+            "vmware_esxi.remediate": mock_remediate,
+        },
+    ):
+        with patch.dict(esxi.__opts__, {"test": True}):
+            result = esxi.remediate(name, cluster_paths, desired_config, profile)
+    # Assert
+    assert result["result"] is None
+    assert "pre_check" in result["changes"]
+    assert (
+        result["comment"] == "Pre-check completed successfully. You can continue with remediation."
+    )
+
+    mock_pre_check.assert_called_once_with(
+        cluster_paths=cluster_paths,
+        desired_state_spec=desired_config,
+        esx_config={"some-key": "some-value"},
+    )
+    mock_remediate.assert_not_called()
+
+
+def test_remediate_precheck_fail():
+    # Assign
+    name = "test_name"
+    cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
+    desired_config = {"some_key": "some_value"}
+    profile = "my_profile"
+
+    # Mock required functions
+    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    mock_pre_check = MagicMock(return_value={"status": False, "details": "Pre-check failed"})
+    mock_remediate = MagicMock(return_value={"status": True})
+
+    # Act
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.pre_check": mock_pre_check,
+            "vmware_esxi.remediate": mock_remediate,
+        },
+    ):
+        with patch.dict(esxi.__opts__, {"test": False}):
+            result = esxi.remediate(name, cluster_paths, desired_config, profile)
+
+    # Assert
+    assert not result["result"]
+    assert result["comment"] == "Pre-check failed."
+    mock_pre_check.assert_called_once_with(
+        cluster_paths=cluster_paths,
+        desired_state_spec=desired_config,
+        esx_config={"some-key": "some-value"},
+    )
+    mock_remediate.assert_not_called()
+
+
+def test_remediate_remediation_fail():
+    # Assign
+    name = "test_name"
+    cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
+    desired_config = {"some_key": "some_value"}
+    profile = "my_profile"
+
+    # Mock required functions
+    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    mock_pre_check = MagicMock(return_value={"status": True})
+    mock_remediate = MagicMock(return_value={"status": False, "details": "Remediation failed"})
+
+    # Act
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.pre_check": mock_pre_check,
+            "vmware_esxi.remediate": mock_remediate,
+        },
+    ):
+        with patch.dict(esxi.__opts__, {"test": False}):
+            result = esxi.remediate(name, cluster_paths, desired_config, profile)
+
+    # Assert
+    assert not result["result"]
+    assert result["comment"] == "Remediation failed."
+    mock_pre_check.assert_called_once_with(
+        cluster_paths=cluster_paths,
+        desired_state_spec=desired_config,
+        esx_config={"some-key": "some-value"},
+    )
+    mock_remediate.assert_called_once_with(
+        cluster_paths=cluster_paths,
+        desired_state_spec=desired_config,
+        esx_config={"some-key": "some-value"},
+    )
+
+
+def test_remediate_exception():
+    # Assign
+    name = "test_name"
+    cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
+    desired_config = {"some_key": "some_value"}
+    profile = "my_profile"
+    # Mock required functions
+    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    mock_pre_check = MagicMock(return_value={"status": True})
+    mock_remediate = MagicMock()
+    mock_remediate.side_effect = Exception("Some error")
+
+    # Act
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.pre_check": mock_pre_check,
+            "vmware_esxi.remediate": mock_remediate,
+        },
+    ):
+        with patch.dict(esxi.__opts__, {"test": False}):
+            result = esxi.remediate(name, cluster_paths, desired_config, profile)
+    # Assert
+    assert not result["result"]
+    assert result["comment"] == "An error occurred during remediation: Some error"
+
+    mock_pre_check.assert_called_once_with(
+        cluster_paths=cluster_paths,
+        desired_state_spec=desired_config,
+        esx_config={"some-key": "some-value"},
+    )
+    mock_remediate.assert_called_once_with(
+        cluster_paths=cluster_paths,
+        desired_state_spec=desired_config,
+        esx_config={"some-key": "some-value"},
+    )
