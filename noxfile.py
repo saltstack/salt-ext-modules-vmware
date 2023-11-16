@@ -370,7 +370,11 @@ def docs(session):
     os.chdir("docs/")
     session.run("make", "clean", external=True)
     session.run("make", "linkcheck", "SPHINXOPTS=-Wn --keep-going", external=True)
-    session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
+
+    ## Disabling till sphinx 7.3.0 is released with fix for divide by zero, i
+    ## see Sphinx https://github.com/sphinx-doc/sphinx/commit/bb74aec2b6aa1179868d83134013450c9ff9d4d6
+    ## session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
+
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
         with open(docs_coverage_file) as rfh:
