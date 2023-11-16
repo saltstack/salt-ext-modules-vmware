@@ -1718,7 +1718,7 @@ def remediate(name, cluster_paths, desired_config, profile=None):
         "name": name,
         "result": None,
         "changes": {},
-        "comment": "Configuration remediated successfully",
+        "comment": "Configuration remediation not determined yet",
     }
 
     log.debug("Starting remediation for %s", name)
@@ -1774,6 +1774,7 @@ def remediate(name, cluster_paths, desired_config, profile=None):
                     log.debug("Remediation completed successfully.")
                     ret["result"] = True
                     ret["changes"]["remediate"] = remediate_response
+                    ret["comment"] = "Configuration remediated successfully"
                 else:
                     # Remediation failed, set result to False and provide details in comment
                     ret["result"] = False
