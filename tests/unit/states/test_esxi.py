@@ -231,7 +231,7 @@ def test_remediate_precheck_fail():
 
     # Assert
     assert not result["result"]
-    assert result["comment"] == "Pre-check failed: Pre-check failed"
+    assert result["comment"] == "Pre-check failed."
     mock_pre_check.assert_called_once_with(
         cluster_paths=cluster_paths,
         desired_state_spec=desired_config,
@@ -265,7 +265,7 @@ def test_remediate_remediation_fail():
 
     # Assert
     assert not result["result"]
-    assert result["comment"] == "Remediation failed: Remediation failed"
+    assert result["comment"] == "Remediation failed."
     mock_pre_check.assert_called_once_with(
         cluster_paths=cluster_paths,
         desired_state_spec=desired_config,
