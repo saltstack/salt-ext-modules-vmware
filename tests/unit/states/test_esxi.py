@@ -5,7 +5,8 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
-import saltext.vmware.utils.esxi
+import saltext.vmware.modules.esxi as modules_esxi
+import saltext.vmware.utils.esxi as utils_esxi
 from saltext.vmware.states import esxi
 
 dummy_advanced_config = {
@@ -51,8 +52,38 @@ NAME = "test"
 
 
 @pytest.fixture
+def dummy_configuration():
+    return {
+        "path/to/cluster": {
+            "host-override": {
+                "esxi-1.vsphere.local": {
+                    "esx": {"security": {"settings": {"account_lock_failures": 10}}}
+                }
+            },
+            "profile": {"esx": {"security": {"settings": {"account_lock_failures": 10}}}},
+        }
+    }
+
+
+@pytest.fixture
+def fake_esx_config():
+    fake = MagicMock()
+    fake.get_desired_configuration.return_value = {
+        "path/to/cluster": {"host_info": {"guid": {"name": "esxi-1.vsphere.local"}}}
+    }
+    fake.draft_create.return_value = {"path/to/cluster": {"draft_id": "draft-0"}}
+    fake.draft_get.return_value = {"metadata": {"state": "VALID"}}
+    fake.draft_check_compliance.return_value = {
+        "path/to/cluster": {"cluster_status": "NON COMPLIANT"}
+    }
+    fake.draft_precheck.return_value = {"path/to/cluster": {"status": "OK"}}
+    fake.draft_apply.return_value = {"path/to/cluster": {"status": "OK"}}
+    return fake
+
+
+@pytest.fixture
 def configure_loader_modules():
-    return {esxi: {}}
+    return {esxi: {}, modules_esxi: {}}
 
 
 def test_get_advanced_config_success_less():
@@ -137,7 +168,7 @@ def test_remediate_success():
     profile = "my_profile"
 
     # Mock required functions
-    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    utils_esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
     mock_pre_check = MagicMock(return_value={"status": True})
     mock_remediate = MagicMock(return_value={"status": True})
 
@@ -177,7 +208,7 @@ def test_remediate_test_mode():
     profile = "my_profile"
 
     # Mock required functions
-    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    utils_esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
     mock_pre_check = MagicMock(return_value={"status": True})
     mock_remediate = MagicMock(return_value={"status": True})
 
@@ -214,7 +245,7 @@ def test_remediate_precheck_fail():
     profile = "my_profile"
 
     # Mock required functions
-    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    utils_esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
     mock_pre_check = MagicMock(return_value={"status": False, "details": "Pre-check failed"})
     mock_remediate = MagicMock(return_value={"status": True})
 
@@ -248,7 +279,7 @@ def test_remediate_remediation_fail():
     profile = "my_profile"
 
     # Mock required functions
-    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    utils_esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
     mock_pre_check = MagicMock(return_value={"status": True})
     mock_remediate = MagicMock(return_value={"status": False, "details": "Remediation failed"})
 
@@ -285,7 +316,7 @@ def test_remediate_exception():
     desired_config = {"some_key": "some_value"}
     profile = "my_profile"
     # Mock required functions
-    saltext.vmware.utils.esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
+    utils_esxi.create_esx_config = MagicMock(return_value={"some-key": "some-value"})
     mock_pre_check = MagicMock(return_value={"status": True})
     mock_remediate = MagicMock()
     mock_remediate.side_effect = Exception("Some error")
@@ -314,3 +345,30 @@ def test_remediate_exception():
         desired_state_spec=desired_config,
         esx_config={"some-key": "some-value"},
     )
+
+
+def test_apply_configuration(fake_esx_config, dummy_configuration):
+    with patch.dict(
+        esxi.__salt__,
+        {
+            "vmware_esxi.get_desired_configuration": modules_esxi.get_desired_configuration,
+            "vmware_esxi.create_draft": modules_esxi.create_draft,
+            "vmware_esxi.get_draft": modules_esxi.get_draft,
+            "vmware_esxi.check_draft_compliance": modules_esxi.check_draft_compliance,
+            "vmware_esxi.precheck_draft": modules_esxi.precheck_draft,
+            "vmware_esxi.apply_draft": modules_esxi.apply_draft,
+        },
+    ):
+        with patch.dict(esxi.__opts__, {"test": False}):
+            with patch.dict(modules_esxi.__opts__, {"test": False}):
+                with patch(
+                    "saltext.vmware.utils.esxi.create_esx_config", return_value=fake_esx_config
+                ):
+                    response = esxi.apply_configuration(name=NAME, config=dummy_configuration)
+                    fake_esx_config.get_desired_configuration.assert_called_once()
+                    fake_esx_config.draft_create.assert_called_once()
+                    fake_esx_config.draft_get.assert_called_once()
+                    fake_esx_config.draft_check_compliance.assert_called_once()
+                    fake_esx_config.draft_precheck.assert_called_once()
+                    fake_esx_config.draft_apply.assert_called_once()
+                    assert response.get("result")

@@ -4024,6 +4024,240 @@ def get_vmotion_enabled(
     return ret
 
 
+def create_draft(cluster_path: str, desired_config: dict = None, esx_config=None, profile=None):
+    """
+    Creates a new draft using a user specified desired configuration
+
+    cluster_path
+        The cluster path where we will create a new draft
+
+    desired_config
+        The configuration that we will create a draft from
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To create an empty draft within the cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_draft cluster_path=dc/vlcm
+    """
+    log.debug("Running vmware_esxi.create_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    return esx_config.draft_create(cluster_path=cluster_path, cluster_configs=desired_config)
+
+
+def get_draft(
+    cluster_path: str, draft_id: str, desired_config: dict = None, esx_config=None, profile=None
+):
+    """
+    Gets information about the draft, including if it is valid or not.
+
+    cluster_path
+        The cluster path where we will perform the precheck
+
+    draft_id
+        The ID for the draft that we will get information for
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To get information of the draft-1 within the cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_draft cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.get_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    return esx_config.draft_get(
+        cluster_path=cluster_path, draft_id=draft_id, draft_configs=desired_config
+    )
+
+
+def precheck_draft(
+    cluster_path: str, draft_id: str, desired_config: dict = None, esx_config=None, profile=None
+):
+    """
+    Prechecks if the draft can be applied to the VLCM cluster.
+
+    cluster_path
+        The cluster path where we will perform the precheck
+
+    draft_id
+        The ID for the draft that we will precheck for it to be applied
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To precheck if the draft-1 can be applied to cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.precheck_draft cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.precheck_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    return esx_config.draft_precheck(
+        cluster_path=cluster_path, draft_id=draft_id, draft_configs=desired_config
+    )
+
+
+def check_draft_compliance(
+    cluster_path: str, draft_id: str, config: dict = None, esx_config=None, profile=None
+):
+    """
+    Checks compliance for the draft against the current configuration of the VLCM cluster.
+
+    cluster_path
+        The cluster path that we will compare against
+
+    draft_id
+        The ID for the draft that we will check compliance
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To check if the cluster dc/vlcm is compliant with the draft-1
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.check_draft_compliance cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.check_draft_compliance")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    return esx_config.draft_check_compliance(cluster_path, draft_id, config)
+
+
+def show_draft_changes(
+    cluster_path: str, draft_id: str, config: dict = None, esx_config=None, profile=None
+):
+    """
+    Shows changes that the draft would apply on the ESXi cluster using VLCM.
+
+    cluster_path
+        Show draft changes for this cluster path
+
+    draft_id
+        The ID for the draft that we will check the changes from
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To show the draft changes that would be done by draft-1 for cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.show_draft_changes cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.show_draft_changes")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    return esx_config.draft_show_changes(
+        cluster_path,
+        draft_id,
+    )
+
+
+def apply_draft(
+    cluster_path: str, draft_id: str, config: dict = None, esx_config=None, profile=None
+):
+    """
+    Applies draft configuration on an ESXi cluster using VLCM.
+
+    cluster_path
+        Delete draft for this cluster path
+
+    draft_id
+        The ID for the draft that will be applied to the cluster
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To apply the configuration defined in the draft-1 for cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.apply_draft cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.apply_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    if __opts__["test"]:
+        return esx_config.draft_check_compliance(cluster_path, draft_id, config)
+    else:
+        return esx_config.draft_apply(cluster_path, draft_id, config)
+
+
+def delete_draft(cluster_path: str, draft_id: str, esx_config=None, profile=None):
+    """
+    Deletes draft for an ESXi cluster using VLCM.
+
+    cluster_path
+        Delete draft for this cluster path
+
+    draft_id
+        The ID for the draft that will be deleted
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To delete the draft-1 for cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.delete_draft cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.delete_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    vlcm_client = esx_config._context.vc_vlcm_client()
+    cluster_moid = utils_esxi.get_cluster_moid(
+        cluster_path=cluster_path, esx_context=esx_config._context
+    )
+    return vlcm_client.draft_delete(cluster_moid=cluster_moid, draft_id=draft_id)
+
+
 def get_configuration(cluster_paths=None, configs=None, esx_config=None, profile=None):
     """
     Gets the current configuration of ESXi clusters using VLCM. IF they are not available, it will fallback to use pyvmomi.
