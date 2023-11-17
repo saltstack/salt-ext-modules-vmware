@@ -346,7 +346,7 @@ def test_remediate_exception():
         esx_config={"some-key": "some-value"},
     )
 
-    
+
 def test_apply_configuration(fake_esx_config, dummy_configuration):
     with patch.dict(
         esxi.__salt__,

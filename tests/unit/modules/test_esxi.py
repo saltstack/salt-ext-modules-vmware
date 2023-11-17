@@ -571,7 +571,7 @@ def test_precheck_failure(mock_create_esx_config):
     assert not result["status"]
     assert "details" in result
 
-    
+
 def test_create_draft(fake_esx_config):
     response = esxi.create_draft(cluster_path="path/to/cluster", esx_config=fake_esx_config)
     fake_esx_config.draft_create.assert_called_once()

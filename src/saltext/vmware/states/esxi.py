@@ -1884,7 +1884,7 @@ def apply_configuration(name, config, profile=None):
         get_response = __salt__["vmware_esxi.get_draft"](
             cluster,
             draft_id,
-            draft,
+            draft_config,
             esx_config,
         )
         get_status = get_response.get("metadata").get("state")
@@ -1924,7 +1924,7 @@ def apply_configuration(name, config, profile=None):
             precheck_response = __salt__["vmware_esxi.precheck_draft"](
                 cluster,
                 draft_id,
-                draft,
+                draft_config,
                 esx_config,
             )
             precheck_status = precheck_response.get(cluster).get("status")
@@ -1949,7 +1949,7 @@ def apply_configuration(name, config, profile=None):
             __salt__["vmware_esxi.apply_draft"](
                 cluster,
                 draft_id,
-                draft,
+                draft_config,
                 esx_config,
             )
             ret["comment"] += f"Provided configuration was applied for cluster {cluster}"
