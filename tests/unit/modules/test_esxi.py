@@ -396,6 +396,7 @@ def test_check_compliance(fake_esx_config, fake_desired_state_spec):
     )
     assert configuration is not None
 
+
 @pytest.fixture
 def mock_create_esx_config():
     with patch.object(
