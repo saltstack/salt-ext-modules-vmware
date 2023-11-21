@@ -98,6 +98,15 @@ def fake_esx_config():
     return fake
 
 
+@pytest.fixture
+def fake_desired_state_spec():
+    fake = MagicMock()
+    fake.get_desired_configuration.return_value = {
+        "path/to/cluster": {"config.module.submodule": "desired"}
+    }
+    return fake
+
+
 # Define some example test data
 profile = "example_profile"
 cluster_paths = ["cluster1", "cluster2"]
