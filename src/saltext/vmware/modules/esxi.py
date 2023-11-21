@@ -4324,6 +4324,7 @@ def get_desired_configuration(cluster_paths=None, esx_config=None, profile=None)
     current_config = esx_config.get_desired_configuration(cluster_paths=cluster_paths)
     return current_config
 
+
 def get_reference_schema():
     """
     Retrieve reference schema for ESXi.
@@ -4333,6 +4334,39 @@ def get_reference_schema():
     """
     log.debug("Running vmware_esxi.retrieve_reference_schema")
     return retrieve_reference_schema(Product.ESX)
+
+
+def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
+    """
+    Checks compliance of cluster.
+
+    desired_state_spec
+        Gets the desired spec from sls file
+
+    cluster_paths
+        Gets the configuration from the cluster paths specified
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt-call vmware_esxi.check_compliance cluster_paths="SDDC-Datacenter/vlcm_cluster1"
+    """
+    config = __opts__
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(config, profile)
+    try:
+        response_check_compliance = esx_config.check_compliance(
+            desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+        )
+        return {"details": response_check_compliance}
+    except Exception as e:
+        log.error("Check Compliance encountered an error: %s", str(e))
+        return {"details": str(e)}
 
 
 def calculate_precheck_status(data):
@@ -4477,8 +4511,8 @@ def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_con
         # Handle exceptions by setting status as false and including exception details
         log.error("Remediation encountered an error: %s", str(e))
         return {"status": False, "details": str(e)}
-    
-    
+
+
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Checks compliance of cluster.
@@ -4497,8 +4531,8 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
 
     .. code-block:: bash
 
-        salt-call vmware_esxi.check_compliance cluster_paths="SDDC-Datacenter/vlcm_cluster1" 
-    """    
+        salt-call vmware_esxi.check_compliance cluster_paths="SDDC-Datacenter/vlcm_cluster1"
+    """
     config = __opts__
     if not esx_config:
         esx_config = utils_esxi.create_esx_config(config, profile)
@@ -4510,6 +4544,3 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
     except Exception as e:
         log.error("Check Compliance encountered an error: %s", str(e))
         return {"details": str(e)}
-
-
-
