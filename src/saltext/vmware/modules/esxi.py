@@ -4024,55 +4024,233 @@ def get_vmotion_enabled(
     return ret
 
 
-def draft_create(cluster_path: str, desired_config: dict = None, profile=None, esx_config=None):
-    log.debug("Running vmware_esxi.draft_create")
+def create_draft(cluster_path: str, desired_config: dict = None, esx_config=None, profile=None):
+    """
+    Creates a new draft using a user specified desired configuration
+
+    cluster_path
+        The cluster path where we will create a new draft
+
+    desired_config
+        The configuration that we will create a draft from
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To create an empty draft within the cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_draft cluster_path=dc/vlcm
+    """
+    log.debug("Running vmware_esxi.create_draft")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(config, profile)
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
     return esx_config.draft_create(cluster_path=cluster_path, cluster_configs=desired_config)
 
 
-def draft_precheck(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
+def get_draft(
+    cluster_path: str, draft_id: str, desired_config: dict = None, esx_config=None, profile=None
 ):
-    log.debug("Running vmware_esxi.draft_precheck")
+    """
+    Gets information about the draft, including if it is valid or not.
+
+    cluster_path
+        The cluster path where we will perform the precheck
+
+    draft_id
+        The ID for the draft that we will get information for
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To get information of the draft-1 within the cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_draft cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.get_draft")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    return esx_config.draft_get(
+        cluster_path=cluster_path, draft_id=draft_id, draft_configs=desired_config
+    )
+
+
+def precheck_draft(
+    cluster_path: str, draft_id: str, desired_config: dict = None, esx_config=None, profile=None
+):
+    """
+    Prechecks if the draft can be applied to the VLCM cluster.
+
+    cluster_path
+        The cluster path where we will perform the precheck
+
+    draft_id
+        The ID for the draft that we will precheck for it to be applied
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To precheck if the draft-1 can be applied to cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.precheck_draft cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.precheck_draft")
+    if not esx_config:
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
     return esx_config.draft_precheck(
         cluster_path=cluster_path, draft_id=draft_id, draft_configs=desired_config
     )
 
 
-def draft_check_compliance(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
+def check_draft_compliance(
+    cluster_path: str, draft_id: str, config: dict = None, esx_config=None, profile=None
 ):
-    log.debug("Running vmware_esxi.draft_check_compliance")
+    """
+    Checks compliance for the draft against the current configuration of the VLCM cluster.
+
+    cluster_path
+        The cluster path that we will compare against
+
+    draft_id
+        The ID for the draft that we will check compliance
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To check if the cluster dc/vlcm is compliant with the draft-1
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.check_draft_compliance cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.check_draft_compliance")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_check_compliance(cluster_path, draft_id, desired_config)
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    return esx_config.draft_check_compliance(cluster_path, draft_id, config)
 
 
-def draft_show_changes(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
+def show_draft_changes(
+    cluster_path: str, draft_id: str, config: dict = None, esx_config=None, profile=None
 ):
-    log.debug("Running vmware_esxi.draft_show_changes")
+    """
+    Shows changes that the draft would apply on the ESXi cluster using VLCM.
+
+    cluster_path
+        Show draft changes for this cluster path
+
+    draft_id
+        The ID for the draft that we will check the changes from
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To show the draft changes that would be done by draft-1 for cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.show_draft_changes cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.show_draft_changes")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_show_changes(cluster_path, draft_id, desired_config)
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    return esx_config.draft_show_changes(
+        cluster_path,
+        draft_id,
+    )
 
 
-def draft_apply(
-    cluster_path: str, draft_id: str, desired_config: dict = None, profile=None, esx_config=None
+def apply_draft(
+    cluster_path: str, draft_id: str, config: dict = None, esx_config=None, profile=None
 ):
-    log.debug("Running vmware_esxi.draft_apply")
+    """
+    Applies draft configuration on an ESXi cluster using VLCM.
+
+    cluster_path
+        Delete draft for this cluster path
+
+    draft_id
+        The ID for the draft that will be applied to the cluster
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To apply the configuration defined in the draft-1 for cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.apply_draft cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.apply_draft")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
-    return esx_config.draft_apply(cluster_path, draft_id, desired_config)
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    if __opts__["test"]:
+        return esx_config.draft_check_compliance(cluster_path, draft_id, config)
+    else:
+        return esx_config.draft_apply(cluster_path, draft_id, config)
 
 
-def draft_delete(cluster_path: str, draft_id: str, profile=None, esx_config=None):
-    log.debug("Running vmware_esxi.draft_delete")
+def delete_draft(cluster_path: str, draft_id: str, esx_config=None, profile=None):
+    """
+    Deletes draft for an ESXi cluster using VLCM.
+
+    cluster_path
+        Delete draft for this cluster path
+
+    draft_id
+        The ID for the draft that will be deleted
+
+    esx_config
+        If there is an esx_config instance already available it can be provided, otherwise a new one will be created. (optional)
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    To delete the draft-1 for cluster dc/vlcm
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.delete_draft cluster_path=dc/vlcm draft_id=draft-1
+    """
+    log.debug("Running vmware_esxi.delete_draft")
     if not esx_config:
-        esx_config = utils_esxi.create_esx_config(profile)
+        esx_config = utils_esxi.create_esx_config(__opts__, profile)
     vlcm_client = esx_config._context.vc_vlcm_client()
     cluster_moid = utils_esxi.get_cluster_moid(
         cluster_path=cluster_path, esx_context=esx_config._context
@@ -4157,7 +4335,6 @@ def get_reference_schema():
     log.debug("Running vmware_esxi.retrieve_reference_schema")
     return retrieve_reference_schema(Product.ESX)
 
-
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Checks compliance of cluster.
@@ -4189,3 +4366,147 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
     except Exception as e:
         log.error("Check Compliance encountered an error: %s", str(e))
         return {"details": str(e)}
+
+def calculate_precheck_status(data):
+    """
+    Calculate the precheck status dynamically based on the presence of "OK" in the precheck response.
+
+    :param data: The precheck response data (JSON).
+    :return: A dictionary containing the status.
+    """
+    status = {"status": True}
+    for key, value in data.items():
+        if value["status"] != "OK":
+            status = {"status": False}
+            break
+    log.debug("calculate precheck status field %s", status)
+    return status
+
+
+def pre_check(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
+    """
+    Perform a pre-check for desired state compliance.
+
+    :param profile: Profile name (optional)
+    :param cluster_paths: List of cluster paths (optional)
+    :param desired_state_spec: Desired state specification
+    :param esx_config: ESXi configuration (optional)
+    :return: Pre-check response and details
+    """
+    log.debug("Precheck %s", desired_state_spec)
+
+    # Ensure esx_config is provided or create a new one
+    if not esx_config:
+        config = __opts__
+        esx_config = utils_esxi.create_esx_config(config, profile)
+
+    log.debug("esx_config %s", esx_config)
+
+    try:
+        precheck_response = esx_config.precheck_desired_state(
+            desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+        )
+
+        # Calculate the precheck status
+        log.debug("precheck_response %s", precheck_response)
+        precheck_status = calculate_precheck_status(precheck_response)
+
+        return {"status": precheck_status["status"], "details": precheck_response}
+
+    except Exception as e:
+        # Handle exceptions by setting status as false and including exception details
+        log.error("Pre-check encountered an error: %s", str(e))
+        return {"status": False, "details": str(e)}
+
+
+def calculate_remediatestatus(data):
+    """
+    Recursively calculates the remediation status based on a nested dictionary or list structure.
+
+    param:
+        data (dict or list): The data structure to be analyzed for remediation status.
+
+    Returns:
+        dict: A dictionary with the remediation status and lists of successful, failed, and skipped hosts.
+
+    The function recursively processes a nested data structure, updating the remediation status based on the
+    presence of successful, failed, and skipped hosts. The resulting dictionary includes:
+
+    - 'status' (bool): Indicates whether any remediation action was successful at any level.
+    - 'successful_hosts' (list): Hosts that were successfully remediated.
+    - 'failed_hosts' (list): Hosts that failed remediation.
+    - 'skipped_hosts' (list): Hosts that were skipped during remediation.
+    """
+    status = {"status": False, "successful_hosts": [], "failed_hosts": [], "skipped_hosts": []}
+
+    if isinstance(data, dict):
+        # If 'data' is a dictionary, check for the presence of success, failure, and skipped host lists.
+        if "successful_hosts" in data:
+            status["successful_hosts"] = data["successful_hosts"]
+        if "failed_hosts" in data:
+            status["failed_hosts"] = data["failed_hosts"]
+        if "skipped_hosts" in data:
+            status["skipped_hosts"] = data["skipped_hosts"]
+
+        # Check if there are only successful hosts (no failures or skips) within this level.
+        if (
+            len(status["successful_hosts"]) > 0
+            and len(status["failed_hosts"]) == 0
+            and len(status["skipped_hosts"]) == 0
+        ):
+            status["status"] = True
+
+        # Recursively process child dictionaries in 'data'.
+        for key, value in data.items():
+            child_status = calculate_remediatestatus(value)
+            if child_status["status"]:
+                status["status"] = True
+                status["successful_hosts"] += child_status["successful_hosts"]
+                status["failed_hosts"] += child_status["failed_hosts"]
+                status["skipped_hosts"] += child_status["skipped_hosts"]
+    elif isinstance(data, list):
+        # If 'data' is a list, iterate through its items and process them.
+        for item in data:
+            child_status = calculate_remediatestatus(item)
+            if child_status["status"]:
+                status["status"] = True
+                status["successful_hosts"] += child_status["successful_hosts"]
+                status["failed_hosts"] += child_status["failed_hosts"]
+                status["skipped_hosts"] += child_status["skipped_hosts"]
+    return status
+
+
+def remediate(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
+    """
+    Remediate the desired state compliance.
+
+    :param profile: Profile name (optional)
+    :param cluster_paths: List of cluster paths (optional)
+    :param desired_state_spec: Desired state specification
+    :param esx_config: ESXi configuration (optional)
+    :return: Remediation response flag and details
+    """
+    log.debug("Remediate %s", desired_state_spec)
+
+    # Ensure esx_config is provided or create a new one
+    if not esx_config:
+        config = __opts__
+        esx_config = utils_esxi.create_esx_config(config, profile)
+
+    log.debug("esx_config %s", esx_config)
+
+    try:
+        remediateresponse = esx_config.remediate_with_desired_state(
+            desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+        )
+
+        # Call calculate_status to determine the status
+        status_info = calculate_remediatestatus(remediateresponse)
+
+        return {"status": status_info["status"], "details": remediateresponse}
+
+    except Exception as e:
+        # Handle exceptions by setting status as false and including exception details
+        log.error("Remediation encountered an error: %s", str(e))
+        return {"status": False, "details": str(e)}
+

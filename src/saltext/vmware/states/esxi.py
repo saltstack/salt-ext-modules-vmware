@@ -4,6 +4,7 @@ import json
 import logging
 
 import salt.exceptions
+import salt.modules.defaults
 import salt.utils.data
 import salt.utils.dictdiffer
 import saltext.vmware.modules.esxi as vmware_esxi
@@ -1682,76 +1683,275 @@ def vsan_config(
     return ret
 
 
-def apply_configuration(
-    name, cluster_path, desired_config, show_changes=False, check_compliance=False, profile=None
-):
+def remediate(name, cluster_paths, desired_config, profile=None):
     """
-    Apply desired state configuration.
+    Sample remediate configuration.
+
+    :param name: Name of the state.
+    :param cluster_paths: Path to the ESXi cluster.
+    :param desired_config: A dictionary containing the desired configuration.
+    :param profile: Profile to use (optional).
+
+    Example Usage in a SaltStack state file:
+
+    remediate_example:
+      vmware_esxi.remediate:
+        - cluster_paths: /SDDC-Datacenter/vlcm_cluster1
+        - desired_config:
+            # Define your desired configuration here
+        - profile: my_profile
+
+    To invoke this state using the Salt command line, use a command like:
+
+    salt 'minion-id' state.apply your_state_file.sls
+
+    Replace 'minion-id' with the target minion's ID and 'your_state_file.sls' with the path to your state file.
+    """
+    ret = {
+        "name": name,
+        "result": None,
+        "changes": {},
+        "comment": "Configuration remediation not determined yet",
+    }
+
+    log.debug("Starting remediation for %s", name)
+
+    # Create ESXi configuration
+    config = __opts__
+    esx_config = utils_esxi.create_esx_config(config, profile)
+    desired_config = json.loads(json.dumps(desired_config))
+    log.debug("Opts: %s", __opts__)
+
+    try:
+        # Perform pre-check
+        precheck_response = __salt__["vmware_esxi.pre_check"](
+            cluster_paths=cluster_paths,
+            desired_state_spec=desired_config,
+            esx_config=esx_config,
+        )
+
+        if __opts__["test"]:
+            # If in test mode, perform pre-check
+            log.debug("Running in test mode. Performing pre-check.")
+            if precheck_response["status"] is True:
+                log.debug("Pre-check completed successfully. You can continue with remediation.")
+                # Update return data
+                ret = {
+                    "name": name,
+                    "result": None,
+                    "comment": "Pre-check completed successfully. You can continue with remediation.",
+                    "changes": {
+                        "pre_check": precheck_response.get("details", "No details available"),
+                    },
+                }
+            else:
+                # Pre-check failed in test mode
+                ret = {
+                    "name": name,
+                    "result": False,
+                    "comment": "Pre-check failed.",
+                    "changes": {
+                        "pre_check": precheck_response.get("details", "No details available"),
+                    },
+                }
+        else:
+            # Not in test mode, proceed with pre-check and remediation
+            log.debug("Performing pre-check and remediation.")
+            if precheck_response["status"] is True:
+                log.debug("Pre-check completed successfully. Proceeding with remediation.")
+                # Execute remediation
+                remediate_response = __salt__["vmware_esxi.remediate"](
+                    cluster_paths=cluster_paths,
+                    desired_state_spec=desired_config,
+                    esx_config=esx_config,
+                )
+
+                if remediate_response["status"] is True:
+                    log.debug("Remediation completed successfully.")
+                    # Update return data for successful remediation
+                    ret = {
+                        "name": name,
+                        "result": True,
+                        "comment": "Configuration remediated successfully",
+                        "changes": {
+                            "remediate": remediate_response.get("details", "No details available"),
+                        },
+                    }
+                else:
+                    # Remediation failed
+                    ret = {
+                        "name": name,
+                        "result": False,
+                        "comment": "Remediation failed.",
+                        "changes": {
+                            "remediate": remediate_response.get("details", "No details available"),
+                        },
+                    }
+            else:
+                # Pre-check failed outside of test mode
+                ret = {
+                    "name": name,
+                    "result": False,
+                    "comment": "Pre-check failed.",
+                    "changes": {
+                        "pre_check": precheck_response.get("details", "No details available"),
+                    },
+                }
+
+    except Exception as e:
+        # Exception occurred during remediation
+        log.error("An error occurred during remediation: %s", str(e))
+        ret = {
+            "name": name,
+            "result": False,
+            "comment": f"An error occurred during remediation: {str(e)}",
+        }
+
+    log.debug("Completed remediation for %s", name)
+    return ret
+
+
+def apply_configuration(name, config, profile=None):
+    """
+    Apply desired state configuration using VCP and fallback to pyvmomi, if not available from VCP.
+
+    name
+        Name of the state.
+
+    config
+        A dictionary containing the clusters that we will apply configuration to, and their corresponding desired configuration values
+
+    profile
+        Profile to use (optional)
+
+    Example:
+    To apply a configuration that tries to set a value on cluster level (/dc/vlcm) and on host level (esxi-1.vsphere.local)
+    .. code-block:: yaml
+
+        apply_esxi_cluster_configuration:
+          vmware_esxi.vsan_configured:
+            - config:
+                /dc/vlcm:
+                  config:
+                    host-override:
+                      esxi-1.vsphere.local:
+                        esx:
+                          security:
+                            settings:
+                              account_lock_failures: 10
+                    profile:
+                      esx:
+                        security:
+                          settings:
+                            account_lock_failures: 20
     """
 
-    # Keep this structure
+    log.debug("Running vmware_esxi.apply_configuration")
+
     ret = {
         "name": name,
         "result": True,
         "changes": {},
-        "comment": "Configuration applied successfully",
+        "comment": "",
     }
 
-    config = __opts__
-    esx_config = utils_esxi.create_esx_config(config, profile)
+    esx_config = utils_esxi.create_esx_config(__opts__, profile)
+    global_config = config.get("global")
+    for cluster in config:
+        if cluster == "global":
+            continue
 
-    # CREATE DRAFT
-    draft_create_response = vmware_esxi.draft_create(
-        desired_config=desired_config, cluster_path=cluster_path, esx_config=esx_config
-    )
-    draft_id = draft_create_response.get(cluster_path)["draft_id"]
+        desired_configuration = __salt__["vmware_esxi.get_desired_configuration"](
+            [cluster], esx_config
+        )
 
-    if __opts__["test"]:
-        # CHECK COMPLIANCE
-        if check_compliance:
-            check_compliance = vmware_esxi.draft_check_compliance(
-                draft_create_response, cluster_path=cluster_path, esx_config=esx_config
+        cluster_config = (
+            salt.modules.defaults.merge(config.get(cluster), global_config)
+            if global_config
+            else config.get(cluster)
+        )
+
+        draft_config = utils_esxi.merge_sls_into_cluster_config(
+            cluster_config, desired_configuration.get(cluster)
+        )
+
+        draft = {cluster: draft_config}
+
+        create_draft_response = __salt__["vmware_esxi.create_draft"](cluster, draft, esx_config)
+        draft_id = create_draft_response.get(cluster).get("draft_id")
+        discard_draft = False
+
+        get_response = __salt__["vmware_esxi.get_draft"](
+            cluster,
+            draft_id,
+            draft_config,
+            esx_config,
+        )
+        get_status = get_response.get("metadata").get("state")
+
+        if get_status != "VALID":
+            log.debug(f"Get draft response:\n {json.dumps(get_response)}")
+
+            errors = get_response.get("errors").get("errors")
+            error_comment = ""
+            for path in errors:
+                for error in errors.get(path).get("errors"):
+                    error_comment += f"{path}: {error.get('message').get('localized')}\n"
+
+            ret[
+                "comment"
+            ] += f"Configuration for cluster {cluster} is invalid. Discarding draft\n{error_comment}\n"
+            ret["result"] = False
+            discard_draft = True
+
+        if not discard_draft:
+            compliance_response = __salt__["vmware_esxi.check_draft_compliance"](
+                cluster,
+                draft_id,
+                draft_config,
+                esx_config,
             )
+            compliance_status = compliance_response.get(cluster).get("cluster_status")
 
-        # SHOW CHANGES
-        if show_changes:
-            show_changes = vmware_esxi.draft_show_changes(
-                draft_create_response, cluster_path=cluster_path, esx_config=esx_config
+            if compliance_status == "COMPLIANT":
+                ret["comment"] += f"Hosts in cluster {cluster} are compliant\n"
+                ret["changes"][cluster] = {}
+                discard_draft = True
+            else:
+                ret["changes"][cluster] = compliance_response.get(cluster)
+
+        if not discard_draft:
+            precheck_response = __salt__["vmware_esxi.precheck_draft"](
+                cluster,
+                draft_id,
+                draft_config,
+                esx_config,
             )
+            precheck_status = precheck_response.get(cluster).get("status")
 
-        # PRECHECK DRAFT
-        precheck_response = vmware_esxi.draft_precheck(
-            cluster_path=cluster_path,
-            desired_config=desired_config,
-            draft_id=draft_id,
-            esx_config=esx_config,
-        )
+            if precheck_status != "OK":
+                log.debug(f"Precheck draft response:\n {json.dumps(precheck_response)}")
+                ret["comment"] += f"Precheck for cluster {cluster} failed. Check result\n"
+                ret["result"] = False
+                discard_draft = True
 
-        ret["result"] = None
-        ret["comment"] = "Validate precheck response."
-        ret["changes"] = precheck_response
-        # DELETE DRAFT
-        vmware_esxi.draft_delete(
-            cluster_path=cluster_path, draft_id=draft_id, esx_config=esx_config
-        )
-    else:
-        # PRECHECK DRAFT
-        precheck_response = vmware_esxi.draft_precheck(
-            cluster_path=cluster_path,
-            desired_config=desired_config,
-            draft_id=draft_id,
-            esx_config=esx_config,
-        )
+        if __opts__["test"]:
+            if not discard_draft:
+                ret[
+                    "comment"
+                ] += f"Provided configuration passed precheck for cluster {cluster}. Following changes would be applied\n"
+                discard_draft = True
 
-        # APPLY
-        apply_response = vmware_esxi.draft_apply(
-            cluster_path=cluster_path,
-            desired_config=desired_config,
-            draft_id=draft_id,
-            esx_config=esx_config,
-        )
+        if discard_draft:
+            __salt__["vmware_esxi.delete_draft"](cluster, draft_id, esx_config)
 
-        ret["result"] = True
-        ret["changes"] = apply_response
+        else:
+            __salt__["vmware_esxi.apply_draft"](
+                cluster,
+                draft_id,
+                draft_config,
+                esx_config,
+            )
+            ret["comment"] += f"Provided configuration was applied for cluster {cluster}"
 
     return ret

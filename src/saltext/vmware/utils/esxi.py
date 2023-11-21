@@ -1,7 +1,10 @@
+import copy
 import hashlib
 import logging
 import socket
 import ssl
+from typing import Mapping
+from typing import OrderedDict
 
 import salt.exceptions
 import saltext.vmware.utils.cluster as utils_cluster
@@ -11,6 +14,9 @@ from config_modules_vmware.esxi.esx_config import EsxConfig
 from config_modules_vmware.esxi.esx_context import EsxContext
 from config_modules_vmware.lib.common.credentials import SddcCredentials
 from config_modules_vmware.lib.common.credentials import VcenterCredentials
+from config_modules_vmware.schema.schema_utility import Product
+from config_modules_vmware.schema.schema_utility import retrieve_reference_schema
+from salt.utils.data import is_iter
 from saltext.vmware.utils.connect import get_config
 
 # pylint: disable=no-name-in-module
@@ -478,3 +484,93 @@ def get_cluster_moid(cluster_path, profile=None, esx_context=None, config=None):
         esx_context = create_esx_context(config, profile)
     mappings = esx_context.vc_vmomi_client().retrieve_cluster_path_moid_mapping()
     return mappings.get(cluster_path)
+
+
+def merge_sls_into_cluster_config(source, target):
+    host_map = target["host_info"]
+    hostname_map = {v.get("name"): k for k, v in host_map.items()}
+    schema = retrieve_reference_schema(Product.ESX_VCP)
+
+    target = merge_sls_config_section_into_cluster(source, target, hostname_map, "config", schema)
+    target = merge_sls_config_section_into_cluster(
+        source, target, hostname_map, "extended_config", schema
+    )
+    return target
+
+
+def merge_sls_config_section_into_cluster(source, target, hostname_map, section, schema):
+    config = source.get(section)
+    if config:
+        host_overrides = config.get("host-override")
+        if host_overrides:
+            for hostname in host_overrides:
+                host_uuid = hostname_map.get(hostname)
+                override_target = target.get(section).get("host-override").get(host_uuid)
+                if override_target:
+                    target[section]["host-override"][host_uuid] = merge_sls_config_into_cluster(
+                        host_overrides.get(hostname),
+                        override_target,
+                        schema.get("properties").get("profile"),
+                        "",
+                        3,
+                    )
+                else:
+                    target.get(section).get("host-override")[host_uuid] = host_overrides.get(
+                        hostname
+                    )
+        profile = config.get("profile")
+        if profile:
+            target[section]["profile"] = merge_sls_config_into_cluster(
+                profile,
+                target.get(section).get("profile"),
+                schema.get("properties").get("profile"),
+                "",
+                3,
+            )
+    return target
+
+
+def merge_sls_config_into_cluster(source, target, schema, path, depth):
+    """
+    Performs a merge on mappings and/or iterables using schema and returns the result
+    """
+    if schema.get("type") == "object":
+        for key in source:
+            if key in target:
+                target[key] = merge_sls_config_into_cluster(
+                    source.get(key),
+                    target.get(key),
+                    schema.get("properties").get(key),
+                    f"{path}/{key}",
+                    depth - 1,
+                )
+            else:
+                target[key] = source.get(key)
+    elif schema.get("type") == "array":
+        key_property = schema.get("instanceId")
+        if key_property:
+            source_map = {}
+            for s in source:
+                source_key = s.get(key_property)
+                if source_key in source_map:
+                    raise ValueError(f"{path}: Duplicated item {s}")
+                else:
+                    source_map[source_key] = s
+            target_index_map = {t.get(key_property): i for i, t in enumerate(target)}
+            for key in source_map:
+                target_index = target_index_map.get(key)
+                if target_index is not None:
+                    target[target_index] = merge_sls_config_into_cluster(
+                        source_map.get(key),
+                        target[target_index],
+                        schema.get("items"),
+                        f"{path}/{key}",
+                        depth - 1,
+                    )
+                else:
+                    log.info(f"Object {key} not available, including it as new one")
+                    item = source_map.get(key)
+                    target.append(item)
+    else:
+        target = source
+    return target

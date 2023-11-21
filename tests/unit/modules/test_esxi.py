@@ -5,13 +5,17 @@ import logging
 import os
 import uuid
 from unittest.mock import MagicMock
+from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
 import saltext.vmware.modules.esxi as esxi
 import saltext.vmware.utils.connect
+import saltext.vmware.utils.esxi as esxi_utils
 from config_modules_vmware.schema.schema_utility import Product
 from config_modules_vmware.schema.schema_utility import retrieve_reference_schema
+from pytest import MonkeyPatch
+from salt.exceptions import SaltException
 
 log = logging.getLogger(__name__)
 
@@ -82,8 +86,16 @@ def fake_esx_config():
     fake.get_desired_configuration.return_value = {
         "path/to/cluster": {"config.module.submodule": "desired"}
     }
+    fake.draft_create.return_value = {"path/to/cluster": {"draft_id": "draft-0"}}
+    fake.draft_get.return_value = {"metadata": {"state": "VALID"}}
+    fake.draft_check_compliance.return_value = {
+        "path/to/cluster": {"cluster_status": "NON COMPLIANT"}
+    }
+    fake.draft_precheck.return_value = {"path/to/cluster": {"status": "OK"}}
+    fake.draft_apply.return_value = {"path/to/cluster": {"status": "OK"}}
+    fake.draft_delete.return_value = {"path/to/cluster": {"status": "OK"}}
+    fake.draft_show_changes.return_value = {"path/to/cluster": {"status": "OK"}}
     return fake
-
 
 @pytest.fixture
 def fake_desired_state_spec():
@@ -92,6 +104,18 @@ def fake_desired_state_spec():
         "path/to/cluster": {"config.module.submodule": "desired"}
     }
     return fake
+
+# Define some example test data
+profile = "example_profile"
+cluster_paths = ["cluster1", "cluster2"]
+desired_state_spec = {"key": "value"}
+
+
+@pytest.fixture
+def create_esx_config_mock():
+    with patch("saltext.vmware.utils.esxi.create_esx_config") as create_esx_config_mock:
+        yield create_esx_config_mock
+
 
 
 def get_host(in_maintenance_mode=None):
@@ -365,8 +389,255 @@ def test_get_desired_configuration_all(fake_esx_config):
     assert configuration == {"path/to/cluster": {"config.module.submodule": "desired"}}
 
 
+
 def test_check_compliance(fake_esx_config, fake_desired_state_spec):
     configuration = esxi.check_compliance(
         esx_config=fake_esx_config, desired_state_spec=fake_desired_state_spec
     )
     assert configuration is not None
+
+@pytest.fixture
+def mock_create_esx_config():
+    with patch.object(
+        esxi.utils_esxi, "create_esx_config", return_value={"some-key": "some-value"}
+    ) as mock:
+        yield mock
+
+
+def test_calculate_precheck_status_success():
+    # Arrange
+    data = {"host1": {"status": "OK"}, "host2": {"status": "OK"}}
+
+    # Act
+    result = esxi.calculate_precheck_status(data)
+
+    # Assert
+    assert result == {"status": True}
+
+
+def test_calculate_precheck_status_failure():
+    # Arrange
+    data = {"host1": {"status": "OK"}, "host2": {"status": "ERROR"}}
+
+    # Act
+    result = esxi.calculate_precheck_status(data)
+
+    # Assert
+    assert result == {"status": False}
+
+
+def test_calculate_remediate_status_success():
+    # Arrange
+    data = {
+        "/SDDC-Datacenter/vlcm_cluster1": {
+            "hosts": {
+                "host-46": {"name": "esxi-6.vrack.vsphere.local"},
+                "host-51": {"name": "esxi-7.vrack.vsphere.local"},
+            },
+            "successful_hosts": ["host-46", "host-51"],
+            "failed_hosts": [],
+            "skipped_hosts": [],
+        }
+    }
+
+    # Act
+    result = esxi.calculate_remediatestatus(data)
+
+    # Assert
+    assert result == {
+        "status": True,
+        "successful_hosts": ["host-46", "host-51"],
+        "failed_hosts": [],
+        "skipped_hosts": [],
+    }
+
+
+def test_calculate_remediate_status_failure():
+    # Arrange
+    data = {"successful_hosts": [], "failed_hosts": ["host1"], "skipped_hosts": []}
+
+    # Act
+    result = esxi.calculate_remediatestatus(data)
+
+    # Assert
+    assert result == {
+        "status": False,
+        "successful_hosts": [],
+        "failed_hosts": ["host1"],
+        "skipped_hosts": [],
+    }
+
+
+def test_remediate_success(create_esx_config_mock):
+    # Arrange
+    esx_config_mock = Mock()
+    create_esx_config_mock.return_value = esx_config_mock
+
+    # Set up the response sample
+    response_sample = {
+        "/SDDC-Datacenter/vlcm_cluster1": {
+            "hosts": {
+                "host-46": {"name": "esxi-6.vrack.vsphere.local"},
+                "host-51": {"name": "esxi-7.vrack.vsphere.local"},
+            },
+            "successful_hosts": ["host-46", "host-51"],
+            "failed_hosts": [],
+            "skipped_hosts": [],
+        }
+    }
+
+    # Set the return value of remediate_with_desired_state to the response sample
+    esx_config_mock.remediate_with_desired_state.return_value = response_sample
+
+    # Act
+    result = esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
+
+    # Assert
+    assert result["status"]
+    assert "details" in result
+    assert result["details"] == response_sample
+    esx_config_mock.remediate_with_desired_state.assert_called_once_with(
+        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+    )
+
+
+def test_remediate_failure(create_esx_config_mock):
+    # Arrange
+    esx_config_mock = Mock()
+    esx_config_mock.remediate_with_desired_state.side_effect = Exception(
+        "Mocked remediate_with_desired_state failure"
+    )
+    create_esx_config_mock.return_value = esx_config_mock
+
+    # Act
+    result = esxi.remediate(profile, cluster_paths, desired_state_spec, esx_config_mock)
+
+    # Assert
+    assert not result["status"]
+    assert "details" in result
+
+    # Ensure remediate_with_desired_state is called
+    esx_config_mock.remediate_with_desired_state.assert_called_once_with(
+        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+    )
+
+
+def test_precheck_success(create_esx_config_mock):
+    # Arrange
+    esx_config_mock = Mock()
+    create_esx_config_mock.return_value = esx_config_mock
+
+    # Set up the response sample
+    response_sample = {
+        "/SDDC-Datacenter/vlcm_cluster1": {
+            "status": "OK",
+            "summary": "Pre-check completed successfully.",
+            "hosts": {
+                "host-46": {
+                    "name": "esxi-6.vrack.vsphere.local",
+                    "summary": "Host is in compliance with desired configuration.",
+                },
+                "host-51": {
+                    "name": "esxi-7.vrack.vsphere.local",
+                    "summary": "Host is in compliance with desired configuration.",
+                },
+            },
+            "successful_hosts": ["host-46", "host-51"],
+            "failed_hosts": [],
+            "skipped_hosts": [],
+        }
+    }
+
+    # Set the return value of precheck_with_desired_state to the response sample
+    esx_config_mock.precheck_desired_state.return_value = response_sample
+
+    # Act
+    result = esxi.pre_check(profile, cluster_paths, desired_state_spec, esx_config_mock)
+
+    # Assert
+    assert result["status"]
+    assert "details" in result
+    assert result["details"] == response_sample
+    esx_config_mock.precheck_desired_state.assert_called_once_with(
+        desired_state_spec=desired_state_spec, cluster_paths=cluster_paths
+    )
+
+
+def test_precheck_failure(mock_create_esx_config):
+    # Arrange
+    name = "test_name"
+    cluster_paths = "/SDDC-Datacenter/vlcm_cluster1"
+    desired_config = {"some_key": "some_value"}
+    profile = "my_profile"
+
+    # Mock the returned value of create_esx_config to be a Mock
+    mock_esx_config = Mock()
+    mock_create_esx_config.return_value = mock_esx_config
+
+    # Set up the necessary attributes and methods on mock_esx_config
+    mock_esx_config.precheck_desired_state.side_effect = Exception(
+        "Mocked precheck_desired_state failure"
+    )
+
+    # Act
+    result = esxi.pre_check(name, cluster_paths, desired_config, profile)
+
+    # Assert
+    assert not result["status"]
+    assert "details" in result
+
+
+def test_create_draft(fake_esx_config):
+    response = esxi.create_draft(cluster_path="path/to/cluster", esx_config=fake_esx_config)
+    fake_esx_config.draft_create.assert_called_once()
+    assert response == {"path/to/cluster": {"draft_id": "draft-0"}}
+
+
+def test_get_draft(fake_esx_config):
+    response = esxi.get_draft(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_get.assert_called_once()
+    assert response == {"metadata": {"state": "VALID"}}
+
+
+def test_check_draft_compliance(fake_esx_config):
+    response = esxi.check_draft_compliance(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_check_compliance.assert_called_once()
+    assert response == {"path/to/cluster": {"cluster_status": "NON COMPLIANT"}}
+
+
+def test_precheck_draft(fake_esx_config):
+    response = esxi.precheck_draft(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_precheck.assert_called_once()
+    assert response == {"path/to/cluster": {"status": "OK"}}
+
+
+def test_apply_draft(fake_esx_config):
+    with patch.dict(esxi.__opts__, {"test": False}):
+        response = esxi.apply_draft(
+            cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+        )
+        fake_esx_config.draft_apply.assert_called_once()
+        assert response == {"path/to/cluster": {"status": "OK"}}
+
+
+def test_delete_draft(fake_esx_config):
+    response = esxi.precheck_draft(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_precheck.assert_called_once()
+    assert response == {"path/to/cluster": {"status": "OK"}}
+
+
+def test_show_draft_changes(fake_esx_config):
+    response = esxi.show_draft_changes(
+        cluster_path="path/to/cluster", draft_id="draft-0", esx_config=fake_esx_config
+    )
+    fake_esx_config.draft_show_changes.assert_called_once()
+    assert response == {"path/to/cluster": {"status": "OK"}}
+
