@@ -1,20 +1,59 @@
 ---
-minimum_pre_commit_version: 1.15.2
+default_language_version:
+  python: python3
+
+exclude: ^(doc/_static/.*|doc/_themes/.*)$
+minimum_pre_commit_version: 2.4.0
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.1.0
+    rev: v4.4.0
     hooks:
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: trailing-whitespace   # Trims trailing whitespace.
         args: [--markdown-linebreak-ext=md]
+        exclude: >
+          (?x)^(
+            pkg/macos/pkg-resources/.*\.rtf
+          )$
+
       - id: mixed-line-ending     # Replaces or checks mixed line ending.
         args: [--fix=auto]
       - id: end-of-file-fixer     # Makes sure files end in a newline and only a newline.
         exclude: changelog/.*
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: check-ast             # Simply check whether files parse as valid python.
+        exclude: >
+          (?x)^(
+            templates/.*
+          )$
+      - id: check-case-conflict   # Check for files with names that would conflict on a
+                                  # case-insensitive filesystem like MacOS HFS+ or Windows FAT.
+      - id: check-json            # Attempts to load all json files to verify syntax.
+      - id: check-symlinks        # Checks for symlinks which do not point to anything.
+      - id: debug-statements      # Check for debugger imports and py37+ breakpoint() calls in python source.
+        exclude: >
+          (?x)^(
+            templates/.*
+          )$
+      - id: fix-byte-order-marker # removes UTF-8 byte order marker
+      - id: forbid-submodules     # forbids any submodules in the repository.
+      - id: fix-encoding-pragma   # Remove `# -*- coding: utf-8 -*-` from the top of python files.
+        args:
+          - --remove
+        exclude: >
+          (?x)^(
+            salt/ext/.*
+          )$
 
   # ----- Formatting ---------------------------------------------------------------------------->
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.37.2
+    hooks:
+      - id: pyupgrade
+        name: Rewrite Code to be Py3.7+, drop six usage and Py2 support
+        args: [--py3-plus, --keep-mock]
+        exclude: src/saltext/vcenter/version.py
+
   - repo: https://github.com/saltstack/pre-commit-remove-import-headers
     rev: 1.1.0
     hooks:
@@ -38,36 +77,22 @@ repos:
 
   - repo: https://github.com/s0undt3ch/salt-rewrite
     # Automatically rewrite code with known rules
-    rev: 1.3.2
+    rev: "2.2.0"
     hooks:
       - id: salt-rewrite
         alias: rewrite-docstrings
         name: Salt extensions docstrings auto-fixes
         files: ^src/saltext/vcenter/.*\.py$
-        args: [--silent]
+        args: [--silent, -F, fix_docstrings]
 
-  - repo: https://github.com/s0undt3ch/salt-rewrite
-    # Automatically rewrite code with known rules
-    rev: 1.3.2
-    hooks:
       - id: salt-rewrite
         alias: rewrite-tests
-        name: Rewrite the test suite
+        name: Rewrite Salt's Test Suite
         files: ^tests/.*\.py$
-        args: [--silent, -E, fix_docstrings]
-
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v2.10.0
-    hooks:
-      - id: pyupgrade
-        name: Rewrite Code to be Py3.7+
-        args: [
-          --py3-plus
-        ]
-        exclude: src/saltext/vcenter/version.py
+        args: [--silent, -E, fix_asserts, -E, fix_docstrings]
 
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v2.4.0
+    rev: v3.10.0
     hooks:
       - id: reorder-python-imports
         args: [
@@ -76,7 +101,7 @@ repos:
         exclude: src/saltext/vcenter/version.py
 
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 22.6.0
     hooks:
       - id: black
         args: [-l 100]
@@ -103,21 +128,21 @@ repos:
 
   # ----- Security ------------------------------------------------------------------------------>
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.0"
+    rev: "1.7.4"
     hooks:
       - id: bandit
         alias: bandit-salt
         name: Run bandit against the code base
-        args: [--silent, -lll, --skip, B701]
+        args: [--silent, -lll, --skip, "B701,B324"]
         exclude: src/saltext/vcenter/version.py
         additional_dependencies: ['importlib_metadata<5']
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.0"
+    rev: "1.7.4"
     hooks:
       - id: bandit
         alias: bandit-tests
         name: Run bandit against the test suite
-        args: [--silent, -lll, --skip, B701]
+        args: [--silent, -lll, --skip, "B701,B324"]
         files: ^tests/.*
         additional_dependencies: ['importlib_metadata<5']
   # <---- Security -------------------------------------------------------------------------------
@@ -131,6 +156,7 @@ repos:
 #        alias: lint-src
 #        name: Lint Source Code
 #        files: ^((setup|noxfile)|src/.*)\.py$
+#        require_serial: True
 #        args:
 #          - -e
 #          - lint-code-pre-commit
@@ -143,6 +169,7 @@ repos:
 #        alias: lint-tests
 #        name: Lint Tests
 #        files: ^tests/.*\.py$
+#        require_serial: True
 #        args:
 #          - -e
 #          - lint-tests-pre-commit
@@ -151,7 +178,7 @@ repos:
 
   # ----- Static Test Requirements -------------------------------------------------------------->
   - repo: https://github.com/saltstack/pip-tools-compile-impersonate
-    rev: dff9089c1003af49665064067ff63c75b9b69dcd
+    rev: '4.8'
     hooks:
       - id: pip-tools-compile
         alias: compile-3.7-test-requirements
@@ -183,6 +210,17 @@ repos:
         args:
           - -v
           - --py-version=3.9
+          - --platform=linux
+          - requirements/tests.in
+
+      - id: pip-tools-compile
+        alias: compile-3.10-test-requirements
+        name: Py3.10 Test Requirements
+        files: ^requirements/tests.in$
+        pass_filenames: false
+        args:
+          - -v
+          - --py-version=3.10
           - --platform=linux
           - requirements/tests.in
   # <---- Static Test Requirements ---------------------------------------------------------------
@@ -220,6 +258,17 @@ repos:
           - --py-version=3.9
           - --platform=linux
           - requirements/lint.in
+
+      - id: pip-tools-compile
+        alias: compile-3.10-test-requirements
+        name: Py3.10 Lint Requirements
+        files: ^requirements/lint.in$
+        pass_filenames: false
+        args:
+          - -v
+          - --py-version=3.10
+          - --platform=linux
+          - requirements/lint.in
   # <---- Static Lint Requirements ---------------------------------------------------------------
 
   # ----- Static Docs Requirements -------------------------------------------------------------->
@@ -253,6 +302,17 @@ repos:
         args:
           - -v
           - --py-version=3.9
+          - --platform=linux
+          - requirements/docs.in
+
+      - id: pip-tools-compile
+        alias: compile-3.10-test-requirements
+        name: Py3.10 Docs Requirements
+        files: ^requirements/docs.in$
+        pass_filenames: false
+        args:
+          - -v
+          - --py-version=3.10
           - --platform=linux
           - requirements/docs.in
   # <---- Static Docs Requirements ---------------------------------------------------------------

@@ -3967,6 +3967,7 @@ def get_vmotion_enabled(
     cluster_name=None,
     service_instance=None,
     profile=None,
+    host_names=None,
 ):
     """
     .. versionadded:: 23.4.4.0rc1
@@ -3989,13 +3990,22 @@ def get_vmotion_enabled(
     profile
         Profile to use (optional)
 
+    host_names
+        List of ESXi host names provided for a vCenter Server, the host_names argument
+        is required to tell vCenter which hosts to check if VMotion is enabled.
+
+        If host_names is not provided, the VMotion status will be retrieved for the
+        ``host`` location instead. This is useful for when service instance
+        connection information is used for a single ESXi host.
+
+
     CLI Example:
 
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_vmotion_enabled
     """
-    log.debug("Running vmware_esxi.get_host_datetime")
+    log.debug("Running vmware_esxi.get_vmotion_enabled")
     ret = {}
     service_instance = service_instance or utils_connect.get_service_instance(
         config=__opts__, profile=profile
@@ -4007,11 +4017,191 @@ def get_vmotion_enabled(
         datacenter_name=datacenter_name,
         get_all_hosts=host_name is None,
     )
-    for host in hosts:
-        vmotion_vnic = host.configManager.vmotionSystem.netConfig.selectedVnic
-        if vmotion_vnic:
-            ret.update({host.name: {"VMotion Enabled": True}})
-        else:
-            ret.update({host.name: {"VMotion Enabled": False}})
 
-    return ret
+    if not host_names:
+        host_names = host
+
+    try:
+        for host in hosts:
+            if host in host_names:
+                vmotion_vnic = host.configManager.vmotionSystem.netConfig.selectedVnic
+                if vmotion_vnic:
+                    ret.update({host.name: {"VMotion Enabled": True}})
+                else:
+                    ret.update({host.name: {"VMotion Enabled": False}})
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def vmotion_disable(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+    host_names=None,
+):
+    """
+    .. versionadded:: 23.6.29.0rc1
+
+    Disable vMotion for a given host or list of host_names.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    host_names
+        List of ESXi host names provided for a vCenter Server, the host_names argument
+        is required to tell vCenter which hosts should disable VMotion.
+
+        If host_names is not provided, VMotion will be disabled for the ``host``
+        location instead. This is useful for when service instance connection
+        information is used for a single ESXi host.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.vmotion_disable
+    """
+    log.debug("Running vmware_esxi.vmotion_disable")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    ## host_names = _check_hosts(service_instance, host, host_names)
+    if not host_names:
+        host_names = host
+
+    try:
+        ## for host_name in host_names:
+        ##     host_ref = _get_host_ref(service_instance, host, host_name=host_name)
+        ##     vmotion_system = host_ref.configManager.vmotionSystem
+
+        for host in hosts:
+            if host in host_names:
+                vmotion_system = host.configManager.vmotionSystem
+
+                # Disable VMotion for the host by removing the VNic selected to use for VMotion.
+                try:
+                    vmotion_system.DeselectVnic()
+                except vim.fault.HostConfigFault as err:
+                    msg = f"vsphere.vmotion_disable failed: {err}"
+                    log.debug(msg)
+                    ret.update({host_name: {"Error": msg, "VMotion Disabled": False}})
+                    continue
+
+                ret.update({host_name: {"VMotion Disabled": True}})
+
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def vmotion_enable(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+    host_names=None,
+    device="vmk0",
+):
+    """
+    .. versionadded:: 23.6.29.0rc1
+
+    Enable vMotion for a given host or list of host_names.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    host_names
+        List of ESXi host names provided for a vCenter Server, the host_names argument
+        is required to tell vCenter which hosts should enable VMotion.
+
+        If host_names is not provided, VMotion will be enabled for the ``host``
+        location instead. This is useful for when service instance connection
+        information is used for a single ESXi host.
+
+    device
+        The device that uniquely identifies the VirtualNic that will be used for
+        VMotion for each host. Defaults to ``vmk0``.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.vmotion_disable
+    """
+    log.debug("Running vmware_esxi.vmotion_disable")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    ## host_names = _check_hosts(service_instance, host, host_names)
+    if not host_names:
+        host_names = host
+
+    try:
+        ## for host_name in host_names:
+        ##     host_ref = _get_host_ref(service_instance, host, host_name=host_name)
+        ##     vmotion_system = host_ref.configManager.vmotionSystem
+
+        for host in hosts:
+            if host in host_names:
+                vmotion_system = host.configManager.vmotionSystem
+
+                # Enable VMotion for the host by setting the given device to provide the VNic to use for VMotion.
+                try:
+                    vmotion_system.SelectVnic(device)
+                except vim.fault.HostConfigFault as err:
+                    msg = f"vsphere.vmotion_disable failed: {err}"
+                    log.debug(msg)
+                    ret.update({host_name: {"Error": msg, "VMotion Enabled": False}})
+                    continue
+
+                ret.update({host_name: {"VMotion Enabled": True}})
+
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
