@@ -4335,6 +4335,7 @@ def get_reference_schema():
     log.debug("Running vmware_esxi.retrieve_reference_schema")
     return retrieve_reference_schema(Product.ESX)
 
+
 def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, esx_config=None):
     """
     Checks compliance of cluster.
@@ -4366,6 +4367,7 @@ def check_compliance(profile=None, cluster_paths=None, desired_state_spec=None, 
     except Exception as e:
         log.error("Check Compliance encountered an error: %s", str(e))
         return {"details": str(e)}
+
 
 def calculate_precheck_status(data):
     """
