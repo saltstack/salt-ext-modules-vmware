@@ -5,10 +5,13 @@ import os
 import ssl
 
 import requests
+from com.vmware.vapi.std.errors_client import Unauthorized, Unauthenticated
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from requests.exceptions import RequestException
 from requests.exceptions import SSLError
+from vmware.vapi.vsphere.client import create_vsphere_client
+
 
 # pylint: disable=no-name-in-module
 try:
@@ -276,3 +279,56 @@ def _get_session(host, user, password, cert):
         log.error(re)
         result = {"error": "Error occurred while calling vCenter API."}
         return result
+
+def api_client(opts=None, pillar=None):
+    """
+    Return an API client object for VMware
+
+    opts
+        (optional) Any additional options.
+
+    pillar
+        (optional) If specified, allows for a dictionary of pillar data to be made
+        available to pillar and ext_pillar rendering. These pillar variables
+        will also override any variables of the same name in pillar or
+        ext_pillar.
+    """
+    host = (
+            os.environ.get("VMWARE_CONFIG_HOST")
+            or opts.get("vmware_config", {}).get("host")
+            or pillar.get("vmware_config", {}).get("host")
+    )
+    user, password = get_username_password(esxi_host=host, opts=opts, pillar=pillar)
+
+    cert = (
+            os.environ.get("VMWARE_CONFIG_REST_API_CERT")
+            or opts.get("vmware_config", {}).get("rest_api_cert")
+            or pillar.get("vmware_config", {}).get("rest_api_cert")
+    )
+
+    session = requests.session()
+    if not cert:
+        session.verify = False
+    # Disable environment variable for proxy
+    session.trust_env = False
+    # Disable urllib3 warnings
+    requests.packages.urllib3.disable_warnings()
+
+    config = {
+        "server": host,
+        "username": user,
+        "password": password,
+        "session": session,
+    }
+
+    try:
+        client = create_vsphere_client(**config)
+    except Unauthorized as e:
+        log.error(e)
+        result = {"error": "Unauthorized, check credentials."}
+        return result
+    except Unauthenticated as e:
+        log.error(e)
+        result = {"error": "Unauthenticated, check credentials."}
+        return result
+    return client

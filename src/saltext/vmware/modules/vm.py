@@ -9,6 +9,8 @@ import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datastore as utils_datastore
 import saltext.vmware.utils.vm as utils_vm
 
+from com.vmware.vapi.std_client import DynamicID
+
 log = logging.getLogger(__name__)
 
 try:
@@ -318,9 +320,7 @@ def info(vm_name=None, service_instance=None, profile=None):
         datacenter_ref = utils_common.get_parent_type(vm, vim.Datacenter)
         mac_address = utils_vm.get_mac_address(vm)
         network = utils_vm.get_network(vm)
-        tags = []
-        for tag in vm.tag:
-            tags.append(tag.name)
+        tags = get_tags(vm._moId)
         folder_path = utils_common.get_path(vm, service_instance)
         info[vm.summary.config.name] = {
             "guest_name": vm.summary.config.name,
@@ -339,6 +339,23 @@ def info(vm_name=None, service_instance=None, profile=None):
         }
     return info
 
+def get_tags(vm_mid):
+    """
+    Return the tags associated with a virtual machine.
+
+    vm_mid
+        The managed object ID of the virtual machine.
+    """
+    tags = []
+    client = connect.api_client(opts=__opts__, pillar=__pillar__)
+    dynamic_managed_object = DynamicID(type="VirtualMachine", id=vm_mid)
+    tag_association = client.tagging.TagAssociation
+    tags_list = tag_association.list_attached_tags(dynamic_managed_object)
+
+    for tag in tags_list:
+        tag_name = client.tagging.Tag.get(tag).name
+        tags.append(tag_name)
+    return tags
 
 def power_state(vm_name, state, datacenter_name=None, service_instance=None, profile=None):
     """
