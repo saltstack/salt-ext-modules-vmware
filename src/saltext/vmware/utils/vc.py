@@ -7,8 +7,8 @@ from saltext.vmware.utils.connect import get_config
 try:
     from config_modules_vmware.lib.common.credentials import SddcCredentials
     from config_modules_vmware.lib.common.credentials import VcenterCredentials
-    from config_modules_vmware.vcenter.vc_context import VcenterContext
     from config_modules_vmware.control_module.control_config import ControlConfig
+    from config_modules_vmware.control_module.vc_context import VcenterContext
 
     HAS_CONFIG_MODULE = True
 except ImportError:
@@ -31,7 +31,7 @@ def create_vc_context(config, profile=None):
     return VcenterContext(SddcCredentials(vc_creds=_get_vc_credential(config, profile)))
 
 
-def create_vc_config(config, profile=None, vc_context=None):
+def create_control_config(config, profile=None, vc_context=None):
     if vc_context:
         return ControlConfig(vc_context)
     return ControlConfig(create_vc_context(config, profile))

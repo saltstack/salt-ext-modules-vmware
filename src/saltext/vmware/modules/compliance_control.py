@@ -13,7 +13,7 @@ def __virtual__():
     return __virtualname__
 
 
-def control_config_compliance_check(control_config, product, vc_config=None, profile=None):
+def control_config_compliance_check(control_config, product, config_obj=None, profile=None):
     """
     Checks compliance of vcenter control config. Control config can be ntp, dns, syslog, etc.
     Returns control compliance response object.
@@ -30,12 +30,12 @@ def control_config_compliance_check(control_config, product, vc_config=None, pro
     """
 
     log.info("Checking complaince %s", control_config)
-    if not vc_config:
+    if not config_obj:
         config = __opts__
-        vc_config = utils_vc.create_vc_config(config, profile)
+        config_obj = utils_vc.create_control_config(config, profile)
 
     try:
-        response_check_compliance = vc_config.check_compliance(
+        response_check_compliance = config_obj.check_compliance(
             product=product, desired_state_spec=control_config
         )
         log.debug("control_config_compliance_check response %s", response_check_compliance)
@@ -45,7 +45,7 @@ def control_config_compliance_check(control_config, product, vc_config=None, pro
         raise salt.exceptions.VMwareRuntimeError(str(exc))
 
 
-def control_config_remediate(control_config, product, vc_config=None, profile=None):
+def control_config_remediate(control_config, product, config_obj=None, profile=None):
     """
     Remediate given compliance control config. Control config can be ntp, dns, syslog, etc.
     Returns remediation response object.
@@ -63,12 +63,12 @@ def control_config_remediate(control_config, product, vc_config=None, profile=No
 
     log.info("control_config_remediate: %s", control_config)
 
-    if not vc_config:
+    if not config_obj:
         config = __opts__
-        vc_config = utils_vc.create_vc_config(config, profile)
+        config_obj = utils_vc.create_control_config(config, profile)
 
     try:
-        response_remediate = vc_config.remediate_with_desired_state(
+        response_remediate = config_obj.remediate_with_desired_state(
             product=product, desired_state_spec=control_config
         )
         log.debug("control_config_remediate response %s", response_remediate)

@@ -21,10 +21,10 @@ def check_control(name, control_config, product, profile=None):
 
     name
         Config name
-
     control_config
         vc control config dict object.
-
+    product
+        appliance name. vcenter, nsx, etc.
     profile
         Optional auth profile to be used for vc connection.
     """
@@ -35,7 +35,7 @@ def check_control(name, control_config, product, profile=None):
 
     # Create ESXi configuration
     config = __opts__
-    vc_config = utils_vc.create_vc_config(config, profile)
+    config_obj = utils_vc.create_control_config(config, profile)
 
     control_config = json.loads(json.dumps(control_config))
     log.debug("Opts: %s", __opts__)
@@ -49,7 +49,7 @@ def check_control(name, control_config, product, profile=None):
             ](
                 control_config=control_config,
                 product=product,
-                vc_config=vc_config,
+                config_obj=config_obj,
             )
 
             if check_control_compliance_response["status"] == "COMPLIANT":
@@ -82,7 +82,7 @@ def check_control(name, control_config, product, profile=None):
             remediate_response = __salt__["vmware_compliance_control.control_config_remediate"](
                 control_config=control_config,
                 product=product,
-                vc_config=vc_config,
+                config_obj=config_obj,
             )
 
             if remediate_response["status"] == "SUCCESS":
