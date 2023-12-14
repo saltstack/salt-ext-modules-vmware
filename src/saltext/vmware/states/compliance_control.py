@@ -6,20 +6,11 @@ import saltext.vmware.utils.vc as utils_vc
 
 log = logging.getLogger(__name__)
 
-try:
-    from config_modules_vmware.vcenter.vc_config import VcenterConfig
-
-    HAS_CONFIG_MODULE = True
-except ImportError:
-    HAS_CONFIG_MODULE = False
-
-__virtualname__ = "vmware_vc"
-__proxyenabled__ = ["vmware_vc"]
+__virtualname__ = "vmware_compliance_control"
+__proxyenabled__ = ["vmware_compliance_control"]
 
 
 def __virtual__():
-    if not HAS_CONFIG_MODULE:
-        return False, "Unable to import unified config module."
     return __virtualname__
 
 
@@ -54,7 +45,7 @@ def check_control(name, control_config, profile=None):
             # If in test mode, perform audit
             log.info("Running in test mode. Performing check_control_compliance_response.")
             check_control_compliance_response = __salt__[
-                "vmware_vc.control_config_compliance_check"
+                "vmware_compliance_control.control_config_compliance_check"
             ](
                 control_config=control_config,
                 vc_config=vc_config,
@@ -64,8 +55,7 @@ def check_control(name, control_config, profile=None):
                 log.debug("Pre-check completed successfully. You can continue with remediation.")
                 # Update return data
                 ret = {"name": name, "result": True, "comment": "COMPLIANT", "changes": {}}
-            else:
-                # Pre-check failed in test mode
+            elif check_control_compliance_response["status"] == "NON_COMPLIANT":
                 ret = {
                     "name": name,
                     "result": False,
@@ -74,11 +64,21 @@ def check_control(name, control_config, profile=None):
                         "changes", "No details available"
                     ),
                 }
+            else:
+                # Pre-check failed in test mode
+                ret = {
+                    "name": name,
+                    "result": False,
+                    "comment": "Failed to run compliance check. Please check changes for more details.",
+                    "changes": check_control_compliance_response.get(
+                        "changes", "No details available"
+                    ),
+                }
         else:
             # Not in test mode, proceed with pre-check and remediation
             log.debug("Performing remediation.")
             # Execute remediation
-            remediate_response = __salt__["vmware_vc.control_config_remediate"](
+            remediate_response = __salt__["vmware_compliance_control.control_config_remediate"](
                 control_config=control_config,
                 vc_config=vc_config,
             )

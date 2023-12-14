@@ -5,28 +5,28 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
-from saltext.vmware.states import vc
+from saltext.vmware.states import compliance_control
 
 NAME = "test"
 
 
 @pytest.fixture
 def configure_loader_modules():
-    return {vc: {"__opts__": {}, "__pillar__": {}}}
+    return {compliance_control: {"__opts__": {}, "__pillar__": {}}}
 
 
 @pytest.fixture(autouse=True)
 def patch_salt_loaded_objects():
     # This esxi needs to be the same as the module we're importing
     with patch(
-        "saltext.vmware.states.vc.__opts__",
+        "saltext.vmware.states.compliance_control.__opts__",
         {
             "cachedir": ".",
             "saltext.vmware": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
         },
         create=True,
-    ), patch.object(vc, "__pillar__", {}, create=True), patch.object(
-        vc, "__salt__", {}, create=True
+    ), patch.object(compliance_control, "__pillar__", {}, create=True), patch.object(
+        compliance_control, "__salt__", {}, create=True
     ):
         yield
 
@@ -58,21 +58,23 @@ def test_check_control_config(
     }
 
     if exception:
-        with patch.dict(vc.__opts__, {"test": test_mode}):
-            result = vc.check_control(name=NAME, control_config=mock_conrtol_config)
+        with patch.dict(compliance_control.__opts__, {"test": test_mode}):
+            result = compliance_control.check_control(name=NAME, control_config=mock_conrtol_config)
             assert result is not None
             assert expected_changes in result["comment"]
             assert result["result"] == expected_result
     else:
         with patch.dict(
-            vc.__salt__,
+            compliance_control.__salt__,
             {
-                "vmware_vc.control_config_compliance_check": mock_check_control_compliance_config,
-                "vmware_vc.control_config_remediate": mock_check_control_remediate_config,
+                "vmware_compliance_control.control_config_compliance_check": mock_check_control_compliance_config,
+                "vmware_compliance_control.control_config_remediate": mock_check_control_remediate_config,
             },
         ):
-            with patch.dict(vc.__opts__, {"test": test_mode}):
-                result = vc.check_control(name=NAME, control_config=mock_conrtol_config)
+            with patch.dict(compliance_control.__opts__, {"test": test_mode}):
+                result = compliance_control.check_control(
+                    name=NAME, control_config=mock_conrtol_config
+                )
 
         assert result is not None
         assert result["changes"] == expected_changes

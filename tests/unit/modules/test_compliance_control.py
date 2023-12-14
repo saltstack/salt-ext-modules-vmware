@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 import salt.exceptions
-import saltext.vmware.modules.vc as vc
+import saltext.vmware.modules.compliance_control as compliance_control
 
 log = logging.getLogger(__name__)
 
@@ -20,21 +20,21 @@ def tgz_file(session_temp_dir):
 
 @pytest.fixture
 def configure_loader_modules():
-    return {vc: {"__opts__": {}, "__pillar__": {}}}
+    return {compliance_control: {"__opts__": {}, "__pillar__": {}}}
 
 
 @pytest.fixture(autouse=True)
 def patch_salt_loaded_objects():
     # This esxi needs to be the same as the module we're importing
     with patch(
-        "saltext.vmware.modules.vc.__opts__",
+        "saltext.vmware.modules.compliance_control.__opts__",
         {
             "cachedir": ".",
             "saltext.vmware": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
         },
         create=True,
-    ), patch.object(vc, "__pillar__", {}, create=True), patch.object(
-        vc, "__salt__", {}, create=True
+    ), patch.object(compliance_control, "__pillar__", {}, create=True), patch.object(
+        compliance_control, "__salt__", {}, create=True
     ):
         yield
 
@@ -63,10 +63,12 @@ def test_control_config_compliance_check(exception):
     }
     if exception:
         with pytest.raises(salt.exceptions.VMwareRuntimeError):
-            vc.control_config_compliance_check(mock_conrtol_config)
+            compliance_control.control_config_compliance_check(mock_conrtol_config)
     else:
         with patch_compliance_check:
-            control_config_check_response = vc.control_config_compliance_check(mock_conrtol_config)
+            control_config_check_response = compliance_control.control_config_compliance_check(
+                mock_conrtol_config
+            )
             assert control_config_check_response == mock_response
 
 
@@ -94,8 +96,10 @@ def test_control_config_remediate(exception):
     }
     if exception:
         with pytest.raises(salt.exceptions.VMwareRuntimeError):
-            vc.control_config_remediate(mock_conrtol_config)
+            compliance_control.control_config_remediate(mock_conrtol_config)
     else:
         with patch_remediate:
-            control_config_remediate_response = vc.control_config_remediate(mock_conrtol_config)
+            control_config_remediate_response = compliance_control.control_config_remediate(
+                mock_conrtol_config
+            )
             assert control_config_remediate_response == mock_response

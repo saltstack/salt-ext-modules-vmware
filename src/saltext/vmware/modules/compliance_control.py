@@ -13,7 +13,7 @@ try:
 except ImportError:
     HAS_CONFIG_MODULE = False
 
-__virtualname__ = "vmware_vc"
+__virtualname__ = "vmware_compliance_control"
 
 
 def __virtual__():
