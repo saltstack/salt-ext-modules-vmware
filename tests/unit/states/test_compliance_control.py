@@ -59,7 +59,9 @@ def test_check_control_config(
 
     if exception:
         with patch.dict(compliance_control.__opts__, {"test": test_mode}):
-            result = compliance_control.check_control(name=NAME, control_config=mock_conrtol_config)
+            result = compliance_control.check_control(
+                name=NAME, control_config=mock_conrtol_config, product="vcenter"
+            )
             assert result is not None
             assert expected_changes in result["comment"]
             assert result["result"] == expected_result
@@ -73,7 +75,7 @@ def test_check_control_config(
         ):
             with patch.dict(compliance_control.__opts__, {"test": test_mode}):
                 result = compliance_control.check_control(
-                    name=NAME, control_config=mock_conrtol_config
+                    name=NAME, control_config=mock_conrtol_config, product="vcenter"
                 )
 
         assert result is not None

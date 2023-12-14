@@ -14,7 +14,7 @@ def __virtual__():
     return __virtualname__
 
 
-def check_control(name, control_config, profile=None):
+def check_control(name, control_config, product, profile=None):
     """
     Check and apply vcenter control configs. Control config can be ntp, dns, syslog, etc.
     Return control compliance response if test=true. Otherwise, return remediate response.
@@ -48,6 +48,7 @@ def check_control(name, control_config, profile=None):
                 "vmware_compliance_control.control_config_compliance_check"
             ](
                 control_config=control_config,
+                product=product,
                 vc_config=vc_config,
             )
 
@@ -80,6 +81,7 @@ def check_control(name, control_config, profile=None):
             # Execute remediation
             remediate_response = __salt__["vmware_compliance_control.control_config_remediate"](
                 control_config=control_config,
+                product=product,
                 vc_config=vc_config,
             )
 

@@ -47,7 +47,7 @@ def test_control_config_compliance_check(exception):
     mock_response = {"status": "COMPLIANT"}
 
     patch_compliance_check = patch(
-        "config_modules_vmware.vcenter.vcenter_config.VcenterConfig.check_compliance",
+        "config_modules_vmware.control_module.control_config.ControlConfig.check_compliance",
         autospec=True,
         return_value=mock_response,
     )
@@ -63,11 +63,13 @@ def test_control_config_compliance_check(exception):
     }
     if exception:
         with pytest.raises(salt.exceptions.VMwareRuntimeError):
-            compliance_control.control_config_compliance_check(mock_conrtol_config)
+            compliance_control.control_config_compliance_check(
+                mock_conrtol_config, product="vcenter"
+            )
     else:
         with patch_compliance_check:
             control_config_check_response = compliance_control.control_config_compliance_check(
-                mock_conrtol_config
+                mock_conrtol_config, product="vcenter"
             )
             assert control_config_check_response == mock_response
 
@@ -80,7 +82,7 @@ def test_control_config_remediate(exception):
     mock_response = {"status": "SUCCESS"}
 
     patch_remediate = patch(
-        "config_modules_vmware.vcenter.vcenter_config.VcenterConfig.remediate_with_desired_state",
+        "config_modules_vmware.control_module.control_config.ControlConfig.remediate_with_desired_state",
         autospec=True,
         return_value=mock_response,
     )
@@ -96,10 +98,10 @@ def test_control_config_remediate(exception):
     }
     if exception:
         with pytest.raises(salt.exceptions.VMwareRuntimeError):
-            compliance_control.control_config_remediate(mock_conrtol_config)
+            compliance_control.control_config_remediate(mock_conrtol_config, product="vcenter")
     else:
         with patch_remediate:
             control_config_remediate_response = compliance_control.control_config_remediate(
-                mock_conrtol_config
+                mock_conrtol_config, product="vcenter"
             )
             assert control_config_remediate_response == mock_response

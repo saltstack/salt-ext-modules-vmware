@@ -8,7 +8,7 @@ try:
     from config_modules_vmware.lib.common.credentials import SddcCredentials
     from config_modules_vmware.lib.common.credentials import VcenterCredentials
     from config_modules_vmware.vcenter.vc_context import VcenterContext
-    from config_modules_vmware.vcenter.vcenter_config import VcenterConfig
+    from config_modules_vmware.control_module.control_config import ControlConfig
 
     HAS_CONFIG_MODULE = True
 except ImportError:
@@ -33,5 +33,5 @@ def create_vc_context(config, profile=None):
 
 def create_vc_config(config, profile=None, vc_context=None):
     if vc_context:
-        return VcenterConfig(vc_context)
-    return VcenterConfig(create_vc_context(config, profile))
+        return ControlConfig(vc_context)
+    return ControlConfig(create_vc_context(config, profile))
