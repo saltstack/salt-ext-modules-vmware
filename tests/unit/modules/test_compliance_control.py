@@ -51,6 +51,14 @@ def test_control_config_compliance_check(exception):
         autospec=True,
         return_value=mock_response,
     )
+    patch_control_config_obj = patch(
+        "saltext.vmware.utils.vc.create_control_config", autospec=True, return_value={}
+    )
+    patch_compliance_check_exception = patch(
+        "config_modules_vmware.control_module.control_config.ControlConfig.check_compliance",
+        autospec=True,
+        side_effect=Exception("Testing"),
+    )
     mock_conrtol_config = {
         "compliance_config": {
             "network_policy": {
@@ -62,10 +70,12 @@ def test_control_config_compliance_check(exception):
         }
     }
     if exception:
-        with pytest.raises(salt.exceptions.VMwareRuntimeError):
-            compliance_control.control_config_compliance_check(
-                mock_conrtol_config, product="vcenter"
-            )
+        with patch_control_config_obj:
+            with patch_compliance_check_exception:
+                with pytest.raises(salt.exceptions.VMwareRuntimeError):
+                    compliance_control.control_config_compliance_check(
+                        mock_conrtol_config, product="vcenter"
+                    )
     else:
         with patch_compliance_check:
             control_config_check_response = compliance_control.control_config_compliance_check(
