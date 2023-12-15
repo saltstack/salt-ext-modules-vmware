@@ -36,7 +36,6 @@ def check_control(name, control_config, product, profile=None):
     # Create ESXi configuration
     config = __opts__
     config_obj = utils_vc.create_control_config(config, profile)
-
     control_config = json.loads(json.dumps(control_config))
     log.debug("Opts: %s", __opts__)
 

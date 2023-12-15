@@ -13,6 +13,7 @@ def __virtual__():
     return __virtualname__
 
 
+
 def control_config_compliance_check(control_config, product, config_obj=None, profile=None):
     """
     Checks compliance of vcenter control config. Control config can be ntp, dns, syslog, etc.
