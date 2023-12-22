@@ -22,7 +22,7 @@ def patch_salt_loaded_objects():
         "saltext.vmware.states.compliance_control.__opts__",
         {
             "cachedir": ".",
-            "saltext.vmware": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
+            "vcenter": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
         },
         create=True,
     ), patch.object(compliance_control, "__pillar__", {}, create=True), patch.object(

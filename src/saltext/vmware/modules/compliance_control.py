@@ -2,7 +2,8 @@
 import logging
 
 import salt.exceptions
-import saltext.vmware.utils.vc as utils_vc
+import saltext.vmware.utils.compliance_control as compliance_control_util
+from config_modules_vmware.control_module.control_config import ControlConfig
 
 log = logging.getLogger(__name__)
 
@@ -13,8 +14,7 @@ def __virtual__():
     return __virtualname__
 
 
-
-def control_config_compliance_check(control_config, product, config_obj=None, profile=None):
+def control_config_compliance_check(control_config, product, auth_context=None):
     """
     Checks compliance of vcenter control config. Control config can be ntp, dns, syslog, etc.
     Returns control compliance response object.
@@ -23,21 +23,19 @@ def control_config_compliance_check(control_config, product, config_obj=None, pr
         vc control config dict object.
     product
         appliance name. vcenter, nsx, etc.
-    vc_config
-        Optional vc_config object with vc connection.
-
-    profile
-        Optional auth profile to be used for vc connection.
+    auth_context
+        Optional auth context to access product.
     """
 
     log.info("Checking complaince %s", control_config)
-    if not config_obj:
+    if not auth_context:
         config = __opts__
-        config_obj = utils_vc.create_control_config(config, profile)
+        auth_context = compliance_control_util.create_auth_context(config=config, product=product)
 
     try:
-        response_check_compliance = config_obj.check_compliance(
-            product=product, desired_state_spec=control_config
+        control_config_obj = ControlConfig(auth_context)
+        response_check_compliance = control_config_obj.check_compliance(
+            desired_state_spec=control_config
         )
         log.debug("control_config_compliance_check response %s", response_check_compliance)
         return response_check_compliance
@@ -46,7 +44,7 @@ def control_config_compliance_check(control_config, product, config_obj=None, pr
         raise salt.exceptions.VMwareRuntimeError(str(exc))
 
 
-def control_config_remediate(control_config, product, config_obj=None, profile=None):
+def control_config_remediate(control_config, product, auth_context=None):
     """
     Remediate given compliance control config. Control config can be ntp, dns, syslog, etc.
     Returns remediation response object.
@@ -55,22 +53,20 @@ def control_config_remediate(control_config, product, config_obj=None, profile=N
         vc control config dict object.
     product
         appliance name. vcenter, nsx, etc.
-    vc_config
-        Optional vc_config object with vc connection.
-
-    profile
-        Optional auth profile to be used for vc connection.
+    auth_context
+        Optional auth context to access product.
     """
 
     log.info("control_config_remediate: %s", control_config)
 
-    if not config_obj:
+    if not auth_context:
         config = __opts__
-        config_obj = utils_vc.create_control_config(config, profile)
+        auth_context = compliance_control_util.create_auth_context(config=config, product=product)
 
     try:
-        response_remediate = config_obj.remediate_with_desired_state(
-            product=product, desired_state_spec=control_config
+        control_config_obj = ControlConfig(auth_context)
+        response_remediate = control_config_obj.remediate_with_desired_state(
+            desired_state_spec=control_config
         )
         log.debug("control_config_remediate response %s", response_remediate)
         return response_remediate

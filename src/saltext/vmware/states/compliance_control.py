@@ -2,7 +2,7 @@
 import json
 import logging
 
-import saltext.vmware.utils.vc as utils_vc
+import saltext.vmware.utils.compliance_control as compliance_control_util
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ def check_control(name, control_config, product, profile=None):
 
     # Create ESXi configuration
     config = __opts__
-    config_obj = utils_vc.create_control_config(config, profile)
+    auth_context = compliance_control_util.create_auth_context(config=config, product=product)
     control_config = json.loads(json.dumps(control_config))
     log.debug("Opts: %s", __opts__)
 
@@ -48,7 +48,7 @@ def check_control(name, control_config, product, profile=None):
             ](
                 control_config=control_config,
                 product=product,
-                config_obj=config_obj,
+                auth_context=auth_context,
             )
 
             if check_control_compliance_response["status"] == "COMPLIANT":
@@ -81,7 +81,7 @@ def check_control(name, control_config, product, profile=None):
             remediate_response = __salt__["vmware_compliance_control.control_config_remediate"](
                 control_config=control_config,
                 product=product,
-                config_obj=config_obj,
+                auth_context=auth_context,
             )
 
             if remediate_response["status"] == "SUCCESS":
