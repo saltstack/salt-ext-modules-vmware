@@ -30,7 +30,7 @@ def patch_salt_loaded_objects():
         "saltext.vmware.modules.compliance_control.__opts__",
         {
             "cachedir": ".",
-            "saltext.vmware": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
+            "vcenter": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
         },
         create=True,
     ), patch.object(compliance_control, "__pillar__", {}, create=True), patch.object(
@@ -52,7 +52,9 @@ def test_control_config_compliance_check(exception):
         return_value=mock_response,
     )
     patch_control_config_obj = patch(
-        "saltext.vmware.utils.vc.create_control_config", autospec=True, return_value={}
+        "saltext.vmware.utils.compliance_control.create_auth_context",
+        autospec=True,
+        return_value={},
     )
     patch_compliance_check_exception = patch(
         "config_modules_vmware.control_module.control_config.ControlConfig.check_compliance",
