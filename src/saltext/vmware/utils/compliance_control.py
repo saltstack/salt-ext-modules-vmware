@@ -39,7 +39,7 @@ def _create_product_context(config, product):
             ssl_thumbprint=conf.get("ssl_thumbprint", None),
         )
     else:
-        raise salt.exceptions.VMwareApiError("Unsupported product {}", product)
+        raise salt.exceptions.VMwareApiError({f"Unsupported product {product}"})
 
 
 def create_auth_context(config, product):
