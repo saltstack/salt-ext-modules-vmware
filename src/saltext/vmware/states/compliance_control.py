@@ -52,7 +52,10 @@ def check_control(name, control_config, product, profile=None):
             if check_control_compliance_response["status"] == "COMPLIANT":
                 log.debug("Pre-check completed successfully. You can continue with remediation.")
                 ret = {"name": name, "result": True, "comment": "COMPLIANT", "changes": {}}
-            elif check_control_compliance_response["status"] == "NON_COMPLIANT" or check_control_compliance_response["status"] == "FAILED":
+            elif (
+                check_control_compliance_response["status"] == "NON_COMPLIANT"
+                or check_control_compliance_response["status"] == "FAILED"
+            ):
                 ret = {
                     "name": name,
                     "result": False,
@@ -66,8 +69,10 @@ def check_control(name, control_config, product, profile=None):
                     "result": False,
                     "comment": "Failed to run compliance check. Please check changes for more details.",
                     "changes": {
-                        "message": check_control_compliance_response.get("message", "Exception running compliance.")
-                    }
+                        "message": check_control_compliance_response.get(
+                            "message", "Exception running compliance."
+                        )
+                    },
                 }
         else:
             # Not in test mode, proceed with pre-check and remediation
@@ -85,7 +90,7 @@ def check_control(name, control_config, product, profile=None):
                     "name": name,
                     "result": True,
                     "comment": "Remediation completed successfully.",
-                    "changes": remediate_response.get("changes", {})
+                    "changes": remediate_response.get("changes", {}),
                 }
             elif remediate_response["status"] == "FAILED":
                 log.debug("Remediation failed.")
@@ -94,7 +99,7 @@ def check_control(name, control_config, product, profile=None):
                     "name": name,
                     "result": False,
                     "comment": "Remediation failed.",
-                    "changes": remediate_response.get("changes", {})
+                    "changes": remediate_response.get("changes", {}),
                 }
             else:
                 # Exception running remediation workflow
@@ -103,7 +108,9 @@ def check_control(name, control_config, product, profile=None):
                     "result": False,
                     "comment": remediate_response["status"],
                     "changes": {
-                        "message": remediate_response.get("message", "Exception running remediation."),
+                        "message": remediate_response.get(
+                            "message", "Exception running remediation."
+                        ),
                     },
                 }
 
