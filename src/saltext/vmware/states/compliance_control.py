@@ -51,7 +51,12 @@ def check_control(name, control_config, product, profile=None):
 
             if check_control_compliance_response["status"] == "COMPLIANT":
                 log.debug("Pre-check completed successfully. You can continue with remediation.")
-                ret = {"name": name, "result": True, "comment": "COMPLIANT", "changes": {}}
+                ret = {
+                    "name": name,
+                    "result": True,
+                    "comment": check_control_compliance_response["status"],
+                    "changes": check_control_compliance_response.get("changes", {}),
+                }
             elif (
                 check_control_compliance_response["status"] == "NON_COMPLIANT"
                 or check_control_compliance_response["status"] == "FAILED"
