@@ -19,11 +19,18 @@ log = logging.getLogger(__name__)
 
 def _create_product_context(config, product):
     conf = (
-        config.get(product)
-        or config.get("grains", {}).get(product)
-        or config.get("pillar", {}).get(product)
+        config.get("saltext.vmware")
+        or config.get("grains", {}).get("saltext.vmware")
+        or config.get("pillar", {}).get("saltext.vmware")
         or {}
     )
+    if not conf:
+        conf = (
+            config.get(product)
+            or config.get("grains", {}).get(product)
+            or config.get("pillar", {}).get(product)
+            or {}
+        )
     if product == BaseContext.ProductEnum.VCENTER.value:
         return VcenterContext(
             hostname=conf["host"],
