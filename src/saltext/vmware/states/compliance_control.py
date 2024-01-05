@@ -29,9 +29,7 @@ def check_control(name, control_config, product, profile=None):
         Optional auth profile to be used for vc connection.
     """
 
-    ret = {"name": name, "result": None, "changes": {}, "comment": None}
-
-    log.info("starting compliance check for %s", name)
+    log.info("Starting compliance check for %s", name)
 
     # Create ESXi configuration
     config = __opts__
@@ -53,31 +51,37 @@ def check_control(name, control_config, product, profile=None):
 
             if check_control_compliance_response["status"] == "COMPLIANT":
                 log.debug("Pre-check completed successfully. You can continue with remediation.")
-                # Update return data
-                ret = {"name": name, "result": True, "comment": "COMPLIANT", "changes": {}}
-            elif check_control_compliance_response["status"] == "NON_COMPLIANT":
+                ret = {
+                    "name": name,
+                    "result": True,
+                    "comment": check_control_compliance_response["status"],
+                    "changes": check_control_compliance_response.get("changes", {}),
+                }
+            elif (
+                check_control_compliance_response["status"] == "NON_COMPLIANT"
+                or check_control_compliance_response["status"] == "FAILED"
+            ):
                 ret = {
                     "name": name,
                     "result": False,
-                    "comment": "NON_COMPLIANT",
-                    "changes": check_control_compliance_response.get(
-                        "changes", "No details available"
-                    ),
+                    "comment": check_control_compliance_response["status"],
+                    "changes": check_control_compliance_response.get("changes", {}),
                 }
             else:
-                # Pre-check failed in test mode
+                # Exception running compliance workflow
                 ret = {
                     "name": name,
                     "result": False,
                     "comment": "Failed to run compliance check. Please check changes for more details.",
-                    "changes": check_control_compliance_response.get(
-                        "changes", "No details available"
-                    ),
+                    "changes": {
+                        "message": check_control_compliance_response.get(
+                            "message", "Exception running compliance."
+                        )
+                    },
                 }
         else:
             # Not in test mode, proceed with pre-check and remediation
             log.debug("Performing remediation.")
-            # Execute remediation
             remediate_response = __salt__["vmware_compliance_control.control_config_remediate"](
                 control_config=control_config,
                 product=product,
@@ -90,30 +94,40 @@ def check_control(name, control_config, product, profile=None):
                 ret = {
                     "name": name,
                     "result": True,
-                    "comment": "Configuration remediated successfully",
-                    "changes": {
-                        "remediate": remediate_response.get("changes", "Nothing to remediate"),
-                    },
+                    "comment": "Remediation completed successfully.",
+                    "changes": remediate_response.get("changes", {}),
                 }
-            else:
-                # Remediation failed
+            elif remediate_response["status"] == "FAILED":
+                log.debug("Remediation failed.")
+                # Update return data for failed remediation
                 ret = {
                     "name": name,
                     "result": False,
                     "comment": "Remediation failed.",
+                    "changes": remediate_response.get("changes", {}),
+                }
+            else:
+                # Exception running remediation workflow
+                ret = {
+                    "name": name,
+                    "result": False,
+                    "comment": remediate_response["status"],
                     "changes": {
-                        "remediate": remediate_response.get("changes", "No details available"),
+                        "message": remediate_response.get(
+                            "message", "Exception running remediation."
+                        ),
                     },
                 }
 
     except Exception as e:
-        # Exception occurred during remediation
-        log.error("An error occurred during remediation: %s", str(e))
-        ret = {
+        # Exception occurred
+        log.error("An error occurred: %s", str(e))
+        return {
             "name": name,
             "result": False,
-            "comment": f"An error occurred during remediation: {str(e)}",
+            "changes": {},
+            "comment": f"An error occurred: {str(e)}",
         }
 
-    log.debug("Completed remediation for %s", name)
+    log.debug("Completed workflow for %s", name)
     return ret
