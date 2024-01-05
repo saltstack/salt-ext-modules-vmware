@@ -30,7 +30,7 @@ def patch_salt_loaded_objects():
         "saltext.vmware.modules.compliance_control.__opts__",
         {
             "cachedir": ".",
-            "vcenter": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
+            "saltext.vmware": {"host": "test.vcenter.local", "user": "test", "password": "test"},
         },
         create=True,
     ), patch.object(compliance_control, "__pillar__", {}, create=True), patch.object(
@@ -63,7 +63,7 @@ def test_control_config_compliance_check(exception):
     )
     mock_conrtol_config = {
         "compliance_config": {
-            "network_policy": {
+            "networking": {
                 "ntp": {
                     "value": {"mode": "NTP", "servers": ["ntp server"]},
                     "metadata": {"configuration_id": "1246", "configuration_title": "time server"},
@@ -100,7 +100,7 @@ def test_control_config_remediate(exception):
     )
     mock_conrtol_config = {
         "compliance_config": {
-            "network_policy": {
+            "networking": {
                 "ntp": {
                     "value": {"mode": "NTP", "servers": ["ntp server"]},
                     "metadata": {"configuration_id": "1246", "configuration_title": "time server"},
@@ -109,8 +109,12 @@ def test_control_config_remediate(exception):
         }
     }
     if exception:
-        with pytest.raises(salt.exceptions.VMwareRuntimeError):
-            compliance_control.control_config_remediate(mock_conrtol_config, product="vcenter")
+        mock_conrtol_config.update({"invalid_field": "invalid"})
+        error_response = compliance_control.control_config_remediate(
+            mock_conrtol_config, product="vcenter"
+        )
+        assert error_response["status"] == "ERROR"
+
     else:
         with patch_remediate:
             control_config_remediate_response = compliance_control.control_config_remediate(
