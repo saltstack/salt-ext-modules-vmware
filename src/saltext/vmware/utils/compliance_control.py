@@ -27,8 +27,8 @@ def _create_product_context(config, product):
     if not conf:
         conf = (
             config.get(product)
-            or config.get("grains", {}).get(product)
             or config.get("pillar", {}).get(product)
+            or config.get("grains", {}).get(product)
             or {}
         )
     if product == BaseContext.ProductEnum.VCENTER.value:
