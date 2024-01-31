@@ -45,6 +45,8 @@ def _create_product_context(config, product):
             password=conf["password"],
             ssl_thumbprint=conf.get("ssl_thumbprint", None),
         )
+    elif product == BaseContext.ProductEnum.NSX.value:
+        return BaseContext(BaseContext.ProductEnum.NSX)
     else:
         raise salt.exceptions.VMwareApiError({f"Unsupported product {product}"})
 
