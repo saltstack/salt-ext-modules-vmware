@@ -8,6 +8,7 @@ try:
     from config_modules_vmware.control_module.control_config import ControlConfig
     from config_modules_vmware.control_module.auth.vc_context import VcenterContext
     from config_modules_vmware.control_module.auth.sddc_manager_context import SDDCManagerContext
+    from config_modules_vmware.control_module.auth.vrslcm_context import VrslcmContext
     from config_modules_vmware.control_module.auth.base_context import BaseContext
 
     HAS_CONFIG_MODULE = True
@@ -45,8 +46,12 @@ def _create_product_context(config, product):
             password=conf["password"],
             ssl_thumbprint=conf.get("ssl_thumbprint", None),
         )
-    elif product == BaseContext.ProductEnum.NSX.value:
-        return BaseContext(BaseContext.ProductEnum.NSX)
+    elif product == BaseContext.ProductEnum.NSXT_MANAGER.value:
+        return BaseContext(BaseContext.ProductEnum.NSXT_MANAGER)
+    elif product == BaseContext.ProductEnum.NSXT_EDGE.value:
+        return BaseContext(BaseContext.ProductEnum.NSXT_EDGE)
+    elif product == BaseContext.ProductEnum.VRSLCM.value:
+        return VrslcmContext(conf["host"])
     else:
         raise salt.exceptions.VMwareApiError({f"Unsupported product {product}"})
 
