@@ -57,7 +57,7 @@ def check_control(name, control_config, product, ids=None, profile=None):
                 log.debug("Pre-check completed successfully. You can continue with remediation.")
                 ret = {
                     "name": name,
-                    "result": None,
+                    "result": True,
                     "comment": check_control_compliance_response["status"],
                     "changes": check_control_compliance_response.get("changes", {}),
                 }
