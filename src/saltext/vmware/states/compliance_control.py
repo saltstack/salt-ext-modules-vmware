@@ -14,7 +14,7 @@ def __virtual__():
     return __virtualname__
 
 
-def check_control(name, control_config, product, profile=None):
+def check_control(name, control_config, product, ids=None, profile=None):
     """
     Check and apply vcenter control configs. Control config can be ntp, dns, syslog, etc.
     Return control compliance response if test=true. Otherwise, return remediate response.
@@ -25,6 +25,8 @@ def check_control(name, control_config, product, profile=None):
         vc control config dict object.
     product
         appliance name. vcenter, nsx, etc.
+    ids
+        List of product ids within the parent product.
     profile
         Optional auth profile to be used for vc connection.
     """
@@ -33,7 +35,9 @@ def check_control(name, control_config, product, profile=None):
 
     # Create ESXi configuration
     config = __opts__
-    auth_context = compliance_control_util.create_auth_context(config=config, product=product)
+    auth_context = compliance_control_util.create_auth_context(
+        config=config, product=product, ids=ids
+    )
     control_config = json.loads(json.dumps(control_config))
     log.debug("Opts: %s", __opts__)
 
@@ -53,7 +57,7 @@ def check_control(name, control_config, product, profile=None):
                 log.debug("Pre-check completed successfully. You can continue with remediation.")
                 ret = {
                     "name": name,
-                    "result": True,
+                    "result": None,
                     "comment": check_control_compliance_response["status"],
                     "changes": check_control_compliance_response.get("changes", {}),
                 }
@@ -63,7 +67,9 @@ def check_control(name, control_config, product, profile=None):
             ):
                 ret = {
                     "name": name,
-                    "result": False,
+                    "result": None
+                    if check_control_compliance_response["status"] == "NON_COMPLIANT"
+                    else False,
                     "comment": check_control_compliance_response["status"],
                     "changes": check_control_compliance_response.get("changes", {}),
                 }
@@ -104,6 +110,14 @@ def check_control(name, control_config, product, profile=None):
                     "name": name,
                     "result": False,
                     "comment": "Remediation failed.",
+                    "changes": remediate_response.get("changes", {}),
+                }
+            elif remediate_response["status"] == "PARTIAL":
+                log.debug("Remediation completed.")
+                ret = {
+                    "name": name,
+                    "result": False,
+                    "comment": "Remediation completed with status partial.",
                     "changes": remediate_response.get("changes", {}),
                 }
             else:
