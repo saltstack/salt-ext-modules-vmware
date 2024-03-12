@@ -4,10 +4,10 @@ import logging
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as connect
 import saltext.vmware.utils.datacenter as utils_datacenter
 import saltext.vmware.utils.esxi as utils_esxi
-import saltext.vmware.utils.vmware as utils_vmware
-from saltext.vmware.utils.connect import get_service_instance
+import saltext.vmware.utils.vsphere as utils_vmware
 
 log = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ except ImportError:
 
 __virtualname__ = "vmware_dvswitch"
 __proxyenabled__ = ["vmware_dvswitch"]
+__func_alias__ = {"list_": "list"}
 
 
 def __virtual__():
@@ -139,8 +140,9 @@ def configure(
 
         salt '*' vmware_dvswitch.configure dvs1
     """
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     try:
         health_spec = product_spec = spec = None
         dc_ref, switch_ref, config_spec = _get_switch_config_spec(
@@ -324,8 +326,9 @@ def remove_hosts(
     """
     log.debug("Running vmware_dvswitch.remove_hosts")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -391,8 +394,9 @@ def add_hosts(
     """
     log.debug("Running vmware_dvswitch.add_hosts")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     _, switch_ref, _ = _get_switch_config_spec(
         service_instance=service_instance,
         datacenter_name=datacenter_name,
@@ -480,8 +484,9 @@ def update_hosts(
     """
     log.debug("Running vmware_dvswitch.update_hosts")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     _, switch_ref, _ = _get_switch_config_spec(
         service_instance=service_instance,
         datacenter_name=datacenter_name,
@@ -527,3 +532,31 @@ def update_hosts(
         salt.exceptions.VMwareApiError,
     ) as exc:
         raise salt.exceptions.SaltException(str(exc))
+
+
+def list_(
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: <<VERSION>>
+
+    Returns a list of distributed virtual switches for the specified host.
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_dvswitch.list
+    """
+    log.debug("Running vmware_dvswitch.list")
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    return utils_vmware.list_dvs(service_instance)

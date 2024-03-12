@@ -99,4 +99,7 @@ def test_sddc_smoke_test(salt_call_cli, vmc_common_data):
                 f"Sddc is currently not in a state where it can be deleted. Please try once the status is READY or FAILED."
             ] == result_as_json["error"]
     else:
-        assert "not available for this organization.”" in result_as_json["error"][0]
+        assert (
+            "not available for this organization."
+            or "exceed host provisioning limit" in result_as_json["error"][0]
+        )

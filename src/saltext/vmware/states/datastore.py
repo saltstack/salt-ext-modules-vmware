@@ -45,8 +45,9 @@ def maintenance_mode(
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     assert isinstance(name, str)
     datastores = utils_datastore.get_datastores(

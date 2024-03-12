@@ -74,3 +74,44 @@ def test_get(service_instance, integration_test_config):
         assert isinstance(ds["type"], str) and len(ds["type"]) >= 1
         assert isinstance(ds["url"], str) and ds["url"].startswith("ds:///")
         assert isinstance(ds["uncommitted"], int)
+
+
+def test_list_datastores(service_instance):
+    ret = datastore.list_datastores(
+        service_instance=service_instance,
+    )
+    assert ret
+    for host in ret:
+        for ds in ret[host]:
+            assert isinstance(ds["name"], str) and len(ds["name"]) >= 1
+            assert isinstance(ds["type"], str) and len(ds["type"]) >= 1
+            assert isinstance(ds["free_space"], int)
+            assert isinstance(ds["capacity"], int)
+
+
+def test_list_disk_partitions(service_instance):
+    ret = datastore.list_datastores(
+        service_instance=service_instance,
+    )
+    assert ret
+    for host in ret:
+        for ds in ret[host]:
+            if "backing_disk_ids" in ds:
+                for id in ds["backing_disk_ids"]:
+                    partition = datastore.list_disk_partitions(
+                        disk_id=id,
+                        service_instance=service_instance,
+                    )
+                    assert partition
+                    for host in partition:
+                        for par in partition[host]:
+                            assert isinstance(par["device"], str) and len(par["device"]) >= 1
+                            assert isinstance(par["format"], str) and len(par["format"]) >= 1
+                            assert isinstance(par["partition"], int)
+
+
+def test_list_datastore_clusters(service_instance):
+    ret = datastore.list_datastore_clusters(
+        service_instance=service_instance,
+    )
+    assert ret

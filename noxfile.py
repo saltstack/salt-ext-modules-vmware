@@ -1,3 +1,9 @@
+"""
+noxfile
+~~~~~~~
+
+Nox configuration script
+"""
 # pylint: disable=missing-module-docstring,import-error,protected-access,missing-function-docstring
 import datetime
 import json
@@ -6,6 +12,15 @@ import pathlib
 import shutil
 import sys
 import tempfile
+
+# fmt: off
+if __name__ == "__main__":
+    sys.stderr.write(
+        "Do not execute this file directly. Use nox instead, it will know how to handle this file\n"
+    )
+    sys.stderr.flush()
+    exit(1)
+# fmt: on
 
 import nox
 from nox.command import CommandFailed
@@ -18,17 +33,17 @@ nox.options.reuse_existing_virtualenvs = True
 nox.options.error_on_missing_interpreters = False
 
 # Python versions to test against
-PYTHON_VERSIONS = ("3", "3.5", "3.6", "3.7", "3.8", "3.9", "3.10")
+PYTHON_VERSIONS = ("3", "3.7", "3.8", "3.9", "3.10")
 # Be verbose when running under a CI context
 CI_RUN = (
     os.environ.get("JENKINS_URL") or os.environ.get("CI") or os.environ.get("DRONE") is not None
 )
 PIP_INSTALL_SILENT = CI_RUN is False
-SKIP_REQUIREMENTS_INSTALL = "SKIP_REQUIREMENTS_INSTALL" in os.environ
+SKIP_REQUIREMENTS_INSTALL = os.environ.get("SKIP_REQUIREMENTS_INSTALL", "0") == "1"
 EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
+COVERAGE_VERSION_REQUIREMENT = "coverage==6.5"  # 7.x dropped support for Py 3.7
 
-COVERAGE_VERSION_REQUIREMENT = "coverage==5.2"
-SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3003rc1"
+SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3006"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
 
@@ -69,8 +84,8 @@ def _get_session_python_version_info(session):
 
 def _get_pydir(session):
     version_info = _get_session_python_version_info(session)
-    if version_info < (3, 5):
-        session.error("Only Python >= 3.5 is supported")
+    if version_info < (3, 7):
+        session.error("Only Python >= 3.7 is supported")
     return "py{}.{}".format(*version_info)
 
 
@@ -355,7 +370,11 @@ def docs(session):
     os.chdir("docs/")
     session.run("make", "clean", external=True)
     session.run("make", "linkcheck", "SPHINXOPTS=-Wn --keep-going", external=True)
-    session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
+
+    ## Disabling till sphinx 7.3.0 is released with fix for divide by zero, i
+    ## see Sphinx https://github.com/sphinx-doc/sphinx/commit/bb74aec2b6aa1179868d83134013450c9ff9d4d6
+    ## session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
+
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
         with open(docs_coverage_file) as rfh:

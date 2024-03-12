@@ -31,6 +31,7 @@ Execution Modules
     saltext.vmware.modules.nsxt_transport_zone
     saltext.vmware.modules.nsxt_uplink_profiles
     saltext.vmware.modules.ssl_adapter
+    saltext.vmware.modules.storage_policies
     saltext.vmware.modules.tag
     saltext.vmware.modules.vm
     saltext.vmware.modules.vmc_dhcp_profiles
@@ -50,4 +51,5 @@ Execution Modules
     saltext.vmware.modules.vmc_vm_disks
     saltext.vmware.modules.vmc_vm_stats
     saltext.vmware.modules.vmc_vpn_statistics
+    saltext.vmware.modules.vsphere
     saltext.vmware.modules.vswitch

@@ -80,16 +80,13 @@ def test_nsxt_ip_pools_get_by_display_name_when_multiple_pages_exists_in_api_res
     response = [response_with_cursor, response_without_cursor]
     mock_call_api.side_effect = response
 
-    assert (
-        nsxt_ip_pools.get_by_display_name(
-            hostname="sample.nsxt-hostname.vmware",
-            username="username",
-            password="password",
-            verify_ssl=False,
-            display_name=_mock_ip_pool["display_name"],
-        )
-        == {"results": [_mock_ip_pool]}
-    )
+    assert nsxt_ip_pools.get_by_display_name(
+        hostname="sample.nsxt-hostname.vmware",
+        username="username",
+        password="password",
+        verify_ssl=False,
+        display_name=_mock_ip_pool["display_name"],
+    ) == {"results": [_mock_ip_pool]}
 
 
 @patch.object(nsxt_request, "call_api")

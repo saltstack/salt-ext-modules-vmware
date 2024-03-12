@@ -377,3 +377,121 @@ def test_advanced_config(patch_salt_globals):
     assert ret["changes"]
     assert ret["comment"] == "Configurations have successfully been changed."
     esxi.advanced_config("Annotations.WelcomeMessage", "")
+
+
+def test_ntp_config_dry_run(patch_salt_globals, dry_run, service_instance):
+    ret = esxi.ntp_config(
+        name="test",
+        service_running=True,
+        ntp_servers=["192.174.1.100", "192.174.1.200"],
+        service_policy="on",
+        service_restart=True,
+        service_instance=service_instance,
+    )
+    assert ret["result"] is None
+    assert ret["changes"]
+    assert ret["comment"] == "NTP state will change."
+    for esxi_server in ret["changes"]:
+        assert ret["changes"][esxi_server]["service_running"]["new"] is True
+        assert ret["changes"][esxi_server]["ntp_servers"]["new"] == [
+            "192.174.1.100",
+            "192.174.1.200",
+        ]
+        assert ret["changes"][esxi_server]["service_policy"]["new"] == "on"
+        assert ret["changes"][esxi_server]["service_restart"]["new"] == "NTP Daemon Restarted."
+
+
+def test_ntp_config(patch_salt_globals, service_instance):
+    ret = esxi.ntp_config(
+        name="test",
+        service_running=True,
+        ntp_servers=["192.174.1.100", "192.174.1.200"],
+        service_policy="on",
+        service_restart=True,
+        service_instance=service_instance,
+    )
+    assert ret["result"] is True
+    assert ret["changes"]
+    for esxi_server in ret["changes"]:
+        assert ret["changes"][esxi_server]["service_running"]["new"] is True
+        assert ret["changes"][esxi_server]["ntp_servers"]["new"] == [
+            "192.174.1.100",
+            "192.174.1.200",
+        ]
+        assert ret["changes"][esxi_server]["service_policy"]["new"] == "on"
+        assert ret["changes"][esxi_server]["service_restart"]["new"] == "NTP Daemon Restarted."
+    ret = esxi.ntp_config(
+        name="test",
+        service_running=True,
+        ntp_servers=["192.174.1.100", "192.174.1.200"],
+        service_policy="on",
+        service_instance=service_instance,
+    )
+    assert ret["result"] is True
+    assert ret["comment"] == "NTP is already in the desired state."
+    esxi.ntp_config(
+        name="test",
+        service_running=False,
+        ntp_servers=["192.174.1.101"],
+        service_policy="off",
+        service_instance=service_instance,
+    )
+
+
+def test_password_present_dry_run(patch_salt_globals, dry_run, service_instance):
+    esxi_mod.add_user(user_name="test", password="ThePass1!", service_instance=service_instance)
+    ret = esxi.password_present(
+        name="test",
+        password="TheBigTestPass1!",
+        service_instance=service_instance,
+    )
+    assert ret["result"] is None
+    assert ret["comment"] == "Host password will change."
+    esxi_mod.remove_user(user_name="test", service_instance=service_instance)
+
+
+def test_password_present_run(patch_salt_globals, service_instance):
+    esxi_mod.add_user(user_name="test", password="ThePass1!", service_instance=service_instance)
+    ret = esxi.password_present(
+        name="test",
+        password="TheBigTestPass1!",
+        service_instance=service_instance,
+    )
+    assert ret["result"] is True
+    assert ret["comment"] == "Host password changed."
+    esxi_mod.remove_user(user_name="test", service_instance=service_instance)
+
+
+def test_vsan_config_dry_run(patch_salt_globals, dry_run, service_instance):
+    ret = esxi.vsan_config(
+        name="test",
+        enabled=True,
+        service_instance=service_instance,
+    )
+    assert ret["result"] is None
+    assert ret["changes"]
+    assert ret["comment"] == "VSAN configuration will change."
+    for esxi_server in ret["changes"]:
+        assert ret["changes"][esxi_server]["enabled"]["new"] is True
+
+
+def test_vsan_config(patch_salt_globals, service_instance):
+    ret = esxi.vsan_config(
+        name="test",
+        enabled=True,
+        service_instance=service_instance,
+    )
+    assert ret["result"] is True
+    assert ret["changes"]
+    for esxi_server in ret["changes"]:
+        assert ret["changes"][esxi_server]["enabled"]["new"] is True
+
+    ret = esxi.vsan_config(
+        name="test",
+        enabled=False,
+        service_instance=service_instance,
+    )
+    assert ret["result"] is True
+    assert ret["changes"]
+    for esxi_server in ret["changes"]:
+        assert ret["changes"][esxi_server]["enabled"]["new"] is False

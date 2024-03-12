@@ -5,17 +5,12 @@ from unittest.mock import patch
 import pytest
 import saltext.vmware.modules.dvportgroup as dvportgroup
 
+from tests.helpers import mock_with_name
+
 
 @pytest.fixture
 def configure_loader_modules():
     return {dvportgroup: {}}
-
-
-def mock_with_name(name, *args, **kwargs):
-    # Can't mock name via constructor: https://docs.python.org/3/library/unittest.mock.html#mock-names-and-the-name-attribute
-    mock = Mock(*args, **kwargs)
-    mock.name = name
-    return mock
 
 
 @pytest.fixture(
@@ -238,7 +233,7 @@ def test_dvportgroup_get_should_return_expected_data(
 
 def test_get_should_feed_results_through_VmomiJSONEncoder():
     expected_data = {"blerp": "lawl"}
-    with patch("saltext.vmware.utils.vmware._get_dvs", autospec=True) as fake_dvs, patch(
+    with patch("saltext.vmware.utils.vsphere._get_dvs", autospec=True) as fake_dvs, patch(
         "pyVmomi.VmomiSupport.VmomiJSONEncoder", autospec=True
     ) as fake_encoder:
         fake_dvs.return_value.portgroup = []

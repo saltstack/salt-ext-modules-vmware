@@ -362,7 +362,7 @@ def test_get_ipsec_statistics_called_with_url():
 
 
 def test_get_ipsec_statistics_fail_with_error_1(ipsec_statistics_data):
-    """ Error when tier0_id or tier1_id is not specified """
+    """Error when tier0_id or tier1_id is not specified"""
     result = vmc_vpn_statistics.get_ipsec_statistics(
         hostname="hostname",
         refresh_key="refresh_key",
@@ -379,7 +379,7 @@ def test_get_ipsec_statistics_fail_with_error_1(ipsec_statistics_data):
 
 
 def test_get_ipsec_statistics_fail_with_error_2(ipsec_statistics_data):
-    """ Error when both tier0_id and tier1_id are specified """
+    """Error when both tier0_id and tier1_id are specified"""
     result = vmc_vpn_statistics.get_ipsec_statistics(
         hostname="hostname",
         refresh_key="refresh_key",

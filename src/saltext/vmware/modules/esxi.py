@@ -5,11 +5,11 @@ import os
 
 import salt.exceptions
 import saltext.vmware.utils.common as utils_common
+import saltext.vmware.utils.connect as utils_connect
 import saltext.vmware.utils.esxi as utils_esxi
-import saltext.vmware.utils.vmware as utils_vmware
+import saltext.vmware.utils.vsphere as utils_vmware
 from salt.defaults import DEFAULT_TARGET_DELIM
 from saltext.vmware.utils.connect import get_config
-from saltext.vmware.utils.connect import get_service_instance
 
 log = logging.getLogger(__name__)
 
@@ -54,8 +54,9 @@ def get_lun_ids(service_instance=None, profile=None):
         Profile to use (optional)
     """
 
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     ids = set()
@@ -89,8 +90,9 @@ def get_capabilities(service_instance=None, profile=None):
     profile
         Profile to use (optional)
     """
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(service_instance=service_instance, get_all_hosts=True)
     capabilities = {}
     for host in hosts:
@@ -106,6 +108,7 @@ def power_state(
     timeout=600,
     force=True,
     profile=None,
+    service_instance=None,
 ):
     """
     Manage the power state of the ESXi host.
@@ -137,7 +140,9 @@ def power_state(
     """
     ret = None
     task = None
-    service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -164,18 +169,16 @@ def power_state(
     return ret
 
 
-def manage_service(
+def service_start(
     service_name,
     datacenter_name=None,
     cluster_name=None,
     host_name=None,
-    state=None,
-    startup_policy=None,
     service_instance=None,
     profile=None,
 ):
     """
-    Manage the state of the service running on the ESXi host.
+    Start service on the ESXi host.
 
     service_name
         Service that needs to be managed.
@@ -189,14 +192,62 @@ def manage_service(
     host_name
         Filter by this ESXi hostname whose power state needs to be managed (optional)
 
-    state
-        Sets the service running on the ESXi host to this state. Valid values: "start", "stop", "restart".
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
 
-    startup_policy
-        Sets the service startup policy. If unspecified, no changes are made. Valid values "on", "off", "automatic".
-        - on: Start and stop with host
-        - off: Start and stop manually
-        - automatic: Start automatically if any ports are open, and stop when all ports are closed
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.service_start sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1
+    """
+    log.debug("Running vmware_esxi.service_start")
+    ret = None
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    try:
+        for host in hosts:
+            host_service = host.configManager.serviceSystem
+            if not host_service:
+                continue
+            host_service.StartService(id=service_name)
+        ret = True
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+    return ret
+
+
+def service_stop(
+    service_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Stop service on the ESXi host.
+
+    service_name
+        Service that needs to be managed.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
 
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
@@ -206,13 +257,13 @@ def manage_service(
 
     .. code-block:: bash
 
-        salt '*' vmware_esxi.manage_service sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1 state=restart startup_policy=on
+        salt '*' vmware_esxi.service_stop sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1
     """
-    log.debug("Running vmware_esxi.manage_service")
+    log.debug("Running vmware_esxi.service_stop")
     ret = None
-    task = None
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -220,30 +271,372 @@ def manage_service(
         datacenter_name=datacenter_name,
         get_all_hosts=host_name is None,
     )
-
     try:
-        for h in hosts:
-            host_service = h.configManager.serviceSystem
+        for host in hosts:
+            host_service = host.configManager.serviceSystem
             if not host_service:
                 continue
-            if state:
-                if state == "start":
-                    host_service.StartService(id=service_name)
-                elif state == "stop":
-                    host_service.StopService(id=service_name)
-                elif state == "restart":
-                    host_service.RestartService(id=service_name)
-                else:
-                    raise salt.exceptions.SaltException("Unknown state - {}".format(state))
-            if startup_policy is not None:
-                if startup_policy is True:
-                    startup_policy = "on"
-                elif startup_policy is False:
-                    startup_policy = "off"
-                host_service.UpdateServicePolicy(id=service_name, policy=startup_policy)
+            host_service.StopService(id=service_name)
         ret = True
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
+    return ret
+
+
+def service_restart(
+    service_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Restart service on the ESXi host.
+
+    service_name
+        Service that needs to be managed.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.service_restart sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1
+    """
+    log.debug("Running vmware_esxi.service_restart")
+    ret = None
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    try:
+        for host in hosts:
+            host_service = host.configManager.serviceSystem
+            if not host_service:
+                continue
+            host_service.RestartService(id=service_name)
+        ret = True
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+    return ret
+
+
+def service_policy(
+    service_name,
+    startup_policy,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Manage service policy on the ESXi host.
+
+    service_name
+        Service that needs to be managed.
+
+    startup_policy
+        Valid values "on", "off", "automatic".
+        - on: Start and stop with host
+        - off: Start and stop manually
+        - automatic: Start automatically if any ports are open, and stop when all ports are closed
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.service_restart sshd datacenter_name=dc1 cluster_name=cl1 host_name=host1
+    """
+    log.debug("Running vmware_esxi.service_restart")
+    ret = None
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    try:
+        for host in hosts:
+            host_service = host.configManager.serviceSystem
+            if not host_service:
+                continue
+            if startup_policy is True:
+                startup_policy = "on"
+            elif startup_policy is False:
+                startup_policy = "off"
+            host_service.UpdateServicePolicy(id=service_name, policy=startup_policy)
+        ret = True
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+    return ret
+
+
+def get_service_policy(
+    service_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: 23.4.4.0rc1
+
+    Get the service name's policy for a given host or list of hosts.
+
+    service_name
+        The name of the service for which to retrieve the policy. Supported service names are:
+          - DCUI
+          - TSM
+          - SSH
+          - lbtd
+          - lsassd
+          - lwiod
+          - netlogond
+          - ntpd
+          - sfcbd-watchdog
+          - snmpd
+          - vprobed
+          - vpxa
+          - xorg
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_service_policy 'ssh'
+
+    """
+    log.debug("Running vmware_esxi.get_service_policy")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    valid_services = [
+        "DCUI",
+        "TSM",
+        "SSH",
+        "ssh",
+        "lbtd",
+        "lsassd",
+        "lwiod",
+        "netlogond",
+        "ntpd",
+        "sfcbd-watchdog",
+        "snmpd",
+        "vprobed",
+        "vpxa",
+        "xorg",
+    ]
+
+    for host in hosts:
+        # Check if the service_name provided is a valid one.
+        # If we don't have a valid service, return. The service will be invalid for all hosts.
+        if service_name not in valid_services:
+            ret.update(
+                {host_name: {"Error": "{} is not a valid service name.".format(service_name)}}
+            )
+            return ret
+
+        services = host.configManager.serviceSystem.serviceInfo.service
+
+        # Don't require users to know that VMware lists the ssh service as TSM-SSH
+        if service_name == "SSH" or service_name == "ssh":
+            temp_service_name = "TSM-SSH"
+        else:
+            temp_service_name = service_name
+
+        # Loop through services until we find a matching name
+        for service in services:
+            if service.key == temp_service_name:
+                ret.update({host.name: {service_name: service.policy}})
+                # We've found a match - break out of the loop so we don't overwrite the
+                # Updated host.name value with an error message.
+                break
+            else:
+                msg = "Could not find service '{}' for host '{}'.".format(service_name, host.name)
+                ret.update({host.name: {"Error": msg}})
+
+        # If we made it this far, something else has gone wrong.
+        if ret.get(host.name) is None:
+            msg = "'vsphere.get_service_policy' failed for host {}.".format(host.name)
+            log.debug(msg)
+            ret.update({host.name: {"Error": msg}})
+
+    return ret
+
+
+def get_service_running(
+    service_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: 23.4.4.0rc1
+
+    Get the service name's running state for a given host or list of hosts.
+
+    service_name
+        The name of the service for which to retrieve the policy. Supported service names are:
+          - DCUI
+          - TSM
+          - SSH
+          - lbtd
+          - lsassd
+          - lwiod
+          - netlogond
+          - ntpd
+          - sfcbd-watchdog
+          - snmpd
+          - vprobed
+          - vpxa
+          - xorg
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname whose power state needs to be managed (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_service_running 'ntpd'
+    """
+    log.debug("Running vmware_esxi.get_service_running")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    valid_services = [
+        "DCUI",
+        "TSM",
+        "SSH",
+        "ssh",
+        "lbtd",
+        "lsassd",
+        "lwiod",
+        "netlogond",
+        "ntpd",
+        "sfcbd-watchdog",
+        "snmpd",
+        "vprobed",
+        "vpxa",
+        "xorg",
+    ]
+    for host in hosts:
+        # Check if the service_name provided is a valid one.
+        # If we don't have a valid service, return. The service will be invalid for all hosts.
+        if service_name not in valid_services:
+            ret.update(
+                {host.name: {"Error": "{} is not a valid service name.".format(service_name)}}
+            )
+            return ret
+
+        services = host.configManager.serviceSystem.serviceInfo.service
+
+        # Don't require users to know that VMware lists the ssh service as TSM-SSH
+        if service_name == "SSH" or service_name == "ssh":
+            temp_service_name = "TSM-SSH"
+        else:
+            temp_service_name = service_name
+
+        # Loop through services until we find a matching name
+        for service in services:
+            if service.key == temp_service_name:
+                ret.update({host.name: {service_name: service.running}})
+                # We've found a match - break out of the loop so we don't overwrite the
+                # Updated host.name value with an error message.
+                break
+            else:
+                msg = "Could not find service '{}' for host '{}'.".format(service_name, host.name)
+                ret.update({host.name: {"Error": msg}})
+
+        # If we made it this far, something else has gone wrong.
+        if ret.get(host.name) is None:
+            msg = "'vsphere.get_service_running' failed for host {}.".format(host.name)
+            log.debug(msg)
+            ret.update({host.name: {"Error": msg}})
+
     return ret
 
 
@@ -290,8 +683,9 @@ def list_services(
     """
     log.debug("Running vmware_esxi.list_services")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -377,8 +771,9 @@ def get_acceptance_level(
 
     log.debug("Running vmware_esxi.get_acceptance_level")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -447,8 +842,9 @@ def set_acceptance_level(
 
     log.debug("Running vmware_esxi.set_acceptance_level")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -504,8 +900,9 @@ def get_advanced_config(
     """
     log.debug("Running vmware_esxi.get_advanced_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -517,11 +914,11 @@ def get_advanced_config(
     try:
         for h in hosts:
             config_manager = h.configManager.advancedOption
-            ret[h.name] = {}
-            if not config_manager:
-                continue
-            for opt in config_manager.QueryOptions(config_name):
-                ret[h.name][opt.key] = opt.value
+            ret[h.name] = (
+                {}
+                if not config_manager
+                else {data.key: data.value for data in config_manager.QueryOptions(config_name)}
+            )
 
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
@@ -574,8 +971,9 @@ def set_advanced_configs(
     """
     log.debug("Running vmware_esxi.set_advanced_configs")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -701,8 +1099,9 @@ def get_all_firewall_configs(
     """
     log.debug("Running vmware_esxi.get_all_firewall_configs")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -719,7 +1118,7 @@ def get_all_firewall_configs(
             for ruleset in firewall_config.firewallInfo.ruleset:
                 ret.setdefault(h.name, []).append(
                     {
-                        "allowed_host": {
+                        "allowed_hosts": {
                             "ip_address": list(ruleset.allowedHosts.ipAddress),
                             "all_ip": ruleset.allowedHosts.allIp,
                             "ip_network": [
@@ -753,6 +1152,7 @@ def get_firewall_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Get Firewall a rule configuration on matching ESXi hosts.
@@ -772,14 +1172,18 @@ def get_firewall_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.get_firewall_config
     """
     log.debug("Running vmware_esxi.get_firewall_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -797,7 +1201,7 @@ def get_firewall_config(
                 if ruleset_name == ruleset.key:
                     ret.setdefault(h.name, []).append(
                         {
-                            "allowed_host": {
+                            "allowed_hosts": {
                                 "ip_address": list(ruleset.allowedHosts.ipAddress),
                                 "all_ip": ruleset.allowedHosts.allIp,
                                 "ip_network": [
@@ -831,6 +1235,7 @@ def set_firewall_config(
     cluster_name=None,
     host_name=None,
     service_instance=None,
+    profile=None,
 ):
     """
     Set Firewall rule configuration on matching ESXi hosts.
@@ -850,14 +1255,18 @@ def set_firewall_config(
     service_instance
         Use this vCenter service connection instance instead of creating a new one. (optional).
 
+    profile
+        Profile to use (optional)
+
     .. code-block:: bash
 
         salt '*' vmware_esxi.set_firewall_config
     """
     log.debug("Running vmware_esxi.set_firewall_config")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -876,16 +1285,18 @@ def set_firewall_config(
                 firewall.EnableRuleset(id=firewall_config["name"])
             else:
                 firewall.DisableRuleset(id=firewall_config["name"])
-            if "allowed_host" in firewall_config:
-                if "all_ip" in firewall_config["allowed_host"]:
-                    firewall_rulespec.allowedHosts.allIp = firewall_config["allowed_host"]["all_ip"]
-                if "ip_address" in firewall_config["allowed_host"]:
+            if "allowed_hosts" in firewall_config:
+                if "all_ip" in firewall_config["allowed_hosts"]:
+                    firewall_rulespec.allowedHosts.allIp = firewall_config["allowed_hosts"][
+                        "all_ip"
+                    ]
+                if "ip_address" in firewall_config["allowed_hosts"]:
                     firewall_rulespec.allowedHosts.ipAddress = list(
-                        firewall_config["allowed_host"]["ip_address"]
+                        firewall_config["allowed_hosts"]["ip_address"]
                     )
                 firewall_rulespec.allowedHosts.ipNetwork = []
-                if "ip_network" in firewall_config["allowed_host"]:
-                    for network in firewall_config["allowed_host"]["ip_network"]:
+                if "ip_network" in firewall_config["allowed_hosts"]:
+                    for network in firewall_config["allowed_hosts"]["ip_network"]:
                         address, mask = network.split("/")
                         tmp_ip_network_spec = vim.host.Ruleset.IpNetwork()
                         tmp_ip_network_spec.network = address
@@ -933,8 +1344,9 @@ def set_all_firewall_configs(
     """
     log.debug("Running vmware_esxi.set_all_firewall_configs")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, pillar=__pillar__)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -993,8 +1405,9 @@ def backup_config(
     log.debug("Running vmware_esxi.backup_config")
     ret = {}
     http_opts = http_opts or {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1071,8 +1484,9 @@ def restore_config(
     log.debug("Running vmware_esxi.backup_config")
     ret = {}
     http_opts = http_opts or {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1153,8 +1567,9 @@ def reset_config(
     """
     log.debug("Running vmware_esxi.reset_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1214,8 +1629,9 @@ def get_dns_config(
     """
     log.debug("Running vmware_esxi.get_dns_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1267,8 +1683,9 @@ def get_ntp_config(
     """
     log.debug("Running vmware_esxi.get_ntp_config")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1291,6 +1708,75 @@ def get_ntp_config(
                     if ntp_config.dateTimeInfo.ntpConfig.configFile
                     else None,
                 }
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def set_ntp_config(
+    ntp_servers,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Set NTP configuration on matching ESXi hosts.
+
+    ntp_servers
+        A list of servers that should be added to and configured for the specified
+        host's NTP configuration.
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.set_ntp_config '[192.174.1.100, 192.174.1.200]'
+    """
+    log.debug("Running vmware_esxi.set_ntp_config")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+
+    if not isinstance(ntp_servers, list):
+        raise salt.exceptions.CommandExecutionError("'ntp_servers' must be a list.")
+
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for host in hosts:
+            date_time_manager = host.configManager.dateTimeSystem
+
+            ntp_config = vim.host.NtpConfig()
+            ntp_config.server = ntp_servers
+            date_config_spec = vim.host.DateTimeConfig()
+            date_config_spec.ntpConfig = ntp_config
+
+            date_time_manager.UpdateDateTimeConfig(date_config_spec)
+            ret[host.name] = True
+
         return ret
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
@@ -1323,8 +1809,9 @@ def list_hosts(
     """
     log.debug("Running vmware_esxi.list_hosts")
     ret = []
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1384,8 +1871,9 @@ def add_user(
     """
     log.debug("Running vmware_esxi.add_user")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1450,8 +1938,9 @@ def update_user(
     """
     log.debug("Running vmware_esxi.update_user")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1461,13 +1950,13 @@ def update_user(
     )
 
     try:
-        for h in hosts:
+        for host in hosts:
             account_spec = vim.host.LocalAccountManager.AccountSpecification()
             account_spec.id = user_name
             account_spec.password = password
             account_spec.description = description
-            h.configManager.accountManager.UpdateUser(account_spec)
-            ret[h.name] = True
+            host.configManager.accountManager.UpdateUser(account_spec)
+            ret[host.name] = True
         return ret
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
@@ -1508,8 +1997,9 @@ def remove_user(
     """
     log.debug("Running vmware_esxi.remove_user")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1522,6 +2012,63 @@ def remove_user(
         for h in hosts:
             h.configManager.accountManager.RemoveUser(user_name)
             ret[h.name] = True
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def get_user(
+    user_name,
+    datacenter_name=None,
+    cluster_name=None,
+    host_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Get local user on matching ESXi hosts.
+
+    user_name
+        User to delete on matching ESXi hosts. (required).
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_user user_name=foo
+    """
+    log.debug("Running vmware_esxi.get_user")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    try:
+        for host in hosts:
+            user_account = host.configManager.userDirectory.RetrieveUserGroups(
+                None, user_name, None, None, True, True, False
+            )
+            ret[host.name] = user_account
         return ret
     except DEFAULT_EXCEPTIONS as exc:
         raise salt.exceptions.SaltException(str(exc))
@@ -1635,8 +2182,9 @@ def create_vmkernel_adapter(
     """
     log.debug("Running vmware_esxi.create_vmkernel_adapter")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1804,8 +2352,9 @@ def get_vmkernel_adapters(
     """
     log.debug("Running vmware_esxi.get_vmkernel_adapter")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -1926,8 +2475,9 @@ def update_vmkernel_adapter(
     """
     log.debug("Running vmware_esxi.update_vmkernel_adapter")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2000,8 +2550,9 @@ def delete_vmkernel_adapter(
     """
     log.debug("Running vmware_esxi.delete_vmkernel_adapter")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2057,8 +2608,9 @@ def get_user(
     """
     log.debug("Running vmware_esxi.get_user")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2122,12 +2674,11 @@ def add_role(
     """
     log.debug("Running vmware_esxi.add_role")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         ret["role_id"] = service_instance.content.authorizationManager.AddAuthorizationRole(
             name=role_name, privIds=privilege_ids
@@ -2165,12 +2716,11 @@ def update_role(
         salt '*' vmware_esxi.update_role role_name=foo privileges=['Folder.Create']
     """
     log.debug("Running vmware_esxi.update_role")
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
         if not role:
@@ -2209,12 +2759,11 @@ def remove_role(
         salt '*' vmware_esxi.remove_role role_name=foo
     """
     log.debug("Running vmware_esxi.update_role")
-    if not service_instance:
-        service_instance = get_service_instance(
-            opts=__opts__,
-            pillar=__pillar__,
-            esxi_host=esxi_host_name,
-        )
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
         if not role:
@@ -2249,8 +2798,11 @@ def get_role(role_name, esxi_host_name=None, service_instance=None, profile=None
     """
     log.debug("Running vmware_esxi.get_role")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, esxi_host=esxi_host_name)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__,
+        profile=profile,
+        esxi_host=esxi_host_name,
+    )
     try:
         for role in service_instance.content.authorizationManager.roleList:
             if role.name == role_name:
@@ -2280,8 +2832,9 @@ def connect(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.connect host=host01
     """
     log.debug(f"Connect ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.reconnect_host(host, service_instance)
     return {"state": state}
@@ -2305,8 +2858,9 @@ def disconnect(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.disconnect host=host01
     """
     log.debug(f"Disconnect ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.disconnect_host(host, service_instance)
     return {"state": state}
@@ -2330,8 +2884,9 @@ def remove(host, service_instance=None, profile=None):
         salt '*' vmware_esxi.remove host=host01
     """
     log.debug(f"Remove ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.remove_host(host, service_instance)
     return {"state": state}
@@ -2358,8 +2913,9 @@ def move(host, cluster_name, service_instance=None, profile=None):
         salt '*' vmware_esxi.move host=host01 cluster=cl1
     """
     log.debug(f"Move ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
 
     state = utils_esxi.move_host(host, cluster_name, service_instance)
     return {"state": state}
@@ -2411,8 +2967,9 @@ def add(
         salt '*' vmware_esxi.add host=host01 root_user=root password=CorrectHorseBatteryStaple cluster_name=cl1 datacenter_name=dc1 verify_host_cert=False connect=True
     """
     log.debug(f"Adding ESXi instance {host}.")
-    if service_instance is None:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     state = utils_esxi.add_host(
         host,
         root_user,
@@ -2462,8 +3019,9 @@ def list_pkgs(
     """
     log.debug("Running vmware_esxi.list_pkgs")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2550,8 +3108,9 @@ def get(
     """
     log.debug("Running vmware_esxi.get")
     ret = {}
-    if not service_instance:
-        service_instance = get_service_instance(config=__opts__, profile=profile)
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
     hosts = utils_esxi.get_hosts(
         service_instance=service_instance,
         host_names=[host_name] if host_name else None,
@@ -2704,8 +3263,9 @@ def in_maintenance_mode(host, service_instance=None, profile=None):
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = "normal"
     if host_ref.runtime.inMaintenanceMode:
@@ -2755,8 +3315,9 @@ def maintenance_mode(
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_maintenance_mode(host_ref, service_instance)
     if mode["maintenanceMode"] == "inMaintenance":
@@ -2803,8 +3364,9 @@ def exit_maintenance_mode(
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_maintenance_mode(host_ref, service_instance)
     if mode["maintenanceMode"] == "normal":
@@ -2841,8 +3403,9 @@ def in_lockdown_mode(host, service_instance=None, profile=None):
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = "normal"
     if host_ref.config.adminDisabled:
@@ -2873,8 +3436,9 @@ def lockdown_mode(host, catch_task_error=True, service_instance=None, profile=No
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_lockdown_mode(host_ref)
     if mode["lockdownMode"] == "inLockdown":
@@ -2913,8 +3477,9 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None, profi
     if isinstance(host, vim.HostSystem):
         host_ref = host
     else:
-        if service_instance is None:
-            service_instance = get_service_instance(config=__opts__, profile=profile)
+        service_instance = service_instance or utils_connect.get_service_instance(
+            config=__opts__, profile=profile
+        )
         host_ref = utils_esxi.get_host(host, service_instance)
     mode = in_lockdown_mode(host_ref)
     if mode["lockdownMode"] == "normal":
@@ -2928,3 +3493,776 @@ def exit_lockdown_mode(host, catch_task_error=True, service_instance=None, profi
     mode = in_lockdown_mode(host_ref, service_instance)
     mode["changes"] = mode["lockdownMode"] == "normal"
     return mode
+
+
+def get_vsan_enabled(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Get the VSAN enabled status for a given host or all hosts. Returns ``True``
+    if VSAN is enabled, ``False`` if it is not enabled.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_vsan_enabled host_name='192.0.2.117'
+    """
+    log.debug("Running vmware_esxi.get_vsan_enabled")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for host in hosts:
+        ret[host.name] = host.config.vsanHostConfig.enabled
+    return ret
+
+
+def vsan_enable(
+    enable=True,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Enable VSAN for a given host or all hosts.
+
+    enable
+        Enable vSAN. Valid values: True, False.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.vsan_enable host_name='192.0.2.117'
+    """
+    log.debug("Running vmware_esxi.get_vsan_enabled")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for host in hosts:
+        config = vim.vsan.host.ConfigInfo()
+        config.enabled = enable
+        task = host.configManager.vsanSystem.UpdateVsan_Task(config)
+        utils_common.wait_for_task(task, host.name, "UpdateVsan_Task")
+        ret[host.name] = host.config.vsanHostConfig.enabled
+    return ret
+
+
+def _get_vsan_eligible_disks(hosts):
+    """
+    Helper function that returns a dictionary of host_name keys with either a list of eligible
+    disks that can be added to VSAN or either an 'Error' message or a message saying no
+    eligible disks were found. Possible keys/values look like:
+
+    return = {'host_1': {'Error': 'VSAN System Config Manager is unset ...'},
+              'host_2': {'Eligible': 'The host xxx does not have any VSAN eligible disks.'},
+              'host_3': {'Eligible': [disk1, disk2, disk3, disk4],
+              'host_4': {'Eligible': []}}
+
+    hosts
+        list of host references
+
+    """
+    ret = {}
+    for host in hosts:
+        # Get VSAN System Config Manager, if available.
+        vsan_system = host.configManager.vsanSystem
+        if vsan_system is None:
+            msg = (
+                "VSAN System Config Manager is unset for host '{}'. "
+                "VSAN configuration cannot be changed without a configured "
+                "VSAN System.".format(host.name)
+            )
+            log.debug(msg)
+            ret.update({host.name: {"Error": msg}})
+            continue
+
+        # Get all VSAN suitable disks for this host.
+        suitable_disks = []
+        query = vsan_system.QueryDisksForVsan()
+        for item in query:
+            if item.state == "eligible":
+                suitable_disks.append(item)
+
+        # No suitable disks were found to add. Warn and move on.
+        # This isn't an error as the state may run repeatedly after all eligible disks are added.
+        if not suitable_disks:
+            msg = "The host '{}' does not have any VSAN eligible disks.".format(host.name)
+            log.warning(msg)
+            ret.update({host.name: {"Eligible": msg}})
+            continue
+
+        # Get disks for host and combine into one list of Disk Objects
+        disks = utils_esxi.get_host_ssds(host) + utils_esxi.get_host_non_ssds(host)
+
+        # Get disks that are in both the disks list and suitable_disks lists.
+        matching = []
+        for disk in disks:
+            for suitable_disk in suitable_disks:
+                if disk.canonicalName == suitable_disk.disk.canonicalName:
+                    matching.append(disk)
+
+        ret.update({host.name: {"Eligible": matching}})
+    return ret
+
+
+def get_vsan_eligible_disks(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Returns a list of VSAN-eligible disks for a given host or list of host_names.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_vsan_enabled host_name='192.0.2.117'
+    """
+    log.debug("Running vmware_esxi.get_vsan_enabled")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    response = _get_vsan_eligible_disks(hosts)
+    ret = {}
+    for host_name, value in response.items():
+        error = value.get("Error")
+        if error:
+            ret.update({host_name: {"Error": error}})
+            continue
+
+        disks = value.get("Eligible")
+        # If we have eligible disks, it will be a list of disk objects
+        if disks and isinstance(disks, list):
+            disk_names = []
+            # We need to return ONLY the disk names, otherwise
+            # MessagePack can't deserialize the disk objects.
+            for disk in disks:
+                disk_names.append(disk.canonicalName)
+            ret.update({host_name: {"Eligible": disk_names}})
+        else:
+            # If we have disks, but it's not a list, it's actually a
+            # string message that we're passing along.
+            ret.update({host_name: {"Eligible": disks}})
+
+    return ret
+
+
+def vsan_add_disks(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Add any VSAN-eligible disks to the VSAN System for the given host or list of host_names.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.vsan_add_disks host_name='192.0.2.117'
+    """
+    log.debug("Running vmware_esxi.vsan_add_disks")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    response = _get_vsan_eligible_disks(hosts)
+
+    for host_name, value in response.items():
+        host_ref = utils_esxi.get_host(host_name, service_instance)
+        vsan_system = host_ref.configManager.vsanSystem
+
+        # We must have a VSAN Config in place before we can manipulate it.
+        if vsan_system is None:
+            msg = (
+                "VSAN System Config Manager is unset for host '{}'. "
+                "VSAN configuration cannot be changed without a configured "
+                "VSAN System.".format(host_name)
+            )
+            log.debug(msg)
+            ret.update({host_name: {"Error": msg}})
+        else:
+            eligible = value.get("Eligible")
+            error = value.get("Error")
+
+            if eligible and isinstance(eligible, list):
+                # If we have eligible, matching disks, add them to VSAN.
+                try:
+                    task = vsan_system.AddDisks(eligible)
+                    utils_common.wait_for_task(
+                        task, host_name, "Adding disks to VSAN", sleep_seconds=3
+                    )
+                except vim.fault.InsufficientDisks as err:
+                    log.debug(err.msg)
+                    ret.update({host_name: {"Error": err.msg}})
+                    continue
+                except Exception as err:
+                    msg = "'vsphere.vsan_add_disks' failed for host {}: {}".format(host_name, err)
+                    log.debug(msg)
+                    ret.update({host_name: {"Error": msg}})
+                    continue
+
+                log.debug(
+                    "Successfully added disks to the VSAN system for host '{}'.".format(host_name)
+                )
+                # We need to return ONLY the disk names, otherwise Message Pack can't deserialize the disk objects.
+                disk_names = []
+                for disk in eligible:
+                    disk_names.append(disk.canonicalName)
+                ret.update({host_name: {"Disks Added": disk_names}})
+            elif eligible and isinstance(eligible, str):
+                # If we have a string type in the eligible value, we don't
+                # have any VSAN-eligible disks. Pull the message through.
+                ret.update({host_name: {"Disks Added": eligible}})
+            elif error:
+                # If we hit an error, populate the Error return dict for state functions.
+                ret.update({host_name: {"Error": error}})
+            else:
+                # If we made it this far, we somehow have eligible disks, but they didn't
+                # match the disk list and just got an empty list of matching disks.
+                ret.update(
+                    {host_name: {"Disks Added": "No new VSAN-eligible disks were found to add."}}
+                )
+
+    return ret
+
+
+def list_disks(
+    disk_ids=None,
+    scsi_addresses=None,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Returns a list of dict representations of the disks in an ESXi host.
+    The list of disks can be filtered by disk canonical names or
+    scsi addresses.
+
+    disk_ids:
+        List of disk canonical names to be retrieved. Default is None.
+
+    scsi_addresses
+        List of scsi addresses of disks to be retrieved. Default is None
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_disks
+        salt '*' vmware_esxi.list_disks disk_ids='[naa.00, naa.001]'
+        salt '*' vmware_esxi.list_disks scsi_addresses='[vmhba0:C0:T0:L0, vmhba1:C0:T0:L0]'
+    """
+    log.debug("Running vmware_esxi.list_disks")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    for host in hosts:
+        get_all_disks = True if not (disk_ids or scsi_addresses) else False
+        ret[host.name] = []
+        scsi_address_to_lun = utils_common.get_scsi_address_to_lun_map(host, hostname=host.name)
+        canonical_name_to_scsi_address = {
+            lun.canonicalName: scsi_addr for scsi_addr, lun in scsi_address_to_lun.items()
+        }
+        for disk in utils_common.get_disks(host, disk_ids, scsi_addresses, get_all_disks):
+            ret[host.name].append(
+                {
+                    "id": disk.canonicalName,
+                    "scsi_address": canonical_name_to_scsi_address[disk.canonicalName],
+                }
+            )
+    return ret
+
+
+def list_diskgroups(
+    cache_disk_ids=None,
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    Returns a list of disk group dict representation on an ESXi host.
+    The list of disk groups can be filtered by the cache disks
+    canonical names. If no filtering is applied, all disk groups are returned.
+
+    cache_disk_ids
+        List of cache disk canonical names of the disk groups to be retrieved.
+        Default is None.
+
+    use_proxy_details
+        Specify whether to use the proxy minion's details instead of the
+        arguments
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.list_diskgroups
+        salt '*' vmware_esxi.list_diskgroups cache_disk_ids='[naa.000000000000001]'
+    """
+    log.debug("Running vmware_esxi.list_diskgroups")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    get_all_diskgroups = True if not cache_disk_ids else False
+    for host in hosts:
+        ret[host.name] = []
+        for diskgroup in utils_common.get_diskgroups(host, cache_disk_ids, get_all_diskgroups):
+            ret[host.name].append(
+                {
+                    "cache_disk": diskgroup.ssd.canonicalName,
+                    "capacity_disks": [d.canonicalName for d in diskgroup.nonSsd],
+                }
+            )
+    return ret
+
+
+def get_host_datetime(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+):
+    """
+    .. versionadded:: 23.4.4.0rc1
+
+    Get the date/time information for a given host or all hosts.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_host_datetime
+
+    """
+    log.debug("Running vmware_esxi.get_host_datetime")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+    for host in hosts:
+        date_time_manager = utils_common.get_date_time_mgr(host)
+        date_time = date_time_manager.QueryDateTime()
+        ret.update({host.name: date_time.ctime()})
+
+    return ret
+
+
+def get_vmotion_enabled(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+    host_names=None,
+):
+    """
+    .. versionadded:: 23.4.4.0rc1
+
+    Get the VMotion enabled status for a given host or a list of host_names. Returns ``True``
+    if VMotion is enabled, ``False`` if it is not enabled.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    host_names
+        List of ESXi host names provided for a vCenter Server, the host_names argument
+        is required to tell vCenter which hosts to check if VMotion is enabled.
+
+        If host_names is not provided, the VMotion status will be retrieved for the
+        ``host`` location instead. This is useful for when service instance
+        connection information is used for a single ESXi host.
+
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.get_vmotion_enabled
+    """
+    log.debug("Running vmware_esxi.get_vmotion_enabled")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    if not host_names:
+        host_names = host
+
+    try:
+        for host in hosts:
+            if host in host_names:
+                vmotion_vnic = host.configManager.vmotionSystem.netConfig.selectedVnic
+                if vmotion_vnic:
+                    ret.update({host.name: {"VMotion Enabled": True}})
+                else:
+                    ret.update({host.name: {"VMotion Enabled": False}})
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def vmotion_disable(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+    host_names=None,
+):
+    """
+    .. versionadded:: 23.6.29.0rc1
+
+    Disable vMotion for a given host or list of host_names.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    host_names
+        List of ESXi host names provided for a vCenter Server, the host_names argument
+        is required to tell vCenter which hosts should disable VMotion.
+
+        If host_names is not provided, VMotion will be disabled for the ``host``
+        location instead. This is useful for when service instance connection
+        information is used for a single ESXi host.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.vmotion_disable
+    """
+    log.debug("Running vmware_esxi.vmotion_disable")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    ## host_names = _check_hosts(service_instance, host, host_names)
+    if not host_names:
+        host_names = host
+
+    try:
+        ## for host_name in host_names:
+        ##     host_ref = _get_host_ref(service_instance, host, host_name=host_name)
+        ##     vmotion_system = host_ref.configManager.vmotionSystem
+
+        for host in hosts:
+            if host in host_names:
+                vmotion_system = host.configManager.vmotionSystem
+
+                # Disable VMotion for the host by removing the VNic selected to use for VMotion.
+                try:
+                    vmotion_system.DeselectVnic()
+                except vim.fault.HostConfigFault as err:
+                    msg = f"vsphere.vmotion_disable failed: {err}"
+                    log.debug(msg)
+                    ret.update({host_name: {"Error": msg, "VMotion Disabled": False}})
+                    continue
+
+                ret.update({host_name: {"VMotion Disabled": True}})
+
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
+
+
+def vmotion_enable(
+    host_name=None,
+    datacenter_name=None,
+    cluster_name=None,
+    service_instance=None,
+    profile=None,
+    host_names=None,
+    device="vmk0",
+):
+    """
+    .. versionadded:: 23.6.29.0rc1
+
+    Enable vMotion for a given host or list of host_names.
+
+    host_name
+        Filter by this ESXi hostname (optional)
+
+    datacenter_name
+        Filter by this datacenter name (required when cluster is specified)
+
+    cluster_name
+        Filter by this cluster name (optional)
+
+    service_instance
+        Use this vCenter service connection instance instead of creating a new one. (optional).
+
+    profile
+        Profile to use (optional)
+
+    host_names
+        List of ESXi host names provided for a vCenter Server, the host_names argument
+        is required to tell vCenter which hosts should enable VMotion.
+
+        If host_names is not provided, VMotion will be enabled for the ``host``
+        location instead. This is useful for when service instance connection
+        information is used for a single ESXi host.
+
+    device
+        The device that uniquely identifies the VirtualNic that will be used for
+        VMotion for each host. Defaults to ``vmk0``.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_esxi.vmotion_disable
+    """
+    log.debug("Running vmware_esxi.vmotion_disable")
+    ret = {}
+    service_instance = service_instance or utils_connect.get_service_instance(
+        config=__opts__, profile=profile
+    )
+    hosts = utils_esxi.get_hosts(
+        service_instance=service_instance,
+        host_names=[host_name] if host_name else None,
+        cluster_name=cluster_name,
+        datacenter_name=datacenter_name,
+        get_all_hosts=host_name is None,
+    )
+
+    ## host_names = _check_hosts(service_instance, host, host_names)
+    if not host_names:
+        host_names = host
+
+    try:
+        ## for host_name in host_names:
+        ##     host_ref = _get_host_ref(service_instance, host, host_name=host_name)
+        ##     vmotion_system = host_ref.configManager.vmotionSystem
+
+        for host in hosts:
+            if host in host_names:
+                vmotion_system = host.configManager.vmotionSystem
+
+                # Enable VMotion for the host by setting the given device to provide the VNic to use for VMotion.
+                try:
+                    vmotion_system.SelectVnic(device)
+                except vim.fault.HostConfigFault as err:
+                    msg = f"vsphere.vmotion_disable failed: {err}"
+                    log.debug(msg)
+                    ret.update({host_name: {"Error": msg, "VMotion Enabled": False}})
+                    continue
+
+                ret.update({host_name: {"VMotion Enabled": True}})
+
+        return ret
+    except DEFAULT_EXCEPTIONS as exc:
+        raise salt.exceptions.SaltException(str(exc))
