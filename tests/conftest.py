@@ -28,14 +28,14 @@ def salt_factories_config():
     }
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="session")
 def master(salt_factories):
     return salt_factories.salt_master_daemon(
         random_string("master-"), defaults={"enable_fqdns_grains": False}
     )
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="session")
 def minion(master):
     return master.salt_minion_daemon(
         random_string("minion-"), defaults={"enable_fqdns_grains": False}

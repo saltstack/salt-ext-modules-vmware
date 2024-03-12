@@ -1,0 +1,2 @@
+Add 'profile' argument in get_firewall_config/set_firewall_config in esxi module.
+Fix 'allowed_host' of firewall config in esxi state.

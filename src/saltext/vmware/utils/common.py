@@ -881,3 +881,395 @@ def deployment_resources(host_name, service_instance):
         "cluster": cluster_ref,
         "resource_pool": resource_pool,
     }
+
+
+def get_storage_system(service_instance, host_ref, hostname=None):
+    """
+    Returns a host's storage system
+    """
+
+    if not hostname:
+        hostname = get_managed_object_name(host_ref)
+
+    traversal_spec = vmodl.query.PropertyCollector.TraversalSpec(
+        path="configManager.storageSystem", type=vim.HostSystem, skip=False
+    )
+    objs = get_mors_with_properties(
+        service_instance,
+        vim.HostStorageSystem,
+        property_list=["systemFile"],
+        container_ref=host_ref,
+        traversal_spec=traversal_spec,
+    )
+    if not objs:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Host's '{}' storage system was not retrieved".format(hostname)
+        )
+    log.trace("[%s] Retrieved storage system", hostname)
+    return objs[0]["object"]
+
+
+def _get_scsi_address_to_lun_key_map(
+    service_instance, host_ref, storage_system=None, hostname=None
+):
+    """
+    Returns a map between the scsi addresses and the keys of all luns on an ESXi
+    host.
+        map[<scsi_address>] = <lun key>
+    service_instance
+        The Service Instance Object from which to obtain the hosts
+    host_ref
+        The vim.HostSystem object representing the host that contains the
+        requested disks.
+    storage_system
+        The host's storage system. Default is None.
+    hostname
+        Name of the host. Default is None.
+    """
+    if not hostname:
+        hostname = get_managed_object_name(host_ref)
+    if not storage_system:
+        storage_system = get_storage_system(service_instance, host_ref, hostname)
+    try:
+        device_info = storage_system.storageDeviceInfo
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    if not device_info:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Host's '{}' storage device info was not retrieved".format(hostname)
+        )
+    multipath_info = device_info.multipathInfo
+    if not multipath_info:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Host's '{}' multipath info was not retrieved".format(hostname)
+        )
+    if multipath_info.lun is None:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "No luns were retrieved from host '{}'".format(hostname)
+        )
+    lun_key_by_scsi_addr = {}
+    for l in multipath_info.lun:
+        # The vmware scsi_address may have multiple comma separated values
+        # The first one is the actual scsi address
+        lun_key_by_scsi_addr.update({p.name.split(",")[0]: l.lun for p in l.path})
+    log.trace("Scsi address to lun id map on host '%s': %s", hostname, lun_key_by_scsi_addr)
+    return lun_key_by_scsi_addr
+
+
+def get_all_luns(host_ref, storage_system=None, hostname=None):
+    """
+    Returns a list of all vim.HostScsiDisk objects in a disk
+
+    host_ref
+        The vim.HostSystem object representing the host that contains the requested disks.
+
+    storage_system
+        The host's storage system. Default is None.
+
+    hostname
+        Name of the host. This argument is optional.
+    """
+    if not hostname:
+        hostname = get_managed_object_name(host_ref)
+    if not storage_system:
+        si = get_service_instance_from_managed_object(host_ref, name=hostname)
+        storage_system = get_storage_system(si, host_ref, hostname)
+        if not storage_system:
+            raise salt.exceptions.VMwareObjectRetrievalError(
+                "Host's '{}' storage system was not retrieved".format(hostname)
+            )
+    try:
+        device_info = storage_system.storageDeviceInfo
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    if not device_info:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "Host's '{}' storage device info was not retrieved".format(hostname)
+        )
+
+    scsi_luns = device_info.scsiLun
+    if scsi_luns:
+        log.trace(
+            "Retrieved scsi luns in host '%s': %s",
+            hostname,
+            [l.canonicalName for l in scsi_luns],
+        )
+        return scsi_luns
+    log.trace("Retrieved no scsi_luns in host '%s'", hostname)
+    return []
+
+
+def get_scsi_address_to_lun_map(host_ref, storage_system=None, hostname=None):
+    """
+    Returns a map of all vim.ScsiLun objects on a ESXi host keyed by their scsi address
+
+    host_ref
+        The vim.HostSystem object representing the host that contains the requested disks.
+
+    storage_system
+        The host's storage system. Default is None.
+
+    hostname
+        Name of the host. This argument is optional.
+    """
+    if not hostname:
+        hostname = get_managed_object_name(host_ref)
+    si = get_service_instance_from_managed_object(host_ref, name=hostname)
+    if not storage_system:
+        storage_system = get_storage_system(si, host_ref, hostname)
+    lun_ids_to_scsi_addr_map = _get_scsi_address_to_lun_key_map(
+        si, host_ref, storage_system, hostname
+    )
+    luns_to_key_map = {d.key: d for d in get_all_luns(host_ref, storage_system, hostname)}
+    return {
+        scsi_addr: luns_to_key_map[lun_key]
+        for scsi_addr, lun_key in lun_ids_to_scsi_addr_map.items()
+    }
+
+
+def get_disks(host_ref, disk_ids=None, scsi_addresses=None, get_all_disks=False):
+    """
+    Returns a list of vim.HostScsiDisk objects representing disks
+    in a ESXi host, filtered by their cannonical names and scsi_addresses
+
+    host_ref
+        The vim.HostSystem object representing the host that contains the
+        requested disks.
+
+    disk_ids
+        The list of canonical names of the disks to be retrieved. Default value
+        is None
+
+    scsi_addresses
+        The list of scsi addresses of the disks to be retrieved. Default value
+        is None
+
+    get_all_disks
+        Specifies whether to retrieve all disks in the host.
+        Default value is False.
+    """
+    hostname = get_managed_object_name(host_ref)
+    if get_all_disks:
+        log.trace("Retrieving all disks in host '%s'", hostname)
+    else:
+        log.trace(
+            "Retrieving disks in host '%s': ids = (%s); scsi addresses = (%s)",
+            hostname,
+            disk_ids,
+            scsi_addresses,
+        )
+        if not (disk_ids or scsi_addresses):
+            return []
+    si = get_service_instance_from_managed_object(host_ref, name=hostname)
+    storage_system = get_storage_system(si, host_ref, hostname)
+    disk_keys = []
+    if scsi_addresses:
+        # convert the scsi addresses to disk keys
+        lun_key_by_scsi_addr = _get_scsi_address_to_lun_key_map(
+            si, host_ref, storage_system, hostname
+        )
+        disk_keys = [
+            key for scsi_addr, key in lun_key_by_scsi_addr.items() if scsi_addr in scsi_addresses
+        ]
+        log.trace("disk_keys based on scsi_addresses = %s", disk_keys)
+
+    scsi_luns = get_all_luns(host_ref, storage_system)
+    scsi_disks = [
+        disk
+        for disk in scsi_luns
+        if isinstance(disk, vim.HostScsiDisk)
+        and (
+            get_all_disks
+            or
+            # Filter by canonical name
+            (disk_ids and (disk.canonicalName in disk_ids))
+            or
+            # Filter by disk keys from scsi addresses
+            (disk.key in disk_keys)
+        )
+    ]
+    log.trace(
+        "Retrieved disks in host '%s': %s",
+        hostname,
+        [d.canonicalName for d in scsi_disks],
+    )
+    return scsi_disks
+
+
+def get_diskgroups(host_ref, cache_disk_ids=None, get_all_disk_groups=False):
+    """
+    Returns a list of vim.VsanHostDiskMapping objects representing disks
+    in a ESXi host, filtered by their cannonical names.
+
+    host_ref
+        The vim.HostSystem object representing the host that contains the
+        requested disks.
+
+    cache_disk_ids
+        The list of cannonical names of the cache disks to be retrieved. The
+        canonical name of the cache disk is enough to identify the disk group
+        because it is guaranteed to have one and only one cache disk.
+        Default is None.
+
+    get_all_disk_groups
+        Specifies whether to retrieve all disks groups in the host.
+        Default value is False.
+    """
+    hostname = get_managed_object_name(host_ref)
+    if get_all_disk_groups:
+        log.trace("Retrieving all disk groups on host '%s'", hostname)
+    else:
+        log.trace(
+            "Retrieving disk groups from host '%s', with cache disk ids : (%s)",
+            hostname,
+            cache_disk_ids,
+        )
+        if not cache_disk_ids:
+            return []
+    try:
+        vsan_host_config = host_ref.config.vsanHostConfig
+    except vim.fault.NoPermission as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(
+            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+        )
+    except vim.fault.VimFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareApiError(exc.msg)
+    except vmodl.RuntimeFault as exc:
+        log.exception(exc)
+        raise salt.exceptions.VMwareRuntimeError(exc.msg)
+    if not vsan_host_config:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "No host config found on host '{}'".format(hostname)
+        )
+    vsan_storage_info = vsan_host_config.storageInfo
+    if not vsan_storage_info:
+        raise salt.exceptions.VMwareObjectRetrievalError(
+            "No vsan storage info found on host '{}'".format(hostname)
+        )
+    vsan_disk_mappings = vsan_storage_info.diskMapping
+    if not vsan_disk_mappings:
+        return []
+    disk_groups = [
+        diskmap
+        for diskmap in vsan_disk_mappings
+        if (get_all_disk_groups or (diskmap.ssd.canonicalName in cache_disk_ids))
+    ]
+    log.trace(
+        "Retrieved disk groups on host '%s', with cache disk ids : %s",
+        hostname,
+        [disk.ssd.canonicalName for disk in disk_groups],
+    )
+    return disk_groups
+
+
+def get_date_time_mgr(host_reference):
+    """
+    Helper function that returns a dateTimeManager object
+    """
+    return host_reference.configManager.dateTimeSystem
+
+
+def get_inventory(service_instance):
+    """
+    .. versionadded:: 23.4.4.0rc1
+
+    Return the inventory of a Service Instance Object.
+
+    service_instance
+        The Service Instance Object for which to obtain inventory.
+    """
+    return service_instance.RetrieveContent()
+
+
+def get_hardware_grains(service_instance):
+    """
+    .. versionadded:: 23.4.4.0rc1
+
+    Return hardware info for standard minion grains if the service_instance is a HostAgent type
+
+    service_instance
+        The service instance object to get hardware info for
+    """
+    hw_grain_data = {}
+    if get_inventory(service_instance).about.apiType == "HostAgent":
+        view = service_instance.content.viewManager.CreateContainerView(
+            service_instance.RetrieveContent().rootFolder, [vim.HostSystem], True
+        )
+        if view and view.view:
+            hw_grain_data["manufacturer"] = view.view[0].hardware.systemInfo.vendor
+            hw_grain_data["productname"] = view.view[0].hardware.systemInfo.model
+
+            for _data in view.view[0].hardware.systemInfo.otherIdentifyingInfo:
+                if _data.identifierType.key == "ServiceTag":
+                    hw_grain_data["serialnumber"] = _data.identifierValue
+
+            hw_grain_data["osfullname"] = view.view[0].summary.config.product.fullName
+            hw_grain_data["osmanufacturer"] = view.view[0].summary.config.product.vendor
+            hw_grain_data["osrelease"] = view.view[0].summary.config.product.version
+            hw_grain_data["osbuild"] = view.view[0].summary.config.product.build
+            hw_grain_data["os_family"] = view.view[0].summary.config.product.name
+            hw_grain_data["os"] = view.view[0].summary.config.product.name
+            hw_grain_data["mem_total"] = view.view[0].hardware.memorySize / 1024 / 1024
+            hw_grain_data["biosversion"] = view.view[0].hardware.biosInfo.biosVersion
+            hw_grain_data["biosreleasedate"] = (
+                view.view[0].hardware.biosInfo.releaseDate.date().strftime("%m/%d/%Y")
+            )
+            hw_grain_data["cpu_model"] = view.view[0].hardware.cpuPkg[0].description
+            hw_grain_data["kernel"] = view.view[0].summary.config.product.productLineId
+            hw_grain_data["num_cpu_sockets"] = view.view[0].hardware.cpuInfo.numCpuPackages
+            hw_grain_data["num_cpu_cores"] = view.view[0].hardware.cpuInfo.numCpuCores
+            hw_grain_data["num_cpus"] = (
+                hw_grain_data["num_cpu_sockets"] * hw_grain_data["num_cpu_cores"]
+            )
+            hw_grain_data["ip_interfaces"] = {}
+            hw_grain_data["ip4_interfaces"] = {}
+            hw_grain_data["ip6_interfaces"] = {}
+            hw_grain_data["hwaddr_interfaces"] = {}
+            for _vnic in view.view[0].configManager.networkSystem.networkConfig.vnic:
+                hw_grain_data["ip_interfaces"][_vnic.device] = []
+                hw_grain_data["ip4_interfaces"][_vnic.device] = []
+                hw_grain_data["ip6_interfaces"][_vnic.device] = []
+
+                hw_grain_data["ip_interfaces"][_vnic.device].append(_vnic.spec.ip.ipAddress)
+                hw_grain_data["ip4_interfaces"][_vnic.device].append(_vnic.spec.ip.ipAddress)
+                if _vnic.spec.ip.ipV6Config:
+                    hw_grain_data["ip6_interfaces"][_vnic.device].append(
+                        _vnic.spec.ip.ipV6Config.ipV6Address
+                    )
+                hw_grain_data["hwaddr_interfaces"][_vnic.device] = _vnic.spec.mac
+            hw_grain_data["host"] = view.view[0].configManager.networkSystem.dnsConfig.hostName
+            hw_grain_data["domain"] = view.view[0].configManager.networkSystem.dnsConfig.domainName
+            hw_grain_data["fqdn"] = "{}{}{}".format(
+                view.view[0].configManager.networkSystem.dnsConfig.hostName,
+                ("." if view.view[0].configManager.networkSystem.dnsConfig.domainName else ""),
+                view.view[0].configManager.networkSystem.dnsConfig.domainName,
+            )
+
+            for _pnic in view.view[0].configManager.networkSystem.networkInfo.pnic:
+                hw_grain_data["hwaddr_interfaces"][_pnic.device] = _pnic.mac
+
+            hw_grain_data["timezone"] = view.view[
+                0
+            ].configManager.dateTimeSystem.dateTimeInfo.timeZone.name
+        view = None
+    return hw_grain_data

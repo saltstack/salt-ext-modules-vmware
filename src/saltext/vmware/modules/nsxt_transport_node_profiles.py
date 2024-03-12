@@ -15,8 +15,6 @@ def __virtual__():
     return __virtual_name__
 
 
-TRANSPORT_NODE_PROFILE_BASE_URL = "https://{0}/api/v1/transport-node-profiles"
-
 create_params_for_transport_profiles = [
     "transport_zone_endpoints",
     "description",
@@ -89,7 +87,7 @@ def get(
 
     """
     log.info("Fetching NSX-T transport node profiles")
-    url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname)
+    url = f"https://{hostname}/api/v1/transport-node-profiles"
     params = common._filter_kwargs(
         allowed_kwargs=["cursor", "included_fields", "page_size", "sort_ascending", "sort_by"],
         default_dict=None,
@@ -268,7 +266,7 @@ def create(
 
     """
     log.info("Creating nsxt transport node profile")
-    url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname)
+    url = f"https://{hostname}/api/v1/transport-node-profiles"
     req_data = common._filter_kwargs(
         allowed_kwargs=create_params_for_transport_profiles,
         default_dict={},
@@ -396,7 +394,7 @@ def update(
 
     """
     log.info("Updating nsxt transport node profile")
-    url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname) + "/{}".format(transport_node_profile_id)
+    url = f"https://{hostname}/api/v1/transport-node-profiles/{transport_node_profile_id}"
     req_data = common._filter_kwargs(
         allowed_kwargs=create_params_for_transport_profiles,
         default_dict={},
@@ -468,7 +466,7 @@ def delete(
 
     """
     log.info("Deleting transport node profile with id %s", transport_node_profile_id)
-    url = TRANSPORT_NODE_PROFILE_BASE_URL.format(hostname) + "/{}".format(transport_node_profile_id)
+    url = f"https://{hostname}/api/v1/transport-node-profiles/{transport_node_profile_id}"
     result = nsxt_request.call_api(
         method="delete",
         url=url,

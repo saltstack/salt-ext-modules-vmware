@@ -110,3 +110,12 @@ def test_add_remove_host(service_instance):
         service_instance=service_instance,
     )
     assert set(ret.values()) == {True}
+
+
+def test_list_dvs(service_instance):
+    ret = dvswitch.list_(
+        service_instance=service_instance,
+    )
+    assert ret
+    for switch in ret:
+        assert isinstance(switch, str)

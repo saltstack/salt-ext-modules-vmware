@@ -74,16 +74,13 @@ def test_get_by_display_name(api_mock):
         "sort_ascending": "true",
     }
     api_mock.return_value = response
-    assert (
-        nsxt_uplink_profiles.get_by_display_name(
-            hostname="hostname",
-            username="username",
-            password="pass",
-            display_name=_mock_uplink_profile["display_name"],
-            verify_ssl=False,
-        )
-        == {"results": [_mock_uplink_profile]}
-    )
+    assert nsxt_uplink_profiles.get_by_display_name(
+        hostname="hostname",
+        username="username",
+        password="pass",
+        display_name=_mock_uplink_profile["display_name"],
+        verify_ssl=False,
+    ) == {"results": [_mock_uplink_profile]}
 
 
 @patch.object(nsxt_request, "call_api")
@@ -120,16 +117,13 @@ def test_get_by_display_name_paginated(api_mock):
         "sort_ascending": "true",
     }
     api_mock.side_effect = [response_with_cursor, response_without_cursor]
-    assert (
-        nsxt_uplink_profiles.get_by_display_name(
-            hostname="hostname",
-            username="username",
-            password="pass",
-            display_name=_mock_uplink_profile["display_name"],
-            verify_ssl=False,
-        )
-        == {"results": [_mock_uplink_profile]}
-    )
+    assert nsxt_uplink_profiles.get_by_display_name(
+        hostname="hostname",
+        username="username",
+        password="pass",
+        display_name=_mock_uplink_profile["display_name"],
+        verify_ssl=False,
+    ) == {"results": [_mock_uplink_profile]}
 
 
 @patch.object(nsxt_request, "call_api")
