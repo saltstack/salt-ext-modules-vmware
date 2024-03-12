@@ -66,6 +66,60 @@ def list_(
     )
 
 
+def get(
+    name,
+    service_instance=None,
+    datacenter_name=None,
+    vm_properties=None,
+    parent_ref=None,
+    traversal_spec=None,
+    profile=None,
+):
+    """
+    Get virtual machine properties based on the traversal specs and properties list,
+    returns Virtual Machine object with properties.
+
+    service_instance
+        Service instance object to access vCenter
+
+    name
+        Name of the virtual machine.
+
+    datacenter
+        Datacenter name
+
+    vm_properties
+        List of vm properties.
+
+    traversal_spec
+        Traversal Spec object(s) for searching.
+
+    parent_ref
+        Container Reference object for searching under a given object.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' vmware_vm.get vm-01
+    """
+    if service_instance is None:
+        service_instance = connect.get_service_instance(config=__opts__, profile=profile)
+
+    virtual_machine = utils_vm.get_vm_by_property(
+        service_instance,
+        name,
+        datacenter=datacenter_name,
+        vm_properties=vm_properties,
+        traversal_spec=traversal_spec,
+        parent_ref=parent_ref,
+    )
+
+    virtual_machine = json.loads(json.dumps(virtual_machine, cls=VmomiSupport.VmomiJSONEncoder))
+
+    return virtual_machine
+
+
 def list_templates(service_instance=None, profile=None):
     """
     Returns virtual machines tempates.
