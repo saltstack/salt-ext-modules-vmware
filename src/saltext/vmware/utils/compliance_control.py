@@ -5,12 +5,15 @@ import salt.exceptions
 
 # pylint: disable=no-name-in-module
 try:
-    from config_modules_vmware.control_module.control_config import ControlConfig
-    from config_modules_vmware.control_module.auth.vc_context import VcenterContext
-    from config_modules_vmware.control_module.auth.sddc_manager_context import SDDCManagerContext
-    from config_modules_vmware.control_module.auth.base_context import BaseContext
-    from config_modules_vmware.control_module.auth.esxi_context import EsxiContext
-    from config_modules_vmware.control_module.auth.vrslcm_context import VrslcmContext
+
+    from config_modules_vmware.interfaces.controller_interface import ControllerInterface
+    from config_modules_vmware.framework.auth.contexts.vc_context import VcenterContext
+    from config_modules_vmware.framework.auth.contexts.sddc_manager_context import (
+        SDDCManagerContext,
+    )
+    from config_modules_vmware.framework.auth.contexts.base_context import BaseContext
+    from config_modules_vmware.framework.auth.contexts.esxi_context import EsxiContext
+    from config_modules_vmware.framework.auth.contexts.vrslcm_context import VrslcmContext
 
     HAS_CONFIG_MODULE = True
 except ImportError:
