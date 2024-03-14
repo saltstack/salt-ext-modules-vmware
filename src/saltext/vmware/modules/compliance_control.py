@@ -3,7 +3,7 @@ import logging
 
 import salt.exceptions
 import saltext.vmware.utils.compliance_control as compliance_control_util
-from config_modules_vmware.control_module.control_config import ControlConfig
+from config_modules_vmware.interfaces.controller_interface import ControllerInterface
 
 log = logging.getLogger(__name__)
 
@@ -33,8 +33,8 @@ def control_config_compliance_check(control_config, product, auth_context=None):
         auth_context = compliance_control_util.create_auth_context(config=config, product=product)
 
     try:
-        control_config_obj = ControlConfig(auth_context)
-        response_check_compliance = control_config_obj.check_compliance(
+        controller_interface_obj = ControllerInterface(auth_context)
+        response_check_compliance = controller_interface_obj.check_compliance(
             desired_state_spec=control_config
         )
         log.debug("control_config_compliance_check response %s", response_check_compliance)
@@ -64,8 +64,8 @@ def control_config_remediate(control_config, product, auth_context=None):
         auth_context = compliance_control_util.create_auth_context(config=config, product=product)
 
     try:
-        control_config_obj = ControlConfig(auth_context)
-        response_remediate = control_config_obj.remediate_with_desired_state(
+        controller_interface_obj = ControllerInterface(auth_context)
+        response_remediate = controller_interface_obj.remediate_with_desired_state(
             desired_state_spec=control_config
         )
         log.debug("control_config_remediate response %s", response_remediate)

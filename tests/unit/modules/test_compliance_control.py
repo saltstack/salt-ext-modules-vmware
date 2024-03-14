@@ -47,7 +47,7 @@ def test_control_config_compliance_check(exception):
     mock_response = {"status": "COMPLIANT"}
 
     patch_compliance_check = patch(
-        "config_modules_vmware.control_module.control_config.ControlConfig.check_compliance",
+        "config_modules_vmware.interfaces.controller_interface.ControllerInterface.check_compliance",
         autospec=True,
         return_value=mock_response,
     )
@@ -57,7 +57,7 @@ def test_control_config_compliance_check(exception):
         return_value={},
     )
     patch_compliance_check_exception = patch(
-        "config_modules_vmware.control_module.control_config.ControlConfig.check_compliance",
+        "config_modules_vmware.interfaces.controller_interface.ControllerInterface.check_compliance",
         autospec=True,
         side_effect=Exception("Testing"),
     )
@@ -94,7 +94,7 @@ def test_control_config_remediate(exception):
     mock_response = {"status": "SUCCESS"}
 
     patch_remediate = patch(
-        "config_modules_vmware.control_module.control_config.ControlConfig.remediate_with_desired_state",
+        "config_modules_vmware.interfaces.controller_interface.ControllerInterface.remediate_with_desired_state",
         autospec=True,
         return_value=mock_response,
     )
