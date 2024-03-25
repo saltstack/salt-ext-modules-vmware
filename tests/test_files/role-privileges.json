@@ -1,0 +1,2402 @@
+[
+    {
+        "name": "Anonymous",
+        "privId": "System.Anonymous",
+        "privGroupName": "System",
+        "onParent": false
+    },
+    {
+        "name": "View",
+        "privId": "System.View",
+        "privGroupName": "System",
+        "onParent": false
+    },
+    {
+        "name": "Read",
+        "privId": "System.Read",
+        "privGroupName": "System",
+        "onParent": false
+    },
+    {
+        "name": "ManageCustomFields",
+        "privId": "Global.ManageCustomFields",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "SetCustomField",
+        "privId": "Global.SetCustomField",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "LogEvent",
+        "privId": "Global.LogEvent",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "CancelTask",
+        "privId": "Global.CancelTask",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "Licenses",
+        "privId": "Global.Licenses",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "Diagnostics",
+        "privId": "Global.Diagnostics",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "Settings",
+        "privId": "Global.Settings",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "VCServer",
+        "privId": "Global.VCServer",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "CapacityPlanning",
+        "privId": "Global.CapacityPlanning",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "ScriptAction",
+        "privId": "Global.ScriptAction",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "Proxy",
+        "privId": "Global.Proxy",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "DisableMethods",
+        "privId": "Global.DisableMethods",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "EnableMethods",
+        "privId": "Global.EnableMethods",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "ServiceManagers",
+        "privId": "Global.ServiceManagers",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "Health",
+        "privId": "Global.Health",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "SystemTag",
+        "privId": "Global.SystemTag",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "GlobalTag",
+        "privId": "Global.GlobalTag",
+        "privGroupName": "Global",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "Folder.Create",
+        "privGroupName": "Folder",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "Folder.Delete",
+        "privGroupName": "Folder",
+        "onParent": true
+    },
+    {
+        "name": "Rename",
+        "privId": "Folder.Rename",
+        "privGroupName": "Folder",
+        "onParent": false
+    },
+    {
+        "name": "Move",
+        "privId": "Folder.Move",
+        "privGroupName": "Folder",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "Datacenter.Create",
+        "privGroupName": "Datacenter",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "Datacenter.Delete",
+        "privGroupName": "Datacenter",
+        "onParent": true
+    },
+    {
+        "name": "Rename",
+        "privId": "Datacenter.Rename",
+        "privGroupName": "Datacenter",
+        "onParent": false
+    },
+    {
+        "name": "Move",
+        "privId": "Datacenter.Move",
+        "privGroupName": "Datacenter",
+        "onParent": false
+    },
+    {
+        "name": "IpPoolConfig",
+        "privId": "Datacenter.IpPoolConfig",
+        "privGroupName": "Datacenter",
+        "onParent": false
+    },
+    {
+        "name": "IpPoolReleaseIp",
+        "privId": "Datacenter.IpPoolReleaseIp",
+        "privGroupName": "Datacenter",
+        "onParent": false
+    },
+    {
+        "name": "IpPoolQueryAllocations",
+        "privId": "Datacenter.IpPoolQueryAllocations",
+        "privGroupName": "Datacenter",
+        "onParent": false
+    },
+    {
+        "name": "Reconfigure",
+        "privId": "Datacenter.Reconfigure",
+        "privGroupName": "Datacenter",
+        "onParent": false
+    },
+    {
+        "name": "Rename",
+        "privId": "Datastore.Rename",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "Move",
+        "privId": "Datastore.Move",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "Datastore.Delete",
+        "privGroupName": "Datastore",
+        "onParent": true
+    },
+    {
+        "name": "Browse",
+        "privId": "Datastore.Browse",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "DeleteFile",
+        "privId": "Datastore.DeleteFile",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "FileManagement",
+        "privId": "Datastore.FileManagement",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "AllocateSpace",
+        "privId": "Datastore.AllocateSpace",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "Config",
+        "privId": "Datastore.Config",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "UpdateVirtualMachineFiles",
+        "privId": "Datastore.UpdateVirtualMachineFiles",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "UpdateVirtualMachineMetadata",
+        "privId": "Datastore.UpdateVirtualMachineMetadata",
+        "privGroupName": "Datastore",
+        "onParent": false
+    },
+    {
+        "name": "Move",
+        "privId": "Network.Move",
+        "privGroupName": "Network",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "Network.Delete",
+        "privGroupName": "Network",
+        "onParent": true
+    },
+    {
+        "name": "Config",
+        "privId": "Network.Config",
+        "privGroupName": "Network",
+        "onParent": false
+    },
+    {
+        "name": "Assign",
+        "privId": "Network.Assign",
+        "privGroupName": "Network",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "DVSwitch.Create",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "Modify",
+        "privId": "DVSwitch.Modify",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "HostOp",
+        "privId": "DVSwitch.HostOp",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "PolicyOp",
+        "privId": "DVSwitch.PolicyOp",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "PortConfig",
+        "privId": "DVSwitch.PortConfig",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "PortSetting",
+        "privId": "DVSwitch.PortSetting",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "DVSwitch.Delete",
+        "privGroupName": "DVSwitch",
+        "onParent": true
+    },
+    {
+        "name": "Move",
+        "privId": "DVSwitch.Move",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "Vspan",
+        "privId": "DVSwitch.Vspan",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "Ipfix",
+        "privId": "DVSwitch.Ipfix",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "ResourceManagement",
+        "privId": "DVSwitch.ResourceManagement",
+        "privGroupName": "DVSwitch",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "DVPortgroup.Create",
+        "privGroupName": "DVPortgroup",
+        "onParent": false
+    },
+    {
+        "name": "Modify",
+        "privId": "DVPortgroup.Modify",
+        "privGroupName": "DVPortgroup",
+        "onParent": false
+    },
+    {
+        "name": "PolicyOp",
+        "privId": "DVPortgroup.PolicyOp",
+        "privGroupName": "DVPortgroup",
+        "onParent": false
+    },
+    {
+        "name": "ScopeOp",
+        "privId": "DVPortgroup.ScopeOp",
+        "privGroupName": "DVPortgroup",
+        "onParent": false
+    },
+    {
+        "name": "Ipfix",
+        "privId": "DVPortgroup.Ipfix",
+        "privGroupName": "DVPortgroup",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "DVPortgroup.Delete",
+        "privGroupName": "DVPortgroup",
+        "onParent": true
+    },
+    {
+        "name": "AddStandaloneHost",
+        "privId": "Host.Inventory.AddStandaloneHost",
+        "privGroupName": "Host.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "CreateCluster",
+        "privId": "Host.Inventory.CreateCluster",
+        "privGroupName": "Host.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "AddHostToCluster",
+        "privId": "Host.Inventory.AddHostToCluster",
+        "privGroupName": "Host.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "RemoveHostFromCluster",
+        "privId": "Host.Inventory.RemoveHostFromCluster",
+        "privGroupName": "Host.Inventory",
+        "onParent": true
+    },
+    {
+        "name": "MoveCluster",
+        "privId": "Host.Inventory.MoveCluster",
+        "privGroupName": "Host.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "RenameCluster",
+        "privId": "Host.Inventory.RenameCluster",
+        "privGroupName": "Host.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "DeleteCluster",
+        "privId": "Host.Inventory.DeleteCluster",
+        "privGroupName": "Host.Inventory",
+        "onParent": true
+    },
+    {
+        "name": "EditCluster",
+        "privId": "Host.Inventory.EditCluster",
+        "privGroupName": "Host.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "MoveHost",
+        "privId": "Host.Inventory.MoveHost",
+        "privGroupName": "Host.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "HbrManagement",
+        "privId": "Host.Hbr.HbrManagement",
+        "privGroupName": "Host.Hbr",
+        "onParent": false
+    },
+    {
+        "name": "AuthenticationStore",
+        "privId": "Host.Config.AuthenticationStore",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "SystemManagement",
+        "privId": "Host.Config.SystemManagement",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Connection",
+        "privId": "Host.Config.Connection",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Maintenance",
+        "privId": "Host.Config.Maintenance",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "AutoStart",
+        "privId": "Host.Config.AutoStart",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "HyperThreading",
+        "privId": "Host.Config.HyperThreading",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Storage",
+        "privId": "Host.Config.Storage",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "NetService",
+        "privId": "Host.Config.NetService",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Memory",
+        "privId": "Host.Config.Memory",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Network",
+        "privId": "Host.Config.Network",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "AdvancedConfig",
+        "privId": "Host.Config.AdvancedConfig",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Resources",
+        "privId": "Host.Config.Resources",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Snmp",
+        "privId": "Host.Config.Snmp",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "DateTime",
+        "privId": "Host.Config.DateTime",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "PciPassthru",
+        "privId": "Host.Config.PciPassthru",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Settings",
+        "privId": "Host.Config.Settings",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Patch",
+        "privId": "Host.Config.Patch",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Firmware",
+        "privId": "Host.Config.Firmware",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Power",
+        "privId": "Host.Config.Power",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Image",
+        "privId": "Host.Config.Image",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Quarantine",
+        "privId": "Host.Config.Quarantine",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "Nvdimm",
+        "privId": "Host.Config.Nvdimm",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "InstallAgent",
+        "privId": "Host.Local.InstallAgent",
+        "privGroupName": "Host.Local",
+        "onParent": false
+    },
+    {
+        "name": "ManageUserGroups",
+        "privId": "Host.Local.ManageUserGroups",
+        "privGroupName": "Host.Local",
+        "onParent": false
+    },
+    {
+        "name": "CreateVM",
+        "privId": "Host.Local.CreateVM",
+        "privGroupName": "Host.Local",
+        "onParent": false
+    },
+    {
+        "name": "ReconfigVM",
+        "privId": "Host.Local.ReconfigVM",
+        "privGroupName": "Host.Local",
+        "onParent": false
+    },
+    {
+        "name": "DeleteVM",
+        "privId": "Host.Local.DeleteVM",
+        "privGroupName": "Host.Local",
+        "onParent": false
+    },
+    {
+        "name": "CimInteraction",
+        "privId": "Host.Cim.CimInteraction",
+        "privGroupName": "Host.Cim",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "VirtualMachine.Inventory.Create",
+        "privGroupName": "VirtualMachine.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "CreateFromExisting",
+        "privId": "VirtualMachine.Inventory.CreateFromExisting",
+        "privGroupName": "VirtualMachine.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "Register",
+        "privId": "VirtualMachine.Inventory.Register",
+        "privGroupName": "VirtualMachine.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "VirtualMachine.Inventory.Delete",
+        "privGroupName": "VirtualMachine.Inventory",
+        "onParent": true
+    },
+    {
+        "name": "Unregister",
+        "privId": "VirtualMachine.Inventory.Unregister",
+        "privGroupName": "VirtualMachine.Inventory",
+        "onParent": true
+    },
+    {
+        "name": "Move",
+        "privId": "VirtualMachine.Inventory.Move",
+        "privGroupName": "VirtualMachine.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "PowerOn",
+        "privId": "VirtualMachine.Interact.PowerOn",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "PowerOff",
+        "privId": "VirtualMachine.Interact.PowerOff",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "Suspend",
+        "privId": "VirtualMachine.Interact.Suspend",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "Reset",
+        "privId": "VirtualMachine.Interact.Reset",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "Pause",
+        "privId": "VirtualMachine.Interact.Pause",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "AnswerQuestion",
+        "privId": "VirtualMachine.Interact.AnswerQuestion",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "ConsoleInteract",
+        "privId": "VirtualMachine.Interact.ConsoleInteract",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "DeviceConnection",
+        "privId": "VirtualMachine.Interact.DeviceConnection",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "SetCDMedia",
+        "privId": "VirtualMachine.Interact.SetCDMedia",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "SetFloppyMedia",
+        "privId": "VirtualMachine.Interact.SetFloppyMedia",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "ToolsInstall",
+        "privId": "VirtualMachine.Interact.ToolsInstall",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "GuestControl",
+        "privId": "VirtualMachine.Interact.GuestControl",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "DefragmentAllDisks",
+        "privId": "VirtualMachine.Interact.DefragmentAllDisks",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "CreateSecondary",
+        "privId": "VirtualMachine.Interact.CreateSecondary",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "TurnOffFaultTolerance",
+        "privId": "VirtualMachine.Interact.TurnOffFaultTolerance",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "MakePrimary",
+        "privId": "VirtualMachine.Interact.MakePrimary",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "TerminateFaultTolerantVM",
+        "privId": "VirtualMachine.Interact.TerminateFaultTolerantVM",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "DisableSecondary",
+        "privId": "VirtualMachine.Interact.DisableSecondary",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "EnableSecondary",
+        "privId": "VirtualMachine.Interact.EnableSecondary",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "Record",
+        "privId": "VirtualMachine.Interact.Record",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "Replay",
+        "privId": "VirtualMachine.Interact.Replay",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "Backup",
+        "privId": "VirtualMachine.Interact.Backup",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "CreateScreenshot",
+        "privId": "VirtualMachine.Interact.CreateScreenshot",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "PutUsbScanCodes",
+        "privId": "VirtualMachine.Interact.PutUsbScanCodes",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "SESparseMaintenance",
+        "privId": "VirtualMachine.Interact.SESparseMaintenance",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "DnD",
+        "privId": "VirtualMachine.Interact.DnD",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "Query",
+        "privId": "VirtualMachine.GuestOperations.Query",
+        "privGroupName": "VirtualMachine.GuestOperations",
+        "onParent": false
+    },
+    {
+        "name": "Modify",
+        "privId": "VirtualMachine.GuestOperations.Modify",
+        "privGroupName": "VirtualMachine.GuestOperations",
+        "onParent": false
+    },
+    {
+        "name": "Execute",
+        "privId": "VirtualMachine.GuestOperations.Execute",
+        "privGroupName": "VirtualMachine.GuestOperations",
+        "onParent": false
+    },
+    {
+        "name": "QueryAliases",
+        "privId": "VirtualMachine.GuestOperations.QueryAliases",
+        "privGroupName": "VirtualMachine.GuestOperations",
+        "onParent": false
+    },
+    {
+        "name": "ModifyAliases",
+        "privId": "VirtualMachine.GuestOperations.ModifyAliases",
+        "privGroupName": "VirtualMachine.GuestOperations",
+        "onParent": false
+    },
+    {
+        "name": "Rename",
+        "privId": "VirtualMachine.Config.Rename",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "Annotation",
+        "privId": "VirtualMachine.Config.Annotation",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "AddExistingDisk",
+        "privId": "VirtualMachine.Config.AddExistingDisk",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "AddNewDisk",
+        "privId": "VirtualMachine.Config.AddNewDisk",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "RemoveDisk",
+        "privId": "VirtualMachine.Config.RemoveDisk",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "RawDevice",
+        "privId": "VirtualMachine.Config.RawDevice",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "HostUSBDevice",
+        "privId": "VirtualMachine.Config.HostUSBDevice",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "CPUCount",
+        "privId": "VirtualMachine.Config.CPUCount",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "Memory",
+        "privId": "VirtualMachine.Config.Memory",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "AddRemoveDevice",
+        "privId": "VirtualMachine.Config.AddRemoveDevice",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "EditDevice",
+        "privId": "VirtualMachine.Config.EditDevice",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "Settings",
+        "privId": "VirtualMachine.Config.Settings",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "Resource",
+        "privId": "VirtualMachine.Config.Resource",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "UpgradeVirtualHardware",
+        "privId": "VirtualMachine.Config.UpgradeVirtualHardware",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "ResetGuestInfo",
+        "privId": "VirtualMachine.Config.ResetGuestInfo",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "ToggleForkParent",
+        "privId": "VirtualMachine.Config.ToggleForkParent",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "AdvancedConfig",
+        "privId": "VirtualMachine.Config.AdvancedConfig",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "DiskLease",
+        "privId": "VirtualMachine.Config.DiskLease",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "SwapPlacement",
+        "privId": "VirtualMachine.Config.SwapPlacement",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "DiskExtend",
+        "privId": "VirtualMachine.Config.DiskExtend",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "ChangeTracking",
+        "privId": "VirtualMachine.Config.ChangeTracking",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "QueryUnownedFiles",
+        "privId": "VirtualMachine.Config.QueryUnownedFiles",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "ReloadFromPath",
+        "privId": "VirtualMachine.Config.ReloadFromPath",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "QueryFTCompatibility",
+        "privId": "VirtualMachine.Config.QueryFTCompatibility",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "MksControl",
+        "privId": "VirtualMachine.Config.MksControl",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "ManagedBy",
+        "privId": "VirtualMachine.Config.ManagedBy",
+        "privGroupName": "VirtualMachine.Config",
+        "onParent": false
+    },
+    {
+        "name": "CreateSnapshot",
+        "privId": "VirtualMachine.State.CreateSnapshot",
+        "privGroupName": "VirtualMachine.State",
+        "onParent": false
+    },
+    {
+        "name": "RevertToSnapshot",
+        "privId": "VirtualMachine.State.RevertToSnapshot",
+        "privGroupName": "VirtualMachine.State",
+        "onParent": false
+    },
+    {
+        "name": "RemoveSnapshot",
+        "privId": "VirtualMachine.State.RemoveSnapshot",
+        "privGroupName": "VirtualMachine.State",
+        "onParent": false
+    },
+    {
+        "name": "RenameSnapshot",
+        "privId": "VirtualMachine.State.RenameSnapshot",
+        "privGroupName": "VirtualMachine.State",
+        "onParent": false
+    },
+    {
+        "name": "ConfigureReplication",
+        "privId": "VirtualMachine.Hbr.ConfigureReplication",
+        "privGroupName": "VirtualMachine.Hbr",
+        "onParent": false
+    },
+    {
+        "name": "ReplicaManagement",
+        "privId": "VirtualMachine.Hbr.ReplicaManagement",
+        "privGroupName": "VirtualMachine.Hbr",
+        "onParent": false
+    },
+    {
+        "name": "MonitorReplication",
+        "privId": "VirtualMachine.Hbr.MonitorReplication",
+        "privGroupName": "VirtualMachine.Hbr",
+        "onParent": false
+    },
+    {
+        "name": "Customize",
+        "privId": "VirtualMachine.Provisioning.Customize",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "Clone",
+        "privId": "VirtualMachine.Provisioning.Clone",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "PromoteDisks",
+        "privId": "VirtualMachine.Provisioning.PromoteDisks",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "CreateTemplateFromVM",
+        "privId": "VirtualMachine.Provisioning.CreateTemplateFromVM",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "DeployTemplate",
+        "privId": "VirtualMachine.Provisioning.DeployTemplate",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "CloneTemplate",
+        "privId": "VirtualMachine.Provisioning.CloneTemplate",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "MarkAsTemplate",
+        "privId": "VirtualMachine.Provisioning.MarkAsTemplate",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "MarkAsVM",
+        "privId": "VirtualMachine.Provisioning.MarkAsVM",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "ReadCustSpecs",
+        "privId": "VirtualMachine.Provisioning.ReadCustSpecs",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "ModifyCustSpecs",
+        "privId": "VirtualMachine.Provisioning.ModifyCustSpecs",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "DiskRandomAccess",
+        "privId": "VirtualMachine.Provisioning.DiskRandomAccess",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "DiskRandomRead",
+        "privId": "VirtualMachine.Provisioning.DiskRandomRead",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "FileRandomAccess",
+        "privId": "VirtualMachine.Provisioning.FileRandomAccess",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "GetVmFiles",
+        "privId": "VirtualMachine.Provisioning.GetVmFiles",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "PutVmFiles",
+        "privId": "VirtualMachine.Provisioning.PutVmFiles",
+        "privGroupName": "VirtualMachine.Provisioning",
+        "onParent": false
+    },
+    {
+        "name": "Management",
+        "privId": "VirtualMachine.Namespace.Management",
+        "privGroupName": "VirtualMachine.Namespace",
+        "onParent": false
+    },
+    {
+        "name": "Query",
+        "privId": "VirtualMachine.Namespace.Query",
+        "privGroupName": "VirtualMachine.Namespace",
+        "onParent": false
+    },
+    {
+        "name": "ModifyContent",
+        "privId": "VirtualMachine.Namespace.ModifyContent",
+        "privGroupName": "VirtualMachine.Namespace",
+        "onParent": false
+    },
+    {
+        "name": "ReadContent",
+        "privId": "VirtualMachine.Namespace.ReadContent",
+        "privGroupName": "VirtualMachine.Namespace",
+        "onParent": false
+    },
+    {
+        "name": "Event",
+        "privId": "VirtualMachine.Namespace.Event",
+        "privGroupName": "VirtualMachine.Namespace",
+        "onParent": false
+    },
+    {
+        "name": "EventNotify",
+        "privId": "VirtualMachine.Namespace.EventNotify",
+        "privGroupName": "VirtualMachine.Namespace",
+        "onParent": false
+    },
+    {
+        "name": "AssignVMToPool",
+        "privId": "Resource.AssignVMToPool",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "AssignVAppToPool",
+        "privId": "Resource.AssignVAppToPool",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "ApplyRecommendation",
+        "privId": "Resource.ApplyRecommendation",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "CreatePool",
+        "privId": "Resource.CreatePool",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "RenamePool",
+        "privId": "Resource.RenamePool",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "EditPool",
+        "privId": "Resource.EditPool",
+        "privGroupName": "Resource",
+        "onParent": true
+    },
+    {
+        "name": "MovePool",
+        "privId": "Resource.MovePool",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "DeletePool",
+        "privId": "Resource.DeletePool",
+        "privGroupName": "Resource",
+        "onParent": true
+    },
+    {
+        "name": "HotMigrate",
+        "privId": "Resource.HotMigrate",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "ColdMigrate",
+        "privId": "Resource.ColdMigrate",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "QueryVMotion",
+        "privId": "Resource.QueryVMotion",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "Alarm.Create",
+        "privGroupName": "Alarm",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "Alarm.Delete",
+        "privGroupName": "Alarm",
+        "onParent": false
+    },
+    {
+        "name": "Edit",
+        "privId": "Alarm.Edit",
+        "privGroupName": "Alarm",
+        "onParent": false
+    },
+    {
+        "name": "Acknowledge",
+        "privId": "Alarm.Acknowledge",
+        "privGroupName": "Alarm",
+        "onParent": false
+    },
+    {
+        "name": "SetStatus",
+        "privId": "Alarm.SetStatus",
+        "privGroupName": "Alarm",
+        "onParent": false
+    },
+    {
+        "name": "DisableActions",
+        "privId": "Alarm.DisableActions",
+        "privGroupName": "Alarm",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "Task.Create",
+        "privGroupName": "Task",
+        "onParent": false
+    },
+    {
+        "name": "Update",
+        "privId": "Task.Update",
+        "privGroupName": "Task",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "ScheduledTask.Create",
+        "privGroupName": "ScheduledTask",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "ScheduledTask.Delete",
+        "privGroupName": "ScheduledTask",
+        "onParent": false
+    },
+    {
+        "name": "Run",
+        "privId": "ScheduledTask.Run",
+        "privGroupName": "ScheduledTask",
+        "onParent": false
+    },
+    {
+        "name": "Edit",
+        "privId": "ScheduledTask.Edit",
+        "privGroupName": "ScheduledTask",
+        "onParent": false
+    },
+    {
+        "name": "TerminateSession",
+        "privId": "Sessions.TerminateSession",
+        "privGroupName": "Sessions",
+        "onParent": false
+    },
+    {
+        "name": "ValidateSession",
+        "privId": "Sessions.ValidateSession",
+        "privGroupName": "Sessions",
+        "onParent": false
+    },
+    {
+        "name": "GlobalMessage",
+        "privId": "Sessions.GlobalMessage",
+        "privGroupName": "Sessions",
+        "onParent": false
+    },
+    {
+        "name": "ImpersonateUser",
+        "privId": "Sessions.ImpersonateUser",
+        "privGroupName": "Sessions",
+        "onParent": false
+    },
+    {
+        "name": "ModifyIntervals",
+        "privId": "Performance.ModifyIntervals",
+        "privGroupName": "Performance",
+        "onParent": false
+    },
+    {
+        "name": "ModifyRoles",
+        "privId": "Authorization.ModifyRoles",
+        "privGroupName": "Authorization",
+        "onParent": false
+    },
+    {
+        "name": "ReassignRolePermissions",
+        "privId": "Authorization.ReassignRolePermissions",
+        "privGroupName": "Authorization",
+        "onParent": false
+    },
+    {
+        "name": "ModifyPermissions",
+        "privId": "Authorization.ModifyPermissions",
+        "privGroupName": "Authorization",
+        "onParent": false
+    },
+    {
+        "name": "Register",
+        "privId": "Extension.Register",
+        "privGroupName": "Extension",
+        "onParent": false
+    },
+    {
+        "name": "Update",
+        "privId": "Extension.Update",
+        "privGroupName": "Extension",
+        "onParent": false
+    },
+    {
+        "name": "Unregister",
+        "privId": "Extension.Unregister",
+        "privGroupName": "Extension",
+        "onParent": false
+    },
+    {
+        "name": "ResourceConfig",
+        "privId": "VApp.ResourceConfig",
+        "privGroupName": "VApp",
+        "onParent": true
+    },
+    {
+        "name": "InstanceConfig",
+        "privId": "VApp.InstanceConfig",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "ApplicationConfig",
+        "privId": "VApp.ApplicationConfig",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "ManagedByConfig",
+        "privId": "VApp.ManagedByConfig",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Export",
+        "privId": "VApp.Export",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Import",
+        "privId": "VApp.Import",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "ExtractOvfEnvironment",
+        "privId": "VApp.ExtractOvfEnvironment",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "AssignVM",
+        "privId": "VApp.AssignVM",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "AssignResourcePool",
+        "privId": "VApp.AssignResourcePool",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "AssignVApp",
+        "privId": "VApp.AssignVApp",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Clone",
+        "privId": "VApp.Clone",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "VApp.Create",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "VApp.Delete",
+        "privGroupName": "VApp",
+        "onParent": true
+    },
+    {
+        "name": "Unregister",
+        "privId": "VApp.Unregister",
+        "privGroupName": "VApp",
+        "onParent": true
+    },
+    {
+        "name": "Move",
+        "privId": "VApp.Move",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "PowerOn",
+        "privId": "VApp.PowerOn",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "PowerOff",
+        "privId": "VApp.PowerOff",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Suspend",
+        "privId": "VApp.Suspend",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Rename",
+        "privId": "VApp.Rename",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "Profile.Create",
+        "privGroupName": "Profile",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "Profile.Delete",
+        "privGroupName": "Profile",
+        "onParent": false
+    },
+    {
+        "name": "Edit",
+        "privId": "Profile.Edit",
+        "privGroupName": "Profile",
+        "onParent": false
+    },
+    {
+        "name": "View",
+        "privId": "Profile.View",
+        "privGroupName": "Profile",
+        "onParent": false
+    },
+    {
+        "name": "Clear",
+        "privId": "Profile.Clear",
+        "privGroupName": "Profile",
+        "onParent": false
+    },
+    {
+        "name": "Export",
+        "privId": "Profile.Export",
+        "privGroupName": "Profile",
+        "onParent": false
+    },
+    {
+        "name": "Config",
+        "privId": "EAM.Config",
+        "privGroupName": "EAM",
+        "onParent": false
+    },
+    {
+        "name": "Modify",
+        "privId": "EAM.Modify",
+        "privGroupName": "EAM",
+        "onParent": false
+    },
+    {
+        "name": "View",
+        "privId": "EAM.View",
+        "privGroupName": "EAM",
+        "onParent": false
+    },
+    {
+        "name": "Config",
+        "privId": "StoragePod.Config",
+        "privGroupName": "StoragePod",
+        "onParent": false
+    },
+    {
+        "name": "Manage",
+        "privId": "Certificate.Manage",
+        "privGroupName": "Certificate",
+        "onParent": false
+    },
+    {
+        "name": "Register",
+        "privId": "HealthUpdateProvider.Register",
+        "privGroupName": "HealthUpdateProvider",
+        "onParent": false
+    },
+    {
+        "name": "Update",
+        "privId": "HealthUpdateProvider.Update",
+        "privGroupName": "HealthUpdateProvider",
+        "onParent": false
+    },
+    {
+        "name": "Unregister",
+        "privId": "HealthUpdateProvider.Unregister",
+        "privGroupName": "HealthUpdateProvider",
+        "onParent": false
+    },
+    {
+        "name": "Register",
+        "privId": "ExternalStatsProvider.Register",
+        "privGroupName": "ExternalStatsProvider",
+        "onParent": false
+    },
+    {
+        "name": "Update",
+        "privId": "ExternalStatsProvider.Update",
+        "privGroupName": "ExternalStatsProvider",
+        "onParent": false
+    },
+    {
+        "name": "Unregister",
+        "privId": "ExternalStatsProvider.Unregister",
+        "privGroupName": "ExternalStatsProvider",
+        "onParent": false
+    },
+    {
+        "name": "ManageKeys",
+        "privId": "Cryptographer.ManageKeys",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "ManageKeyServers",
+        "privId": "Cryptographer.ManageKeyServers",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "ManageEncryptionPolicy",
+        "privId": "Cryptographer.ManageEncryptionPolicy",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "Access",
+        "privId": "Cryptographer.Access",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "RegisterHost",
+        "privId": "Cryptographer.RegisterHost",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "EncryptNew",
+        "privId": "Cryptographer.EncryptNew",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "Encrypt",
+        "privId": "Cryptographer.Encrypt",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "Decrypt",
+        "privId": "Cryptographer.Decrypt",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "RegisterVM",
+        "privId": "Cryptographer.RegisterVM",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "Migrate",
+        "privId": "Cryptographer.Migrate",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "Recrypt",
+        "privId": "Cryptographer.Recrypt",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "AddDisk",
+        "privId": "Cryptographer.AddDisk",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "Clone",
+        "privId": "Cryptographer.Clone",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "Query",
+        "privId": "TenantManager.Query",
+        "privGroupName": "TenantManager",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Session.Terminate",
+        "privId": "HmsSession.com.vmware.vcHms.Session.Terminate",
+        "privGroupName": "HmsSession",
+        "onParent": false
+    },
+    {
+        "name": "AttachTag",
+        "privId": "InventoryService.Tagging.AttachTag",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "com.vmware.vcDr.SystemLogs",
+        "privId": "VcDr.Diagnostics.com.vmware.vcDr.SystemLogs",
+        "privGroupName": "VcDr.Diagnostics",
+        "onParent": false
+    },
+    {
+        "name": "ModifyUsedByForCategory",
+        "privId": "InventoryService.Tagging.ModifyUsedByForCategory",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "Searchable",
+        "privId": "Cns.Searchable",
+        "privGroupName": "Cns",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Edit",
+        "privId": "VcDr.PlaceholderDatastoreManager.com.vmware.vcDr.Edit",
+        "privGroupName": "VcDr.PlaceholderDatastoreManager",
+        "onParent": false
+    },
+    {
+        "name": "GuestStore",
+        "privId": "Host.Config.GuestStore",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "ReadTrustedHosts",
+        "privId": "TrustedAdmin.ReadTrustedHosts",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "EvictLibraryItem",
+        "privId": "ContentLibrary.EvictLibraryItem",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "DeleteCategory",
+        "privId": "InventoryService.Tagging.DeleteCategory",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "ReadKMSTrust",
+        "privId": "TrustedAdmin.ReadKMSTrust",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.ViewDeleted",
+        "privId": "VcDr.RecoveryHistoryManager.com.vmware.vcDr.ViewDeleted",
+        "privGroupName": "VcDr.RecoveryHistoryManager",
+        "onParent": false
+    },
+    {
+        "name": "TypeIntrospection",
+        "privId": "ContentLibrary.TypeIntrospection",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "ConfigureHostMetadata",
+        "privId": "TrustedAdmin.ConfigureHostMetadata",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Edit",
+        "privId": "VcDr.ProtectionProfile.com.vmware.vcDr.Edit",
+        "privGroupName": "VcDr.ProtectionProfile",
+        "onParent": false
+    },
+    {
+        "name": "GetConfiguration",
+        "privId": "ContentLibrary.GetConfiguration",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Delete",
+        "privId": "VcDr.RecoveryHistoryManager.com.vmware.vcDr.Delete",
+        "privGroupName": "VcDr.RecoveryHistoryManager",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Edit",
+        "privId": "VcDr.InventoryMapper.com.vmware.vcDr.Edit",
+        "privGroupName": "VcDr.InventoryMapper",
+        "onParent": false
+    },
+    {
+        "name": "Manage",
+        "privId": "CertificateManagement.Manage",
+        "privGroupName": "CertificateManagement",
+        "onParent": false
+    },
+    {
+        "name": "SuspendToMemory",
+        "privId": "VirtualMachine.Interact.SuspendToMemory",
+        "privGroupName": "VirtualMachine.Interact",
+        "onParent": false
+    },
+    {
+        "name": "EditTag",
+        "privId": "InventoryService.Tagging.EditTag",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "UpdateSession",
+        "privId": "ContentLibrary.UpdateSession",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "AssociateMachine",
+        "privId": "AutoDeploy.Host.AssociateMachine",
+        "privGroupName": "AutoDeploy.Host",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcIntegrity.ViewStatus",
+        "privId": "VcIntegrity.Updates.com.vmware.vcIntegrity.ViewStatus",
+        "privGroupName": "VcIntegrity.Updates",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Edit",
+        "privId": "VcDr.Autoprotect.com.vmware.vcDr.Edit",
+        "privGroupName": "VcDr.Autoprotect",
+        "onParent": false
+    },
+    {
+        "name": "AddSubscription",
+        "privId": "ContentLibrary.AddSubscription",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "DeleteSubscription",
+        "privId": "ContentLibrary.DeleteSubscription",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "UpdateLibrary",
+        "privId": "ContentLibrary.UpdateLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.ConfigureServerCommands",
+        "privId": "VcDr.RecoveryProfile.com.vmware.vcDr.ConfigureServerCommands",
+        "privGroupName": "VcDr.RecoveryProfile",
+        "onParent": false
+    },
+    {
+        "name": "Monitor",
+        "privId": "TransferService.Monitor",
+        "privGroupName": "TransferService",
+        "onParent": false
+    },
+    {
+        "name": "ModifyUsedByForTag",
+        "privId": "InventoryService.Tagging.ModifyUsedByForTag",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "com.vmware.vcIntegrity.Configure",
+        "privId": "VcIntegrity.General.com.vmware.vcIntegrity.Configure",
+        "privGroupName": "VcIntegrity.General",
+        "onParent": false
+    },
+    {
+        "name": "ReadKeyServersInfo",
+        "privId": "Cryptographer.ReadKeyServersInfo",
+        "privGroupName": "Cryptographer",
+        "onParent": false
+    },
+    {
+        "name": "SyncLibraryItem",
+        "privId": "ContentLibrary.SyncLibraryItem",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "AutoDeploy.Rule.Create",
+        "privGroupName": "AutoDeploy.Rule",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Replication.View",
+        "privId": "HmsReplication.com.vmware.vcHms.Replication.View",
+        "privGroupName": "HmsReplication",
+        "onParent": false
+    },
+    {
+        "name": "UpdateSubscribedLibrary",
+        "privId": "ContentLibrary.UpdateSubscribedLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "ShallowRekey",
+        "privId": "Vsan.Cluster.ShallowRekey",
+        "privGroupName": "Vsan.Cluster",
+        "onParent": false
+    },
+    {
+        "name": "PullFromUrls",
+        "privId": "VApp.PullFromUrls",
+        "privGroupName": "VApp",
+        "onParent": false
+    },
+    {
+        "name": "Activate",
+        "privId": "AutoDeploy.RuleSet.Activate",
+        "privGroupName": "AutoDeploy.RuleSet",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Hms.Manage",
+        "privId": "HmsRemote.com.vmware.vcHms.Hms.Manage",
+        "privGroupName": "HmsRemote",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.RemoveFromRecoveryPlan",
+        "privId": "VcDr.ProtectionProfile.com.vmware.vcDr.RemoveFromRecoveryPlan",
+        "privGroupName": "VcDr.ProtectionProfile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Create",
+        "privId": "VcDr.ProtectionProfile.com.vmware.vcDr.Create",
+        "privGroupName": "VcDr.ProtectionProfile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Protect",
+        "privId": "VirtualMachine.Replication.com.vmware.vcDr.Protect",
+        "privGroupName": "VirtualMachine.Replication",
+        "onParent": false
+    },
+    {
+        "name": "UpdateLibraryItem",
+        "privId": "ContentLibrary.UpdateLibraryItem",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Run",
+        "privId": "VcDr.RecoveryProfile.com.vmware.vcDr.Run",
+        "privGroupName": "VcDr.RecoveryProfile",
+        "onParent": false
+    },
+    {
+        "name": "DeleteLibraryItem",
+        "privId": "ContentLibrary.DeleteLibraryItem",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.InternalAccess",
+        "privId": "VcDr.Internal.com.vmware.vcDr.InternalAccess",
+        "privGroupName": "VcDr.Internal",
+        "onParent": false
+    },
+    {
+        "name": "DestroyDependency",
+        "privId": "vService.DestroyDependency",
+        "privGroupName": "vService",
+        "onParent": false
+    },
+    {
+        "name": "CreateTag",
+        "privId": "InventoryService.Tagging.CreateTag",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "UpdateDependency",
+        "privId": "vService.UpdateDependency",
+        "privGroupName": "vService",
+        "onParent": false
+    },
+    {
+        "name": "DeleteTag",
+        "privId": "InventoryService.Tagging.DeleteTag",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "com.vmware.vcDr.Edit",
+        "privId": "VcDr.OptionManager.com.vmware.vcDr.Edit",
+        "privGroupName": "VcDr.OptionManager",
+        "onParent": false
+    },
+    {
+        "name": "Edit",
+        "privId": "AutoDeploy.Rule.Edit",
+        "privGroupName": "AutoDeploy.Rule",
+        "onParent": false
+    },
+    {
+        "name": "Update",
+        "privId": "TenantManager.Update",
+        "privGroupName": "TenantManager",
+        "onParent": false
+    },
+    {
+        "name": "SyncLibrary",
+        "privId": "ContentLibrary.SyncLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "RetrieveTPMHostCertificates",
+        "privId": "TrustedAdmin.RetrieveTPMHostCertificates",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "UpdateConfiguration",
+        "privId": "ContentLibrary.UpdateConfiguration",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Edit",
+        "privId": "VcDr.RemoteSite.com.vmware.vcDr.Edit",
+        "privGroupName": "VcDr.RemoteSite",
+        "onParent": false
+    },
+    {
+        "name": "Edit",
+        "privId": "AutoDeploy.RuleSet.Edit",
+        "privGroupName": "AutoDeploy.RuleSet",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcIntegrity.Stage",
+        "privId": "VcIntegrity.Updates.com.vmware.vcIntegrity.Stage",
+        "privGroupName": "VcIntegrity.Updates",
+        "onParent": false
+    },
+    {
+        "name": "GetData",
+        "privId": "GuestDataPublisher.GetData",
+        "privGroupName": "GuestDataPublisher",
+        "onParent": false
+    },
+    {
+        "name": "PublishLibraryItem",
+        "privId": "ContentLibrary.PublishLibraryItem",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Protect",
+        "privId": "Datastore.Replication.com.vmware.vcDr.Protect",
+        "privGroupName": "Datastore.Replication",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Reprotect",
+        "privId": "VcDr.RecoveryProfile.com.vmware.vcDr.Reprotect",
+        "privGroupName": "VcDr.RecoveryProfile",
+        "onParent": false
+    },
+    {
+        "name": "UpdateSubscription",
+        "privId": "ContentLibrary.UpdateSubscription",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Hbr.Manage",
+        "privId": "HmsRemote.com.vmware.vcHms.Hbr.Manage",
+        "privGroupName": "HmsRemote",
+        "onParent": false
+    },
+    {
+        "name": "DownloadSession",
+        "privId": "ContentLibrary.DownloadSession",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Create",
+        "privId": "VcDr.RecoveryProfile.com.vmware.vcDr.Create",
+        "privGroupName": "VcDr.RecoveryProfile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.RecoveryUse",
+        "privId": "Resource.com.vmware.vcDr.RecoveryUse",
+        "privGroupName": "Resource",
+        "onParent": false
+    },
+    {
+        "name": "ReconfigureDependency",
+        "privId": "vService.ReconfigureDependency",
+        "privGroupName": "vService",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Diagnostics.Manage",
+        "privId": "HmsDiagnostics.com.vmware.vcHms.Diagnostics.Manage",
+        "privGroupName": "HmsDiagnostics",
+        "onParent": false
+    },
+    {
+        "name": "ReadAttestingSSO",
+        "privId": "TrustedAdmin.ReadAttestingSSO",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Hbr.View",
+        "privId": "HmsRemote.com.vmware.vcHms.Hbr.View",
+        "privGroupName": "HmsRemote",
+        "onParent": false
+    },
+    {
+        "name": "ConfigureHostCertificates",
+        "privId": "TrustedAdmin.ConfigureHostCertificates",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "ConfigureTokenConversionPolicy",
+        "privId": "TrustedAdmin.ConfigureTokenConversionPolicy",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "DeleteLocalLibrary",
+        "privId": "ContentLibrary.DeleteLocalLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "Edit",
+        "privId": "AutoDeploy.Profile.Edit",
+        "privGroupName": "AutoDeploy.Profile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.AssignToRecoveryPlan",
+        "privId": "VcDr.ProtectionProfile.com.vmware.vcDr.AssignToRecoveryPlan",
+        "privGroupName": "VcDr.ProtectionProfile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Delete",
+        "privId": "VcDr.ProtectionProfile.com.vmware.vcDr.Delete",
+        "privGroupName": "VcDr.ProtectionProfile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Delete",
+        "privId": "VcDr.RecoveryProfile.com.vmware.vcDr.Delete",
+        "privGroupName": "VcDr.RecoveryProfile",
+        "onParent": false
+    },
+    {
+        "name": "ModifyPrivileges",
+        "privId": "Authorization.ModifyPrivileges",
+        "privGroupName": "Authorization",
+        "onParent": false
+    },
+    {
+        "name": "Update",
+        "privId": "StorageProfile.Update",
+        "privGroupName": "StorageProfile",
+        "onParent": false
+    },
+    {
+        "name": "EvictSubscribedLibrary",
+        "privId": "ContentLibrary.EvictSubscribedLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcIntegrity.AssignBaselines",
+        "privId": "VcIntegrity.Baseline.com.vmware.vcIntegrity.AssignBaselines",
+        "privGroupName": "VcIntegrity.Baseline",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcIntegrity.Scan",
+        "privId": "VcIntegrity.Updates.com.vmware.vcIntegrity.Scan",
+        "privGroupName": "VcIntegrity.Updates",
+        "onParent": false
+    },
+    {
+        "name": "DeleteSubscribedLibrary",
+        "privId": "ContentLibrary.DeleteSubscribedLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "View",
+        "privId": "StorageProfile.View",
+        "privGroupName": "StorageProfile",
+        "onParent": false
+    },
+    {
+        "name": "ManageAttestingSSO",
+        "privId": "TrustedAdmin.ManageAttestingSSO",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "ImportStorage",
+        "privId": "ContentLibrary.ImportStorage",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "Manage",
+        "privId": "TransferService.Manage",
+        "privGroupName": "TransferService",
+        "onParent": false
+    },
+    {
+        "name": "ConfigureService",
+        "privId": "StorageViews.ConfigureService",
+        "privGroupName": "StorageViews",
+        "onParent": false
+    },
+    {
+        "name": "Administer",
+        "privId": "CertificateManagement.Administer",
+        "privGroupName": "CertificateManagement",
+        "onParent": false
+    },
+    {
+        "name": "ManageKMSTrust",
+        "privId": "TrustedAdmin.ManageKMSTrust",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "ProductLocker",
+        "privId": "Host.Config.ProductLocker",
+        "privGroupName": "Host.Config",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Mappings.Manage",
+        "privId": "HmsDatastoreMapper.com.vmware.vcHms.Mappings.Manage",
+        "privGroupName": "HmsDatastoreMapper",
+        "onParent": false
+    },
+    {
+        "name": "RetrieveHostMetadata",
+        "privId": "TrustedAdmin.RetrieveHostMetadata",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Hms.View",
+        "privId": "HmsRemote.com.vmware.vcHms.Hms.View",
+        "privGroupName": "HmsRemote",
+        "onParent": false
+    },
+    {
+        "name": "CreateSubscribedLibrary",
+        "privId": "ContentLibrary.CreateSubscribedLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "ToggleEnableOnEntity",
+        "privId": "Alarm.ToggleEnableOnEntity",
+        "privGroupName": "Alarm",
+        "onParent": false
+    },
+    {
+        "name": "Delete",
+        "privId": "AutoDeploy.Rule.Delete",
+        "privGroupName": "AutoDeploy.Rule",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcIntegrity.ManageBaselines",
+        "privId": "VcIntegrity.Baseline.com.vmware.vcIntegrity.ManageBaselines",
+        "privGroupName": "VcIntegrity.Baseline",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Unprotect",
+        "privId": "VirtualMachine.Replication.com.vmware.vcDr.Unprotect",
+        "privGroupName": "VirtualMachine.Replication",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcIntegrity.Remediate",
+        "privId": "VcIntegrity.Updates.com.vmware.vcIntegrity.Remediate",
+        "privGroupName": "VcIntegrity.Updates",
+        "onParent": false
+    },
+    {
+        "name": "CreateDependency",
+        "privId": "vService.CreateDependency",
+        "privGroupName": "vService",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcIntegrity.ImportFile",
+        "privId": "VcIntegrity.FileUpload.com.vmware.vcIntegrity.ImportFile",
+        "privGroupName": "VcIntegrity.FileUpload",
+        "onParent": false
+    },
+    {
+        "name": "ManageTrustedHosts",
+        "privId": "TrustedAdmin.ManageTrustedHosts",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "ManageClusterLifecyle",
+        "privId": "Host.Inventory.ManageClusterLifecyle",
+        "privGroupName": "Host.Inventory",
+        "onParent": false
+    },
+    {
+        "name": "Create",
+        "privId": "AutoDeploy.Profile.Create",
+        "privGroupName": "AutoDeploy.Profile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcHms.Mappings.View",
+        "privId": "HmsDatastoreMapper.com.vmware.vcHms.Mappings.View",
+        "privGroupName": "HmsDatastoreMapper",
+        "onParent": false
+    },
+    {
+        "name": "UpdateLocalLibrary",
+        "privId": "ContentLibrary.UpdateLocalLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "EditCategory",
+        "privId": "InventoryService.Tagging.EditCategory",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "CreateCategory",
+        "privId": "InventoryService.Tagging.CreateCategory",
+        "privGroupName": "InventoryService.Tagging",
+        "onParent": true
+    },
+    {
+        "name": "PublishLibrary",
+        "privId": "ContentLibrary.PublishLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Edit",
+        "privId": "VcDr.RecoveryProfile.com.vmware.vcDr.Edit",
+        "privGroupName": "VcDr.RecoveryProfile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Configure",
+        "privId": "VcDr.Storage.com.vmware.vcDr.Configure",
+        "privGroupName": "VcDr.Storage",
+        "onParent": false
+    },
+    {
+        "name": "ReadStsInfo",
+        "privId": "TrustedAdmin.ReadStsInfo",
+        "privGroupName": "TrustedAdmin",
+        "onParent": false
+    },
+    {
+        "name": "ProbeSubscription",
+        "privId": "ContentLibrary.ProbeSubscription",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "ReadStorage",
+        "privId": "ContentLibrary.ReadStorage",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "View",
+        "privId": "StorageViews.View",
+        "privGroupName": "StorageViews",
+        "onParent": false
+    },
+    {
+        "name": "AddLibraryItem",
+        "privId": "ContentLibrary.AddLibraryItem",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "CreateLocalLibrary",
+        "privId": "ContentLibrary.CreateLocalLibrary",
+        "privGroupName": "ContentLibrary",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Failover",
+        "privId": "VcDr.RecoveryProfile.com.vmware.vcDr.Failover",
+        "privGroupName": "VcDr.RecoveryProfile",
+        "onParent": false
+    },
+    {
+        "name": "com.vmware.vcDr.Unprotect",
+        "privId": "Datastore.Replication.com.vmware.vcDr.Unprotect",
+        "privGroupName": "Datastore.Replication",
+        "onParent": false
+    }
+]

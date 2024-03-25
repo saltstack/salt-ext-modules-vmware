@@ -1,0 +1,2002 @@
+[
+    {
+        "key": "System.Anonymous",
+        "label": "Anonymous",
+        "summary": "The only privilege held by sessions which have not logged in"
+    },
+    {
+        "key": "System.View",
+        "label": "View",
+        "summary": "Visibility without read access to an entity. This is assigned implicitly by the system, if read privileges are assigned at lower levels in the inventory"
+    },
+    {
+        "key": "System.Read",
+        "label": "Read",
+        "summary": "Grants read access to an entity"
+    },
+    {
+        "key": "Global.ManageCustomFields",
+        "label": "Manage custom attributes",
+        "summary": "Add, remove, and rename custom attribute definitions"
+    },
+    {
+        "key": "Global.SetCustomField",
+        "label": "Set custom attribute",
+        "summary": "Set the value of a custom attribute on an object"
+    },
+    {
+        "key": "Global.LogEvent",
+        "label": "Log event",
+        "summary": "Log a user-defined event on an object"
+    },
+    {
+        "key": "Global.CancelTask",
+        "label": "Cancel task",
+        "summary": "Cancel a running task"
+    },
+    {
+        "key": "Global.Licenses",
+        "label": "Licenses",
+        "summary": "Manage licenses"
+    },
+    {
+        "key": "Global.Diagnostics",
+        "label": "Diagnostics",
+        "summary": "Export diagnostic data"
+    },
+    {
+        "key": "Global.Settings",
+        "label": "Settings",
+        "summary": "Edit global settings"
+    },
+    {
+        "key": "Global.VCServer",
+        "label": "Act as vCenter Server",
+        "summary": "Act as the vCenter Server"
+    },
+    {
+        "key": "Global.CapacityPlanning",
+        "label": "Capacity planning",
+        "summary": "Discover and convert physical host to virtual machine"
+    },
+    {
+        "key": "Global.ScriptAction",
+        "label": "Script action",
+        "summary": "Schedule an external script action"
+    },
+    {
+        "key": "Global.Proxy",
+        "label": "Proxy",
+        "summary": "Add or remove endpoints to or from the proxy"
+    },
+    {
+        "key": "Global.DisableMethods",
+        "label": "Disable methods",
+        "summary": "Operations are disabled in vCenter "
+    },
+    {
+        "key": "Global.EnableMethods",
+        "label": "Enable methods",
+        "summary": "Operations are enabled in vCenter "
+    },
+    {
+        "key": "Global.ServiceManagers",
+        "label": "Service managers",
+        "summary": "Access the directory service"
+    },
+    {
+        "key": "Global.Health",
+        "label": "Health",
+        "summary": "Access the health of vCenter group"
+    },
+    {
+        "key": "Global.SystemTag",
+        "label": "System tag",
+        "summary": "Add or remove system tag"
+    },
+    {
+        "key": "Global.GlobalTag",
+        "label": "Global tag",
+        "summary": "Add or remove global tag"
+    },
+    {
+        "key": "Folder.Create",
+        "label": "Create folder",
+        "summary": "Create folder"
+    },
+    {
+        "key": "Folder.Delete",
+        "label": "Delete folder",
+        "summary": "Delete folder"
+    },
+    {
+        "key": "Folder.Rename",
+        "label": "Rename folder",
+        "summary": "Rename folder"
+    },
+    {
+        "key": "Folder.Move",
+        "label": "Move folder",
+        "summary": "Move folder"
+    },
+    {
+        "key": "Datacenter.Create",
+        "label": "Create datacenter",
+        "summary": "Create a datacenter"
+    },
+    {
+        "key": "Datacenter.Delete",
+        "label": "Remove datacenter",
+        "summary": "Remove a datacenter"
+    },
+    {
+        "key": "Datacenter.Rename",
+        "label": "Rename datacenter",
+        "summary": "Rename a datacenter"
+    },
+    {
+        "key": "Datacenter.Move",
+        "label": "Move datacenter",
+        "summary": "Move a datacenter"
+    },
+    {
+        "key": "Datacenter.IpPoolConfig",
+        "label": "Network protocol profile configuration",
+        "summary": "Configure a network protocol profile on a datacenter"
+    },
+    {
+        "key": "Datacenter.IpPoolReleaseIp",
+        "label": "Release IP allocation",
+        "summary": "Release IP allocation on a network protocol profile in a datacenter"
+    },
+    {
+        "key": "Datacenter.IpPoolQueryAllocations",
+        "label": "Query IP pool allocation",
+        "summary": "Query IP pool allocation on a network protocol profile in a datacenter"
+    },
+    {
+        "key": "Datacenter.Reconfigure",
+        "label": "Reconfigure datacenter",
+        "summary": "Reconfigure a datacenter"
+    },
+    {
+        "key": "Datastore.Rename",
+        "label": "Rename datastore",
+        "summary": "Rename a datastore"
+    },
+    {
+        "key": "Datastore.Move",
+        "label": "Move datastore",
+        "summary": "Move a datastore"
+    },
+    {
+        "key": "Datastore.Delete",
+        "label": "Remove datastore",
+        "summary": "Remove a datastore from the datacenter"
+    },
+    {
+        "key": "Datastore.Browse",
+        "label": "Browse datastore",
+        "summary": "Browse a datastore"
+    },
+    {
+        "key": "Datastore.DeleteFile",
+        "label": "Remove file",
+        "summary": "Remove a file from a datastore"
+    },
+    {
+        "key": "Datastore.FileManagement",
+        "label": "Low level file operations",
+        "summary": "Perform low level file operations on a datastore"
+    },
+    {
+        "key": "Datastore.AllocateSpace",
+        "label": "Allocate space",
+        "summary": "Allocate space on a datastore"
+    },
+    {
+        "key": "Datastore.Config",
+        "label": "Configure datastore",
+        "summary": "Configure a datastore"
+    },
+    {
+        "key": "Datastore.UpdateVirtualMachineFiles",
+        "label": "Update virtual machine files",
+        "summary": "Update virtual machine files on a datastore"
+    },
+    {
+        "key": "Datastore.UpdateVirtualMachineMetadata",
+        "label": "Update virtual machine metadata",
+        "summary": "Update virtual machine metadata on a datastore"
+    },
+    {
+        "key": "Network.Move",
+        "label": "Move network",
+        "summary": "Move a network"
+    },
+    {
+        "key": "Network.Delete",
+        "label": "Remove",
+        "summary": "Remove a network"
+    },
+    {
+        "key": "Network.Config",
+        "label": "Configure",
+        "summary": "Configure a network"
+    },
+    {
+        "key": "Network.Assign",
+        "label": "Assign network",
+        "summary": "Assign network to virtual machine, host service console, VMkernel virtual NIC or physical NIC"
+    },
+    {
+        "key": "DVSwitch.Create",
+        "label": "Create",
+        "summary": "Create a distributed switch"
+    },
+    {
+        "key": "DVSwitch.Modify",
+        "label": "Modify",
+        "summary": "Change the configuration of a distributed switch"
+    },
+    {
+        "key": "DVSwitch.HostOp",
+        "label": "Host operation",
+        "summary": "Change the host member of a distributed switch"
+    },
+    {
+        "key": "DVSwitch.PolicyOp",
+        "label": "Policy operation",
+        "summary": "Change the policy of a distributed switch"
+    },
+    {
+        "key": "DVSwitch.PortConfig",
+        "label": "Port configuration operation",
+        "summary": "Change the configuration of a port in a distributed switch"
+    },
+    {
+        "key": "DVSwitch.PortSetting",
+        "label": "Port setting operation",
+        "summary": "Change the setting of a port in a distributed switch"
+    },
+    {
+        "key": "DVSwitch.Delete",
+        "label": "Delete",
+        "summary": "Delete a distributed switch"
+    },
+    {
+        "key": "DVSwitch.Move",
+        "label": "Move",
+        "summary": "Move a distributed switch into another folder"
+    },
+    {
+        "key": "DVSwitch.Vspan",
+        "label": "VSPAN operation",
+        "summary": "Change the distributed port mirroring configuration of a distributed switch"
+    },
+    {
+        "key": "DVSwitch.Ipfix",
+        "label": "IPFIX operation",
+        "summary": "Change the ipfix configuration of a distributed switch"
+    },
+    {
+        "key": "DVSwitch.ResourceManagement",
+        "label": "Network I/O control operation",
+        "summary": "Add or update network I/O control resource pools"
+    },
+    {
+        "key": "DVPortgroup.Create",
+        "label": "Create",
+        "summary": "Create a dvPort group"
+    },
+    {
+        "key": "DVPortgroup.Modify",
+        "label": "Modify",
+        "summary": "Modify the configuration of a dvPort group"
+    },
+    {
+        "key": "DVPortgroup.PolicyOp",
+        "label": "Policy operation",
+        "summary": "Set the policy of a dvPort group"
+    },
+    {
+        "key": "DVPortgroup.ScopeOp",
+        "label": "Scope operation",
+        "summary": "Set the scope of a dvPort group"
+    },
+    {
+        "key": "DVPortgroup.Ipfix",
+        "label": "IPFIX operation",
+        "summary": "Change the ipfix configuration of a dvPort group"
+    },
+    {
+        "key": "DVPortgroup.Delete",
+        "label": "Delete",
+        "summary": "Delete a dvPort group"
+    },
+    {
+        "key": "Host.Inventory.AddStandaloneHost",
+        "label": "Add standalone host",
+        "summary": "Add a standalone host"
+    },
+    {
+        "key": "Host.Inventory.CreateCluster",
+        "label": "Create cluster",
+        "summary": "Create a cluster along with its initial specification"
+    },
+    {
+        "key": "Host.Inventory.AddHostToCluster",
+        "label": "Add host to cluster",
+        "summary": "Add a host to a cluster"
+    },
+    {
+        "key": "Host.Inventory.RemoveHostFromCluster",
+        "label": "Remove host",
+        "summary": "Remove a host"
+    },
+    {
+        "key": "Host.Inventory.MoveCluster",
+        "label": "Move cluster or standalone host",
+        "summary": "Move a cluster or standalone host"
+    },
+    {
+        "key": "Host.Inventory.RenameCluster",
+        "label": "Rename cluster",
+        "summary": "Rename cluster"
+    },
+    {
+        "key": "Host.Inventory.DeleteCluster",
+        "label": "Remove cluster",
+        "summary": "Remove a cluster or standalone host"
+    },
+    {
+        "key": "Host.Inventory.EditCluster",
+        "label": "Modify cluster",
+        "summary": "Modify a cluster's specification"
+    },
+    {
+        "key": "Host.Inventory.MoveHost",
+        "label": "Move host",
+        "summary": "Move a host between clusters"
+    },
+    {
+        "key": "Host.Hbr.HbrManagement",
+        "label": "Manage replication",
+        "summary": "Manage replication of virtual machines"
+    },
+    {
+        "key": "Host.Config.AuthenticationStore",
+        "label": "Authentication Store",
+        "summary": "Configure authentication stores"
+    },
+    {
+        "key": "Host.Config.SystemManagement",
+        "label": "System Management",
+        "summary": "Remote file management and CIM read/write access"
+    },
+    {
+        "key": "Host.Config.Connection",
+        "label": "Connection",
+        "summary": "Connect or disconnect a host"
+    },
+    {
+        "key": "Host.Config.Maintenance",
+        "label": "Maintenance",
+        "summary": "Enable and disable maintenance mode"
+    },
+    {
+        "key": "Host.Config.AutoStart",
+        "label": "Virtual machine autostart configuration",
+        "summary": "Virtual machine autostart configuration"
+    },
+    {
+        "key": "Host.Config.HyperThreading",
+        "label": "Hyperthreading",
+        "summary": "Enable/disable hyperthreading"
+    },
+    {
+        "key": "Host.Config.Storage",
+        "label": "Storage partition configuration",
+        "summary": "Storage, host datastore, and diagnostic partition configuration"
+    },
+    {
+        "key": "Host.Config.NetService",
+        "label": "Security profile and firewall",
+        "summary": "Configure internet services and firewall"
+    },
+    {
+        "key": "Host.Config.Memory",
+        "label": "Memory configuration",
+        "summary": "Service console memory reservation"
+    },
+    {
+        "key": "Host.Config.Network",
+        "label": "Network configuration",
+        "summary": "Network configuration"
+    },
+    {
+        "key": "Host.Config.AdvancedConfig",
+        "label": "Advanced settings",
+        "summary": "Modify advanced settings for the host"
+    },
+    {
+        "key": "Host.Config.Resources",
+        "label": "System resources",
+        "summary": "Modify system resource settings"
+    },
+    {
+        "key": "Host.Config.Snmp",
+        "label": "Change SNMP settings",
+        "summary": "Modify SNMP settings"
+    },
+    {
+        "key": "Host.Config.DateTime",
+        "label": "Change date and time settings",
+        "summary": "Change date and time settings for the host"
+    },
+    {
+        "key": "Host.Config.PciPassthru",
+        "label": "Change PciPassthru settings",
+        "summary": "Change PciPassthru settings for the host"
+    },
+    {
+        "key": "Host.Config.Settings",
+        "label": "Change settings",
+        "summary": "Change host settings"
+    },
+    {
+        "key": "Host.Config.Patch",
+        "label": "Query patch",
+        "summary": "Query host patches"
+    },
+    {
+        "key": "Host.Config.Firmware",
+        "label": "Firmware",
+        "summary": "Firmware system operations"
+    },
+    {
+        "key": "Host.Config.Power",
+        "label": "Power",
+        "summary": "Power system operations"
+    },
+    {
+        "key": "Host.Config.Image",
+        "label": "Image configuration",
+        "summary": "Change image configuration settings"
+    },
+    {
+        "key": "Host.Config.Quarantine",
+        "label": "Quarantine",
+        "summary": "Change quarantine mode of a host"
+    },
+    {
+        "key": "Host.Config.Nvdimm",
+        "label": "NVDIMM",
+        "summary": "NVDIMM system operations"
+    },
+    {
+        "key": "Host.Local.InstallAgent",
+        "label": "Add host to vCenter",
+        "summary": "Bring the host under vCenter management"
+    },
+    {
+        "key": "Host.Local.ManageUserGroups",
+        "label": "Manage user groups",
+        "summary": "User account management"
+    },
+    {
+        "key": "Host.Local.CreateVM",
+        "label": "Create virtual machine",
+        "summary": "Create a virtual machine without registering it"
+    },
+    {
+        "key": "Host.Local.ReconfigVM",
+        "label": "Reconfigure virtual machine",
+        "summary": "Reconfigure a virtual machine"
+    },
+    {
+        "key": "Host.Local.DeleteVM",
+        "label": "Delete virtual machine",
+        "summary": "Delete an unregistered virtual machine"
+    },
+    {
+        "key": "Host.Cim.CimInteraction",
+        "label": "CIM interaction",
+        "summary": "Establish a remote connection to a CIM interface. By default, this privilege is belongs only to the administrator. This privilege provides SuperUser level access to the CIM service"
+    },
+    {
+        "key": "VirtualMachine.Inventory.Create",
+        "label": "Create new",
+        "summary": "Create a new virtual machine or template"
+    },
+    {
+        "key": "VirtualMachine.Inventory.CreateFromExisting",
+        "label": "Create from existing",
+        "summary": "Create a virtual machine based on an existing virtual machine or template"
+    },
+    {
+        "key": "VirtualMachine.Inventory.Register",
+        "label": "Register",
+        "summary": "Add an existing virtual machine to the inventory"
+    },
+    {
+        "key": "VirtualMachine.Inventory.Delete",
+        "label": "Remove",
+        "summary": "Remove a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Inventory.Unregister",
+        "label": "Unregister",
+        "summary": "Unregister a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Inventory.Move",
+        "label": "Move",
+        "summary": "Move a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.PowerOn",
+        "label": "Power on",
+        "summary": "Power on or resume a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.PowerOff",
+        "label": "Power off",
+        "summary": "Power off a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.Suspend",
+        "label": "Suspend",
+        "summary": "Suspend a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.Reset",
+        "label": "Reset",
+        "summary": "Reset (power cycle) a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.Pause",
+        "label": "Pause or Unpause",
+        "summary": "Pause or unpause a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.AnswerQuestion",
+        "label": "Answer question",
+        "summary": "Answer a virtual machine run-time question"
+    },
+    {
+        "key": "VirtualMachine.Interact.ConsoleInteract",
+        "label": "Console interaction",
+        "summary": "Interact with the virtual machine console"
+    },
+    {
+        "key": "VirtualMachine.Interact.DeviceConnection",
+        "label": "Connect devices",
+        "summary": "Connect/disconnect media and network devices"
+    },
+    {
+        "key": "VirtualMachine.Interact.SetCDMedia",
+        "label": "Configure CD media",
+        "summary": "Configure a different media for virtual CD-ROMs"
+    },
+    {
+        "key": "VirtualMachine.Interact.SetFloppyMedia",
+        "label": "Configure floppy media",
+        "summary": "Configure a different media for virtual floppies"
+    },
+    {
+        "key": "VirtualMachine.Interact.ToolsInstall",
+        "label": "Install VMware Tools",
+        "summary": "Install VMware Tools (or mount/unmount the tools installer image)"
+    },
+    {
+        "key": "VirtualMachine.Interact.GuestControl",
+        "label": "Guest operating system management by VIX API",
+        "summary": "Perform management operations within the guest operating system via the VIX API"
+    },
+    {
+        "key": "VirtualMachine.Interact.DefragmentAllDisks",
+        "label": "Defragment all disks",
+        "summary": "Defragment all disks on the virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.CreateSecondary",
+        "label": "Turn on Fault Tolerance",
+        "summary": "Turn on Fault Tolerance for this virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.TurnOffFaultTolerance",
+        "label": "Turn off Fault Tolerance",
+        "summary": "Turn off Fault Tolerance for this virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.MakePrimary",
+        "label": "Test failover",
+        "summary": "Make the Secondary VM the Primary VM"
+    },
+    {
+        "key": "VirtualMachine.Interact.TerminateFaultTolerantVM",
+        "label": "Test restart Secondary VM",
+        "summary": "Terminate the Secondary VM"
+    },
+    {
+        "key": "VirtualMachine.Interact.DisableSecondary",
+        "label": "Suspend Fault Tolerance",
+        "summary": "Suspend Fault Tolerance for this virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.EnableSecondary",
+        "label": "Resume Fault Tolerance",
+        "summary": "Resume Fault Tolerance for this virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.Record",
+        "label": "Record session on virtual machine",
+        "summary": "Record session on a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.Replay",
+        "label": "Replay session on virtual machine",
+        "summary": "Replay session on a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.Backup",
+        "label": "Backup operation on virtual machine",
+        "summary": "Backup operations on a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Interact.CreateScreenshot",
+        "label": "Create screenshot",
+        "summary": "Create a screenshot"
+    },
+    {
+        "key": "VirtualMachine.Interact.PutUsbScanCodes",
+        "label": "Inject USB HID scan codes",
+        "summary": "Inject a sequence of USB HID scan codes into the keyboard"
+    },
+    {
+        "key": "VirtualMachine.Interact.SESparseMaintenance",
+        "label": "Perform wipe or shrink operations",
+        "summary": "Perform wipe or shrink operations on Flex-SE disks"
+    },
+    {
+        "key": "VirtualMachine.Interact.DnD",
+        "label": "Drag and drop",
+        "summary": "Drag files between a virtual machine and a remote client"
+    },
+    {
+        "key": "VirtualMachine.GuestOperations.Query",
+        "label": "Guest operation queries",
+        "summary": "Queries in a virtual machine guest operating system"
+    },
+    {
+        "key": "VirtualMachine.GuestOperations.Modify",
+        "label": "Guest operation modifications",
+        "summary": "Modifications in a virtual machine guest operating system"
+    },
+    {
+        "key": "VirtualMachine.GuestOperations.Execute",
+        "label": "Guest operation program execution",
+        "summary": "Running processes in a virtual machine guest operating system"
+    },
+    {
+        "key": "VirtualMachine.GuestOperations.QueryAliases",
+        "label": "Guest operation alias query",
+        "summary": "Querying the alias store in a virtual machine guest operating system"
+    },
+    {
+        "key": "VirtualMachine.GuestOperations.ModifyAliases",
+        "label": "Guest operation alias modification",
+        "summary": "Modifying the alias store in a virtual machine guest operating system"
+    },
+    {
+        "key": "VirtualMachine.Config.Rename",
+        "label": "Rename",
+        "summary": "Rename a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Config.Annotation",
+        "label": "Set annotation",
+        "summary": "Set annotation on a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Config.AddExistingDisk",
+        "label": "Add existing disk",
+        "summary": "Browse for and attach an existing virtual disk"
+    },
+    {
+        "key": "VirtualMachine.Config.AddNewDisk",
+        "label": "Add new disk",
+        "summary": "Create and attach a new virtual disk"
+    },
+    {
+        "key": "VirtualMachine.Config.RemoveDisk",
+        "label": "Remove disk",
+        "summary": "Detach and optionally remove a virtual disk"
+    },
+    {
+        "key": "VirtualMachine.Config.RawDevice",
+        "label": "Configure Raw device",
+        "summary": "Virtual machine raw device configuration"
+    },
+    {
+        "key": "VirtualMachine.Config.HostUSBDevice",
+        "label": "Configure Host USB device",
+        "summary": "Add, remove or edit a virtual USB device backed by a host USB device"
+    },
+    {
+        "key": "VirtualMachine.Config.CPUCount",
+        "label": "Change CPU count",
+        "summary": "Change the number of virtual CPUs"
+    },
+    {
+        "key": "VirtualMachine.Config.Memory",
+        "label": "Change Memory",
+        "summary": "Set the amount of virtual machine memory"
+    },
+    {
+        "key": "VirtualMachine.Config.AddRemoveDevice",
+        "label": "Add or remove device",
+        "summary": "Add or remove virtual devices"
+    },
+    {
+        "key": "VirtualMachine.Config.EditDevice",
+        "label": "Modify device settings",
+        "summary": "Modify virtual device settings"
+    },
+    {
+        "key": "VirtualMachine.Config.Settings",
+        "label": "Change Settings",
+        "summary": "Change virtual machine settings"
+    },
+    {
+        "key": "VirtualMachine.Config.Resource",
+        "label": "Change resource",
+        "summary": "Change virtual machine resource allocations"
+    },
+    {
+        "key": "VirtualMachine.Config.UpgradeVirtualHardware",
+        "label": "Upgrade virtual machine compatibility",
+        "summary": "Upgrade virtual machine compatibility"
+    },
+    {
+        "key": "VirtualMachine.Config.ResetGuestInfo",
+        "label": "Reset guest information",
+        "summary": "Reset guest information variables"
+    },
+    {
+        "key": "VirtualMachine.Config.ToggleForkParent",
+        "label": "Toggle fork parent",
+        "summary": "Enable or disable a vmfork parent"
+    },
+    {
+        "key": "VirtualMachine.Config.AdvancedConfig",
+        "label": "Advanced configuration",
+        "summary": "Make advanced configuration changes"
+    },
+    {
+        "key": "VirtualMachine.Config.DiskLease",
+        "label": "Acquire disk lease",
+        "summary": "Lease disks for disk manager"
+    },
+    {
+        "key": "VirtualMachine.Config.SwapPlacement",
+        "label": "Change Swapfile placement",
+        "summary": "Set the placement policy for a single virtual machine's swapfile"
+    },
+    {
+        "key": "VirtualMachine.Config.DiskExtend",
+        "label": "Extend virtual disk",
+        "summary": "Extend virtual disk"
+    },
+    {
+        "key": "VirtualMachine.Config.ChangeTracking",
+        "label": "Toggle disk change tracking",
+        "summary": "Enable or disable change tracking for the virtual machine's disks"
+    },
+    {
+        "key": "VirtualMachine.Config.QueryUnownedFiles",
+        "label": "Query unowned files",
+        "summary": "Query unowned files"
+    },
+    {
+        "key": "VirtualMachine.Config.ReloadFromPath",
+        "label": "Reload from path",
+        "summary": "Reload Virtual Machine from new configuration path"
+    },
+    {
+        "key": "VirtualMachine.Config.QueryFTCompatibility",
+        "label": "Query Fault Tolerance compatibility",
+        "summary": "Check if a virtual machine is compatible for Fault Tolerance"
+    },
+    {
+        "key": "VirtualMachine.Config.MksControl",
+        "label": "Display connection settings",
+        "summary": "Toggle virtual machine display connection settings"
+    },
+    {
+        "key": "VirtualMachine.Config.ManagedBy",
+        "label": "Configure managedBy",
+        "summary": "Configure managedBy on a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.State.CreateSnapshot",
+        "label": "Create snapshot",
+        "summary": "Create a snapshot"
+    },
+    {
+        "key": "VirtualMachine.State.RevertToSnapshot",
+        "label": "Revert to snapshot",
+        "summary": "Make a snapshot current"
+    },
+    {
+        "key": "VirtualMachine.State.RemoveSnapshot",
+        "label": "Remove snapshot",
+        "summary": "Remove a snapshot"
+    },
+    {
+        "key": "VirtualMachine.State.RenameSnapshot",
+        "label": "Rename snapshot",
+        "summary": "Rename a snapshot"
+    },
+    {
+        "key": "VirtualMachine.Hbr.ConfigureReplication",
+        "label": "Configure replication",
+        "summary": "Configure a virtual machine for replication"
+    },
+    {
+        "key": "VirtualMachine.Hbr.ReplicaManagement",
+        "label": "Manage replication",
+        "summary": "Manage replication properties of a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Hbr.MonitorReplication",
+        "label": "Monitor replication",
+        "summary": "Monitor replication of a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.Customize",
+        "label": "Customize guest",
+        "summary": "Customize a virtual machine's guest operating system"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.Clone",
+        "label": "Clone virtual machine",
+        "summary": "Clone a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.PromoteDisks",
+        "label": "Promote disks",
+        "summary": "Promote a virtual machine's disks"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.CreateTemplateFromVM",
+        "label": "Create template from virtual machine",
+        "summary": "Create a template from a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.DeployTemplate",
+        "label": "Deploy template",
+        "summary": "Deploy a virtual machine from a template"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.CloneTemplate",
+        "label": "Clone template",
+        "summary": "Clone a template"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.MarkAsTemplate",
+        "label": "Mark as template",
+        "summary": "Mark a virtual machine as a template"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.MarkAsVM",
+        "label": "Mark as virtual machine",
+        "summary": "Mark a template as a virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.ReadCustSpecs",
+        "label": "Read customization specifications",
+        "summary": "Read customization specifications"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.ModifyCustSpecs",
+        "label": "Modify customization specification",
+        "summary": "Create, edit or delete customization specifications"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.DiskRandomAccess",
+        "label": "Allow disk access",
+        "summary": "Allow random access to disk files through a separate NFC connection"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.DiskRandomRead",
+        "label": "Allow read-only disk access",
+        "summary": "Allow read-only random access to disk files through a separate NFC connection"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.FileRandomAccess",
+        "label": "Allow file access",
+        "summary": "Allow access to files through a separate NFC connection"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.GetVmFiles",
+        "label": "Allow virtual machine download",
+        "summary": "Allow download of virtual machines (used by provisioning operations)"
+    },
+    {
+        "key": "VirtualMachine.Provisioning.PutVmFiles",
+        "label": "Allow virtual machine files upload",
+        "summary": "Allow upload of virtual machine (used by provisioning operations)"
+    },
+    {
+        "key": "VirtualMachine.Namespace.Management",
+        "label": "Manage service configurations",
+        "summary": "Manage virtual machine service configurations"
+    },
+    {
+        "key": "VirtualMachine.Namespace.Query",
+        "label": "Query service configurations",
+        "summary": "Query virtual machine service configurations"
+    },
+    {
+        "key": "VirtualMachine.Namespace.ModifyContent",
+        "label": "Modify service configuration",
+        "summary": "Modify existing virtual machine service configuration"
+    },
+    {
+        "key": "VirtualMachine.Namespace.ReadContent",
+        "label": "Read service configuration",
+        "summary": "Read existing virtual machine service configuration"
+    },
+    {
+        "key": "VirtualMachine.Namespace.Event",
+        "label": "Allow notifications",
+        "summary": "Allow generating and consuming service notifications"
+    },
+    {
+        "key": "VirtualMachine.Namespace.EventNotify",
+        "label": "Allow polling of global event notifications",
+        "summary": "Allow use of property collector to receive push notification for pending service notifications"
+    },
+    {
+        "key": "Resource.AssignVMToPool",
+        "label": "Assign virtual machine to resource pool",
+        "summary": "Assign a virtual machine to a resource pool"
+    },
+    {
+        "key": "Resource.AssignVAppToPool",
+        "label": "Assign vApp to resource pool",
+        "summary": "Assign a vApp to a resource pool"
+    },
+    {
+        "key": "Resource.ApplyRecommendation",
+        "label": "Apply recommendation",
+        "summary": "Apply a DRS vMotion recommendation"
+    },
+    {
+        "key": "Resource.CreatePool",
+        "label": "Create resource pool",
+        "summary": "Create a resource pool"
+    },
+    {
+        "key": "Resource.RenamePool",
+        "label": "Rename resource pool",
+        "summary": "Rename a resource pool"
+    },
+    {
+        "key": "Resource.EditPool",
+        "label": "Modify resource pool",
+        "summary": "Modify a resource pool"
+    },
+    {
+        "key": "Resource.MovePool",
+        "label": "Move resource pool",
+        "summary": "Move a resource pool"
+    },
+    {
+        "key": "Resource.DeletePool",
+        "label": "Remove resource pool",
+        "summary": "Remove a resource pool"
+    },
+    {
+        "key": "Resource.HotMigrate",
+        "label": "Migrate powered on virtual machine",
+        "summary": "Migrate a powered on virtual machine"
+    },
+    {
+        "key": "Resource.ColdMigrate",
+        "label": "Migrate powered off virtual machine",
+        "summary": "Migrate a powered off virtual machine"
+    },
+    {
+        "key": "Resource.QueryVMotion",
+        "label": "Query vMotion",
+        "summary": "Query vMotion compatibility of a set of hosts"
+    },
+    {
+        "key": "Alarm.Create",
+        "label": "Create alarm",
+        "summary": "Create an alarm"
+    },
+    {
+        "key": "Alarm.Delete",
+        "label": "Remove alarm",
+        "summary": "Remove an alarm"
+    },
+    {
+        "key": "Alarm.Edit",
+        "label": "Modify alarm",
+        "summary": "Modify an alarm"
+    },
+    {
+        "key": "Alarm.Acknowledge",
+        "label": "Acknowledge alarm",
+        "summary": "Acknowledge an alarm"
+    },
+    {
+        "key": "Alarm.SetStatus",
+        "label": "Set alarm status",
+        "summary": "Set status for an alarm"
+    },
+    {
+        "key": "Alarm.DisableActions",
+        "label": "Disable alarm action",
+        "summary": "Disable actions for an alarm"
+    },
+    {
+        "key": "Task.Create",
+        "label": "Create task",
+        "summary": "Create a task"
+    },
+    {
+        "key": "Task.Update",
+        "label": "Update task",
+        "summary": "Update a task"
+    },
+    {
+        "key": "ScheduledTask.Create",
+        "label": "Create tasks",
+        "summary": "Create a scheduled task"
+    },
+    {
+        "key": "ScheduledTask.Delete",
+        "label": "Remove task",
+        "summary": "Remove a scheduled task"
+    },
+    {
+        "key": "ScheduledTask.Run",
+        "label": "Run task",
+        "summary": "Run a scheduled task immediately"
+    },
+    {
+        "key": "ScheduledTask.Edit",
+        "label": "Modify task",
+        "summary": "Edit a scheduled task"
+    },
+    {
+        "key": "Sessions.TerminateSession",
+        "label": "View and stop sessions",
+        "summary": "Monitor who is logged in and stop sessions"
+    },
+    {
+        "key": "Sessions.ValidateSession",
+        "label": "Validate session",
+        "summary": "Verify session validity"
+    },
+    {
+        "key": "Sessions.GlobalMessage",
+        "label": "Message",
+        "summary": "Modify the message (seen by all users when logging in)"
+    },
+    {
+        "key": "Sessions.ImpersonateUser",
+        "label": "Impersonate user",
+        "summary": "Impersonate users"
+    },
+    {
+        "key": "Performance.ModifyIntervals",
+        "label": "Modify intervals",
+        "summary": "Modify historical intervals"
+    },
+    {
+        "key": "Authorization.ModifyRoles",
+        "label": "Modify role",
+        "summary": "Modify a role's name or privileges"
+    },
+    {
+        "key": "Authorization.ReassignRolePermissions",
+        "label": "Reassign role permissions",
+        "summary": "Reassign the permissions of one role to another"
+    },
+    {
+        "key": "Authorization.ModifyPermissions",
+        "label": "Modify permission",
+        "summary": "Modify a permission's role or propagation"
+    },
+    {
+        "key": "Extension.Register",
+        "label": "Register extension",
+        "summary": "Register extensions"
+    },
+    {
+        "key": "Extension.Update",
+        "label": "Update extension",
+        "summary": "Update extensions"
+    },
+    {
+        "key": "Extension.Unregister",
+        "label": "Unregister extension",
+        "summary": "Unregister extensions"
+    },
+    {
+        "key": "VApp.ResourceConfig",
+        "label": "vApp resource configuration",
+        "summary": "Edit vApp resource configuration"
+    },
+    {
+        "key": "VApp.InstanceConfig",
+        "label": "vApp instance configuration",
+        "summary": "Edit vApp instance configuration, such as policies and property values"
+    },
+    {
+        "key": "VApp.ApplicationConfig",
+        "label": "vApp application configuration",
+        "summary": "Edit vApp application configuration, such as product info"
+    },
+    {
+        "key": "VApp.ManagedByConfig",
+        "label": "vApp managedBy configuration",
+        "summary": "Edit vApp managedBy configuration"
+    },
+    {
+        "key": "VApp.Export",
+        "label": "Export",
+        "summary": "Export vApp"
+    },
+    {
+        "key": "VApp.Import",
+        "label": "Import",
+        "summary": "Import vApp"
+    },
+    {
+        "key": "VApp.ExtractOvfEnvironment",
+        "label": "View OVF environment",
+        "summary": "View the OVF environment for a virtual machine"
+    },
+    {
+        "key": "VApp.AssignVM",
+        "label": "Add virtual machine",
+        "summary": "Add a virtual machine to the vApp"
+    },
+    {
+        "key": "VApp.AssignResourcePool",
+        "label": "Assign resource pool",
+        "summary": "Assign resource pool to vApp"
+    },
+    {
+        "key": "VApp.AssignVApp",
+        "label": "Assign vApp",
+        "summary": "Assign a vApp to another vApp"
+    },
+    {
+        "key": "VApp.Clone",
+        "label": "Clone",
+        "summary": "Clone a vApp"
+    },
+    {
+        "key": "VApp.Create",
+        "label": "Create",
+        "summary": "Create a new vApp"
+    },
+    {
+        "key": "VApp.Delete",
+        "label": "Delete",
+        "summary": "Delete a vApp"
+    },
+    {
+        "key": "VApp.Unregister",
+        "label": "Unregister",
+        "summary": "Unregister a vApp"
+    },
+    {
+        "key": "VApp.Move",
+        "label": "Move",
+        "summary": "Move a vApp"
+    },
+    {
+        "key": "VApp.PowerOn",
+        "label": "Power on",
+        "summary": "Power on a vApp"
+    },
+    {
+        "key": "VApp.PowerOff",
+        "label": "Power off",
+        "summary": "Power off a vApp"
+    },
+    {
+        "key": "VApp.Suspend",
+        "label": "Suspend",
+        "summary": "Suspend a vApp"
+    },
+    {
+        "key": "VApp.Rename",
+        "label": "Rename",
+        "summary": "Rename a vApp"
+    },
+    {
+        "key": "Profile.Create",
+        "label": "Create",
+        "summary": "Create a host profile"
+    },
+    {
+        "key": "Profile.Delete",
+        "label": "Delete",
+        "summary": "Delete a host profile"
+    },
+    {
+        "key": "Profile.Edit",
+        "label": "Edit",
+        "summary": "Edit a host profile"
+    },
+    {
+        "key": "Profile.View",
+        "label": "View",
+        "summary": "View a host profile"
+    },
+    {
+        "key": "Profile.Clear",
+        "label": "Clear",
+        "summary": "Clear host profile related information"
+    },
+    {
+        "key": "Profile.Export",
+        "label": "Export",
+        "summary": "Export a host profile"
+    },
+    {
+        "key": "EAM.Config",
+        "label": "Config",
+        "summary": "Update ESX agent host configuration"
+    },
+    {
+        "key": "EAM.Modify",
+        "label": "Modify",
+        "summary": "Modify agencies and agents"
+    },
+    {
+        "key": "EAM.View",
+        "label": "View",
+        "summary": "View agencies and agents"
+    },
+    {
+        "key": "StoragePod.Config",
+        "label": "Configure a datastore cluster",
+        "summary": "Configure a datastore cluster"
+    },
+    {
+        "key": "Certificate.Manage",
+        "label": "Manage certificates",
+        "summary": "Manage certificates"
+    },
+    {
+        "key": "HealthUpdateProvider.Register",
+        "label": "Register",
+        "summary": "Register a health update provider"
+    },
+    {
+        "key": "HealthUpdateProvider.Update",
+        "label": "Update",
+        "summary": "Add, remove and update entities managed by this provider"
+    },
+    {
+        "key": "HealthUpdateProvider.Unregister",
+        "label": "Unregister",
+        "summary": "Unregister a health update provider"
+    },
+    {
+        "key": "ExternalStatsProvider.Register",
+        "label": "Register",
+        "summary": "Register an external stats provider"
+    },
+    {
+        "key": "ExternalStatsProvider.Update",
+        "label": "Update",
+        "summary": "Report VM stats"
+    },
+    {
+        "key": "ExternalStatsProvider.Unregister",
+        "label": "Unregister",
+        "summary": "Unregister an external stats provider"
+    },
+    {
+        "key": "Cryptographer.ManageKeys",
+        "label": "Manage keys",
+        "summary": "Add/Update/Remove/List cryptographic keys"
+    },
+    {
+        "key": "Cryptographer.ManageKeyServers",
+        "label": "Manage KMS",
+        "summary": "Add/Update/Remove/List KMS information"
+    },
+    {
+        "key": "Cryptographer.ManageEncryptionPolicy",
+        "label": "Manage encryption policies",
+        "summary": "Manage encryption storage policies"
+    },
+    {
+        "key": "Cryptographer.Access",
+        "label": "Direct Access",
+        "summary": "Grants access to unencrypted or cleartext data of encrypted VMs"
+    },
+    {
+        "key": "Cryptographer.RegisterHost",
+        "label": "Register host",
+        "summary": "Register host in a cluster with encrypted VMs"
+    },
+    {
+        "key": "Cryptographer.EncryptNew",
+        "label": "Encrypt new",
+        "summary": "Encrypt newly created VM or disk"
+    },
+    {
+        "key": "Cryptographer.Encrypt",
+        "label": "Encrypt",
+        "summary": "Encrypt existing VM or disk"
+    },
+    {
+        "key": "Cryptographer.Decrypt",
+        "label": "Decrypt",
+        "summary": "Decrypt encrypted VM or disk"
+    },
+    {
+        "key": "Cryptographer.RegisterVM",
+        "label": "Register VM",
+        "summary": "Registed encrypted VM"
+    },
+    {
+        "key": "Cryptographer.Migrate",
+        "label": "Migrate",
+        "summary": "Migrate an encrypted VM"
+    },
+    {
+        "key": "Cryptographer.Recrypt",
+        "label": "Recrypt",
+        "summary": "Re-encrypt an encrypted VM or disk with another key"
+    },
+    {
+        "key": "Cryptographer.AddDisk",
+        "label": "Add disk",
+        "summary": "Add an encrypted disk to a VM"
+    },
+    {
+        "key": "Cryptographer.Clone",
+        "label": "Clone",
+        "summary": "Clone an encrypted VM"
+    },
+    {
+        "key": "TenantManager.Query",
+        "label": "Query",
+        "summary": "Query"
+    },
+    {
+        "key": "HmsSession.com.vmware.vcHms.Session.Terminate",
+        "label": "Terminate",
+        "summary": "Terminate a user session"
+    },
+    {
+        "key": "InventoryService.Tagging.AttachTag",
+        "label": "AttachTag",
+        "summary": "AttachTag"
+    },
+    {
+        "key": "VcDr.Diagnostics.com.vmware.vcDr.SystemLogs",
+        "label": "Export",
+        "summary": "Export diagnostic data"
+    },
+    {
+        "key": "InventoryService.Tagging.ModifyUsedByForCategory",
+        "label": "ModifyUsedByForCategory",
+        "summary": "ModifyUsedByForCategory"
+    },
+    {
+        "key": "Cns.Searchable",
+        "label": "Searchable",
+        "summary": "Can use all CNS searchable APIs"
+    },
+    {
+        "key": "VcDr.PlaceholderDatastoreManager.com.vmware.vcDr.Edit",
+        "label": "Configure",
+        "summary": "Configure placeholder datastores"
+    },
+    {
+        "key": "Host.Config.GuestStore",
+        "label": "GuestStore",
+        "summary": "GuestStore"
+    },
+    {
+        "key": "TrustedAdmin.ReadTrustedHosts",
+        "label": "ReadTrustedHosts",
+        "summary": "ReadTrustedHosts"
+    },
+    {
+        "key": "ContentLibrary.EvictLibraryItem",
+        "label": "Evict library item",
+        "summary": "Evict the cached content of a subscribed library item"
+    },
+    {
+        "key": "InventoryService.Tagging.DeleteCategory",
+        "label": "DeleteCategory",
+        "summary": "DeleteCategory"
+    },
+    {
+        "key": "TrustedAdmin.ReadKMSTrust",
+        "label": "ReadKMSTrust",
+        "summary": "ReadKMSTrust"
+    },
+    {
+        "key": "VcDr.RecoveryHistoryManager.com.vmware.vcDr.ViewDeleted",
+        "label": "View Deleted Plans",
+        "summary": "View deleted plan history"
+    },
+    {
+        "key": "ContentLibrary.TypeIntrospection",
+        "label": "Type introspection",
+        "summary": "Introspect types supported by Content Library"
+    },
+    {
+        "key": "TrustedAdmin.ConfigureHostMetadata",
+        "label": "ConfigureHostMetadata",
+        "summary": "ConfigureHostMetadata"
+    },
+    {
+        "key": "VcDr.ProtectionProfile.com.vmware.vcDr.Edit",
+        "label": "Modify",
+        "summary": "Modify a protection group"
+    },
+    {
+        "key": "ContentLibrary.GetConfiguration",
+        "label": "View configuration settings",
+        "summary": "View global settings of Content Library"
+    },
+    {
+        "key": "VcDr.RecoveryHistoryManager.com.vmware.vcDr.Delete",
+        "label": "Delete History",
+        "summary": "Delete history"
+    },
+    {
+        "key": "VcDr.InventoryMapper.com.vmware.vcDr.Edit",
+        "label": "Modify",
+        "summary": "Modify inventory mappings"
+    },
+    {
+        "key": "CertificateManagement.Manage",
+        "label": "Manage",
+        "summary": "Manage"
+    },
+    {
+        "key": "VirtualMachine.Interact.SuspendToMemory",
+        "label": "SuspendToMemory",
+        "summary": "SuspendToMemory"
+    },
+    {
+        "key": "InventoryService.Tagging.EditTag",
+        "label": "EditTag",
+        "summary": "EditTag"
+    },
+    {
+        "key": "ContentLibrary.UpdateSession",
+        "label": "Update files",
+        "summary": "Update files of a library item"
+    },
+    {
+        "key": "AutoDeploy.Host.AssociateMachine",
+        "label": "AssociateMachine",
+        "summary": "Associate a machine identifier with a host in vCenter"
+    },
+    {
+        "key": "VcIntegrity.Updates.com.vmware.vcIntegrity.ViewStatus",
+        "label": "View Compliance Status",
+        "summary": "View baseline or software update compliance information for an object in the vSphere inventory."
+    },
+    {
+        "key": "VcDr.Autoprotect.com.vmware.vcDr.Edit",
+        "label": "Modify",
+        "summary": "Modify automatic protection configuration"
+    },
+    {
+        "key": "ContentLibrary.AddSubscription",
+        "label": "Create a subscription for a published library",
+        "summary": "Create a subscription"
+    },
+    {
+        "key": "ContentLibrary.DeleteSubscription",
+        "label": "Delete subscription of a published library",
+        "summary": "Delete subscription"
+    },
+    {
+        "key": "ContentLibrary.UpdateLibrary",
+        "label": "Update library",
+        "summary": "Update properties common to all library types"
+    },
+    {
+        "key": "VcDr.RecoveryProfile.com.vmware.vcDr.ConfigureServerCommands",
+        "label": "Configure commands",
+        "summary": "Configure commands to run during recovery"
+    },
+    {
+        "key": "TransferService.Monitor",
+        "label": "Monitor",
+        "summary": "Monitor"
+    },
+    {
+        "key": "InventoryService.Tagging.ModifyUsedByForTag",
+        "label": "ModifyUsedByForTag",
+        "summary": "ModifyUsedByForTag"
+    },
+    {
+        "key": "VcIntegrity.General.com.vmware.vcIntegrity.Configure",
+        "label": "Configure Service",
+        "summary": "Configure the vSphere Update Manager service and the scheduled task to download patches, extensions, notifications, and related data."
+    },
+    {
+        "key": "Cryptographer.ReadKeyServersInfo",
+        "label": "ReadKeyServersInfo",
+        "summary": "ReadKeyServersInfo"
+    },
+    {
+        "key": "ContentLibrary.SyncLibraryItem",
+        "label": "Sync library item",
+        "summary": "Synchronize a subscribed library item"
+    },
+    {
+        "key": "AutoDeploy.Rule.Create",
+        "label": "Create",
+        "summary": "Create a rule"
+    },
+    {
+        "key": "HmsReplication.com.vmware.vcHms.Replication.View",
+        "label": "View replications",
+        "summary": "View replications status and details"
+    },
+    {
+        "key": "ContentLibrary.UpdateSubscribedLibrary",
+        "label": "Update subscribed library",
+        "summary": "Update a subscribed library"
+    },
+    {
+        "key": "Vsan.Cluster.ShallowRekey",
+        "label": "ShallowRekey",
+        "summary": "Rotate the key encryption key for vSAN Cluster, without re-encrypting all data"
+    },
+    {
+        "key": "VApp.PullFromUrls",
+        "label": "PullFromUrls",
+        "summary": "PullFromUrls"
+    },
+    {
+        "key": "AutoDeploy.RuleSet.Activate",
+        "label": "Activate",
+        "summary": "Activate a rule set"
+    },
+    {
+        "key": "HmsRemote.com.vmware.vcHms.Hms.Manage",
+        "label": "Manage VRM",
+        "summary": "Pair, repair or break pairing between two vSphere Replication Management Servers"
+    },
+    {
+        "key": "VcDr.ProtectionProfile.com.vmware.vcDr.RemoveFromRecoveryPlan",
+        "label": "Remove from plan",
+        "summary": "Remove from a recovery plan"
+    },
+    {
+        "key": "VcDr.ProtectionProfile.com.vmware.vcDr.Create",
+        "label": "Create",
+        "summary": "Create a protection group"
+    },
+    {
+        "key": "VirtualMachine.Replication.com.vmware.vcDr.Protect",
+        "label": "Protect",
+        "summary": "Protect virtual machine"
+    },
+    {
+        "key": "ContentLibrary.UpdateLibraryItem",
+        "label": "Update library item",
+        "summary": "Update a library item in a local library"
+    },
+    {
+        "key": "VcDr.RecoveryProfile.com.vmware.vcDr.Run",
+        "label": "Test",
+        "summary": "Test recovery plan"
+    },
+    {
+        "key": "ContentLibrary.DeleteLibraryItem",
+        "label": "Delete library item",
+        "summary": "Delete a library item from a local library"
+    },
+    {
+        "key": "VcDr.Internal.com.vmware.vcDr.InternalAccess",
+        "label": "Internal Access",
+        "summary": "Internal SRM use"
+    },
+    {
+        "key": "vService.DestroyDependency",
+        "label": "Destroy dependency",
+        "summary": "Destroy a vService dependency on a virtual machine or vApp"
+    },
+    {
+        "key": "InventoryService.Tagging.CreateTag",
+        "label": "CreateTag",
+        "summary": "CreateTag"
+    },
+    {
+        "key": "vService.UpdateDependency",
+        "label": "Update dependency",
+        "summary": "Update a vService dependency on a virtual machine or vApp"
+    },
+    {
+        "key": "InventoryService.Tagging.DeleteTag",
+        "label": "DeleteTag",
+        "summary": "DeleteTag"
+    },
+    {
+        "key": "VcDr.OptionManager.com.vmware.vcDr.Edit",
+        "label": "Modify",
+        "summary": "Modify advanced settings"
+    },
+    {
+        "key": "AutoDeploy.Rule.Edit",
+        "label": "Edit",
+        "summary": "Edit a rule"
+    },
+    {
+        "key": "TenantManager.Update",
+        "label": "Update",
+        "summary": "Update"
+    },
+    {
+        "key": "ContentLibrary.SyncLibrary",
+        "label": "Sync subscribed library",
+        "summary": "Synchronize a subscribed library"
+    },
+    {
+        "key": "TrustedAdmin.RetrieveTPMHostCertificates",
+        "label": "RetrieveTPMHostCertificates",
+        "summary": "RetrieveTPMHostCertificates"
+    },
+    {
+        "key": "ContentLibrary.UpdateConfiguration",
+        "label": "Update configuration settings",
+        "summary": "Update global configuration settings of Content Library"
+    },
+    {
+        "key": "VcDr.RemoteSite.com.vmware.vcDr.Edit",
+        "label": "Modify",
+        "summary": "Modify remote site"
+    },
+    {
+        "key": "AutoDeploy.RuleSet.Edit",
+        "label": "Edit",
+        "summary": "Edit a rule set"
+    },
+    {
+        "key": "VcIntegrity.Updates.com.vmware.vcIntegrity.Stage",
+        "label": "Stage Patches and Extensions",
+        "summary": "Stage patches or extensions to hosts. In addition, this privilege allows you to view the compliance status."
+    },
+    {
+        "key": "GuestDataPublisher.GetData",
+        "label": "GetData",
+        "summary": "GetData"
+    },
+    {
+        "key": "ContentLibrary.PublishLibraryItem",
+        "label": "Publish a library item to its subscribers",
+        "summary": "Publish a library item"
+    },
+    {
+        "key": "Datastore.Replication.com.vmware.vcDr.Protect",
+        "label": "Protect",
+        "summary": "Protect datastore"
+    },
+    {
+        "key": "VcDr.RecoveryProfile.com.vmware.vcDr.Reprotect",
+        "label": "Reprotect",
+        "summary": "Reprotect"
+    },
+    {
+        "key": "ContentLibrary.UpdateSubscription",
+        "label": "Update subscription of a published library",
+        "summary": "Update subscription"
+    },
+    {
+        "key": "HmsRemote.com.vmware.vcHms.Hbr.Manage",
+        "label": "Manage VR Server",
+        "summary": "Add, update or remove a vSphere Replication Server"
+    },
+    {
+        "key": "ContentLibrary.DownloadSession",
+        "label": "Download files",
+        "summary": "Download files from a library item"
+    },
+    {
+        "key": "VcDr.RecoveryProfile.com.vmware.vcDr.Create",
+        "label": "Create",
+        "summary": "Create recovery plan"
+    },
+    {
+        "key": "Resource.com.vmware.vcDr.RecoveryUse",
+        "label": "Recovery use",
+        "summary": "Allow SRM to use resource"
+    },
+    {
+        "key": "vService.ReconfigureDependency",
+        "label": "Reconfigure dependency configuration",
+        "summary": "Reconfigure the vService dependency"
+    },
+    {
+        "key": "HmsDiagnostics.com.vmware.vcHms.Diagnostics.Manage",
+        "label": "Manage",
+        "summary": "Generate, retrieve or delete a support bundle"
+    },
+    {
+        "key": "TrustedAdmin.ReadAttestingSSO",
+        "label": "ReadAttestingSSO",
+        "summary": "ReadAttestingSSO"
+    },
+    {
+        "key": "HmsRemote.com.vmware.vcHms.Hbr.View",
+        "label": "View VR Server",
+        "summary": "View vSphere Replication Server connection details"
+    },
+    {
+        "key": "TrustedAdmin.ConfigureHostCertificates",
+        "label": "ConfigureHostCertificates",
+        "summary": "ConfigureHostCertificates"
+    },
+    {
+        "key": "TrustedAdmin.ConfigureTokenConversionPolicy",
+        "label": "ConfigureTokenConversionPolicy",
+        "summary": "ConfigureTokenConversionPolicy"
+    },
+    {
+        "key": "ContentLibrary.DeleteLocalLibrary",
+        "label": "Delete local library",
+        "summary": "Delete a local library"
+    },
+    {
+        "key": "AutoDeploy.Profile.Edit",
+        "label": "Edit",
+        "summary": "Associate an Image Profile"
+    },
+    {
+        "key": "VcDr.ProtectionProfile.com.vmware.vcDr.AssignToRecoveryPlan",
+        "label": "Assign to plan",
+        "summary": "Assign to a recovery plan"
+    },
+    {
+        "key": "VcDr.ProtectionProfile.com.vmware.vcDr.Delete",
+        "label": "Remove",
+        "summary": "Remove a protection group"
+    },
+    {
+        "key": "VcDr.RecoveryProfile.com.vmware.vcDr.Delete",
+        "label": "Remove",
+        "summary": "Remove recovery plan"
+    },
+    {
+        "key": "Authorization.ModifyPrivileges",
+        "label": "Modify privilege",
+        "summary": "Modify a privilege's group or description"
+    },
+    {
+        "key": "StorageProfile.Update",
+        "label": "Profile-driven storage update",
+        "summary": "Profile-driven storage update"
+    },
+    {
+        "key": "ContentLibrary.EvictSubscribedLibrary",
+        "label": "Evict subscribed library",
+        "summary": "Evict the cached content of a subscribed library"
+    },
+    {
+        "key": "VcIntegrity.Baseline.com.vmware.vcIntegrity.AssignBaselines",
+        "label": "Attach Baseline",
+        "summary": "Attach baselines to an object in the vSphere inventory."
+    },
+    {
+        "key": "VcIntegrity.Updates.com.vmware.vcIntegrity.Scan",
+        "label": "Scan for Applicable Patches, Extensions, and Upgrades",
+        "summary": "Scan virtual machines, virtual appliances, and hosts to search for applicable patches, extensions, or upgrades."
+    },
+    {
+        "key": "ContentLibrary.DeleteSubscribedLibrary",
+        "label": "Delete subscribed library",
+        "summary": "Delete a subscribed library"
+    },
+    {
+        "key": "StorageProfile.View",
+        "label": "Profile-driven storage view",
+        "summary": "Profile-driven storage view"
+    },
+    {
+        "key": "TrustedAdmin.ManageAttestingSSO",
+        "label": "ManageAttestingSSO",
+        "summary": "ManageAttestingSSO"
+    },
+    {
+        "key": "ContentLibrary.ImportStorage",
+        "label": "Import storage",
+        "summary": "Import storage to a library item"
+    },
+    {
+        "key": "TransferService.Manage",
+        "label": "Manage",
+        "summary": "Manage"
+    },
+    {
+        "key": "StorageViews.ConfigureService",
+        "label": "Configure service",
+        "summary": "Allows changing server configuration such as the reports update interval and database connectivity information"
+    },
+    {
+        "key": "CertificateManagement.Administer",
+        "label": "Administer",
+        "summary": "Administer"
+    },
+    {
+        "key": "TrustedAdmin.ManageKMSTrust",
+        "label": "ManageKMSTrust",
+        "summary": "ManageKMSTrust"
+    },
+    {
+        "key": "Host.Config.ProductLocker",
+        "label": "ProductLocker",
+        "summary": "ProductLocker"
+    },
+    {
+        "key": "HmsDatastoreMapper.com.vmware.vcHms.Mappings.Manage",
+        "label": "Manage",
+        "summary": "Add or remove mappings"
+    },
+    {
+        "key": "TrustedAdmin.RetrieveHostMetadata",
+        "label": "RetrieveHostMetadata",
+        "summary": "RetrieveHostMetadata"
+    },
+    {
+        "key": "HmsRemote.com.vmware.vcHms.Hms.View",
+        "label": "View VRM",
+        "summary": "View pairing connection details"
+    },
+    {
+        "key": "ContentLibrary.CreateSubscribedLibrary",
+        "label": "Create subscribed library",
+        "summary": "Create a subscribed library"
+    },
+    {
+        "key": "Alarm.ToggleEnableOnEntity",
+        "label": "ToggleEnableOnEntity",
+        "summary": "ToggleEnableOnEntity"
+    },
+    {
+        "key": "AutoDeploy.Rule.Delete",
+        "label": "Delete",
+        "summary": "Delete a rule"
+    },
+    {
+        "key": "VcIntegrity.Baseline.com.vmware.vcIntegrity.ManageBaselines",
+        "label": "Manage Baseline",
+        "summary": "Create, edit, or delete a baseline."
+    },
+    {
+        "key": "VirtualMachine.Replication.com.vmware.vcDr.Unprotect",
+        "label": "Stop",
+        "summary": "Stop protection of a virtual machine"
+    },
+    {
+        "key": "VcIntegrity.Updates.com.vmware.vcIntegrity.Remediate",
+        "label": "Remediate to Apply Patches, Extensions, and Upgrades",
+        "summary": "Remediate virtual machines, virtual appliances, and hosts to apply patches, extensions, or upgrades. In addition, this privilege allows you to view the compliance status."
+    },
+    {
+        "key": "vService.CreateDependency",
+        "label": "Create dependency",
+        "summary": "Create a vService dependency on a virtual machine or vApp"
+    },
+    {
+        "key": "VcIntegrity.FileUpload.com.vmware.vcIntegrity.ImportFile",
+        "label": "Upload file",
+        "summary": "Upload host upgrade releases and offline patch bundles"
+    },
+    {
+        "key": "TrustedAdmin.ManageTrustedHosts",
+        "label": "ManageTrustedHosts",
+        "summary": "ManageTrustedHosts"
+    },
+    {
+        "key": "Host.Inventory.ManageClusterLifecyle",
+        "label": "ManageClusterLifecyle",
+        "summary": "ManageClusterLifecyle"
+    },
+    {
+        "key": "AutoDeploy.Profile.Create",
+        "label": "Create",
+        "summary": "Create an Image Profile"
+    },
+    {
+        "key": "HmsDatastoreMapper.com.vmware.vcHms.Mappings.View",
+        "label": "View",
+        "summary": "View mappings"
+    },
+    {
+        "key": "ContentLibrary.UpdateLocalLibrary",
+        "label": "Update local library",
+        "summary": "Update a local library"
+    },
+    {
+        "key": "InventoryService.Tagging.EditCategory",
+        "label": "EditCategory",
+        "summary": "EditCategory"
+    },
+    {
+        "key": "InventoryService.Tagging.CreateCategory",
+        "label": "CreateCategory",
+        "summary": "CreateCategory"
+    },
+    {
+        "key": "ContentLibrary.PublishLibrary",
+        "label": "Publish a library to its subscribers",
+        "summary": "Publish a library"
+    },
+    {
+        "key": "VcDr.RecoveryProfile.com.vmware.vcDr.Edit",
+        "label": "Modify",
+        "summary": "Modify recovery plan"
+    },
+    {
+        "key": "VcDr.Storage.com.vmware.vcDr.Configure",
+        "label": "Configure",
+        "summary": "Configure the SAN array manager"
+    },
+    {
+        "key": "TrustedAdmin.ReadStsInfo",
+        "label": "ReadStsInfo",
+        "summary": "ReadStsInfo"
+    },
+    {
+        "key": "ContentLibrary.ProbeSubscription",
+        "label": "Probe subscription information",
+        "summary": "Probe remote library subscription information to validate subscription configuration"
+    },
+    {
+        "key": "ContentLibrary.ReadStorage",
+        "label": "Read storage",
+        "summary": "Get storage information for a library item"
+    },
+    {
+        "key": "StorageViews.View",
+        "label": "View",
+        "summary": "View"
+    },
+    {
+        "key": "ContentLibrary.AddLibraryItem",
+        "label": "Add library item",
+        "summary": "Add or copy a library item to a local library"
+    },
+    {
+        "key": "ContentLibrary.CreateLocalLibrary",
+        "label": "Create local library",
+        "summary": "Create a local library"
+    },
+    {
+        "key": "VcDr.RecoveryProfile.com.vmware.vcDr.Failover",
+        "label": "Recovery",
+        "summary": "Run recovery plan"
+    },
+    {
+        "key": "Datastore.Replication.com.vmware.vcDr.Unprotect",
+        "label": "Stop",
+        "summary": "Stop protection of a datastore"
+    }
+]
