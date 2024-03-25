@@ -8,6 +8,7 @@ State Modules
 .. autosummary::
     :toctree:
 
+    saltext.vmware.states.content_library
     saltext.vmware.states.datacenter
     saltext.vmware.states.datastore
     saltext.vmware.states.esxi
