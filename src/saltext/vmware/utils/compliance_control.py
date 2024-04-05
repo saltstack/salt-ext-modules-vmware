@@ -66,8 +66,8 @@ def _create_product_context(config, product, ids=None):
             or config.get("grains", {}).get("saltext.vmware")
             or config.get("pillar", {}).get("saltext.vmware")
             or config.get(parent_product)
-            or config.get("pillar", {}).get(parent_product)
             or config.get("grains", {}).get(parent_product)
+            or config.get("pillar", {}).get(parent_product)
             or {}
         )
     else:
@@ -76,8 +76,8 @@ def _create_product_context(config, product, ids=None):
             or config.get("grains", {}).get("saltext.vmware")
             or config.get("pillar", {}).get("saltext.vmware")
             or config.get(product)
-            or config.get("pillar", {}).get(product)
             or config.get("grains", {}).get(product)
+            or config.get("pillar", {}).get(product)
             or {}
         )
 
