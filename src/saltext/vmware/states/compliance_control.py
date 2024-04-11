@@ -95,14 +95,17 @@ def check_control(name, control_config, product, ids=None, profile=None):
             )
 
             if remediate_response["status"] == "SUCCESS":
-                log.debug("Remediation completed successfully.")
+                log.debug("Remediation completed with success status.")
                 # Update return data for successful remediation
                 ret = {
                     "name": name,
                     "result": True,
-                    "comment": "Remediation completed successfully.",
                     "changes": remediate_response.get("changes", {}),
                 }
+                if not ret["changes"]:
+                    ret["comment"] = "Nothing to remediate."
+                else:
+                    ret["comment"] = "Remediation completed successfully."
             elif remediate_response["status"] == "FAILED":
                 log.debug("Remediation failed.")
                 # Update return data for failed remediation
