@@ -28,6 +28,7 @@ def _create_vcenter_context(conf, fqdn):
         username=conf["user"],
         password=conf["password"],
         ssl_thumbprint=conf.get("ssl_thumbprint", None),
+        verify_ssl=conf.get("verify_ssl", True)
     )
 
 
@@ -37,6 +38,7 @@ def _create_sddc_manager_context(conf, fqdn):
         username=conf["user"],
         password=conf["password"],
         ssl_thumbprint=conf.get("ssl_thumbprint", None),
+        verify_ssl=conf.get("verify_ssl", True)
     )
 
 
