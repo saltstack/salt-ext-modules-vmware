@@ -42,6 +42,23 @@ def check_control(name, control_config, product, ids=None, profile=None):
     log.debug("Opts: %s", __opts__)
 
     try:
+        compliance_config = control_config.get('compliance_config')
+        if not isinstance(compliance_config, dict) or not compliance_config:
+            raise Exception(f"Desired spec is empty or not in correct format")
+        else:
+            product_control_config = control_config.get('compliance_config', {}).get(product)
+            if product_control_config:
+                control_config = {'compliance_config': {product: product_control_config}}
+            else:
+                err_msg = f"Desired spec is empty for {product}"
+                log.error(err_msg)
+                return {
+                    "name": name,
+                    "result": None,
+                    "changes": {},
+                    "comment": err_msg,
+            }
+
         if __opts__["test"]:
             # If in test mode, perform audit
             log.info("Running in test mode. Performing check_control_compliance_response.")
