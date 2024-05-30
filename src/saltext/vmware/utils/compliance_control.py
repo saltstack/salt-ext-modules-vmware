@@ -50,6 +50,7 @@ def _create_esxi_context(vcenter_conf, fqdn=None, ids=None):
         vc_ssl_thumbprint=vcenter_conf.get("ssl_thumbprint", None),
         vc_saml_token=vcenter_conf.get("saml_token", None),
         esxi_host_names=ids,
+        verify_ssl=vcenter_conf.get("verify_ssl", True)
     )
 
 
