@@ -41,9 +41,7 @@ def test_managed():
                     "global_key": "global_value",
                     "configuration_id": "1112",
                     "instance_metadata_1": True,
-                    "metadata_2": {
-                        "nested_key_1": "nested_key_1_value"
-                    }
+                    "metadata_2": {"nested_key_1": "nested_key_1_value"},
                 }
             }
         }
@@ -56,10 +54,8 @@ def test_managed():
         },
     ):
         with patch.dict(
-                controller_metadata.__states__,
-                {
-                    "file.managed": mock_file_managed
-                },
+            controller_metadata.__states__,
+            {"file.managed": mock_file_managed},
         ):
             result = controller_metadata.managed(
                 name=NAME, controller_metadata=mock_controller_metadata

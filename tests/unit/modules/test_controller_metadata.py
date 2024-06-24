@@ -56,9 +56,7 @@ def test_validate(exception):
                     "global_key": "global_value",
                     "configuration_id": "1112",
                     "instance_metadata_1": True,
-                    "metadata_2": {
-                        "nested_key_1": "nested_key_1_value"
-                    }
+                    "metadata_2": {"nested_key_1": "nested_key_1_value"},
                 }
             }
         }

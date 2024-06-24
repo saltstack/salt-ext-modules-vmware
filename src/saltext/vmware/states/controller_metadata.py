@@ -27,13 +27,11 @@ def managed(name, controller_metadata, **kwargs):
 
     log.info("Starting controller_metadata.managed for %s", name)
 
-    __salt__[
-        "vmware_controller_metadata.validate"
-    ](
+    __salt__["vmware_controller_metadata.validate"](
         controller_metadata=controller_metadata,
     )
 
     log.info("Controller metadata successfully validated")
 
     log.info("Calling file.managed for controller metadata")
-    return __states__['file.managed'](name, contents=json.dumps(controller_metadata), **kwargs)
+    return __states__["file.managed"](name, contents=json.dumps(controller_metadata), **kwargs)
