@@ -3,6 +3,8 @@ import json
 import logging
 
 import saltext.vmware.utils.compliance_control as compliance_control_util
+from config_modules_vmware.framework.models.output_models.compliance_response import ComplianceStatus
+from config_modules_vmware.framework.models.output_models.remediate_response import RemediateStatus
 
 log = logging.getLogger(__name__)
 
@@ -70,8 +72,8 @@ def check_control(name, control_config, product, ids=None, profile=None):
                 auth_context=auth_context,
             )
 
-            if check_control_compliance_response["status"] == "COMPLIANT":
-                log.debug("Pre-check completed successfully. You can continue with remediation.")
+            if (check_control_compliance_response["status"] == ComplianceStatus.COMPLIANT
+                    or check_control_compliance_response["status"] == ComplianceStatus.SKIPPED):
                 ret = {
                     "name": name,
                     "result": True,
@@ -79,13 +81,13 @@ def check_control(name, control_config, product, ids=None, profile=None):
                     "changes": check_control_compliance_response.get("changes", {}),
                 }
             elif (
-                check_control_compliance_response["status"] == "NON_COMPLIANT"
-                or check_control_compliance_response["status"] == "FAILED"
+                check_control_compliance_response["status"] == ComplianceStatus.NON_COMPLIANT
+                or check_control_compliance_response["status"] == ComplianceStatus.FAILED
             ):
                 ret = {
                     "name": name,
                     "result": None
-                    if check_control_compliance_response["status"] == "NON_COMPLIANT"
+                    if check_control_compliance_response["status"] == ComplianceStatus.NON_COMPLIANT
                     else False,
                     "comment": check_control_compliance_response["status"],
                     "changes": check_control_compliance_response.get("changes", {}),
@@ -111,19 +113,24 @@ def check_control(name, control_config, product, ids=None, profile=None):
                 auth_context=auth_context,
             )
 
-            if remediate_response["status"] == "SUCCESS":
+            if remediate_response["status"] == RemediateStatus.SUCCESS:
                 log.debug("Remediation completed with success status.")
                 # Update return data for successful remediation
                 ret = {
                     "name": name,
                     "result": True,
                     "changes": remediate_response.get("changes", {}),
+                    "comment": "Remediation completed successfully.",
                 }
-                if not ret["changes"]:
-                    ret["comment"] = "Nothing to remediate."
-                else:
-                    ret["comment"] = "Remediation completed successfully."
-            elif remediate_response["status"] == "FAILED":
+            elif remediate_response["status"] == RemediateStatus.SKIPPED:
+                log.debug("Remediation completed with skipped status.")
+                ret = {
+                    "name": name,
+                    "result": True,
+                    "changes": remediate_response.get("changes", {}),
+                    "comment": "Nothing to remediate.",
+                }
+            elif remediate_response["status"] == RemediateStatus.FAILED:
                 log.debug("Remediation failed.")
                 # Update return data for failed remediation
                 ret = {
@@ -132,8 +139,8 @@ def check_control(name, control_config, product, ids=None, profile=None):
                     "comment": "Remediation failed.",
                     "changes": remediate_response.get("changes", {}),
                 }
-            elif remediate_response["status"] == "PARTIAL":
-                log.debug("Remediation completed.")
+            elif remediate_response["status"] == RemediateStatus.PARTIAL:
+                log.debug("Remediation completed partially.")
                 ret = {
                     "name": name,
                     "result": False,
