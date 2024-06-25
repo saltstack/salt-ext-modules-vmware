@@ -9,6 +9,7 @@ State Modules
     :toctree:
 
     saltext.vmware.states.compliance_control
+    saltext.vmware.states.controller_metadata
     saltext.vmware.states.datacenter
     saltext.vmware.states.datastore
     saltext.vmware.states.esxi

@@ -3,7 +3,9 @@ import json
 import logging
 
 import saltext.vmware.utils.compliance_control as compliance_control_util
-from config_modules_vmware.framework.models.output_models.compliance_response import ComplianceStatus
+from config_modules_vmware.framework.models.output_models.compliance_response import (
+    ComplianceStatus,
+)
 from config_modules_vmware.framework.models.output_models.remediate_response import RemediateStatus
 
 log = logging.getLogger(__name__)
@@ -44,13 +46,13 @@ def check_control(name, control_config, product, ids=None, profile=None):
     log.debug("Opts: %s", __opts__)
 
     try:
-        compliance_config = control_config.get('compliance_config')
+        compliance_config = control_config.get("compliance_config")
         if not isinstance(compliance_config, dict) or not compliance_config:
             raise Exception(f"Desired spec is empty or not in correct format")
         else:
-            product_control_config = control_config.get('compliance_config', {}).get(product)
+            product_control_config = control_config.get("compliance_config", {}).get(product)
             if product_control_config:
-                control_config = {'compliance_config': {product: product_control_config}}
+                control_config = {"compliance_config": {product: product_control_config}}
             else:
                 err_msg = f"Desired spec is empty for {product}"
                 log.error(err_msg)
@@ -59,7 +61,7 @@ def check_control(name, control_config, product, ids=None, profile=None):
                     "result": None,
                     "changes": {},
                     "comment": err_msg,
-            }
+                }
 
         if __opts__["test"]:
             # If in test mode, perform audit
@@ -72,8 +74,10 @@ def check_control(name, control_config, product, ids=None, profile=None):
                 auth_context=auth_context,
             )
 
-            if (check_control_compliance_response["status"] == ComplianceStatus.COMPLIANT
-                    or check_control_compliance_response["status"] == ComplianceStatus.SKIPPED):
+            if (
+                check_control_compliance_response["status"] == ComplianceStatus.COMPLIANT
+                or check_control_compliance_response["status"] == ComplianceStatus.SKIPPED
+            ):
                 ret = {
                     "name": name,
                     "result": True,

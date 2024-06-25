@@ -28,7 +28,7 @@ def _create_vcenter_context(conf, fqdn):
         username=conf["user"],
         password=conf["password"],
         ssl_thumbprint=conf.get("ssl_thumbprint", None),
-        verify_ssl=conf.get("verify_ssl", True)
+        verify_ssl=conf.get("verify_ssl", True),
     )
 
 
@@ -38,7 +38,7 @@ def _create_sddc_manager_context(conf, fqdn):
         username=conf["user"],
         password=conf["password"],
         ssl_thumbprint=conf.get("ssl_thumbprint", None),
-        verify_ssl=conf.get("verify_ssl", True)
+        verify_ssl=conf.get("verify_ssl", True),
     )
 
 
@@ -50,7 +50,7 @@ def _create_esxi_context(vcenter_conf, fqdn=None, ids=None):
         vc_ssl_thumbprint=vcenter_conf.get("ssl_thumbprint", None),
         vc_saml_token=vcenter_conf.get("saml_token", None),
         esxi_host_names=ids,
-        verify_ssl=vcenter_conf.get("verify_ssl", True)
+        verify_ssl=vcenter_conf.get("verify_ssl", True),
     )
 
 
