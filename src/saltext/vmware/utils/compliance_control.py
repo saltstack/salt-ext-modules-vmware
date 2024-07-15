@@ -54,35 +54,25 @@ def _create_esxi_context(vcenter_conf, fqdn=None, ids=None):
     )
 
 
-def _get_parent(product):
+def _get_conf(config, product):
     if product == BaseContext.ProductEnum.ESXI.value:
-        return BaseContext.ProductEnum.VCENTER.value
-    else:
-        return None
+        # for esxi get parent product (vcenter) conf
+        product = BaseContext.ProductEnum.VCENTER.value
+
+    return (
+        config.get("saltext.vmware")
+        or config.get("grains", {}).get("saltext.vmware")
+        or config.get("pillar", {}).get("saltext.vmware")
+        or config.get(product)
+        or config.get("pillar", {}).get(product)
+        or config.get("grains", {}).get(product)
+        or {}
+    )
 
 
 def _create_product_context(config, product, ids=None):
-    parent_product = _get_parent(product)
-    if parent_product:
-        conf = (
-            config.get("saltext.vmware")
-            or config.get("grains", {}).get("saltext.vmware")
-            or config.get("pillar", {}).get("saltext.vmware")
-            or config.get(parent_product)
-            or config.get("pillar", {}).get(parent_product)
-            or config.get("grains", {}).get(parent_product)
-            or {}
-        )
-    else:
-        conf = (
-            config.get("saltext.vmware")
-            or config.get("grains", {}).get("saltext.vmware")
-            or config.get("pillar", {}).get("saltext.vmware")
-            or config.get(product)
-            or config.get("pillar", {}).get(product)
-            or config.get("grains", {}).get(product)
-            or {}
-        )
+    conf = _get_conf(config, product)
+    # Fetch fqdn from grains if available
     fqdn = config.get("grains", {}).get("fqdn")
     if not fqdn:
         fqdn = conf.get("host")

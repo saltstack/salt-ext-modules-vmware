@@ -1,5 +1,5 @@
 """
-    :codeauthor: VMware
+Unit Tests for compliance control execution module.
 """
 import logging
 from unittest.mock import patch
@@ -12,24 +12,15 @@ log = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def tgz_file(session_temp_dir):
-    tgz = session_temp_dir / "vmware.tgz"
-    tgz.write_bytes(b"1")
-    yield tgz
-
-
-@pytest.fixture
 def configure_loader_modules():
     return {compliance_control: {"__opts__": {}, "__pillar__": {}}}
 
 
 @pytest.fixture(autouse=True)
 def patch_salt_loaded_objects():
-    # This esxi needs to be the same as the module we're importing
     with patch(
         "saltext.vmware.modules.compliance_control.__opts__",
         {
-            "cachedir": ".",
             "saltext.vmware": {"host": "test.vcenter.local", "user": "test", "password": "test"},
         },
         create=True,
@@ -44,26 +35,29 @@ def patch_salt_loaded_objects():
     [False, True],
 )
 def test_control_config_compliance_check(exception):
+    # mock auth
+    patch_auth_context = patch(
+        "saltext.vmware.utils.compliance_control.create_auth_context",
+        autospec=True,
+        return_value={},
+    )
+    # mock successful compliance check
     mock_response = {"status": "COMPLIANT"}
-
     patch_compliance_check = patch(
         "config_modules_vmware.interfaces.controller_interface.ControllerInterface.check_compliance",
         autospec=True,
         return_value=mock_response,
     )
-    patch_control_config_obj = patch(
-        "saltext.vmware.utils.compliance_control.create_auth_context",
-        autospec=True,
-        return_value={},
-    )
+    # mock exception in compliance check
     patch_compliance_check_exception = patch(
         "config_modules_vmware.interfaces.controller_interface.ControllerInterface.check_compliance",
         autospec=True,
         side_effect=Exception("Testing"),
     )
-    mock_conrtol_config = {
+    # mock input
+    mock_control_config = {
         "compliance_config": {
-            "networking": {
+            "vcenter": {
                 "ntp": {
                     "value": {"mode": "NTP", "servers": ["ntp server"]},
                     "metadata": {"configuration_id": "1246", "configuration_title": "time server"},
@@ -71,19 +65,18 @@ def test_control_config_compliance_check(exception):
             }
         }
     }
-    if exception:
-        with patch_control_config_obj:
-            with patch_compliance_check_exception:
-                with pytest.raises(salt.exceptions.VMwareRuntimeError):
-                    compliance_control.control_config_compliance_check(
-                        mock_conrtol_config, product="vcenter"
-                    )
-    else:
-        with patch_compliance_check:
-            control_config_check_response = compliance_control.control_config_compliance_check(
-                mock_conrtol_config, product="vcenter"
+    if not exception:
+        with patch_auth_context and patch_compliance_check:
+            compliance_check_response = compliance_control.control_config_compliance_check(
+                mock_control_config, product="vcenter"
             )
-            assert control_config_check_response == mock_response
+            assert compliance_check_response == mock_response
+    else:
+        with patch_auth_context and patch_compliance_check_exception:
+            with pytest.raises(salt.exceptions.VMwareRuntimeError):
+                compliance_control.control_config_compliance_check(
+                    mock_control_config, product="vcenter"
+                )
 
 
 @pytest.mark.parametrize(
@@ -91,16 +84,29 @@ def test_control_config_compliance_check(exception):
     [False, True],
 )
 def test_control_config_remediate(exception):
+    # mock auth
+    patch_auth_context = patch(
+        "saltext.vmware.utils.compliance_control.create_auth_context",
+        autospec=True,
+        return_value={},
+    )
+    # mock successful remediation
     mock_response = {"status": "SUCCESS"}
-
     patch_remediate = patch(
         "config_modules_vmware.interfaces.controller_interface.ControllerInterface.remediate_with_desired_state",
         autospec=True,
         return_value=mock_response,
     )
-    mock_conrtol_config = {
+    # mock exception in remediation
+    patch_remediate_exception = patch(
+        "config_modules_vmware.interfaces.controller_interface.ControllerInterface.remediate_with_desired_state",
+        autospec=True,
+        side_effect=Exception("Testing"),
+    )
+    # mock input
+    mock_control_config = {
         "compliance_config": {
-            "networking": {
+            "vcenter": {
                 "ntp": {
                     "value": {"mode": "NTP", "servers": ["ntp server"]},
                     "metadata": {"configuration_id": "1246", "configuration_title": "time server"},
@@ -108,16 +114,20 @@ def test_control_config_remediate(exception):
             }
         }
     }
-    if exception:
-        mock_conrtol_config.update({"invalid_field": "invalid"})
+    if not exception:
+        with patch_auth_context and patch_remediate:
+            remediate_response = compliance_control.control_config_remediate(
+                mock_control_config, product="vcenter"
+            )
+            assert remediate_response == mock_response
+
+        # Error in remediation test with invalid fields
+        mock_control_config.update({"invalid_field": "invalid"})
         error_response = compliance_control.control_config_remediate(
-            mock_conrtol_config, product="vcenter"
+            mock_control_config, product="vcenter"
         )
         assert error_response["status"] == "ERROR"
-
     else:
-        with patch_remediate:
-            control_config_remediate_response = compliance_control.control_config_remediate(
-                mock_conrtol_config, product="vcenter"
-            )
-            assert control_config_remediate_response == mock_response
+        with patch_auth_context and patch_remediate_exception:
+            with pytest.raises(salt.exceptions.VMwareRuntimeError):
+                compliance_control.control_config_remediate(mock_control_config, product="vcenter")

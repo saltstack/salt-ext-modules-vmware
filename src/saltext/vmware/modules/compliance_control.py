@@ -16,18 +16,18 @@ def __virtual__():
 
 def control_config_compliance_check(control_config, product, auth_context=None):
     """
-    Checks compliance of vcenter control config. Control config can be ntp, dns, syslog, etc.
+    Checks compliance of control config. Control config can be ntp, dns, syslog, etc.
     Returns control compliance response object.
 
     control_config
-        vc control config dict object.
+        control config dict object.
     product
-        appliance name. vcenter, nsx, etc.
+        appliance name - vcenter, sddc-manager, etc.
     auth_context
-        Optional auth context to access product.
+        optional auth context to access product.
     """
 
-    log.info("Checking complaince %s", control_config)
+    log.info("Checking compliance %s", control_config)
     if not auth_context:
         config = __opts__
         auth_context = compliance_control_util.create_auth_context(config=config, product=product)
@@ -37,10 +37,10 @@ def control_config_compliance_check(control_config, product, auth_context=None):
         response_check_compliance = controller_interface_obj.check_compliance(
             desired_state_spec=control_config
         )
-        log.debug("control_config_compliance_check response %s", response_check_compliance)
+        log.debug("Response for compliance check %s", response_check_compliance)
         return response_check_compliance
     except Exception as exc:
-        log.error("control_config_compliance_check encountered an error: %s", str(exc))
+        log.error("Compliance check encountered an error: %s", str(exc))
         raise salt.exceptions.VMwareRuntimeError(str(exc))
 
 
@@ -50,14 +50,14 @@ def control_config_remediate(control_config, product, auth_context=None):
     Returns remediation response object.
 
     control_config
-        vc control config dict object.
+        control config dict object.
     product
-        appliance name. vcenter, nsx, etc.
+        appliance name. vcenter, sddc-manager, etc.
     auth_context
         Optional auth context to access product.
     """
 
-    log.info("control_config_remediate: %s", control_config)
+    log.info("Remediation : %s", control_config)
 
     if not auth_context:
         config = __opts__
@@ -68,10 +68,10 @@ def control_config_remediate(control_config, product, auth_context=None):
         response_remediate = controller_interface_obj.remediate_with_desired_state(
             desired_state_spec=control_config
         )
-        log.debug("control_config_remediate response %s", response_remediate)
+        log.debug("Remediation response %s", response_remediate)
         return response_remediate
 
     except Exception as exc:
         # Handle exceptions by setting status as false and including exception details
-        log.error("control_config_remediate encountered an error: %s", str(exc))
+        log.error("Remediation encountered an error: %s", str(exc))
         raise salt.exceptions.VMwareRuntimeError(str(exc))

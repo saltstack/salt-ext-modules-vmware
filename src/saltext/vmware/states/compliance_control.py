@@ -18,7 +18,7 @@ def __virtual__():
     return __virtualname__
 
 
-def check_control(name, control_config, product, ids=None, profile=None):
+def check_control(name, control_config, product, ids=None):
     """
     Check and apply vcenter control configs. Control config can be ntp, dns, syslog, etc.
     Return control compliance response if test=true. Otherwise, return remediate response.
@@ -31,8 +31,6 @@ def check_control(name, control_config, product, ids=None, profile=None):
         appliance name. vcenter, nsx, etc.
     ids
         List of product ids within the parent product.
-    profile
-        Optional auth profile to be used for vc connection.
     """
 
     log.info("Starting compliance check for %s", name)
