@@ -35,7 +35,6 @@ def check_control(name, control_config, product, ids=None):
 
     log.info("Starting compliance check for %s", name)
 
-    # Create ESXi configuration
     config = __opts__
     auth_context = compliance_control_util.create_auth_context(
         config=config, product=product, ids=ids
