@@ -148,8 +148,17 @@ autodoc_mock_imports = ["salt"]
 # <---- Autodoc Config -----------------------------------------------------------------------------------------------
 
 linkcheck_timeout = 10
+
+# Ignoring linkcheck for links migrated from vmware to broadcom
+linkcheck_ignore = [
+    r"https://developer\.vmware\.com/.*",
+    r"http://pubs\.vmware\.com/.*",
+    r"https://code\.vmware\.com/.*",
+]
 if not os.environ.get("SKIP_LINKCHECK_IGNORE"):
-    linkcheck_ignore = ["https://docs.github.com/en/authentication/connecting-to-github-with-ssh"]
+    linkcheck_ignore.append(
+        "https://docs.github.com/en/authentication/connecting-to-github-with-ssh"
+    )
 
 
 def setup(app):
