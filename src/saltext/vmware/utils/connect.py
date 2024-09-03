@@ -51,14 +51,16 @@ def get_config(config, profile=None, esxi_host=None):
         credentials = credentials.get("esxi_host", {}).get(esxi_host)
         password = credentials.get("password")
         user = credentials.get("user")
+        ssl_thumbprint = credentials.get("ssl_thumbprint")
     else:
         host = os.environ.get("SALTEXT_VMWARE_HOST") or credentials.get("host")
         password = os.environ.get("SALTEXT_VMWARE_PASSWORD") or credentials.get("password")
         user = os.environ.get("SALTEXT_VMWARE_USER") or credentials.get("user")
+        ssl_thumbprint = credentials.get("ssl_thumbprint")
 
     if host is None or password is None or user is None:
         raise ValueError("Cannot create service instance, VMware credentials incomplete.")
-    return {"host": host, "user": user, "password": password}
+    return {"host": host, "user": user, "password": password, "ssl_thumbprint": ssl_thumbprint}
 
 
 def get_service_instance(*, config, esxi_host=None, profile=None):

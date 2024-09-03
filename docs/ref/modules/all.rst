@@ -11,6 +11,8 @@ Execution Modules
     saltext.vmware.modules.cluster
     saltext.vmware.modules.cluster_drs
     saltext.vmware.modules.cluster_ha
+    saltext.vmware.modules.compliance_control
+    saltext.vmware.modules.controller_metadata
     saltext.vmware.modules.datacenter
     saltext.vmware.modules.datastore
     saltext.vmware.modules.dvportgroup

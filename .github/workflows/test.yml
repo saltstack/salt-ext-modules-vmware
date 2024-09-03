@@ -33,7 +33,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python 3.7 For Nox
+    - name: Set up Python 3.10 For Nox
       uses: actions/setup-python@v4
       with:
         python-version: "3.10"
@@ -64,12 +64,9 @@ jobs:
       max-parallel: 4
       matrix:
         python-version:
-          - 3.7
-          - 3.8
-          - 3.9
           - "3.10"
         salt-version:
-          - 3006.4
+          - 3006.9
 
     steps:
     - uses: actions/checkout@v2
@@ -187,7 +184,7 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - 3006.4
+          - 3006.9
 
     steps:
     - uses: actions/checkout@v2
@@ -206,7 +203,6 @@ jobs:
       shell: bash
       env:
         SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
-        EXTRA_REQUIREMENTS_INSTALL: Cython
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-3 --install-only
@@ -310,7 +306,7 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - 3006.4
+          - 3006.9
 
     steps:
     - uses: actions/checkout@v2
