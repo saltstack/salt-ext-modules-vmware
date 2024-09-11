@@ -22,7 +22,7 @@ jobs:
       with:
         path: ~/.cache/pre-commit
         key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
-    - uses: pre-commit/action@v3
+    - uses: pre-commit/action@v3.0.1
 
   Docs:
     runs-on: ubuntu-latest
