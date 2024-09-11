@@ -2,6 +2,7 @@
 Salt execution module for nat rules
 Provides methods to Create, Update, Read and Delete nat rules.
 """
+
 import logging
 import os
 

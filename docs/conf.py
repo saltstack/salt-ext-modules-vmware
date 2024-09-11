@@ -40,10 +40,10 @@ this_year = datetime.datetime.today().year
 if this_year == 2020:
     copyright_year = 2020
 else:
-    copyright_year = "2020 - {}".format(this_year)
+    copyright_year = f"2020 - {this_year}"
 project = dist.metadata["Summary"]
 author = dist.metadata["Author"]
-copyright = "{}, {}".format(copyright_year, author)
+copyright = f"{copyright_year}, {author}"
 
 # The full version, including alpha/beta/rc tags
 release = dist.version

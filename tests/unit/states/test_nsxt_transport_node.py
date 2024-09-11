@@ -1,6 +1,7 @@
 """
     Unit Tests for nsxt_transport_nodes state
 """
+
 from unittest.mock import MagicMock
 from unittest.mock import patch
 

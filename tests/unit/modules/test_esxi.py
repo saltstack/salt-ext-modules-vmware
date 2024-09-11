@@ -1,6 +1,7 @@
 """
     :codeauthor: VMware
 """
+
 import logging
 import os
 import uuid
@@ -46,9 +47,9 @@ def patch_salt_loaded_objects():
 def fake_hosts():
     hosts = [MagicMock()]
     hosts[0].name = "blerp"
-    hosts[
-        0
-    ].configManager.firmwareSystem.QueryFirmwareConfigUploadURL.return_value = "something/cool/*"
+    hosts[0].configManager.firmwareSystem.QueryFirmwareConfigUploadURL.return_value = (
+        "something/cool/*"
+    )
 
     with patch("saltext.vmware.utils.esxi.get_hosts", autospec=True, return_value=hosts):
         yield hosts

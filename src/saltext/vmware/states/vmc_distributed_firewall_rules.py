@@ -27,6 +27,7 @@ Example usage :
 
 
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants
@@ -314,7 +315,7 @@ def present(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated distributed firewall rule {}".format(rule_id),
+                comment=f"Updated distributed firewall rule {rule_id}",
                 old_state=distributed_firewall_rule,
                 new_state=updated_distributed_firewall_rule,
                 result=True,
@@ -361,7 +362,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created distributed firewall rule {}".format(rule_id),
+            comment=f"Created distributed firewall rule {rule_id}",
             new_state=created_distributed_firewall_rule,
             result=True,
         )
@@ -478,7 +479,7 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted distributed firewall rule {}".format(rule_id),
+            comment=f"Deleted distributed firewall rule {rule_id}",
             old_state=distributed_firewall_rule,
             result=True,
         )
@@ -486,6 +487,6 @@ def absent(
         log.info("No distributed firewall rule found with ID %s", rule_id)
         return vmc_state._create_state_response(
             name=name,
-            comment="No distributed firewall rule found with ID {}".format(rule_id),
+            comment=f"No distributed firewall rule found with ID {rule_id}",
             result=True,
         )

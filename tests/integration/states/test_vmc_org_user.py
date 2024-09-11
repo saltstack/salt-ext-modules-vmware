@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_org_user state module
 """
+
 import pytest
 
 
@@ -39,7 +40,7 @@ def test_vmc_org_user_state_module(salt_call_cli, vmc_common_data, user_name):
     changes = result["changes"]
 
     assert changes["old"] is None
-    assert result["comment"] == "Invited {} successfully".format(user_name)
+    assert result["comment"] == f"Invited {user_name} successfully"
 
     # Invoke absent to remove the user
     response = salt_call_cli.run(
@@ -50,4 +51,4 @@ def test_vmc_org_user_state_module(salt_call_cli, vmc_common_data, user_name):
     changes = result["changes"]
 
     assert changes == {}
-    assert result["comment"] == "No user found with username {}".format(user_name)
+    assert result["comment"] == f"No user found with username {user_name}"

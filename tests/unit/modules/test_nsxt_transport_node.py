@@ -1,6 +1,7 @@
 """
     Tests for nsxt_transport_nodes module
 """
+
 import logging
 from unittest.mock import patch
 

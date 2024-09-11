@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_security_rules state module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request
@@ -88,7 +89,7 @@ def test_vmc_security_rules_state_module(
 
     assert changes["old"] is None
     assert changes["new"]["id"] == rule_id
-    assert result["comment"] == "Created Security rule {}".format(rule_id)
+    assert result["comment"] == f"Created Security rule {rule_id}"
 
     # Test present to update with identical fields
     response = salt_call_cli.run(
@@ -134,7 +135,7 @@ def test_vmc_security_rules_state_module(
 
     assert changes["old"]["display_name"] != changes["new"]["display_name"]
     assert changes["new"]["display_name"] == updated_display_name
-    assert result["comment"] == "Updated Security rule {}".format(rule_id)
+    assert result["comment"] == f"Updated Security rule {rule_id}"
 
     # Invoke present state to update security rule with tags field
     response = salt_call_cli.run(
@@ -157,7 +158,7 @@ def test_vmc_security_rules_state_module(
     changes = result["changes"]
 
     assert changes["new"]["tags"] == updated_tags
-    assert result["comment"] == "Updated Security rule {}".format(rule_id)
+    assert result["comment"] == f"Updated Security rule {rule_id}"
 
     # Invoke absent to delete the security rule
     response = salt_call_cli.run(
@@ -180,7 +181,7 @@ def test_vmc_security_rules_state_module(
 
     assert changes["new"] is None
     assert changes["old"]["id"] == rule_id
-    assert result["comment"] == "Deleted Security rule {}".format(rule_id)
+    assert result["comment"] == f"Deleted Security rule {rule_id}"
 
     # Invoke absent when security rule is not present
     response = salt_call_cli.run(
@@ -202,4 +203,4 @@ def test_vmc_security_rules_state_module(
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}
-    assert result["comment"] == "No Security rule found with Id {}".format(rule_id)
+    assert result["comment"] == f"No Security rule found with Id {rule_id}"

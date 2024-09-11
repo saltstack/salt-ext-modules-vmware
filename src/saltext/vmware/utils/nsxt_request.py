@@ -1,6 +1,7 @@
 """
     NSX-T API Request Module
 """
+
 import json
 import logging
 
@@ -52,7 +53,7 @@ def call_api(
             params=params,
             data=json.dumps(data),
         )
-        log.info("Response status code: {}".format(response.status_code))
+        log.info(f"Response status code: {response.status_code}")
         # raise error for any client/server HTTP Error codes
         response.raise_for_status()
 

@@ -1,6 +1,7 @@
 """
 Salt Module to perform CRUD operations for NSX-T's IP Address Blocks
 """
+
 import logging
 
 from saltext.vmware.utils import common
@@ -338,7 +339,7 @@ def update(
     """
 
     log.info("Updating IP Address block %s", display_name)
-    url = IP_BLOCKS_BASE_URL.format(hostname) + "/{}".format(ip_block_id)
+    url = IP_BLOCKS_BASE_URL.format(hostname) + f"/{ip_block_id}"
 
     req_data = common._filter_kwargs(
         allowed_kwargs=["description", "tags"],
@@ -406,7 +407,7 @@ def delete(
 
     log.info("Deleting IP Address Block %s", ip_block_id)
 
-    url = IP_BLOCKS_BASE_URL.format(hostname) + "/{}".format(ip_block_id)
+    url = IP_BLOCKS_BASE_URL.format(hostname) + f"/{ip_block_id}"
 
     response = nsxt_request.call_api(
         method="delete",

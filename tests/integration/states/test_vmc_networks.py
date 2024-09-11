@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_networks state module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request
@@ -96,7 +97,7 @@ def test_vmc_networks_state_module(salt_call_cli, delete_network, common_data, n
 
     assert changes["old"] is None
     assert changes["new"]["id"] == network_id
-    assert result["comment"] == "Created network {}".format(network_id)
+    assert result["comment"] == f"Created network {network_id}"
 
     # Test present to update with identical fields
     # Invoke state when network is already present
@@ -128,7 +129,7 @@ def test_vmc_networks_state_module(salt_call_cli, delete_network, common_data, n
 
     assert changes["old"]["display_name"] != changes["new"]["display_name"]
     assert changes["new"]["display_name"] == updated_display_name
-    assert result["comment"] == "Updated network {}".format(network_id)
+    assert result["comment"] == f"Updated network {network_id}"
 
     # Invoke present state to update Network with tags field
     updated_tags = [{"tag": "tag1", "scope": "scope1"}]
@@ -144,7 +145,7 @@ def test_vmc_networks_state_module(salt_call_cli, delete_network, common_data, n
     changes = result["changes"]
 
     assert changes["new"]["tags"] == updated_tags
-    assert result["comment"] == "Updated network {}".format(network_id)
+    assert result["comment"] == f"Updated network {network_id}"
 
     # Invoke absent to delete the network
     response = salt_call_cli.run(
@@ -159,7 +160,7 @@ def test_vmc_networks_state_module(salt_call_cli, delete_network, common_data, n
 
     assert changes["new"] is None
     assert changes["old"]["id"] == network_id
-    assert result["comment"] == "Deleted network {}".format(network_id)
+    assert result["comment"] == f"Deleted network {network_id}"
 
     # Invoke absent when network is not present
     response = salt_call_cli.run(
@@ -174,4 +175,4 @@ def test_vmc_networks_state_module(salt_call_cli, delete_network, common_data, n
     # assert no changes are done
     assert changes == {}
 
-    assert result["comment"] == "No network found with ID {}".format(network_id)
+    assert result["comment"] == f"No network found with ID {network_id}"

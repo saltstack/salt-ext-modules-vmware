@@ -1,6 +1,7 @@
 """
 State module for NSX-T transport node profiles
 """
+
 import logging
 
 import salt.utils.dictdiffer
@@ -74,7 +75,7 @@ def _get_by_display_name_result_from_module(
             )
         }
     if not result["results"]:
-        return {"error": "No results for {} with display_name {}".format(module_name, display_name)}
+        return {"error": f"No results for {module_name} with display_name {display_name}"}
     return result["results"][0]
 
 
@@ -91,7 +92,7 @@ def _get_by_display_name(
         url=url,
         username=username,
         password=password,
-        **kwargs
+        **kwargs,
     )
 
     if "error" in object_list:
@@ -104,7 +105,7 @@ def _get_by_display_name(
             )
         }
     if not object_list:
-        return {"error": "No results for {} with display_name {}".format(object_type, display_name)}
+        return {"error": f"No results for {object_type} with display_name {display_name}"}
 
     return object_list[0]
 
@@ -535,9 +536,9 @@ def present(
             log.info(
                 "Update is not required. Transport node profile with same params already exists"
             )
-            ret[
-                "comment"
-            ] = "Transport node profile already exists with similar params. No action to perform"
+            ret["comment"] = (
+                "Transport node profile already exists with similar params. No action to perform"
+            )
             return ret
 
 
@@ -637,10 +638,10 @@ def absent(
     if __opts__["test"]:
         if result_count == 0:
             ret["result"] = None
-            ret[
-                "comment"
-            ] = "No transport node profile with display_name: {} found in NSX-T Manager".format(
-                display_name
+            ret["comment"] = (
+                "No transport node profile with display_name: {} found in NSX-T Manager".format(
+                    display_name
+                )
             )
         else:
             ret["result"] = None
@@ -650,10 +651,10 @@ def absent(
         return ret
 
     if result_count == 0:
-        ret[
-            "comment"
-        ] = "No transport node profile with display_name: {} found in NSX-T Manager".format(
-            display_name
+        ret["comment"] = (
+            "No transport node profile with display_name: {} found in NSX-T Manager".format(
+                display_name
+            )
         )
         return ret
     else:
@@ -674,10 +675,10 @@ def absent(
             )
             return ret
         else:
-            ret[
-                "comment"
-            ] = "Transport node profile with display_name: {} successfully deleted".format(
-                display_name
+            ret["comment"] = (
+                "Transport node profile with display_name: {} successfully deleted".format(
+                    display_name
+                )
             )
             ret["changes"]["old"] = transport_node_profile_to_delete
             ret["changes"]["new"] = {}

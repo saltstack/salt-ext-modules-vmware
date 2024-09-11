@@ -79,31 +79,31 @@ def role_present(name, privilege_ids, esxi_host_name=None, service_instance=None
     }
     if not role:
         if __opts__["test"]:
-            ret["comment"] = "Role {} will be created.".format(name)
+            ret["comment"] = f"Role {name} will be created."
             ret["result"] = None
         else:
             role = __salt__["vmware_esxi.add_role"](
                 role_name=name, privilege_ids=privilege_ids, service_instance=service_instance
             )
             changes["new"]["role_id"] = role["role_id"]
-            ret["comment"] = "Role {} created.".format(name)
+            ret["comment"] = f"Role {name} created."
             ret["result"] = True
             ret["changes"] = changes
     elif not new_privs and not del_privs:
-        ret["comment"] = "Role {} is in the correct state".format(name)
+        ret["comment"] = f"Role {name} is in the correct state"
         ret["result"] = None
     elif __opts__["test"]:
-        ret[
-            "comment"
-        ] = "Role {} will be updated. {} privileges will be added. {} privileges will be removed.".format(
-            name, ",".join(sorted(new_privs)) or "No", ",".join(sorted(del_privs)) or "No"
+        ret["comment"] = (
+            "Role {} will be updated. {} privileges will be added. {} privileges will be removed.".format(
+                name, ",".join(sorted(new_privs)) or "No", ",".join(sorted(del_privs)) or "No"
+            )
         )
         ret["result"] = None
     else:
         __salt__["vmware_esxi.update_role"](
             role_name=name, privilege_ids=privilege_ids, service_instance=service_instance
         )
-        ret["comment"] = "Role {} updated.".format(name)
+        ret["comment"] = f"Role {name} updated."
         ret["result"] = True
         ret["changes"] = changes
     return ret
@@ -135,14 +135,14 @@ def role_absent(name, esxi_host_name=None, service_instance=None, profile=None):
     )
     role = __salt__["vmware_esxi.get_role"](role_name=name, service_instance=service_instance)
     if not role:
-        ret["comment"] = "Role {} is not present.".format(name)
+        ret["comment"] = f"Role {name} is not present."
         ret["result"] = None
     elif __opts__["test"]:
-        ret["comment"] = "Role {} will be deleted.".format(name)
+        ret["comment"] = f"Role {name} will be deleted."
         ret["result"] = None
     else:
         __salt__["vmware_esxi.remove_role"](role_name=name, service_instance=service_instance)
-        ret["comment"] = "Role {} deleted.".format(name)
+        ret["comment"] = f"Role {name} deleted."
         ret["result"] = True
     return ret
 
@@ -277,16 +277,16 @@ def vmkernel_adapter_present(
             add_on_hosts.append(h.name)
 
     if __opts__["test"]:
-        ret[
-            "comment"
-        ] = "vmkernel adapter {!r} will be created on {} host(s) and updated on {} host(s).".format(
-            name, len(add_on_hosts), len(update_on_hosts)
+        ret["comment"] = (
+            "vmkernel adapter {!r} will be created on {} host(s) and updated on {} host(s).".format(
+                name, len(add_on_hosts), len(update_on_hosts)
+            )
         )
         ret["result"] = None
     elif not add_on_hosts and not update_on_hosts:
-        ret[
-            "comment"
-        ] = "vmkernel adapter {!r} not created/updated on any host. No changes made.".format(name)
+        ret["comment"] = (
+            f"vmkernel adapter {name!r} not created/updated on any host. No changes made."
+        )
         ret["result"] = True
     else:
         hosts_in_error = []
@@ -404,7 +404,7 @@ def vmkernel_adapter_absent(
         )
         ret["result"] = None
     elif not delete_on_hosts:
-        ret["comment"] = "vmkernel adapter {!r} absent on all hosts. No changes made.".format(name)
+        ret["comment"] = f"vmkernel adapter {name!r} absent on all hosts. No changes made."
     else:
         hosts_in_error = []
         sample_exception = None
@@ -515,10 +515,10 @@ def user_present(
             create += 1
     for host in diff.copy():
         if __opts__["test"]:
-            ret[
-                "comment"
-            ] = "User {} will be created on {} host(s) and updated on {} host(s).".format(
-                name, create, update
+            ret["comment"] = (
+                "User {} will be created on {} host(s) and updated on {} host(s).".format(
+                    name, create, update
+                )
             )
             ret["result"] = None
         elif diff[host]["action"] == "update":
@@ -537,10 +537,10 @@ def user_present(
                 update -= 1
                 failed_hosts.append(host)
                 diff.pop(host)
-                ret[
-                    "comment"
-                ] = "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, create, update, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                ret["comment"] = (
+                    "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
+                        name, create, update, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                    )
                 )
                 ret["changes"] = diff
                 ret["result"] = False
@@ -565,10 +565,10 @@ def user_present(
                 create -= 1
                 failed_hosts.append(host)
                 diff.pop(host)
-                ret[
-                    "comment"
-                ] = "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, create, update, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                ret["comment"] = (
+                    "User {} created on {} host(s), updated on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
+                        name, create, update, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                    )
                 )
                 ret["changes"] = diff
                 ret["result"] = False
@@ -649,7 +649,7 @@ def user_absent(
     for host in diff.copy():
         if __opts__["test"]:
             if not ret["comment"]:
-                ret["comment"] = "User {} will be deleted on {} host(s).".format(name, delete)
+                ret["comment"] = f"User {name} will be deleted on {delete} host(s)."
                 ret["result"] = None
         elif diff[host][name]:
             try:
@@ -664,19 +664,19 @@ def user_absent(
                 delete -= 1
                 failed_hosts.append(host)
                 diff.pop(host)
-                ret[
-                    "comment"
-                ] = "User {} removed on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
-                    name, delete, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                ret["comment"] = (
+                    "User {} removed on {} host(s), failed on {} host(s). List of failed host(s) - {}. Sample Error: {}".format(
+                        name, delete, len(failed_hosts), ",".join(sorted(failed_hosts)), exc
+                    )
                 )
                 ret["changes"] = diff
                 ret["result"] = False
             if not ret["comment"]:
-                ret["comment"] = "User {} removed on {} host(s).".format(name, delete)
+                ret["comment"] = f"User {name} removed on {delete} host(s)."
                 ret["changes"] = diff
                 ret["result"] = True
     if not ret["comment"]:
-        ret["comment"] = "User {} doesn't exist on {} host(s).".format(name, no_user)
+        ret["comment"] = f"User {name} doesn't exist on {no_user} host(s)."
         ret["result"] = None
     return ret
 
@@ -763,9 +763,9 @@ def maintenance_mode(
             "new": f"Host entered {'Maintenance' if enter_maintenance_mode else 'Normal'} mode."
         }
     else:
-        ret[
-            "comment"
-        ] = f"Failed to put host {str(name)} in {'Maintenance' if enter_maintenance_mode else 'Normal'} mode."
+        ret["comment"] = (
+            f"Failed to put host {str(name)} in {'Maintenance' if enter_maintenance_mode else 'Normal'} mode."
+        )
     return ret
 
 
@@ -1220,7 +1220,7 @@ def ntp_config(
                 error = response.get("Error")
                 if error:
                     ret["result"] = False
-                    ret["comment"] = "Error: {}".format(error)
+                    ret["comment"] = f"Error: {error}"
                     return ret
             # Set changes dictionary for ntp_servers
             ret["changes"][host.name].update(
@@ -1552,7 +1552,7 @@ def password_present(
             )
         except salt.exceptions.CommandExecutionError as err:
             ret["result"] = False
-            ret["comment"] = "Error: {}".format(err)
+            ret["comment"] = f"Error: {err}"
             return ret
     ret["comment"] = "Host password changed."
     return ret
@@ -1628,7 +1628,7 @@ def vsan_config(
         )
         error = current_vsan_enabled.get("Error")
         if error:
-            ret["comment"] = "Error: {}".format(error)
+            ret["comment"] = f"Error: {error}"
             return ret
         current_vsan_enabled = current_vsan_enabled.get(host.name)
 
@@ -1641,7 +1641,7 @@ def vsan_config(
                 )
                 error = response.get("Error")
                 if error:
-                    ret["comment"] = "Error: {}".format(error)
+                    ret["comment"] = f"Error: {error}"
                     return ret
             ret["changes"][host.name].update(
                 {"enabled": {"old": current_vsan_enabled, "new": enabled}}
@@ -1654,7 +1654,7 @@ def vsan_config(
             )
             error = current_eligible_disks.get("Error")
             if error:
-                ret["comment"] = "Error: {}".format(error)
+                ret["comment"] = f"Error: {error}"
                 return ret
             disks = current_eligible_disks.get("Eligible")
             if disks and isinstance(disks, list):
@@ -1665,7 +1665,7 @@ def vsan_config(
                     )
                     error = response.get("Error")
                     if error:
-                        ret["comment"] = "Error: {}".format(error)
+                        ret["comment"] = f"Error: {error}"
                         return ret
 
                 ret["changes"][host.name].update({"add_disks_to_vsan": {"old": "", "new": disks}})
@@ -1757,7 +1757,7 @@ def vmotion_configured(
                         response = __salt__["vmware_esxi.vmotion_enable"](device=device).get(host)
                         error = response.get("Error")
                         if error:
-                            ret["comment"] = "Error: {}".format(error)
+                            ret["comment"] = f"Error: {error}"
                             return ret
                     # Disable VMotion if enabled=False
                     else:
@@ -1766,7 +1766,7 @@ def vmotion_configured(
                         response = __salt__["vmware_esxi.vmotion_disable"]().get(host)
                         error = response.get("Error")
                         if error:
-                            ret["comment"] = "Error: {}".format(error)
+                            ret["comment"] = f"Error: {error}"
                             return ret
                 ret["changes"].update(
                     {host: {"enabled": {"old": current_vmotion_enabled, "new": enabled}}}
@@ -1783,7 +1783,7 @@ def vmotion_configured(
 
     except salt.exceptions.CommandExecutionError as err:
         ret["result"] = False
-        ret["comment"] = "Error: {}".format(err)
+        ret["comment"] = f"Error: {err}"
         return ret
 
     return ret

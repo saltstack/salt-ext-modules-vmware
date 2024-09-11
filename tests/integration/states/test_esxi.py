@@ -41,8 +41,8 @@ def test_user_present_absent(patch_salt_globals):
     """
     Test scenarios for user_present state run
     """
-    user_name = "A{}".format(uuid.uuid4())
-    random_user = "Random{}".format(uuid.uuid4())
+    user_name = f"A{uuid.uuid4()}"
+    random_user = f"Random{uuid.uuid4()}"
     password = "Secret@123"
 
     # create a new user
@@ -74,7 +74,7 @@ def test_user_add_error(patch_salt_globals, user_add_error):
     """
     Test scenarios for user add error
     """
-    user_name = "A{}".format(uuid.uuid4())
+    user_name = f"A{uuid.uuid4()}"
     password = "Secret@123"
     ret = esxi.user_present(name=user_name, password=password)
     assert ret["result"] is False
@@ -87,7 +87,7 @@ def test_user_remove_error(patch_salt_globals, user_remove_error):
     Test scenarios for user remove error
     """
     # Remove the user
-    user_name = "A{}".format(uuid.uuid4())
+    user_name = f"A{uuid.uuid4()}"
     password = "Secret@123"
     ret = esxi.user_present(name=user_name, password=password)
     assert ret["result"] is True
@@ -102,7 +102,7 @@ def test_user_update_error(patch_salt_globals, user_update_error):
     Test scenarios for user remove error
     """
     # Remove the user
-    user_name = "A{}".format(uuid.uuid4())
+    user_name = f"A{uuid.uuid4()}"
     password = "Secret@123"
     ret = esxi.user_present(name=user_name, password=password)
     assert ret["result"] is True
@@ -117,8 +117,8 @@ def test_user_present_absent_dry_run(vmware_datacenter, service_instance, dry_ru
     Test scenarios for vmware_esxi.user_present state run with test=True
     """
 
-    user_name = "A{}".format(uuid.uuid4())
-    random_user = "Random{}".format(uuid.uuid4())
+    user_name = f"A{uuid.uuid4()}"
+    random_user = f"Random{uuid.uuid4()}"
     password = "GVh3J69oMcJ0tA"
 
     # create a new user
@@ -153,8 +153,8 @@ def test_role_present_absent(patch_salt_globals):
     """
     Test scenarios for role_present state run
     """
-    role_name = "A{}".format(uuid.uuid4())
-    random_role = "Random{}".format(uuid.uuid4())
+    role_name = f"A{uuid.uuid4()}"
+    random_role = f"Random{uuid.uuid4()}"
 
     # create a new role
     ret = esxi.role_present(name=role_name, privilege_ids=["Folder.Create"])
@@ -183,7 +183,7 @@ def test_role_present_absent(patch_salt_globals):
     # Remove the role
     ret = esxi.role_absent(name=role_name)
     assert ret["result"]
-    assert "Role {} deleted.".format(role_name) == ret["comment"]
+    assert f"Role {role_name} deleted." == ret["comment"]
 
     # Remove a non-existent user
     ret = esxi.user_absent(name=random_role)
@@ -196,14 +196,14 @@ def test_role_present_absent_dry_run(vmware_datacenter, service_instance, dry_ru
     Test scenarios for vmware_esxi.role_present state run with test=True
     """
 
-    role_name = "A{}".format(uuid.uuid4())
-    random_role = "Random{}".format(uuid.uuid4())
+    role_name = f"A{uuid.uuid4()}"
+    random_role = f"Random{uuid.uuid4()}"
 
     # create a new role
     ret = esxi.role_present(name=role_name, privilege_ids=["Folder.Create"])
     assert ret["result"] is None
     assert not ret["changes"]
-    assert "Role {} will be created.".format(role_name) == ret["comment"]
+    assert f"Role {role_name} will be created." == ret["comment"]
 
     # create the role using exec mod
     ret = esxi_mod.add_role(
@@ -219,13 +219,13 @@ def test_role_present_absent_dry_run(vmware_datacenter, service_instance, dry_ru
     ret = esxi.role_absent(name=role_name)
     assert ret["result"] is None
     assert not ret["changes"]
-    assert "Role {} will be deleted.".format(role_name) == ret["comment"]
+    assert f"Role {role_name} will be deleted." == ret["comment"]
 
     # Remove a non-existent user
     ret = esxi.role_absent(name=random_role)
     assert ret["result"] is None
     assert not ret["changes"]
-    assert "Role {} is not present.".format(random_role) in ret["comment"]
+    assert f"Role {random_role} is not present." in ret["comment"]
 
 
 def test_vmkernel_adapter_present(vmware_datacenter, service_instance):

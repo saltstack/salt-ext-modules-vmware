@@ -1,6 +1,7 @@
 """
 NSX-T Transport_Zone state module
 """
+
 import logging
 
 log = logging.getLogger(__name__)
@@ -370,7 +371,7 @@ def absent(
 
     if len(transport_zone_response_by_display_name) == 0:
         ret["result"] = True
-        ret["comment"] = "No transport zone exist with same display name : {}".format(display_name)
+        ret["comment"] = f"No transport zone exist with same display name : {display_name}"
         return ret
 
     if transport_zone_dict is not None:

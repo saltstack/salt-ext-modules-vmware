@@ -31,6 +31,7 @@ Example usage :
     files.
 
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_state
@@ -221,7 +222,7 @@ def present(
         log.info("vmc_sddc present is called with test option")
         return vmc_state._create_state_response(
             name=name,
-            comment="SDDC {} would have been created".format(sddc_name),
+            comment=f"SDDC {sddc_name} would have been created",
         )
 
     created_sddc = __salt__["vmc_sddc.create"](
@@ -259,7 +260,7 @@ def present(
 
     return vmc_state._create_state_response(
         name=name,
-        comment="Created SDDC {}".format(sddc_name),
+        comment=f"Created SDDC {sddc_name}",
         new_state=created_sddc,
         result=True,
     )
@@ -277,7 +278,6 @@ def absent(
     verify_ssl=True,
     cert=None,
 ):
-
     """
     Ensure a given SDDC does not exist for the given organization.
 
@@ -346,7 +346,7 @@ def absent(
         if vmc_sddc:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will delete SDDC with ID {}".format(sddc_id),
+                comment=f"State absent will delete SDDC with ID {sddc_id}",
             )
         else:
             return vmc_state._create_state_response(
@@ -378,7 +378,7 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted SDDC {}".format(sddc_id),
+            comment=f"Deleted SDDC {sddc_id}",
             old_state=vmc_sddc,
             result=True,
         )

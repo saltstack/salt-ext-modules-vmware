@@ -25,6 +25,7 @@ Example usage :
 
 
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants
@@ -237,7 +238,7 @@ def present(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated security group {}".format(security_group_id),
+                comment=f"Updated security group {security_group_id}",
                 old_state=security_group,
                 new_state=updated_security_group,
                 result=True,
@@ -273,7 +274,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created security group {}".format(security_group_id),
+            comment=f"Created security group {security_group_id}",
             new_state=created_security_group,
             result=True,
         )
@@ -384,7 +385,7 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted security group {}".format(security_group_id),
+            comment=f"Deleted security group {security_group_id}",
             old_state=security_group,
             result=True,
         )
@@ -392,6 +393,6 @@ def absent(
         log.info("No security group found with ID %s", security_group_id)
         return vmc_state._create_state_response(
             name=name,
-            comment="No security group found with ID {}".format(security_group_id),
+            comment=f"No security group found with ID {security_group_id}",
             result=True,
         )

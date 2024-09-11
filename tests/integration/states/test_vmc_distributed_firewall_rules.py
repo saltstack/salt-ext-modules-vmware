@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_distributed_firewall_rules state module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request
@@ -116,7 +117,7 @@ def test_vmc_distributed_firewall_rules_state_module(
 
     assert changes["old"] is None
     assert changes["new"]["id"] == rule_id
-    assert result["comment"] == "Created distributed firewall rule {}".format(rule_id)
+    assert result["comment"] == f"Created distributed firewall rule {rule_id}"
 
     # Test present to update with identical fields
     response = salt_call_cli.run(
@@ -147,7 +148,7 @@ def test_vmc_distributed_firewall_rules_state_module(
 
     assert changes["old"]["display_name"] != changes["new"]["display_name"]
     assert changes["new"]["display_name"] == updated_display_name
-    assert result["comment"] == "Updated distributed firewall rule {}".format(rule_id)
+    assert result["comment"] == f"Updated distributed firewall rule {rule_id}"
 
     # Invoke present state to update distributed firewall rule with tags field
     updated_tags = [{"tag": "tag1", "scope": "scope1"}]
@@ -163,7 +164,7 @@ def test_vmc_distributed_firewall_rules_state_module(
     changes = result["changes"]
 
     assert changes["new"]["tags"] == updated_tags
-    assert result["comment"] == "Updated distributed firewall rule {}".format(rule_id)
+    assert result["comment"] == f"Updated distributed firewall rule {rule_id}"
 
     # Invoke absent to delete the distributed firewall rule
     response = salt_call_cli.run(
@@ -175,7 +176,7 @@ def test_vmc_distributed_firewall_rules_state_module(
 
     assert changes["new"] is None
     assert changes["old"]["id"] == rule_id
-    assert result["comment"] == "Deleted distributed firewall rule {}".format(rule_id)
+    assert result["comment"] == f"Deleted distributed firewall rule {rule_id}"
 
     # Invoke absent when distributed firewall rule is not present
     response = salt_call_cli.run(
@@ -189,4 +190,4 @@ def test_vmc_distributed_firewall_rules_state_module(
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}
-    assert result["comment"] == "No distributed firewall rule found with ID {}".format(rule_id)
+    assert result["comment"] == f"No distributed firewall rule found with ID {rule_id}"

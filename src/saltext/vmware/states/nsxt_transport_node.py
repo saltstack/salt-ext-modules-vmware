@@ -51,6 +51,7 @@ Example:
                  password: "ca$hc0w"
                  thumbprint: "e7fd7dd84267da10f991812ca62b2bedea3a4a62965396a04728da1e7f8e1cb9"
 """
+
 import logging
 
 import salt.utils.dictdiffer
@@ -239,10 +240,10 @@ def _get_id_for_resource(
             return
         if len(get_transport_zone_response["results"]) > 1:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "More than one transport zone exist with same display name : {}".format(
-                resource_name
+            ret["comment"] = (
+                "More than one transport zone exist with same display name : {}".format(
+                    resource_name
+                )
             )
             return
         transport_zone_response_by_display_name = get_transport_zone_response["results"]
@@ -273,10 +274,10 @@ def _get_id_for_resource(
             return
         if len(get_host_switch_profile["results"]) > 1:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "More than one host switch profile exist with same display name : {}".format(
-                resource_name
+            ret["comment"] = (
+                "More than one host switch profile exist with same display name : {}".format(
+                    resource_name
+                )
             )
             return
         host_profile_profile_by_display_name = get_host_switch_profile["results"]
@@ -307,10 +308,10 @@ def _get_id_for_resource(
             return
         if len(get_compute_manager_response["results"]) > 1:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "More than one host compute managers exist with same display name : {}".format(
-                resource_name
+            ret["comment"] = (
+                "More than one host compute managers exist with same display name : {}".format(
+                    resource_name
+                )
             )
             return
         compute_manager_by_display_name = get_compute_manager_response["results"]
@@ -339,10 +340,10 @@ def _get_id_for_resource(
             return
         if len(get_compute_manager_response["results"]) > 1:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "More than one host compute managers exist with same display name : {}".format(
-                resource_name
+            ret["comment"] = (
+                "More than one host compute managers exist with same display name : {}".format(
+                    resource_name
+                )
             )
             return
         compute_manager_by_display_name = get_compute_manager_response["results"]

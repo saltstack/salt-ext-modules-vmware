@@ -1,6 +1,7 @@
 """
     Unit Tests for controller metadata
 """
+
 from unittest.mock import MagicMock
 from unittest.mock import patch
 

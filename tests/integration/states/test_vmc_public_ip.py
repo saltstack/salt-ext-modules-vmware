@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_public_ip state module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request
@@ -89,7 +90,7 @@ def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, common_data
 
     assert changes["old"] is None
     assert changes["new"]["id"] == public_ip_id
-    assert result["comment"] == "Created public IP {}".format(public_ip_id)
+    assert result["comment"] == f"Created public IP {public_ip_id}"
 
     # Test present to update public IP with identical fields
     response = salt_call_cli.run(
@@ -122,7 +123,7 @@ def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, common_data
 
     assert changes["old"]["display_name"] != changes["new"]["display_name"]
     assert changes["new"]["display_name"] == updated_display_name
-    assert result["comment"] == "Updated public IP {}".format(public_ip_id)
+    assert result["comment"] == f"Updated public IP {public_ip_id}"
 
     # Invoke absent to delete the public IP
     response = salt_call_cli.run(
@@ -137,7 +138,7 @@ def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, common_data
 
     assert changes["new"] is None
     assert changes["old"]["id"] == public_ip_id
-    assert result["comment"] == "Deleted public IP {}".format(public_ip_id)
+    assert result["comment"] == f"Deleted public IP {public_ip_id}"
 
     # Invoke absent when public IP is not present
     response = salt_call_cli.run(
@@ -151,4 +152,4 @@ def test_vmc_public_ip_state_module(salt_call_cli, delete_public_ip, common_data
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}
-    assert result["comment"] == "No public IP found with ID {}".format(public_ip_id)
+    assert result["comment"] == f"No public IP found with ID {public_ip_id}"

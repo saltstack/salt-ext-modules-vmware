@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_vm_disks execution module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_vcenter_request

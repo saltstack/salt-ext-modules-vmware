@@ -1,6 +1,7 @@
 """
 Tests for execution module of NSX-T transport node profiles
 """
+
 from unittest.mock import patch
 
 import saltext.vmware.modules.nsxt_transport_node_profiles as nsxt_transport_node_profiles

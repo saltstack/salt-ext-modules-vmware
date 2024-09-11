@@ -1,6 +1,7 @@
 """
 State module for NSX-T segment
 """
+
 import logging
 
 log = logging.getLogger(__name__)
@@ -707,7 +708,7 @@ def present(
             segment_ports=segment_ports,
         )
 
-        log.info("Execution logs for segment create : {}".format(execution_logs_create))
+        log.info(f"Execution logs for segment create : {execution_logs_create}")
         if "error" in execution_logs_create[len(execution_logs_create) - 1]:
             ret["result"] = False
             ret["comment"] = "Failed while doing create segment or its sub resource: {}".format(
@@ -799,7 +800,7 @@ def present(
             segment_ports=segment_ports,
         )
 
-        log.info("Execution logs for updating segment : {}".format(execution_logs_update))
+        log.info(f"Execution logs for updating segment : {execution_logs_update}")
         if "error" in execution_logs_update[len(execution_logs_update) - 1]:
             ret["result"] = False
             ret["comment"] = "Failed while updating segment and sub-resources: {}".format(
@@ -964,16 +965,16 @@ def absent(
         cert_common_name=cert_common_name,
         segment_id=segment_id,
     )
-    log.info("Execution logs for deleting segment : {}".format(execution_logs_delete))
+    log.info(f"Execution logs for deleting segment : {execution_logs_delete}")
     if "error" in execution_logs_delete[len(execution_logs_delete) - 1]:
         ret["result"] = False
-        ret["comment"] = "Failed to delete segment : {}".format(execution_logs_delete)
+        ret["comment"] = f"Failed to delete segment : {execution_logs_delete}"
         return ret
     else:
-        ret[
-            "comment"
-        ] = "Segment with display_name: {} and its sub-resources deleted successfully".format(
-            display_name
+        ret["comment"] = (
+            "Segment with display_name: {} and its sub-resources deleted successfully".format(
+                display_name
+            )
         )
         ret["changes"]["old"] = segment_hierarchy
         ret["changes"]["new"] = {}

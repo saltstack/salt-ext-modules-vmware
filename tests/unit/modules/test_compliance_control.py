@@ -1,6 +1,7 @@
 """
 Unit Tests for compliance control execution module.
 """
+
 import logging
 from unittest.mock import patch
 

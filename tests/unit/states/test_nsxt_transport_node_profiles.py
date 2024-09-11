@@ -355,7 +355,7 @@ def test_present_state_error_when_update_tnp_returns_error(mock_call_api):
             "nsxt_transport_node_profiles.update": MagicMock(return_value=json_response),
         },
     ):
-        ret["comment"] = "Failure while updating transport node profile: {}".format(err_msg)
+        ret["comment"] = f"Failure while updating transport node profile: {err_msg}"
         with patch.dict(nsxt_transport_node_profiles.__opts__, {"test": False}):
             assert (
                 nsxt_transport_node_profiles.present(
@@ -570,10 +570,10 @@ def test_absent_state_when_opts_true_during_create():
         },
     ):
         with patch.dict(nsxt_transport_node_profiles.__opts__, {"test": True}):
-            ret[
-                "comment"
-            ] = "No transport node profile with display_name: {} found in NSX-T Manager".format(
-                _mock_transport_node_profile["display_name"]
+            ret["comment"] = (
+                "No transport node profile with display_name: {} found in NSX-T Manager".format(
+                    _mock_transport_node_profile["display_name"]
+                )
             )
             assert (
                 nsxt_transport_node_profiles.absent(
@@ -626,10 +626,10 @@ def test_absent_state_when_no_transport_node_profile_exists_with_given_name():
         },
     ):
         with patch.dict(nsxt_transport_node_profiles.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "No transport node profile with display_name: {} found in NSX-T Manager".format(
-                _mock_transport_node_profile["display_name"]
+            ret["comment"] = (
+                "No transport node profile with display_name: {} found in NSX-T Manager".format(
+                    _mock_transport_node_profile["display_name"]
+                )
             )
             assert (
                 nsxt_transport_node_profiles.absent(
@@ -657,7 +657,7 @@ def test_absent_state_when_delete_call_returns_error():
         },
     ):
         with patch.dict(nsxt_transport_node_profiles.__opts__, {"test": False}):
-            ret["comment"] = "Failed to delete transport node profile : {}".format(err_msg)
+            ret["comment"] = f"Failed to delete transport node profile : {err_msg}"
             assert (
                 nsxt_transport_node_profiles.absent(
                     name="delete transport node profile",
@@ -685,10 +685,10 @@ def test_absent_state_to_delete_existing_transport_node_profile():
         },
     ):
         with patch.dict(nsxt_transport_node_profiles.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "Transport node profile with display_name: {} successfully deleted".format(
-                _mock_transport_node_profile["display_name"]
+            ret["comment"] = (
+                "Transport node profile with display_name: {} successfully deleted".format(
+                    _mock_transport_node_profile["display_name"]
+                )
             )
             ret["changes"]["new"] = {}
             ret["changes"]["old"] = _mock_transport_node_profile

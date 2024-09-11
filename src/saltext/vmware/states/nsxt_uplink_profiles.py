@@ -1,6 +1,7 @@
 """
 State module for NSX-T uplink profiles
 """
+
 import logging
 
 import salt.utils.dictdiffer
@@ -338,7 +339,7 @@ def present(
             ret["comment"] = create_result["error"]
             return ret
 
-        ret["comment"] = "Created uplink profile {display_name}".format(display_name=display_name)
+        ret["comment"] = f"Created uplink profile {display_name}"
         ret["changes"]["new"] = create_result
         return ret
     else:
@@ -386,7 +387,7 @@ def present(
                 teaming=teaming,
                 uplink_profile_id=existing_uplink_profile["id"],
                 revision=existing_uplink_profile["_revision"],
-                **optional_params_dict
+                **optional_params_dict,
             )
 
             if "error" in update_result:
@@ -402,9 +403,9 @@ def present(
             return ret
         else:
             log.info("Update is not required. Uplink profile with same params already exists")
-            ret[
-                "comment"
-            ] = "Uplink profile already exists with similar params. No action to perform"
+            ret["comment"] = (
+                "Uplink profile already exists with similar params. No action to perform"
+            )
             return ret
 
 
@@ -501,10 +502,10 @@ def absent(
     if __opts__["test"]:
         if result_count == 0:
             ret["result"] = None
-            ret[
-                "comment"
-            ] = "No uplink profile with display_name: {} found in NSX-T Manager".format(
-                display_name
+            ret["comment"] = (
+                "No uplink profile with display_name: {} found in NSX-T Manager".format(
+                    display_name
+                )
             )
         else:
             ret["result"] = None

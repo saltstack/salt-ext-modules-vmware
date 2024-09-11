@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_direct_connect execution module
 """
+
 from unittest.mock import patch
 
 import pytest

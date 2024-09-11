@@ -25,6 +25,7 @@ Example usage :
 
 
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants
@@ -268,11 +269,11 @@ def present(
         log.info("present is called with test option")
         if network:
             return vmc_state._create_state_response(
-                name=name, comment="State present will update network {}".format(network_id)
+                name=name, comment=f"State present will update network {network_id}"
             )
         else:
             return vmc_state._create_state_response(
-                name=name, comment="State present will create network {}".format(network_id)
+                name=name, comment=f"State present will create network {network_id}"
             )
 
     if network:
@@ -325,7 +326,7 @@ def present(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated network {}".format(network_id),
+                comment=f"Updated network {network_id}",
                 old_state=network,
                 new_state=updated_network,
                 result=True,
@@ -363,7 +364,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created network {}".format(network_id),
+            comment=f"Created network {network_id}",
             new_state=created_network,
             result=True,
         )
@@ -433,7 +434,7 @@ def absent(
         log.info("absent is called with test option")
         if network:
             return vmc_state._create_state_response(
-                name=name, comment="State absent will delete network with ID {}".format(network_id)
+                name=name, comment=f"State absent will delete network with ID {network_id}"
             )
         else:
             return vmc_state._create_state_response(
@@ -463,12 +464,12 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted network {}".format(network_id),
+            comment=f"Deleted network {network_id}",
             old_state=network,
             result=True,
         )
     else:
         log.info("No Network found with Id %s", network_id)
         return vmc_state._create_state_response(
-            name=name, comment="No network found with ID {}".format(network_id), result=True
+            name=name, comment=f"No network found with ID {network_id}", result=True
         )

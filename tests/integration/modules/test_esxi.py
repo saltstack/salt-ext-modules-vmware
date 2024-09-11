@@ -585,7 +585,7 @@ def test_add_update_remove_user(service_instance):
     """
     Test add/get/update/remove a local ESXi user
     """
-    user_name = "A{}".format(uuid.uuid4())
+    user_name = f"A{uuid.uuid4()}"
     ret = esxi.add_user(
         service_instance=service_instance,
         datacenter_name="Datacenter",
@@ -654,7 +654,7 @@ def test_add_update_remove_role(service_instance):
     """
     Test add/update/remove a local ESXi role
     """
-    role_name = "A{}".format(uuid.uuid4())
+    role_name = f"A{uuid.uuid4()}"
     ret = esxi.add_role(
         service_instance=service_instance,
         role_name=role_name,

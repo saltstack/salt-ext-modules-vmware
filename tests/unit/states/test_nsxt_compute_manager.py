@@ -230,9 +230,9 @@ def test_present_state_to_update_existing_compute_manager_registration_during_up
             "nsxt_compute_manager.update": MagicMock(return_value=updated_compute_manager),
         },
     ):
-        ret[
-            "comment"
-        ] = "Compute manager existing-server.local registration successfully updated with NSX-T"
+        ret["comment"] = (
+            "Compute manager existing-server.local registration successfully updated with NSX-T"
+        )
         ret["changes"]["new"] = updated_compute_manager
         ret["changes"]["old"] = old_compute_manager
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
@@ -326,9 +326,9 @@ def test_present_state_error_with_wrong_compute_manager_credential():
             "nsxt_compute_manager.get": MagicMock(return_value=existing_compute_managers),
         },
     ):
-        ret[
-            "comment"
-        ] = "Parameter credential must be of type dictionary. Please refer documentation"
+        ret["comment"] = (
+            "Parameter credential must be of type dictionary. Please refer documentation"
+        )
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
                 nsxt_compute_manager.present(
@@ -374,10 +374,10 @@ def test_present_state_error_when_existing_compute_manager_registration_update_f
             "nsxt_compute_manager.update": MagicMock(return_value=err_json),
         },
     ):
-        ret[
-            "comment"
-        ] = "Failed to update existing registration of compute manager with NSX-T Manager : {}".format(
-            error_msg
+        ret["comment"] = (
+            "Failed to update existing registration of compute manager with NSX-T Manager : {}".format(
+                error_msg
+            )
         )
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
@@ -439,7 +439,7 @@ def test_present_state_error_while_new_registration_fails_when_calling_get():
         nsxt_compute_manager.__salt__,
         {"nsxt_compute_manager.get": MagicMock(return_value=err_json)},
     ):
-        ret["comment"] = "Failed to get compute managers from NSX-T Manager : {}".format(error_msg)
+        ret["comment"] = f"Failed to get compute managers from NSX-T Manager : {error_msg}"
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
                 nsxt_compute_manager.present(
@@ -573,10 +573,10 @@ def test_absent_state_error_when_delete_compute_manager_call_fails():
             "nsxt_compute_manager.remove": MagicMock(return_value=error_json),
         },
     ):
-        ret[
-            "comment"
-        ] = "Failed to remove registration of compute manager with NSX-T Manager : {}".format(
-            err_msg
+        ret["comment"] = (
+            "Failed to remove registration of compute manager with NSX-T Manager : {}".format(
+                err_msg
+            )
         )
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
@@ -602,7 +602,7 @@ def test_absent_state_error_get_compute_manager_call_fails():
             "nsxt_compute_manager.get": MagicMock(return_value=error_json),
         },
     ):
-        ret["comment"] = "Failed to get compute managers from NSX-T Manager : {}".format(err_msg)
+        ret["comment"] = f"Failed to get compute managers from NSX-T Manager : {err_msg}"
         with patch.dict(nsxt_compute_manager.__opts__, {"test": False}):
             assert (
                 nsxt_compute_manager.absent(

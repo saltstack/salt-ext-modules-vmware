@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_vm_stats execution module
 """
+
 import pytest
 
 

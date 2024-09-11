@@ -2,6 +2,7 @@
 Salt execution module for VMC vm stats
 Provides methods to get cpu or memory related settings of a virtual machine
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

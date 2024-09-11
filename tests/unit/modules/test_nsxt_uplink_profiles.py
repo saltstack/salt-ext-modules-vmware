@@ -1,6 +1,7 @@
 """
 Tests for execution module of NSX-T uplink profiles
 """
+
 from unittest.mock import patch
 
 import saltext.vmware.modules.nsxt_uplink_profiles as nsxt_uplink_profiles

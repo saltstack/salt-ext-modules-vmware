@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_sddc_clusters execution module
 """
+
 import logging
 from unittest.mock import patch
 
