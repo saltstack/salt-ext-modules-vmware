@@ -84,6 +84,7 @@ jobs:
     - name: Install Test Requirements
       env:
         SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
+        EXTRA_REQUIREMENTS_INSTALL: setuptools
       run: |
         nox --force-color -e tests-3 --install-only
 
