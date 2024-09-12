@@ -100,20 +100,20 @@ repos:
         ]
         exclude: src/saltext/vcenter/version.py
 
-  ## - repo: https://github.com/psf/black
-  ##   rev: 24.8.0
-  ##   hooks:
-  ##     - id: black
-  ##       args: [-tpy310]
-  ##       exclude: ^src/saltext/vcenter/version.py
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        args: [-tpy310]
+        exclude: ^src/saltext/vcenter/version.py
 
-  ## - repo: https://github.com/asottile/blacken-docs
-  ##   rev: 1.18.0
-  ##   hooks:
-  ##     - id: blacken-docs
-  ##       args: [--skip-errors]
-  ##       files: ^docs/.*\.rst
-  ##       additional_dependencies: [black==24.8.0]
+  - repo: https://github.com/asottile/blacken-docs
+    rev: 1.18.0
+    hooks:
+      - id: blacken-docs
+        args: [--skip-errors]
+        files: ^docs/.*\.rst
+        additional_dependencies: [black==24.8.0]
 
   - repo: https://github.com/myint/rstcheck
     rev: v6.2.4
