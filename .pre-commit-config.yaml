@@ -116,11 +116,11 @@ repos:
         additional_dependencies: [black==24.8.0]
 
   - repo: https://github.com/myint/rstcheck
-    rev: v6.2.4
+    rev: v5.0.0
     hooks:
       - id: rstcheck
         name: Check reST files using rstcheck
-        args: [--report-level=warning, --ignore-directives=automodule]
+        args: [--report=warning, --ignore-directives=automodule]
         additional_dependencies: [sphinx]
   # <---- Formatting -----------------------------------------------------------------------------
 
