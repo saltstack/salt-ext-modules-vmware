@@ -109,7 +109,7 @@ def test_vmc_network_execution_module(
         "vmc_networks.update",
         network_id=network_id,
         display_name="network1",
-        **common_data_for_network
+        **common_data_for_network,
     )
     response_as_json = response.json
     assert "error" not in response_as_json

@@ -21,10 +21,13 @@ import saltext.vmware.utils.connect as connect
 def test_when_no_config_and_environ_is_missing_conf_values_get_service_instance_should_raise_error(
     environ_values,
 ):
-    with pytest.raises(
-        ValueError,
-        match="Cannot create service instance, VMware credentials incomplete.",
-    ), mock.patch.dict(os.environ, environ_values):
+    with (
+        pytest.raises(
+            ValueError,
+            match="Cannot create service instance, VMware credentials incomplete.",
+        ),
+        mock.patch.dict(os.environ, environ_values),
+    ):
         connect.get_service_instance(config={})
 
 
@@ -46,10 +49,13 @@ def test_when_no_config_and_environ_is_missing_conf_values_get_service_instance_
 def test_when_no_environ_values_and_config_is_missing_conf_values_get_service_instance_should_raise_error(
     config_values,
 ):
-    with pytest.raises(
-        ValueError,
-        match="Cannot create service instance, VMware credentials incomplete.",
-    ), mock.patch.dict(os.environ, {}):
+    with (
+        pytest.raises(
+            ValueError,
+            match="Cannot create service instance, VMware credentials incomplete.",
+        ),
+        mock.patch.dict(os.environ, {}),
+    ):
         connect.get_service_instance(config=config_values)
 
 
@@ -313,10 +319,10 @@ def test_get_service_instance_should_correctly_pass_config_values_to_SmartConnec
     expected_values, esxi_host, profile, conf_values, environ_values
 ):
     fake_ssl_ctx = object()
-    with mock.patch.dict(os.environ, environ_values), mock.patch(
-        "pyVim.connect.SmartConnect", autospec=True
-    ) as fake_pyvimconnect, mock.patch(
-        "ssl._create_unverified_context", autospec=True, return_value=fake_ssl_ctx
+    with (
+        mock.patch.dict(os.environ, environ_values),
+        mock.patch("pyVim.connect.SmartConnect", autospec=True) as fake_pyvimconnect,
+        mock.patch("ssl._create_unverified_context", autospec=True, return_value=fake_ssl_ctx),
     ):
         connect.get_service_instance(config=conf_values, esxi_host=esxi_host, profile=profile)
         fake_pyvimconnect.assert_called_with(**expected_values, sslContext=fake_ssl_ctx)

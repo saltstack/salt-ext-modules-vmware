@@ -290,8 +290,9 @@ def patch_salt_globals_datacenter(vmware_conf, patch_salt_globals):
     """
     Patch __opts__ and __pillar__
     """
-    with patch.dict(datacenter_mod.__opts__, {"test": False}), patch.dict(
-        datacenter_mod.__pillar__, vmware_conf
+    with (
+        patch.dict(datacenter_mod.__opts__, {"test": False}),
+        patch.dict(datacenter_mod.__pillar__, vmware_conf),
     ):
         yield
 
@@ -301,8 +302,9 @@ def patch_salt_globals_tag(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-    with patch.object(tagging, "__opts__", {"test": False}, create=True), patch.object(
-        tagging, "__pillar__", vmware_conf, create=True
+    with (
+        patch.object(tagging, "__opts__", {"test": False}, create=True),
+        patch.object(tagging, "__pillar__", vmware_conf, create=True),
     ):
         yield
 

@@ -104,6 +104,7 @@ repos:
     rev: 24.8.0
     hooks:
       - id: black
+        args: [-tpy310]
         exclude: ^src/saltext/vcenter/version.py
 
   - repo: https://github.com/asottile/blacken-docs

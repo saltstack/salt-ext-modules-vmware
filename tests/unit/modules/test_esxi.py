@@ -30,15 +30,21 @@ def configure_loader_modules():
 @pytest.fixture(autouse=True)
 def patch_salt_loaded_objects():
     # This esxi needs to be the same as the module we're importing
-    with patch(
-        "saltext.vmware.modules.esxi.__opts__",
-        {
-            "cachedir": ".",
-            "saltext.vmware": {"host": "fnord.example.com", "user": "fnord", "password": "fnord"},
-        },
-        create=True,
-    ), patch.object(esxi, "__pillar__", {}, create=True), patch.object(
-        esxi, "__salt__", {}, create=True
+    with (
+        patch(
+            "saltext.vmware.modules.esxi.__opts__",
+            {
+                "cachedir": ".",
+                "saltext.vmware": {
+                    "host": "fnord.example.com",
+                    "user": "fnord",
+                    "password": "fnord",
+                },
+            },
+            create=True,
+        ),
+        patch.object(esxi, "__pillar__", {}, create=True),
+        patch.object(esxi, "__salt__", {}, create=True),
     ):
         yield
 

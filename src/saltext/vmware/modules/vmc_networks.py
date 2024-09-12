@@ -495,7 +495,7 @@ def create(
     req_data = vmc_request._filter_kwargs(
         allowed_kwargs=allowed_dict.keys(),
         allow_none=["tags", "subnets", "l2_extension"],
-        **allowed_dict
+        **allowed_dict,
     )
 
     payload = _create_payload_for_network(network_id, req_data)
@@ -766,7 +766,7 @@ def update(
     req_data = vmc_request._filter_kwargs(
         allowed_kwargs=allowed_dict.keys(),
         allow_none=["tags", "subnets", "l2_extension"],
-        **allowed_dict
+        **allowed_dict,
     )
 
     payload = vmc_request.create_payload_for_request(

@@ -130,7 +130,7 @@ def test_create_with_dot_vmdk_file_name_and_capacity_and_storage_policy_id_shoul
             vm_id="vm_id",
             bus_adapter_type="IDE",
             verify_ssl=False,
-            **kwargs
+            **kwargs,
         )
         == expected_error
     )
@@ -184,7 +184,7 @@ def test_create_with_vmdk_name_and_capacity_and_storage_policy_id_should_pass_ex
             vm_id="vm_id",
             bus_adapter_type="IDE",
             verify_ssl=False,
-            **kwargs
+            **kwargs,
         )
 
     call_kwargs = vmc_call_api.mock_calls[0][-1]

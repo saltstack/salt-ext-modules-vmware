@@ -19,15 +19,21 @@ def configure_loader_modules():
 @pytest.fixture(autouse=True)
 def patch_salt_loaded_objects():
     # This needs to be the same as the module we're importing
-    with patch(
-        "saltext.vmware.states.controller_metadata.__opts__",
-        {
-            "cachedir": ".",
-            "saltext.vmware": {"host": "test.vcenter.local", "user": "test", "password": "test"},
-        },
-        create=True,
-    ), patch.object(controller_metadata, "__pillar__", {}, create=True), patch.object(
-        controller_metadata, "__salt__", {}, create=True
+    with (
+        patch(
+            "saltext.vmware.states.controller_metadata.__opts__",
+            {
+                "cachedir": ".",
+                "saltext.vmware": {
+                    "host": "test.vcenter.local",
+                    "user": "test",
+                    "password": "test",
+                },
+            },
+            create=True,
+        ),
+        patch.object(controller_metadata, "__pillar__", {}, create=True),
+        patch.object(controller_metadata, "__salt__", {}, create=True),
     ):
         yield
 
