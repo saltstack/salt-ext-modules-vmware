@@ -583,7 +583,7 @@ def wait_for_task(task, instance_name, task_type, sleep_seconds=1, log_level="de
             log.exception(exc)
             exc_message = exc.msg
             if exc.faultMessage:
-                exc_message = "{} ({})".format(exc_message, exc.faultMessage[0].message)
+                exc_message = f"{exc_message} ({exc.faultMessage[0].message})"
             raise salt.exceptions.VMwareApiError(exc_message)
 
 
@@ -664,7 +664,7 @@ def get_datacenter(service_instance, datacenter_name):
     items = get_datacenters(service_instance, datacenter_names=[datacenter_name])
     if not items:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "Datacenter '{}' was not found".format(datacenter_name)
+            f"Datacenter '{datacenter_name}' was not found"
         )
     return items[0]
 
@@ -903,7 +903,7 @@ def get_storage_system(service_instance, host_ref, hostname=None):
     )
     if not objs:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "Host's '{}' storage system was not retrieved".format(hostname)
+            f"Host's '{hostname}' storage system was not retrieved"
         )
     log.trace("[%s] Retrieved storage system", hostname)
     return objs[0]["object"]
@@ -935,7 +935,7 @@ def _get_scsi_address_to_lun_key_map(
     except vim.fault.NoPermission as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+            f"Not enough permissions. Required privilege: {exc.privilegeId}"
         )
     except vim.fault.VimFault as exc:
         log.exception(exc)
@@ -945,16 +945,16 @@ def _get_scsi_address_to_lun_key_map(
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     if not device_info:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "Host's '{}' storage device info was not retrieved".format(hostname)
+            f"Host's '{hostname}' storage device info was not retrieved"
         )
     multipath_info = device_info.multipathInfo
     if not multipath_info:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "Host's '{}' multipath info was not retrieved".format(hostname)
+            f"Host's '{hostname}' multipath info was not retrieved"
         )
     if multipath_info.lun is None:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "No luns were retrieved from host '{}'".format(hostname)
+            f"No luns were retrieved from host '{hostname}'"
         )
     lun_key_by_scsi_addr = {}
     for l in multipath_info.lun:
@@ -985,14 +985,14 @@ def get_all_luns(host_ref, storage_system=None, hostname=None):
         storage_system = get_storage_system(si, host_ref, hostname)
         if not storage_system:
             raise salt.exceptions.VMwareObjectRetrievalError(
-                "Host's '{}' storage system was not retrieved".format(hostname)
+                f"Host's '{hostname}' storage system was not retrieved"
             )
     try:
         device_info = storage_system.storageDeviceInfo
     except vim.fault.NoPermission as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+            f"Not enough permissions. Required privilege: {exc.privilegeId}"
         )
     except vim.fault.VimFault as exc:
         log.exception(exc)
@@ -1002,7 +1002,7 @@ def get_all_luns(host_ref, storage_system=None, hostname=None):
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     if not device_info:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "Host's '{}' storage device info was not retrieved".format(hostname)
+            f"Host's '{hostname}' storage device info was not retrieved"
         )
 
     scsi_luns = device_info.scsiLun
@@ -1149,7 +1149,7 @@ def get_diskgroups(host_ref, cache_disk_ids=None, get_all_disk_groups=False):
     except vim.fault.NoPermission as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+            f"Not enough permissions. Required privilege: {exc.privilegeId}"
         )
     except vim.fault.VimFault as exc:
         log.exception(exc)
@@ -1159,12 +1159,12 @@ def get_diskgroups(host_ref, cache_disk_ids=None, get_all_disk_groups=False):
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     if not vsan_host_config:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "No host config found on host '{}'".format(hostname)
+            f"No host config found on host '{hostname}'"
         )
     vsan_storage_info = vsan_host_config.storageInfo
     if not vsan_storage_info:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "No vsan storage info found on host '{}'".format(hostname)
+            f"No vsan storage info found on host '{hostname}'"
         )
     vsan_disk_mappings = vsan_storage_info.diskMapping
     if not vsan_disk_mappings:

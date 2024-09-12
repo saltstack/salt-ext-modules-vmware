@@ -148,7 +148,7 @@ class NSXTPolicyBaseResource(ABC):
         cert_common_name=None,
         verify_ssl=True,
         execution_logs=[],
-        **kwargs
+        **kwargs,
     ):
         # must call this method for creation of resource and sub-resources
 
@@ -312,7 +312,7 @@ class NSXTPolicyBaseResource(ABC):
                 self.nsx_resource_params.get("cert_common_name"),
                 self.nsx_resource_params.get("verify_ssl"),
                 execution_logs,
-                **kwargs
+                **kwargs,
             )
 
         self._parent_info["_parent"] = my_parent
@@ -470,7 +470,7 @@ class NSXTPolicyBaseResource(ABC):
             execution_logs.append(
                 {
                     "resourceType": self.get_spec_identifier(),
-                    "results": "{} deleted successfully".format(resource_id),
+                    "results": f"{resource_id} deleted successfully",
                 }
             )
 

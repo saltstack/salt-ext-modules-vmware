@@ -35,7 +35,7 @@ def test_org_users_smoke_test(salt_call_cli, vmc_common_data):
     )
     result_as_json = ret.json
     assert "error" not in result_as_json
-    assert "Invited {} successfully".format(user_name) in result_as_json["message"]
+    assert f"Invited {user_name} successfully" in result_as_json["message"]
 
     # search the user
     ret = salt_call_cli.run(

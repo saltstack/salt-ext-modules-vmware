@@ -153,7 +153,7 @@ def _execute_present_state(
         verify_ssl=False,
         display_name=display_name,
         host_switch_spec=host_switch_spec,
-        **params
+        **params,
     ).json
     return response[list(response.keys())[0]]
 
@@ -177,7 +177,7 @@ def _create_transport_zone_using_nsxt_api(hostname, username, password, display_
     payload = {
         "display_name": display_name,
         "host_switch_name": "test-host-switch-1",
-        "description": "Transport Zone: {}".format(display_name),
+        "description": f"Transport Zone: {display_name}",
         "transport_type": "OVERLAY",
     }
     headers = {"Accept": "application/json", "content-Type": "application/json"}
@@ -292,9 +292,10 @@ def test_nsxt_transport_node_profiles_present_and_absent_states(nsxt_config, set
         hostname, username, password, salt_call_cli=salt_call_cli, display_name=_display_name
     )
     assert result_as_json["result"] is True
-    assert result_as_json[
-        "comment"
-    ] == "Transport node profile with display_name: {} successfully deleted".format(_display_name)
+    assert (
+        result_as_json["comment"]
+        == f"Transport node profile with display_name: {_display_name} successfully deleted"
+    )
     old_changes_json = result_as_json["changes"]["old"]
     assert old_changes_json["display_name"] == _display_name
     assert old_changes_json["description"] == _update_description

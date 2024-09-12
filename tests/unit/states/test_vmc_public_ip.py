@@ -183,7 +183,7 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created public IP {}".format(public_ip)
+    assert result["comment"] == f"Created public IP {public_ip}"
     assert result["result"]
 
 
@@ -207,7 +207,7 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "Public IP {} would have been created".format(public_ip_id)
+    assert result["comment"] == f"Public IP {public_ip_id} would have been created"
     assert result["result"] is None
 
 
@@ -234,7 +234,7 @@ def test_present_state_for_update_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "Public IP {} would have been updated".format(public_ip_id)
+    assert result["comment"] == f"Public IP {public_ip_id} would have been updated"
     assert result["result"] is None
 
 
@@ -291,7 +291,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_r
 
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response}
-    assert result["comment"] == "Deleted public IP {}".format(public_ip_id)
+    assert result["comment"] == f"Deleted public IP {public_ip_id}"
     assert result["result"]
 
 
@@ -314,7 +314,7 @@ def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
 
     assert result is not None
     assert result["changes"] == {}
-    assert result["comment"] == "No public IP found with ID {}".format(public_ip_id)
+    assert result["comment"] == f"No public IP found with ID {public_ip_id}"
     assert result["result"]
 
 
@@ -340,7 +340,7 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State absent will delete public IP with ID {}".format(public_ip_id)
+    assert result["comment"] == f"State absent will delete public IP with ID {public_ip_id}"
     assert result["result"] is None
 
 
@@ -366,9 +366,10 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result[
-        "comment"
-    ] == "State absent will do nothing as no public IP found with ID {}".format(public_ip_id)
+    assert (
+        result["comment"]
+        == f"State absent will do nothing as no public IP found with ID {public_ip_id}"
+    )
     assert result["result"] is None
 
 
@@ -453,7 +454,7 @@ def test_present_when_get_by_id_returns_not_found_error(mocked_ok_response):
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created public IP {}".format(public_ip_id)
+    assert result["comment"] == f"Created public IP {public_ip_id}"
     assert result["result"]
 
 

@@ -1467,14 +1467,14 @@ def present(
             locale_services=locale_services,
         )
 
-        log.info("Execution logs for creating tier 0 : {}".format(create_execution_logs))
+        log.info(f"Execution logs for creating tier 0 : {create_execution_logs}")
         if "error" in create_execution_logs[len(create_execution_logs) - 1]:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failed while creating tier0 gateway and sub-resources: {}\n Execution logs: {}".format(
-                create_execution_logs[len(create_execution_logs) - 1]["error"],
-                create_execution_logs,
+            ret["comment"] = (
+                "Failed while creating tier0 gateway and sub-resources: {}\n Execution logs: {}".format(
+                    create_execution_logs[len(create_execution_logs) - 1]["error"],
+                    create_execution_logs,
+                )
             )
             return ret
         tier0_execution_log = next(
@@ -1521,10 +1521,10 @@ def present(
         )
         if "error" in tier0_hierarchy_before_update:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failed while querying tier0 gateway and its sub-resources.: {}".format(
-                tier0_hierarchy_before_update["error"]
+            ret["comment"] = (
+                "Failed while querying tier0 gateway and its sub-resources.: {}".format(
+                    tier0_hierarchy_before_update["error"]
+                )
             )
             return ret
 
@@ -1558,7 +1558,7 @@ def present(
             locale_services=locale_services,
         )
 
-        log.info("Execution logs for updating tier 0 : {}".format(update_execution_logs))
+        log.info(f"Execution logs for updating tier 0 : {update_execution_logs}")
 
         # update execution logs can come empty if there is nothing to update
         if (
@@ -1566,11 +1566,11 @@ def present(
             and "error" in update_execution_logs[len(update_execution_logs) - 1]
         ):
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failed while creating tier0 gateway and sub-resources: {}\n Execution logs: {}".format(
-                update_execution_logs[len(update_execution_logs) - 1]["error"],
-                update_execution_logs,
+            ret["comment"] = (
+                "Failed while creating tier0 gateway and sub-resources: {}\n Execution logs: {}".format(
+                    update_execution_logs[len(update_execution_logs) - 1]["error"],
+                    update_execution_logs,
+                )
             )
             return ret
 
@@ -1585,10 +1585,10 @@ def present(
         )
         if "error" in tier0_hierarchy_after_update:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failure while querying tier0 gateway and its sub-resources: {}".format(
-                tier0_hierarchy_after_update["error"]
+            ret["comment"] = (
+                "Failure while querying tier0 gateway and its sub-resources: {}".format(
+                    tier0_hierarchy_after_update["error"]
+                )
             )
             return ret
 
@@ -1710,10 +1710,10 @@ def absent(
         )
         if "error" in tier0_hierarchy:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failure while querying tier0 gateway and its sub-resources: {}".format(
-                tier0_hierarchy["error"]
+            ret["comment"] = (
+                "Failure while querying tier0 gateway and its sub-resources: {}".format(
+                    tier0_hierarchy["error"]
+                )
             )
             return ret
 
@@ -1726,7 +1726,7 @@ def absent(
             cert=cert,
             cert_common_name=cert_common_name,
         )
-        log.info("Execution logs for deleting tier 0 : {}".format(delete_execution_logs))
+        log.info(f"Execution logs for deleting tier 0 : {delete_execution_logs}")
         if "error" in delete_execution_logs[len(delete_execution_logs) - 1]:
             ret["result"] = False
             ret["comment"] = "Failed to delete tier0 gateway : {}\n Execution logs: {}".format(
@@ -1735,10 +1735,10 @@ def absent(
             )
             return ret
         else:
-            ret[
-                "comment"
-            ] = "Tier0 gateway with display_name: {} and its sub-resources deleted successfully".format(
-                display_name
+            ret["comment"] = (
+                "Tier0 gateway with display_name: {} and its sub-resources deleted successfully".format(
+                    display_name
+                )
             )
             ret["changes"]["old"] = tier0_hierarchy
             ret["changes"]["new"] = {}

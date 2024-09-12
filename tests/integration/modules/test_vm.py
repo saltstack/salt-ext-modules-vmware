@@ -23,8 +23,9 @@ def patch_salt_globals_vm(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-    with patch.object(virtual_machine, "__opts__", {}, create=True), patch.object(
-        virtual_machine, "__pillar__", vmware_conf, create=True
+    with (
+        patch.object(virtual_machine, "__opts__", {}, create=True),
+        patch.object(virtual_machine, "__pillar__", vmware_conf, create=True),
     ):
         yield
 

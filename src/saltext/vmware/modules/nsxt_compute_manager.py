@@ -89,7 +89,7 @@ def get(
     """
 
     url = BASE_URL.format(management_host=hostname)
-    log.info("Retrieving compute managers from NSX Manager {}".format(hostname))
+    log.info(f"Retrieving compute managers from NSX Manager {hostname}")
 
     params = common._filter_kwargs(
         allowed_kwargs=(

@@ -492,9 +492,7 @@ def get_service_policy(
         # Check if the service_name provided is a valid one.
         # If we don't have a valid service, return. The service will be invalid for all hosts.
         if service_name not in valid_services:
-            ret.update(
-                {host_name: {"Error": "{} is not a valid service name.".format(service_name)}}
-            )
+            ret.update({host_name: {"Error": f"{service_name} is not a valid service name."}})
             return ret
 
         services = host.configManager.serviceSystem.serviceInfo.service
@@ -513,12 +511,12 @@ def get_service_policy(
                 # Updated host.name value with an error message.
                 break
             else:
-                msg = "Could not find service '{}' for host '{}'.".format(service_name, host.name)
+                msg = f"Could not find service '{service_name}' for host '{host.name}'."
                 ret.update({host.name: {"Error": msg}})
 
         # If we made it this far, something else has gone wrong.
         if ret.get(host.name) is None:
-            msg = "'vsphere.get_service_policy' failed for host {}.".format(host.name)
+            msg = f"'vsphere.get_service_policy' failed for host {host.name}."
             log.debug(msg)
             ret.update({host.name: {"Error": msg}})
 
@@ -607,9 +605,7 @@ def get_service_running(
         # Check if the service_name provided is a valid one.
         # If we don't have a valid service, return. The service will be invalid for all hosts.
         if service_name not in valid_services:
-            ret.update(
-                {host.name: {"Error": "{} is not a valid service name.".format(service_name)}}
-            )
+            ret.update({host.name: {"Error": f"{service_name} is not a valid service name."}})
             return ret
 
         services = host.configManager.serviceSystem.serviceInfo.service
@@ -628,12 +624,12 @@ def get_service_running(
                 # Updated host.name value with an error message.
                 break
             else:
-                msg = "Could not find service '{}' for host '{}'.".format(service_name, host.name)
+                msg = f"Could not find service '{service_name}' for host '{host.name}'."
                 ret.update({host.name: {"Error": msg}})
 
         # If we made it this far, something else has gone wrong.
         if ret.get(host.name) is None:
-            msg = "'vsphere.get_service_running' failed for host {}.".format(host.name)
+            msg = f"'vsphere.get_service_running' failed for host {host.name}."
             log.debug(msg)
             ret.update({host.name: {"Error": msg}})
 
@@ -1122,7 +1118,7 @@ def get_all_firewall_configs(
                             "ip_address": list(ruleset.allowedHosts.ipAddress),
                             "all_ip": ruleset.allowedHosts.allIp,
                             "ip_network": [
-                                "{}/{}".format(ip.network, ip.prefixLength)
+                                f"{ip.network}/{ip.prefixLength}"
                                 for ip in ruleset.allowedHosts.ipNetwork
                             ],
                         },
@@ -1205,7 +1201,7 @@ def get_firewall_config(
                                 "ip_address": list(ruleset.allowedHosts.ipAddress),
                                 "all_ip": ruleset.allowedHosts.allIp,
                                 "ip_network": [
-                                    "{}/{}".format(ip.network, ip.prefixLength)
+                                    f"{ip.network}/{ip.prefixLength}"
                                     for ip in ruleset.allowedHosts.ipNetwork
                                 ],
                             },
@@ -1528,7 +1524,7 @@ def restore_config(
             h.configManager.firmwareSystem.RestoreFirmwareConfiguration(force=False)
             ret[h.name] = True
         except Exception as exc:
-            msg = "Unable to restore configuration for host - {}. Error - {}".format(h.name, exc)
+            msg = f"Unable to restore configuration for host - {h.name}. Error - {exc}"
             log.error(msg)
             ret[h.name] = msg
             if h.runtime.inMaintenanceMode:
@@ -1588,11 +1584,11 @@ def reset_config(
             h.configManager.firmwareSystem.ResetFirmwareToFactoryDefaults()
             ret[h.name] = True
         except vmodl.fault.HostCommunication as exc:
-            msg = "Unable to reach host - {}. Error - {}".format(h.name, str(exc))
+            msg = f"Unable to reach host - {h.name}. Error - {str(exc)}"
             ret[h.name] = msg
             log.error(msg)
         except Exception as exc:
-            msg = "Unable to reset configuration for host - {}. Error - {}".format(h.name, str(exc))
+            msg = f"Unable to reset configuration for host - {h.name}. Error - {str(exc)}"
             ret[h.name] = msg
             log.error(msg)
             log.debug("Host - %s exiting maintenance mode", h.name)
@@ -1704,9 +1700,11 @@ def get_ntp_config(
                     "time_zone_description": ntp_config.dateTimeInfo.timeZone.description,
                     "time_zone_gmt_offset": ntp_config.dateTimeInfo.timeZone.gmtOffset,
                     "ntp_servers": list(ntp_config.dateTimeInfo.ntpConfig.server),
-                    "ntp_config_file": list(ntp_config.dateTimeInfo.ntpConfig.configFile)
-                    if ntp_config.dateTimeInfo.ntpConfig.configFile
-                    else None,
+                    "ntp_config_file": (
+                        list(ntp_config.dateTimeInfo.ntpConfig.configFile)
+                        if ntp_config.dateTimeInfo.ntpConfig.configFile
+                        else None
+                    ),
                 }
         return ret
     except DEFAULT_EXCEPTIONS as exc:
@@ -2724,7 +2722,7 @@ def update_role(
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
         if not role:
-            raise salt.exceptions.SaltException("Role {} not found".format(role_name))
+            raise salt.exceptions.SaltException(f"Role {role_name} not found")
         service_instance.content.authorizationManager.UpdateAuthorizationRole(
             roleId=role["role_id"], newName=role_name, privIds=privilege_ids
         )
@@ -2767,7 +2765,7 @@ def remove_role(
     try:
         role = get_role(role_name=role_name, service_instance=service_instance)
         if not role:
-            raise salt.exceptions.SaltException("Role {} not found".format(role_name))
+            raise salt.exceptions.SaltException(f"Role {role_name} not found")
         service_instance.content.authorizationManager.RemoveAuthorizationRole(
             roleId=role["role_id"], failIfUsed=force
         )
@@ -3576,7 +3574,7 @@ def _get_vsan_eligible_disks(hosts):
         # No suitable disks were found to add. Warn and move on.
         # This isn't an error as the state may run repeatedly after all eligible disks are added.
         if not suitable_disks:
-            msg = "The host '{}' does not have any VSAN eligible disks.".format(host.name)
+            msg = f"The host '{host.name}' does not have any VSAN eligible disks."
             log.warning(msg)
             ret.update({host.name: {"Eligible": msg}})
             continue
@@ -3735,14 +3733,12 @@ def vsan_add_disks(
                     ret.update({host_name: {"Error": err.msg}})
                     continue
                 except Exception as err:
-                    msg = "'vsphere.vsan_add_disks' failed for host {}: {}".format(host_name, err)
+                    msg = f"'vsphere.vsan_add_disks' failed for host {host_name}: {err}"
                     log.debug(msg)
                     ret.update({host_name: {"Error": msg}})
                     continue
 
-                log.debug(
-                    "Successfully added disks to the VSAN system for host '{}'.".format(host_name)
-                )
+                log.debug(f"Successfully added disks to the VSAN system for host '{host_name}'.")
                 # We need to return ONLY the disk names, otherwise Message Pack can't deserialize the disk objects.
                 disk_names = []
                 for disk in eligible:

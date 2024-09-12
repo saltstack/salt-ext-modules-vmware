@@ -119,7 +119,7 @@ def test_nsxt_ip_pools_present_and_absent_states(nsxt_config, salt_call_cli):
     assert dict(changes)["old"] is None
     assert dict(changes)["new"]["display_name"] == display_name
     assert dict(changes)["new"]["description"] == description
-    assert comment == "Created IP Pool {}".format(display_name)
+    assert comment == f"Created IP Pool {display_name}"
 
     # Test present to update with identical fields
     changes, comment = _execute_present_state(
@@ -137,7 +137,7 @@ def test_nsxt_ip_pools_present_and_absent_states(nsxt_config, salt_call_cli):
 
     assert dict(changes)["old"]["description"] == description
     assert dict(changes)["new"]["description"] == updated_description
-    assert comment == "Updated IP Pool {}".format(display_name)
+    assert comment == f"Updated IP Pool {display_name}"
 
     # Test absent to delete IP Address Pool
     changes, comment = _execute_absent_state(
@@ -147,7 +147,7 @@ def test_nsxt_ip_pools_present_and_absent_states(nsxt_config, salt_call_cli):
     assert dict(changes)["new"] is None
     assert dict(changes)["old"]["display_name"] == display_name
     assert dict(changes)["old"]["description"] == updated_description
-    assert comment == "Deleted IP Pool {}".format(display_name)
+    assert comment == f"Deleted IP Pool {display_name}"
 
     # Test absent to delete non existing IP Address Pool
     changes, comment = _execute_absent_state(
@@ -155,4 +155,4 @@ def test_nsxt_ip_pools_present_and_absent_states(nsxt_config, salt_call_cli):
     )
 
     assert not changes
-    assert comment == "No IP Address Pool found with name {}".format(display_name)
+    assert comment == f"No IP Address Pool found with name {display_name}"

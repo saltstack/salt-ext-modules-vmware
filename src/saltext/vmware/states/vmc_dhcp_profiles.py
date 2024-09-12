@@ -185,12 +185,12 @@ def present(
         if dhcp_profile:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State present will update DHCP Profile {}".format(dhcp_profile_id),
+                comment=f"State present will update DHCP Profile {dhcp_profile_id}",
             )
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State present will create DHCP Profile {}".format(dhcp_profile_id),
+                comment=f"State present will create DHCP Profile {dhcp_profile_id}",
             )
 
     if dhcp_profile:
@@ -237,7 +237,7 @@ def present(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated DHCP Profile {}".format(dhcp_profile_id),
+                comment=f"Updated DHCP Profile {dhcp_profile_id}",
                 old_state=dhcp_profile,
                 new_state=updated_dhcp_profile,
                 result=True,
@@ -271,7 +271,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created DHCP Profile {}".format(dhcp_profile_id),
+            comment=f"Created DHCP Profile {dhcp_profile_id}",
             new_state=created_dhcp_profile,
             result=True,
         )
@@ -347,7 +347,7 @@ def absent(
         if dhcp_profile:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will delete DHCP Profile with Id {}".format(dhcp_profile_id),
+                comment=f"State absent will delete DHCP Profile with Id {dhcp_profile_id}",
             )
         else:
             return vmc_state._create_state_response(
@@ -378,7 +378,7 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted DHCP Profile {}".format(dhcp_profile_id),
+            comment=f"Deleted DHCP Profile {dhcp_profile_id}",
             old_state=dhcp_profile,
             result=True,
         )
@@ -386,6 +386,6 @@ def absent(
         log.info("No DHCP Profile found with Id %s", dhcp_profile_id)
         return vmc_state._create_state_response(
             name=name,
-            comment="No DHCP Profile found with Id {}".format(dhcp_profile_id),
+            comment=f"No DHCP Profile found with Id {dhcp_profile_id}",
             result=True,
         )

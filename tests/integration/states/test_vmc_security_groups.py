@@ -106,7 +106,7 @@ def test_vmc_security_groups_state_module(
 
     assert changes["old"] is None
     assert changes["new"]["id"] == security_group_id
-    assert result["comment"] == "Created security group {}".format(security_group_id)
+    assert result["comment"] == f"Created security group {security_group_id}"
 
     # Test present to update with identical fields
     response = salt_call_cli.run(
@@ -137,7 +137,7 @@ def test_vmc_security_groups_state_module(
 
     assert changes["old"]["display_name"] != changes["new"]["display_name"]
     assert changes["new"]["display_name"] == updated_display_name
-    assert result["comment"] == "Updated security group {}".format(security_group_id)
+    assert result["comment"] == f"Updated security group {security_group_id}"
 
     # Invoke present state to update security group with tags field
     updated_tags = [{"tag": "tag1", "scope": "scope1"}]
@@ -153,7 +153,7 @@ def test_vmc_security_groups_state_module(
     changes = result["changes"]
 
     assert changes["new"]["tags"] == updated_tags
-    assert result["comment"] == "Updated security group {}".format(security_group_id)
+    assert result["comment"] == f"Updated security group {security_group_id}"
 
     # Invoke absent to delete the security group
     response = salt_call_cli.run(
@@ -168,7 +168,7 @@ def test_vmc_security_groups_state_module(
 
     assert changes["new"] is None
     assert changes["old"]["id"] == security_group_id
-    assert result["comment"] == "Deleted security group {}".format(security_group_id)
+    assert result["comment"] == f"Deleted security group {security_group_id}"
 
     # Invoke absent when security group is not present
     response = salt_call_cli.run(
@@ -182,4 +182,4 @@ def test_vmc_security_groups_state_module(
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}
-    assert result["comment"] == "No security group found with ID {}".format(security_group_id)
+    assert result["comment"] == f"No security group found with ID {security_group_id}"

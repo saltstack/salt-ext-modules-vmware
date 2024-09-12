@@ -100,7 +100,7 @@ def power_cycle_vm(virtual_machine, action="on"):
             " ".join(
                 [
                     "An error occurred during power",
-                    "operation, a file was not found: {}".format(exc),
+                    f"operation, a file was not found: {exc}",
                 ]
             )
         )

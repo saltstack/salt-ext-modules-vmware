@@ -386,7 +386,7 @@ def add(
     )
     if search_result["results"]:
         log.info("Added %s in the org successfully %s", user_name, org_id)
-        result.update(message="Added {} successfully".format(user_name))
+        result.update(message=f"Added {user_name} successfully")
     else:
         # check if user_name is in invitation list
         api_base_url = vmc_request.set_base_url(hostname)
@@ -415,13 +415,13 @@ def add(
             if user_name == invitation["username"] and invitation["status"] == "AVAILABLE":
                 log.info("Invited %s successfully", user_name)
                 result = {
-                    "message": "Invited {} successfully".format(user_name),
+                    "message": f"Invited {user_name} successfully",
                     "invitation": invitation,
                 }
                 break
         else:
             log.info("Failed to add %s", user_name)
-            result = {vmc_constants.ERROR: "Failed to add {}".format(user_name)}
+            result = {vmc_constants.ERROR: f"Failed to add {user_name}"}
     return result
 
 

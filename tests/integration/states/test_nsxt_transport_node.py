@@ -38,6 +38,7 @@ _node_deployment_info = {
     "display_name": "Check-Display",
 }
 
+
 # Creation of the transport nodes using the present state module and later deleting the same using absent call
 @pytest.mark.xfail(reason="no nsx test setup yet")
 def test_state_transport_node_verify(nsxt_config, salt_call_cli):

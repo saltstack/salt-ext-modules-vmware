@@ -223,7 +223,7 @@ def present(
             None,
             None,
             False,
-            "Multiple IP Pools found for the provided display name {}".format(display_name),
+            f"Multiple IP Pools found for the provided display name {display_name}",
         )
 
     existing_ip_pool = ip_pools[0] if len(ip_pools) > 0 else None
@@ -236,7 +236,7 @@ def present(
                 None,
                 None,
                 None,
-                "State present will update IP Pool with name {}".format(display_name),
+                f"State present will update IP Pool with name {display_name}",
             )
         else:
             return _create_state_response(
@@ -244,7 +244,7 @@ def present(
                 None,
                 None,
                 None,
-                "State present will create IP Pool with name {}".format(display_name),
+                f"State present will create IP Pool with name {display_name}",
             )
     if existing_ip_pool:
         is_update_required = _needs_update(existing_ip_pool, input_dict)
@@ -277,7 +277,7 @@ def present(
                 existing_ip_pool,
                 updated_ip_pool,
                 True,
-                "Updated IP Pool {}".format(display_name),
+                f"Updated IP Pool {display_name}",
             )
         else:
             log.info("All fields are same as existing IP Address Pool %s", display_name)
@@ -304,7 +304,7 @@ def present(
             return _create_state_response(name, None, None, False, created_ip_pool["error"])
 
         return _create_state_response(
-            name, None, created_ip_pool, True, "Created IP Pool {}".format(display_name)
+            name, None, created_ip_pool, True, f"Created IP Pool {display_name}"
         )
 
 
@@ -387,7 +387,7 @@ def absent(
             None,
             None,
             False,
-            "Multiple IP Pools found for the provided display name {}".format(display_name),
+            f"Multiple IP Pools found for the provided display name {display_name}",
         )
 
     existing_ip_pool = ip_pools[0] if len(ip_pools) > 0 else None
@@ -400,7 +400,7 @@ def absent(
                 None,
                 None,
                 None,
-                "State absent will delete IP Pool with name {}".format(display_name),
+                f"State absent will delete IP Pool with name {display_name}",
             )
         else:
             return _create_state_response(
@@ -429,10 +429,10 @@ def absent(
             return _create_state_response(name, None, None, False, deleted_response["error"])
 
         return _create_state_response(
-            name, existing_ip_pool, None, True, "Deleted IP Pool {}".format(display_name)
+            name, existing_ip_pool, None, True, f"Deleted IP Pool {display_name}"
         )
     else:
         log.info("No IP Address Pool found with name %s", display_name)
         return _create_state_response(
-            name, None, None, True, "No IP Address Pool found with name {}".format(display_name)
+            name, None, None, True, f"No IP Address Pool found with name {display_name}"
         )

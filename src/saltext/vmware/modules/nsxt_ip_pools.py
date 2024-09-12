@@ -387,7 +387,7 @@ def update(
     """
 
     log.info("Updating IP Address Pool %s", display_name)
-    url = IP_POOLS_BASE_URL.format(hostname) + "/{}".format(ip_pool_id)
+    url = IP_POOLS_BASE_URL.format(hostname) + f"/{ip_pool_id}"
 
     req_data = common._filter_kwargs(
         allowed_kwargs=["description", "subnets", "tags", "ip_release_delay"],
@@ -456,7 +456,7 @@ def delete(
 
     log.info("Deleting IP Address Pool %s", ip_pool_id)
 
-    url = IP_POOLS_BASE_URL.format(hostname) + "/{}".format(ip_pool_id)
+    url = IP_POOLS_BASE_URL.format(hostname) + f"/{ip_pool_id}"
 
     response = nsxt_request.call_api(
         method="delete",

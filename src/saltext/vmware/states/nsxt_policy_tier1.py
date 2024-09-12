@@ -1157,14 +1157,14 @@ def present(
             arp_limit=arp_limit,
             type=type,
         )
-        log.info("Execution logs for creating tier 1 : {}".format(create_execution_logs))
+        log.info(f"Execution logs for creating tier 1 : {create_execution_logs}")
         if "error" in create_execution_logs[len(create_execution_logs) - 1]:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
-                create_execution_logs[len(create_execution_logs) - 1]["error"],
-                create_execution_logs,
+            ret["comment"] = (
+                "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
+                    create_execution_logs[len(create_execution_logs) - 1]["error"],
+                    create_execution_logs,
+                )
             )
             return ret
         tier1_execution_log = next(
@@ -1210,10 +1210,10 @@ def present(
         )
         if "error" in tier1_hierarchy_before_update:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failed while querying tier1 gateway and its sub-resources.: {}".format(
-                tier1_hierarchy_before_update["error"]
+            ret["comment"] = (
+                "Failed while querying tier1 gateway and its sub-resources.: {}".format(
+                    tier1_hierarchy_before_update["error"]
+                )
             )
             return ret
         update_execution_logs = __salt__["nsxt_policy_tier1.create_or_update"](
@@ -1250,18 +1250,18 @@ def present(
             arp_limit=arp_limit,
             type=type,
         )
-        log.info("Execution logs for updating tier 1 : {}".format(update_execution_logs))
+        log.info(f"Execution logs for updating tier 1 : {update_execution_logs}")
         # update execution logs can come empty if there is nothing to update
         if (
             update_execution_logs
             and "error" in update_execution_logs[len(update_execution_logs) - 1]
         ):
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
-                update_execution_logs[len(update_execution_logs) - 1]["error"],
-                update_execution_logs,
+            ret["comment"] = (
+                "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
+                    update_execution_logs[len(update_execution_logs) - 1]["error"],
+                    update_execution_logs,
+                )
             )
             return ret
         tier1_hierarchy_after_update = __salt__["nsxt_policy_tier1.get_hierarchy"](
@@ -1275,10 +1275,10 @@ def present(
         )
         if "error" in tier1_hierarchy_after_update:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failure while querying tier1 gateway and its sub-resources: {}".format(
-                tier1_hierarchy_after_update["error"]
+            ret["comment"] = (
+                "Failure while querying tier1 gateway and its sub-resources: {}".format(
+                    tier1_hierarchy_after_update["error"]
+                )
             )
             return ret
         ret["comment"] = "Updated Tier-1 gateway {display_name} successfully".format(
@@ -1404,10 +1404,10 @@ def absent(
         )
         if "error" in tier1_hierarchy:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failure while querying tier1 gateway and its sub-resources: {}".format(
-                tier1_hierarchy["error"]
+            ret["comment"] = (
+                "Failure while querying tier1 gateway and its sub-resources: {}".format(
+                    tier1_hierarchy["error"]
+                )
             )
             return ret
         delete_execution_logs = __salt__["nsxt_policy_tier1.delete"](
@@ -1419,7 +1419,7 @@ def absent(
             cert=cert,
             cert_common_name=cert_common_name,
         )
-        log.info("Execution logs for deleting tier 1 : {}".format(delete_execution_logs))
+        log.info(f"Execution logs for deleting tier 1 : {delete_execution_logs}")
         if "error" in delete_execution_logs[len(delete_execution_logs) - 1]:
             ret["result"] = False
             ret["comment"] = "Failed to delete tier1 gateway : {} \n Execution logs: {}".format(
@@ -1428,10 +1428,10 @@ def absent(
             )
             return ret
         else:
-            ret[
-                "comment"
-            ] = "tier1 gateway with display_name: {} and its sub-resources deleted successfully".format(
-                display_name
+            ret["comment"] = (
+                "tier1 gateway with display_name: {} and its sub-resources deleted successfully".format(
+                    display_name
+                )
             )
             ret["changes"]["old"] = tier1_hierarchy
             ret["changes"]["new"] = {}

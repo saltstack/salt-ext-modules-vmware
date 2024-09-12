@@ -17,14 +17,20 @@ def configure_loader_modules():
 
 @pytest.fixture(autouse=True)
 def patch_salt_loaded_objects():
-    with patch(
-        "saltext.vmware.states.compliance_control.__opts__",
-        {
-            "saltext.vmware": {"host": "test.vcenter.local", "user": "test", "password": "test"},
-        },
-        create=True,
-    ), patch.object(compliance_control, "__pillar__", {}, create=True), patch.object(
-        compliance_control, "__salt__", {}, create=True
+    with (
+        patch(
+            "saltext.vmware.states.compliance_control.__opts__",
+            {
+                "saltext.vmware": {
+                    "host": "test.vcenter.local",
+                    "user": "test",
+                    "password": "test",
+                },
+            },
+            create=True,
+        ),
+        patch.object(compliance_control, "__pillar__", {}, create=True),
+        patch.object(compliance_control, "__salt__", {}, create=True),
     ):
         yield
 

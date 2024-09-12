@@ -226,7 +226,7 @@ def test_present_to_create_when_module_returns_success_response(get_mocked_data)
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created Security rule {}".format(rule_id)
+    assert result["comment"] == f"Created Security rule {rule_id}"
     assert result["result"]
 
 
@@ -266,7 +266,7 @@ def test_present_to_update_when_module_returns_success_response(get_mocked_data)
     assert result is not None
     assert result["changes"]["new"] == mocked_updated_security_rule
     assert result["changes"]["old"] == mocked_ok_response
-    assert result["comment"] == "Updated Security rule {}".format(rule_id)
+    assert result["comment"] == f"Updated Security rule {rule_id}"
     assert result["result"]
 
 
@@ -365,7 +365,7 @@ def test_present_state_for_create_when_opts_test_is_true(get_mocked_data):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State present will create Security rule {}".format(rule_id)
+    assert result["comment"] == f"State present will create Security rule {rule_id}"
     assert result["result"] is None
 
 
@@ -395,7 +395,7 @@ def test_present_state_for_update_when_opts_test_is_true(get_mocked_data):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State present will update Security rule {}".format(rule_id)
+    assert result["comment"] == f"State present will update Security rule {rule_id}"
     assert result["result"] is None
 
 
@@ -430,7 +430,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(get_mocked_
 
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response}
-    assert result["comment"] == "Deleted Security rule {}".format(rule_id)
+    assert result["comment"] == f"Deleted Security rule {rule_id}"
     assert result["result"]
 
 
@@ -457,7 +457,7 @@ def test_absent_state_when_object_to_delete_does_not_exists(get_mocked_data):
 
     assert result is not None
     assert result["changes"] == {}
-    assert result["comment"] == "No Security rule found with Id {}".format(rule_id)
+    assert result["comment"] == f"No Security rule found with Id {rule_id}"
     assert result["result"]
 
 
@@ -487,7 +487,7 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(get_mocked_data):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State absent will delete Security rule with Id {}".format(rule_id)
+    assert result["comment"] == f"State absent will delete Security rule with Id {rule_id}"
     assert result["result"] is None
 
 
@@ -517,9 +517,10 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result[
-        "comment"
-    ] == "State absent will do nothing as no Security rule found with Id {}".format(rule_id)
+    assert (
+        result["comment"]
+        == f"State absent will do nothing as no Security rule found with Id {rule_id}"
+    )
     assert result["result"] is None
 
 

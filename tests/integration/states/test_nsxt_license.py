@@ -20,7 +20,7 @@ def delete_license(nsxt_config):
     license_key = nsxt_config["license_key"]
     verify_ssl = nsxt_config.get("cert", False)
 
-    url = "https://{management_host}/api/v1/licenses".format(management_host=hostname)
+    url = f"https://{hostname}/api/v1/licenses"
     session = requests.Session()
     headers = {"Accept": "application/json", "Content-Type": "application/json"}
     response = session.get(url=url, auth=(username, password), verify=verify_ssl, headers=headers)

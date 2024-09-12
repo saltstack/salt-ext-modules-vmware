@@ -17,7 +17,7 @@ def setup(nsxt_config):
 
 @pytest.fixture
 def delete_transport_zone():
-    url = "https://{management_host}/api/v1/transport-zones".format(management_host=_hostname)
+    url = f"https://{_hostname}/api/v1/transport-zones"
     session = requests.Session()
     headers = dict({"Accept": "application/json", "Content-Type": "application/json"})
     verify_ssl = False

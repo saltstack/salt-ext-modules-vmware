@@ -312,7 +312,7 @@ def present(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated nat rule {}".format(nat_rule),
+                comment=f"Updated nat rule {nat_rule}",
                 old_state=get_nat_rule_response,
                 new_state=updated_nat_rule,
                 result=True,
@@ -357,7 +357,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created nat rule {}".format(nat_rule),
+            comment=f"Created nat rule {nat_rule}",
             new_state=created_nat_rule,
             result=True,
         )
@@ -436,7 +436,7 @@ def absent(
         log.info("absent is called with test option")
         if get_nat_rule_response:
             return vmc_state._create_state_response(
-                name=name, comment="State absent will delete nat rule with Id {}".format(nat_rule)
+                name=name, comment=f"State absent will delete nat rule with Id {nat_rule}"
             )
         else:
             return vmc_state._create_state_response(
@@ -468,12 +468,12 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted nat rule {}".format(nat_rule),
+            comment=f"Deleted nat rule {nat_rule}",
             old_state=get_nat_rule_response,
             result=True,
         )
     else:
         log.info("No nat rule found with Id %s", nat_rule)
         return vmc_state._create_state_response(
-            name=name, comment="No nat rule found with Id {}".format(nat_rule), result=True
+            name=name, comment=f"No nat rule found with Id {nat_rule}", result=True
         )

@@ -47,7 +47,7 @@ repos:
 
   # ----- Formatting ---------------------------------------------------------------------------->
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.1
+    rev: v3.17.0
     hooks:
       - id: pyupgrade
         name: Rewrite Code to be Py3.10+, drop six usage and Py2 support
@@ -100,33 +100,33 @@ repos:
         ]
         exclude: src/saltext/vcenter/version.py
 
-  - repo: https://github.com/psf/black
-    rev: 24.8.0
-    hooks:
-      - id: black
-        args: [-tpy310]
-        exclude: ^src/saltext/vcenter/version.py
+  ## - repo: https://github.com/psf/black
+  ##   rev: 24.8.0
+  ##   hooks:
+  ##     - id: black
+  ##       args: [-tpy310]
+  ##       exclude: ^src/saltext/vcenter/version.py
 
-  - repo: https://github.com/asottile/blacken-docs
-    rev: 1.16.0
-    hooks:
-      - id: blacken-docs
-        args: [--skip-errors]
-        files: ^docs/.*\.rst
-        additional_dependencies: [black==24.8.0]
+  ## - repo: https://github.com/asottile/blacken-docs
+  ##   rev: 1.18.0
+  ##   hooks:
+  ##     - id: blacken-docs
+  ##       args: [--skip-errors]
+  ##       files: ^docs/.*\.rst
+  ##       additional_dependencies: [black==24.8.0]
 
   - repo: https://github.com/myint/rstcheck
-    rev: v5.0.0
+    rev: v6.2.4
     hooks:
       - id: rstcheck
         name: Check reST files using rstcheck
-        args: [--report=warning, --ignore-directives=automodule]
+        args: [--report-level=warning, --ignore-directives=automodule,autosummary]
         additional_dependencies: [sphinx]
   # <---- Formatting -----------------------------------------------------------------------------
 
   # ----- Security ------------------------------------------------------------------------------>
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.7"
+    rev: "1.7.9"
     hooks:
       - id: bandit
         alias: bandit-salt
@@ -135,7 +135,7 @@ repos:
         exclude: src/saltext/vcenter/version.py
         additional_dependencies: ['importlib_metadata<5']
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.7"
+    rev: "1.7.9"
     hooks:
       - id: bandit
         alias: bandit-tests

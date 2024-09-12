@@ -94,9 +94,9 @@ def delete_dhcp_profile(
             session = requests.Session()
             response = session.delete(
                 url=profile_url,
-                verify=common_data_for_dhcp["cert"]
-                if common_data_for_dhcp["verify_ssl"]
-                else False,
+                verify=(
+                    common_data_for_dhcp["cert"] if common_data_for_dhcp["verify_ssl"] else False
+                ),
                 headers=request_headers,
             )
             # raise error if any

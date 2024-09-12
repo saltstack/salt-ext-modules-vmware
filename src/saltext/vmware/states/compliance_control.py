@@ -87,9 +87,12 @@ def check_control(name, control_config, product, ids=None):
             ):
                 ret = {
                     "name": name,
-                    "result": None
-                    if check_control_compliance_response["status"] == ComplianceStatus.NON_COMPLIANT
-                    else False,
+                    "result": (
+                        None
+                        if check_control_compliance_response["status"]
+                        == ComplianceStatus.NON_COMPLIANT
+                        else False
+                    ),
                     "comment": check_control_compliance_response["status"],
                     "changes": check_control_compliance_response.get("changes", {}),
                 }

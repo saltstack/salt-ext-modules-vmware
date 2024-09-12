@@ -47,7 +47,7 @@ def _execute_present_state(nsxt_config, salt_call_cli, display_name, teaming, **
         verify_ssl=False,
         display_name=display_name,
         teaming=teaming,
-        **params
+        **params,
     ).json
     return response[list(response.keys())[0]]
 
@@ -161,9 +161,10 @@ def test_nsxt_uplink_profiles_present_and_absent_states(nsxt_config, setup, salt
         nsxt_config=nsxt_config, salt_call_cli=salt_call_cli, display_name=_display_name
     )
     assert result_as_json["result"] is True
-    assert result_as_json[
-        "comment"
-    ] == "Uplink profile with display_name: {} successfully deleted".format(_display_name)
+    assert (
+        result_as_json["comment"]
+        == f"Uplink profile with display_name: {_display_name} successfully deleted"
+    )
 
     old_changes_json = result_as_json["changes"]["old"]
     assert old_changes_json["display_name"] == _display_name

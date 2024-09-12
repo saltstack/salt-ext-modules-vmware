@@ -96,7 +96,7 @@ def test_vmc_sddc_state_module(salt_call_cli, vmc_common_data, delete_sddc, sddc
         changes = result["changes"]
         assert changes["old"] is None
         assert changes["new"]["params"]["sddcConfig"]["name"] == sddc_name
-        assert result["comment"] == "Created SDDC {}".format(sddc_name)
+        assert result["comment"] == f"Created SDDC {sddc_name}"
 
         # get the sddc_id of newly created SDDC
         sddc_id = result["changes"]["new"]["resource_id"]
@@ -143,6 +143,6 @@ def test_vmc_sddc_state_module(salt_call_cli, vmc_common_data, delete_sddc, sddc
         else:
             assert changes["new"] is None
             assert changes["old"]["id"] == sddc_id
-            assert result["comment"] == "Deleted SDDC {}".format(sddc_id)
+            assert result["comment"] == f"Deleted SDDC {sddc_id}"
     else:
         assert "Failed to add SDDC" in result["comment"]

@@ -186,7 +186,7 @@ def present(
             None,
             None,
             False,
-            "Multiple IP Blocks found for the provided display name {}".format(display_name),
+            f"Multiple IP Blocks found for the provided display name {display_name}",
         )
 
     existing_ip_block = ip_blocks[0] if len(ip_blocks) > 0 else None
@@ -199,7 +199,7 @@ def present(
                 None,
                 None,
                 None,
-                "State present will update IP Block with name {}".format(display_name),
+                f"State present will update IP Block with name {display_name}",
             )
         else:
             return _create_state_response(
@@ -207,7 +207,7 @@ def present(
                 None,
                 None,
                 None,
-                "State present will create IP Block with name {}".format(display_name),
+                f"State present will create IP Block with name {display_name}",
             )
     if existing_ip_block:
         is_update_required = _check_for_updates(existing_ip_block, input_dict)
@@ -239,7 +239,7 @@ def present(
                 existing_ip_block,
                 updated_ip_block,
                 True,
-                "Updated IP Block {}".format(display_name),
+                f"Updated IP Block {display_name}",
             )
         else:
             log.info("All fields are same as existing IP Address Block %s", display_name)
@@ -265,7 +265,7 @@ def present(
             return _create_state_response(name, None, None, False, created_ip_block["error"])
 
         return _create_state_response(
-            name, None, created_ip_block, True, "Created IP Block {}".format(display_name)
+            name, None, created_ip_block, True, f"Created IP Block {display_name}"
         )
 
 
@@ -348,7 +348,7 @@ def absent(
             None,
             None,
             False,
-            "Multiple IP Blocks found for the provided display name {}".format(display_name),
+            f"Multiple IP Blocks found for the provided display name {display_name}",
         )
 
     existing_ip_block = ip_blocks[0] if len(ip_blocks) > 0 else None
@@ -361,7 +361,7 @@ def absent(
                 None,
                 None,
                 None,
-                "State absent will delete IP Block with name {}".format(display_name),
+                f"State absent will delete IP Block with name {display_name}",
             )
         else:
             return _create_state_response(
@@ -390,10 +390,10 @@ def absent(
             return _create_state_response(name, None, None, False, deleted_response["error"])
 
         return _create_state_response(
-            name, existing_ip_block, None, True, "Deleted IP Block {}".format(display_name)
+            name, existing_ip_block, None, True, f"Deleted IP Block {display_name}"
         )
     else:
         log.info("No IP Address Block found with name %s", display_name)
         return _create_state_response(
-            name, None, None, True, "No IP Address Block found with name {}".format(display_name)
+            name, None, None, True, f"No IP Address Block found with name {display_name}"
         )

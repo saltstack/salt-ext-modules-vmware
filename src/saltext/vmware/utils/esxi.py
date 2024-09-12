@@ -120,9 +120,7 @@ def configure_host_cache(host_ref, datastore_ref, swap_size_MiB, host_cache_mana
             host_ref, ["configManager.cacheConfigurationManager"]
         )
         if not props.get("configManager.cacheConfigurationManager"):
-            raise salt.exceptions.VMwareObjectRetrievalError(
-                "Host '{}' has no host cache".format(hostname)
-            )
+            raise salt.exceptions.VMwareObjectRetrievalError(f"Host '{hostname}' has no host cache")
         host_cache_manager = props["configManager.cacheConfigurationManager"]
     log.trace(
         "Configuring the host cache on host '%s', datastore '%s', " "swap size=%s MiB",
@@ -371,7 +369,7 @@ def get_firewall_config(
                             "ip_address": list(ruleset.allowedHosts.ipAddress),
                             "all_ip": ruleset.allowedHosts.allIp,
                             "ip_network": [
-                                "{}/{}".format(ip.network, ip.prefixLength)
+                                f"{ip.network}/{ip.prefixLength}"
                                 for ip in ruleset.allowedHosts.ipNetwork
                             ],
                         },

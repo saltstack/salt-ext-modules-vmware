@@ -232,7 +232,7 @@ def update(
         validation_result.append("vmdk_file")
 
     if validation_result:
-        error_msg = "Mandatory params {} are missing from user input".format(validation_result)
+        error_msg = f"Mandatory params {validation_result} are missing from user input"
         log.error(error_msg)
         return {vmc_constants.ERROR: error_msg}
 

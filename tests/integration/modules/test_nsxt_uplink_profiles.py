@@ -113,7 +113,7 @@ def _create_uplink_profile(nsxt_config, request_data, salt_call_cli):
         username=username,
         password=password,
         verify_ssl=False,
-        **request_data
+        **request_data,
     ).json
 
 
@@ -145,7 +145,7 @@ def _update_uplink_profile(nsxt_config, uplink_profile_json, salt_call_cli):
         revision=uplink_profile_json["_revision"],
         uplink_profile_id=uplink_profile_json["id"],
         verify_ssl=False,
-        **uplink_profile_json
+        **uplink_profile_json,
     ).json
 
 

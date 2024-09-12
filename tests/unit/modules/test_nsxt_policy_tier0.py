@@ -929,13 +929,16 @@ def test_get_hierarchy_with_error_while_getting_list_response(api_mock):
     err_msg = "Generic error"
     static_routes_list_response = {"error": err_msg}
     api_mock.side_effect = [tier0_obj, static_routes_list_response]
-    assert nsxt_policy_tier0.get_hierarchy(
-        hostname="hostname",
-        username="username",
-        password="pass",
-        tier0_id=tier0_obj["id"],
-        verify_ssl=False,
-    )["error"] == "Failure while querying static_routes: {}".format(err_msg)
+    assert (
+        nsxt_policy_tier0.get_hierarchy(
+            hostname="hostname",
+            username="username",
+            password="pass",
+            tier0_id=tier0_obj["id"],
+            verify_ssl=False,
+        )["error"]
+        == f"Failure while querying static_routes: {err_msg}"
+    )
 
 
 @patch.object(nsxt_request, "call_api")

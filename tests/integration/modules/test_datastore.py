@@ -11,8 +11,9 @@ def patch_salt_globals_datastore(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-    with patch.object(datastore, "__opts__", {}, create=True), patch.object(
-        datastore, "__pillar__", vmware_conf, create=True
+    with (
+        patch.object(datastore, "__opts__", {}, create=True),
+        patch.object(datastore, "__pillar__", vmware_conf, create=True),
     ):
         yield
 

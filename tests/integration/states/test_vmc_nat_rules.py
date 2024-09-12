@@ -154,7 +154,7 @@ def test_vmc_nat_rules_state_module(
 
     assert changes["old"] is None
     assert changes["new"]["id"] == nat_rule
-    assert result["comment"] == "Created nat rule {}".format(nat_rule)
+    assert result["comment"] == f"Created nat rule {nat_rule}"
 
     # Test present to update with identical fields
     response = salt_call_cli.run(
@@ -206,7 +206,7 @@ def test_vmc_nat_rules_state_module(
 
     assert changes["old"]["display_name"] != changes["new"]["display_name"]
     assert changes["new"]["display_name"] == updated_display_name
-    assert result["comment"] == "Updated nat rule {}".format(nat_rule)
+    assert result["comment"] == f"Updated nat rule {nat_rule}"
 
     # Invoke present state to update nat rule with tags field
     response = salt_call_cli.run(
@@ -232,7 +232,7 @@ def test_vmc_nat_rules_state_module(
     changes = result["changes"]
 
     assert changes["new"]["tags"] == updated_tags
-    assert result["comment"] == "Updated nat rule {}".format(nat_rule)
+    assert result["comment"] == f"Updated nat rule {nat_rule}"
 
     # Invoke absent to delete the nat rule
     response = salt_call_cli.run(
@@ -256,7 +256,7 @@ def test_vmc_nat_rules_state_module(
 
     assert changes["new"] is None
     assert changes["old"]["id"] == nat_rule
-    assert result["comment"] == "Deleted nat rule {}".format(nat_rule)
+    assert result["comment"] == f"Deleted nat rule {nat_rule}"
 
     # Invoke absent when nat rule is not present
     response = salt_call_cli.run(
@@ -279,4 +279,4 @@ def test_vmc_nat_rules_state_module(
     changes = result["changes"]
     # assert no changes are done
     assert changes == {}
-    assert result["comment"] == "No nat rule found with Id {}".format(nat_rule)
+    assert result["comment"] == f"No nat rule found with Id {nat_rule}"

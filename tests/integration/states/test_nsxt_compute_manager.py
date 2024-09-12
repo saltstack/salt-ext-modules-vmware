@@ -66,9 +66,10 @@ def test_register_update_and_delete(nsxt_config, salt_call_cli, delete_compute_m
     result_as_json = ret[list(ret.keys())[0]]
     assert result_as_json["name"] == "compute manager registration"
     assert result_as_json["result"] is True
-    assert result_as_json[
-        "comment"
-    ] == "Compute manager {} successfully registered with NSX-T".format(compute_manager_server)
+    assert (
+        result_as_json["comment"]
+        == f"Compute manager {compute_manager_server} successfully registered with NSX-T"
+    )
     new_changes_json = result_as_json["changes"]["new"]
     assert new_changes_json["server"] == compute_manager_server
     assert new_changes_json["description"] == "compute manager registered by IT"

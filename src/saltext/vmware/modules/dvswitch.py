@@ -162,9 +162,7 @@ def configure(
         if uplink_count:
             config_spec.uplinkPortPolicy = vim.DistributedVirtualSwitch.NameArrayUplinkPortPolicy()
             for i in range(uplink_count):
-                config_spec.uplinkPortPolicy.uplinkPortName.append(
-                    "{}{}".format(uplink_prefix, i + 1)
-                )
+                config_spec.uplinkPortPolicy.uplinkPortName.append(f"{uplink_prefix}{i + 1}")
 
         if switch_version:
             product_spec = vim.dvs.ProductSpec()
