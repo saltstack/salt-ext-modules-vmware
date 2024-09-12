@@ -51,6 +51,7 @@ Example:
                  password: "ca$hc0w"
                  thumbprint: "e7fd7dd84267da10f991812ca62b2bedea3a4a62965396a04728da1e7f8e1cb9"
 """
+
 import logging
 
 import salt.utils.dictdiffer

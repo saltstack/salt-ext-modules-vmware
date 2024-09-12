@@ -21,6 +21,7 @@ Example usage :
     It is recommended to pass the VMC authentication details using Pillars rather than specifying as plain text in SLS
     files.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_state

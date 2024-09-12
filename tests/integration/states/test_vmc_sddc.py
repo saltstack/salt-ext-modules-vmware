@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_sddc state module
 """
+
 from datetime import datetime
 
 import pytest

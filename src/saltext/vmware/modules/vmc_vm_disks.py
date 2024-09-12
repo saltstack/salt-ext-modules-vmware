@@ -2,6 +2,7 @@
 Salt execution module for VMC vm disks
 Provides methods to Create, Read, Update and Delete virtual disks from the VM.
 """
+
 import logging
 import os
 

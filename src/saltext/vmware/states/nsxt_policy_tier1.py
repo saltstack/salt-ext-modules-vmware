@@ -1,6 +1,7 @@
 """
 State module for NSX-T tier1 gateway
 """
+
 import logging
 
 log = logging.getLogger(__name__)

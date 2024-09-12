@@ -2,6 +2,7 @@
 Salt execution module for security groups
 Provides methods to Create, Read, Update and Delete security groups.
 """
+
 import logging
 import os
 

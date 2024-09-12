@@ -1,6 +1,7 @@
 """
 State module for NSX-T segment
 """
+
 import logging
 
 log = logging.getLogger(__name__)

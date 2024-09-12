@@ -1,6 +1,7 @@
 """
 Execution module to perform CRUD operations for NSX-T's Segment
 """
+
 import logging
 
 from salt.exceptions import SaltInvocationError

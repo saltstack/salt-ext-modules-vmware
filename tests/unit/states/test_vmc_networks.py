@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_networks state module
 """
+
 from unittest.mock import create_autospec
 from unittest.mock import patch
 

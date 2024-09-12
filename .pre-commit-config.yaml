@@ -91,14 +91,14 @@ repos:
         files: ^tests/.*\.py$
         args: [--silent, -E, fix_asserts, -E, fix_docstrings]
 
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.13.0
-    hooks:
-      - id: reorder-python-imports
-        args: [
-          --py310-plus,
-        ]
-        exclude: src/saltext/vcenter/version.py
+  ## - repo: https://github.com/asottile/reorder_python_imports
+  ##   rev: v3.13.0
+  ##   hooks:
+  ##     - id: reorder-python-imports
+  ##       args: [
+  ##         --py310-plus,
+  ##       ]
+  ##       exclude: src/saltext/vcenter/version.py
 
   - repo: https://github.com/psf/black
     rev: 24.8.0
@@ -120,7 +120,7 @@ repos:
     hooks:
       - id: rstcheck
         name: Check reST files using rstcheck
-        args: [--report-level=warning, --ignore-directives=automodule,autosummary]
+        args: [--report-level=warning, --ignore-directives=automodule]
         additional_dependencies: [sphinx]
   # <---- Formatting -----------------------------------------------------------------------------
 

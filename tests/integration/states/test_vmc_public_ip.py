@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_public_ip state module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request

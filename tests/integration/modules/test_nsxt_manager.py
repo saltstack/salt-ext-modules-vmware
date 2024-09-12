@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_manager execution module
 """
+
 import pytest
 from saltext.vmware.utils import nsxt_request
 

@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_distributed_firewall_rules state module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request

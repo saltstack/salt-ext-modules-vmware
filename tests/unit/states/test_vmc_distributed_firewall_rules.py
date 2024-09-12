@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_distributed_firewall_rules state module
 """
+
 from unittest.mock import create_autospec
 from unittest.mock import MagicMock
 from unittest.mock import patch

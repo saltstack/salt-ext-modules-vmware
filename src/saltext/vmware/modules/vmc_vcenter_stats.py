@@ -3,6 +3,7 @@ Salt execution module for VMC vCenter stats
 Provides methods to get monitored items list and to query monitored item data for given vCenter.
 To get the data from this module, admin credentials for vCenter are required.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

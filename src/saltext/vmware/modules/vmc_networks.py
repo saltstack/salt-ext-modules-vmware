@@ -2,6 +2,7 @@
 Salt execution module for VMC Networks
 Provides methods to Create, Read, Update and Delete Networks/Segments.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

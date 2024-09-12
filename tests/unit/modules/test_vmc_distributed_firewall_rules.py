@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_distributed_firewall_rules execution module
 """
+
 from unittest.mock import patch
 
 import pytest

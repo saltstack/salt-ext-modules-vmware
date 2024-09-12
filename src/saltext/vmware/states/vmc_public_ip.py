@@ -24,6 +24,7 @@ Example usage :
     files.
 
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_state

@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_sddc_host execution module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request

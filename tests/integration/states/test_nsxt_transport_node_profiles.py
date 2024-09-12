@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_transport_node_profiles state module
 """
+
 import json
 from urllib.parse import urljoin
 

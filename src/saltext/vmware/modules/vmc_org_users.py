@@ -2,6 +2,7 @@
 Salt execution module for VMC org users.
 Provides methods to get, add and remove user within a org.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

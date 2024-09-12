@@ -1,6 +1,7 @@
 """
 State module for NSX-T compute manager registration and de-registration
 """
+
 import logging
 
 log = logging.getLogger(__name__)

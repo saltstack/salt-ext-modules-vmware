@@ -3,6 +3,7 @@ Salt execution module for ESX hosts
 Provides methods to Add/Remove one or more ESX hosts in the target SDDC
 
 """
+
 import logging
 
 from saltext.vmware.modules import vmc_sddc

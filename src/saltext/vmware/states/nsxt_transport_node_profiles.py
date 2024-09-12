@@ -1,6 +1,7 @@
 """
 State module for NSX-T transport node profiles
 """
+
 import logging
 
 import salt.utils.dictdiffer

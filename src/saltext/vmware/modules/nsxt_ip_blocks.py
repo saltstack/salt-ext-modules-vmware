@@ -1,6 +1,7 @@
 """
 Salt Module to perform CRUD operations for NSX-T's IP Address Blocks
 """
+
 import logging
 
 from saltext.vmware.utils import common

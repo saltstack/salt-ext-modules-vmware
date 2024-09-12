@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_ip_pools state module
 """
+
 from urllib.parse import urljoin
 
 import pytest

@@ -1,6 +1,7 @@
 """
     Unit Tests for nsxt_policy_segment state
 """
+
 from unittest.mock import MagicMock
 from unittest.mock import patch
 

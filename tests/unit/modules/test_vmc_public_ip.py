@@ -2,6 +2,7 @@
     Unit tests for vmc_public_ip execution module
     :codeauthor: VMware
 """
+
 from unittest.mock import patch
 
 import pytest

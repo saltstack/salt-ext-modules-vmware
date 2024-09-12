@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_security_groups execution module
 """
+
 from unittest.mock import patch
 
 import pytest

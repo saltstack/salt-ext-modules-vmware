@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_uplink_profiles execution module
 """
+
 import pytest
 import requests
 

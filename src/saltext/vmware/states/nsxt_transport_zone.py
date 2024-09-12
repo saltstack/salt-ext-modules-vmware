@@ -1,6 +1,7 @@
 """
 NSX-T Transport_Zone state module
 """
+
 import logging
 
 log = logging.getLogger(__name__)

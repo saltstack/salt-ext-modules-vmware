@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_nat_rules state module
 """
+
 import json
 
 import pytest

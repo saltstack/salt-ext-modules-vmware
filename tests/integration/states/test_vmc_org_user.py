@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_org_user state module
 """
+
 import pytest
 
 

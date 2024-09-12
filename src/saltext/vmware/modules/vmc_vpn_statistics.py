@@ -2,6 +2,7 @@
 Salt execution module for VPN statistics
 Provides methods to Display VPN Statistics and Sessions.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

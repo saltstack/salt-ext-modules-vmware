@@ -2,6 +2,7 @@
 Salt execution module for VMC Security Rules
 Provides methods to Create, Read, Update and Delete security rules.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

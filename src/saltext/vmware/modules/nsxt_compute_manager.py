@@ -1,6 +1,7 @@
 """
 Execution module for NSX-T compute manager registration and de-registration
 """
+
 import json
 import logging
 

@@ -1,6 +1,7 @@
 """
     VMC vCenter API Request Module
 """
+
 import logging
 
 import requests

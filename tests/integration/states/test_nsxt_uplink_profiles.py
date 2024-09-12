@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_uplink_profiles state module
 """
+
 from urllib.parse import urljoin
 
 import pytest

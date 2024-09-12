@@ -22,6 +22,7 @@ Example:
               scope: <tag-value-2>
           cidr: <cidr>
 """
+
 import logging
 
 log = logging.getLogger(__name__)

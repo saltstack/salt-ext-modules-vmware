@@ -1,6 +1,7 @@
 """
 Execution module to perform CRUD operations for NSX-T's Tier 1 Gateway
 """
+
 import logging
 
 from salt.exceptions import SaltInvocationError

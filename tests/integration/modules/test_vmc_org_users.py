@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_org_users execution module
 """
+
 import json
 
 import pytest

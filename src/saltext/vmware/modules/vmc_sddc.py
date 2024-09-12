@@ -1,6 +1,7 @@
 """
 Manage VMware VMC SDDC
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

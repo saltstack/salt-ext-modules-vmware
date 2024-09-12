@@ -26,6 +26,7 @@ Example usage :
 
 
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

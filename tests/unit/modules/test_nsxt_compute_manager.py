@@ -1,6 +1,7 @@
 """
 Tests for execution module of NSX-T compute manager registration and de-registration
 """
+
 from unittest.mock import patch
 
 import saltext.vmware.modules.nsxt_compute_manager as nsxt_compute_manager

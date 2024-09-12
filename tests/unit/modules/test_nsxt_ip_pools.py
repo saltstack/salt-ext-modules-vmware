@@ -1,6 +1,7 @@
 """
     Tests for nsxt_manager module
 """
+
 import logging
 from unittest.mock import patch
 

@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_vcenter_stats execution module
 """
+
 from unittest.mock import patch
 
 import pytest

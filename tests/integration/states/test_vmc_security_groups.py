@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_security_groups state module
 """
+
 import json
 
 import pytest

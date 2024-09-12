@@ -1,6 +1,7 @@
 """
 Unit Tests for compliance control utils.
 """
+
 import pytest
 import salt.exceptions
 from config_modules_vmware.framework.auth.contexts.base_context import BaseContext

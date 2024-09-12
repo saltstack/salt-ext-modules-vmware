@@ -4,6 +4,7 @@ noxfile
 
 Nox configuration script
 """
+
 # pylint: disable=missing-module-docstring,import-error,protected-access,missing-function-docstring
 import datetime
 import json

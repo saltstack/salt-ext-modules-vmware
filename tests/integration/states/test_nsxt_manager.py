@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_manager state module
 """
+
 import logging
 
 import pytest

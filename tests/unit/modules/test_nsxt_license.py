@@ -1,6 +1,7 @@
 """
     :codeauthor: VMware
 """
+
 from unittest.mock import patch
 
 from saltext.vmware.modules import nsxt_license

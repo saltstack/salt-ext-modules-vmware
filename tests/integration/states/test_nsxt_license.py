@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_license state module
 """
+
 import json
 
 import pytest
