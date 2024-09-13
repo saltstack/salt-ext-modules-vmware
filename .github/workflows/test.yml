@@ -200,6 +200,7 @@ jobs:
         pip install nox
         # DGM
         pip install setuptools==68.2.2
+        pip install pyvmomi==7.0.3
 
     - name: Install Test Requirements
       shell: bash
@@ -324,6 +325,7 @@ jobs:
         pip install nox
         # DGM
         pip install setuptools==68.2.2
+        pip install pyvmomi==7.0.3
 
     - name: Install Test Requirements
       env:
