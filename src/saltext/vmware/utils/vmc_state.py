@@ -1,6 +1,7 @@
 """
     Util Module for VMC states.
 """
+
 from salt.utils import dictdiffer
 from saltext.vmware.utils import vmc_constants
 

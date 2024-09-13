@@ -2,6 +2,7 @@
 Salt execution module for VMC Networks
 Provides methods to Create, Read, Update and Delete Networks/Segments.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants
@@ -494,7 +495,7 @@ def create(
     req_data = vmc_request._filter_kwargs(
         allowed_kwargs=allowed_dict.keys(),
         allow_none=["tags", "subnets", "l2_extension"],
-        **allowed_dict
+        **allowed_dict,
     )
 
     payload = _create_payload_for_network(network_id, req_data)
@@ -765,7 +766,7 @@ def update(
     req_data = vmc_request._filter_kwargs(
         allowed_kwargs=allowed_dict.keys(),
         allow_none=["tags", "subnets", "l2_extension"],
-        **allowed_dict
+        **allowed_dict,
     )
 
     payload = vmc_request.create_payload_for_request(

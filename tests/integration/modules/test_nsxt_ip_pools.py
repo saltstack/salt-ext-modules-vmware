@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_ip_pools module
 """
+
 from urllib.parse import urljoin
 
 import pytest
@@ -42,7 +43,7 @@ def _delete_ip_pool(hostname, password, salt_call_cli, updated_ip_pool_json, use
         password=password,
         verify_ssl=False,
         ip_pool_id=updated_ip_pool_json["id"],
-        **updated_ip_pool_json
+        **updated_ip_pool_json,
     ).json
 
 
@@ -55,7 +56,7 @@ def _update_ip_pool(created_ip_pool_json, hostname, password, salt_call_cli, use
         revision=created_ip_pool_json["_revision"],
         ip_pool_id=created_ip_pool_json["id"],
         verify_ssl=False,
-        **created_ip_pool_json
+        **created_ip_pool_json,
     ).json
 
 
@@ -66,7 +67,7 @@ def _create_ip_pool(hostname, password, request_data, salt_call_cli, username):
         username=username,
         password=password,
         verify_ssl=False,
-        **request_data
+        **request_data,
     ).json
 
 

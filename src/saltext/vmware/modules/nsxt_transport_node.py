@@ -1,6 +1,7 @@
 """
 Salt execution Module to manage VMware NSX-T transport-nodes
 """
+
 import logging
 
 from saltext.vmware.utils import common

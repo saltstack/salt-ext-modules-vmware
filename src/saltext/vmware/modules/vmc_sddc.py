@@ -1,6 +1,7 @@
 """
 Manage VMware VMC SDDC
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants
@@ -64,7 +65,7 @@ def list_(
     """
     log.info("Retrieving the List of SDDCs for the given organization %s", org_id)
     api_base_url = vmc_request.set_base_url(hostname)
-    api_url = "{base_url}vmc/api/orgs/{org_id}/sddcs".format(base_url=api_base_url, org_id=org_id)
+    api_url = f"{api_base_url}vmc/api/orgs/{org_id}/sddcs"
 
     params = vmc_request._filter_kwargs(
         allowed_kwargs=["includeDeleted"],
@@ -341,7 +342,7 @@ def create(
     """
     log.info("Creating a new SDDC %s in the organization %s", sddc_name, org_id)
     api_base_url = vmc_request.set_base_url(hostname)
-    api_url = "{base_url}vmc/api/orgs/{org_id}/sddcs".format(base_url=api_base_url, org_id=org_id)
+    api_url = f"{api_base_url}vmc/api/orgs/{org_id}/sddcs"
 
     allowed_dict = {
         "name": sddc_name,

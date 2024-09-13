@@ -149,9 +149,9 @@ def get(cluster_name, datacenter_name, service_instance=None, profile=None):
         dc_ref = utils_datacenter.get_datacenter(service_instance, datacenter_name)
         cluster_ref = utils_cluster.get_cluster(dc_ref=dc_ref, cluster=cluster_name)
         ret["enabled"] = cluster_ref.configurationEx.drsConfig.enabled
-        ret[
-            "enable_vm_behavior_overrides"
-        ] = cluster_ref.configurationEx.drsConfig.enableVmBehaviorOverrides
+        ret["enable_vm_behavior_overrides"] = (
+            cluster_ref.configurationEx.drsConfig.enableVmBehaviorOverrides
+        )
         ret["default_vm_behavior"] = cluster_ref.configurationEx.drsConfig.defaultVmBehavior
         ret["vmotion_rate"] = 6 - cluster_ref.configurationEx.drsConfig.vmotionRate
         ret["advanced_settings"] = {}

@@ -26,6 +26,7 @@ Example usage :
 
 
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants
@@ -250,11 +251,11 @@ def present(
         log.info("present is called with test option")
         if existing_security_rule:
             return vmc_state._create_state_response(
-                name=name, comment="State present will update Security rule {}".format(rule_id)
+                name=name, comment=f"State present will update Security rule {rule_id}"
             )
         else:
             return vmc_state._create_state_response(
-                name=name, comment="State present will create Security rule {}".format(rule_id)
+                name=name, comment=f"State present will create Security rule {rule_id}"
             )
 
     if existing_security_rule:
@@ -312,7 +313,7 @@ def present(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated Security rule {}".format(rule_id),
+                comment=f"Updated Security rule {rule_id}",
                 old_state=existing_security_rule,
                 new_state=get_security_rule_after_update,
                 result=True,
@@ -354,7 +355,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created Security rule {}".format(rule_id),
+            comment=f"Created Security rule {rule_id}",
             new_state=created_security_rule,
             result=True,
         )
@@ -434,7 +435,7 @@ def absent(
         if existing_security_rule:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will delete Security rule with Id {}".format(rule_id),
+                comment=f"State absent will delete Security rule with Id {rule_id}",
             )
         else:
             return vmc_state._create_state_response(
@@ -465,12 +466,12 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted Security rule {}".format(rule_id),
+            comment=f"Deleted Security rule {rule_id}",
             old_state=existing_security_rule,
             result=True,
         )
     else:
         log.info("No Security rule found with Id %s", rule_id)
         return vmc_state._create_state_response(
-            name=name, comment="No Security rule found with Id {}".format(rule_id), result=True
+            name=name, comment=f"No Security rule found with Id {rule_id}", result=True
         )

@@ -1,6 +1,7 @@
 """
 Salt Module to perform CRUD operations for NSX-T uplink profiles
 """
+
 import logging
 
 from saltext.vmware.utils import common
@@ -511,7 +512,7 @@ def update(
         (Optional) Description for the resource
     """
     log.info("Updating nsxt uplink profile %s", display_name)
-    url = UPLINK_PROFILES_BASE_URL.format(hostname) + "/{}".format(uplink_profile_id)
+    url = UPLINK_PROFILES_BASE_URL.format(hostname) + f"/{uplink_profile_id}"
     req_data = common._filter_kwargs(
         allowed_kwargs=create_params_for_uplink_profies,
         default_dict={},
@@ -585,7 +586,7 @@ def delete(
         compare against certificate common name
     """
     log.info("Deleting uplink profile with id %s", uplink_profile_id)
-    url = UPLINK_PROFILES_BASE_URL.format(hostname) + "/{}".format(uplink_profile_id)
+    url = UPLINK_PROFILES_BASE_URL.format(hostname) + f"/{uplink_profile_id}"
     result = nsxt_request.call_api(
         method="delete",
         url=url,

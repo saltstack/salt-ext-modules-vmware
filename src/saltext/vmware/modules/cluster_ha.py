@@ -375,26 +375,26 @@ def get(cluster_name, datacenter_name, service_instance=None, profile=None):
             component_protection_settings = (
                 das_config.defaultVmSettings.vmComponentProtectionSettings
             )
-            ret[
-                "enable_apd_timeout_for_hosts"
-            ] = component_protection_settings.enableAPDTimeoutForHosts
+            ret["enable_apd_timeout_for_hosts"] = (
+                component_protection_settings.enableAPDTimeoutForHosts
+            )
             ret["vm_reaction_on_apd_cleared"] = component_protection_settings.vmReactionOnAPDCleared
-            ret[
-                "vm_storage_protection_for_apd"
-            ] = component_protection_settings.vmStorageProtectionForAPD
-            ret[
-                "vm_storage_protection_for_pdl"
-            ] = component_protection_settings.vmStorageProtectionForPDL
-            ret[
-                "vm_terminate_delay_for_apd_sec"
-            ] = component_protection_settings.vmTerminateDelayForAPDSec
+            ret["vm_storage_protection_for_apd"] = (
+                component_protection_settings.vmStorageProtectionForAPD
+            )
+            ret["vm_storage_protection_for_pdl"] = (
+                component_protection_settings.vmStorageProtectionForPDL
+            )
+            ret["vm_terminate_delay_for_apd_sec"] = (
+                component_protection_settings.vmTerminateDelayForAPDSec
+            )
 
             ret["admission_control_enabled"] = das_config.admissionControlEnabled
             ret["admission_control_policy"] = None
             ret["failover_level"] = das_config.admissionControlPolicy.failoverLevel
-            ret[
-                "resource_reduction_to_tolerate_percent"
-            ] = das_config.admissionControlPolicy.resourceReductionToToleratePercent
+            ret["resource_reduction_to_tolerate_percent"] = (
+                das_config.admissionControlPolicy.resourceReductionToToleratePercent
+            )
             if isinstance(
                 das_config.admissionControlPolicy,
                 vim.cluster.FailoverLevelAdmissionControlPolicy,
@@ -413,15 +413,15 @@ def get(cluster_name, datacenter_name, service_instance=None, profile=None):
                 vim.cluster.FailoverResourcesAdmissionControlPolicy,
             ):
                 ret["admission_control_policy"] = "reservation_based_admission_control"
-                ret[
-                    "autocompute_percentages"
-                ] = das_config.admissionControlPolicy.autoComputePercentages
-                ret[
-                    "cpu_failover_resources_percent"
-                ] = das_config.admissionControlPolicy.cpuFailoverResourcesPercent
-                ret[
-                    "memory_failover_resources_percent"
-                ] = das_config.admissionControlPolicy.memoryFailoverResourcesPercent
+                ret["autocompute_percentages"] = (
+                    das_config.admissionControlPolicy.autoComputePercentages
+                )
+                ret["cpu_failover_resources_percent"] = (
+                    das_config.admissionControlPolicy.cpuFailoverResourcesPercent
+                )
+                ret["memory_failover_resources_percent"] = (
+                    das_config.admissionControlPolicy.memoryFailoverResourcesPercent
+                )
 
         ret["advanced_settings"] = {}
         for obj in cluster_ref.configurationEx.dasConfig.option:

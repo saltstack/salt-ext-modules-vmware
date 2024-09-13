@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_networks execution module
 """
+
 import pytest
 import requests
 from saltext.vmware.utils import vmc_request
@@ -81,9 +82,11 @@ def delete_network(get_networks, network_url, common_data_for_network, request_h
             session = requests.Session()
             response = session.delete(
                 url=network_url,
-                verify=common_data_for_network["cert"]
-                if common_data_for_network["verify_ssl"]
-                else False,
+                verify=(
+                    common_data_for_network["cert"]
+                    if common_data_for_network["verify_ssl"]
+                    else False
+                ),
                 headers=request_headers,
             )
             # raise error if any
@@ -106,7 +109,7 @@ def test_vmc_network_execution_module(
         "vmc_networks.update",
         network_id=network_id,
         display_name="network1",
-        **common_data_for_network
+        **common_data_for_network,
     )
     response_as_json = response.json
     assert "error" not in response_as_json

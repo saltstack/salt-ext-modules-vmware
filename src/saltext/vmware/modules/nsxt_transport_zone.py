@@ -1,6 +1,7 @@
 """
 Salt execution Module to manage VMware NSX-T transport-zones
 """
+
 import logging
 
 from saltext.vmware.utils import common
@@ -373,7 +374,7 @@ def update(
         (Optional) Opaque identifiers meaningful to the API user
     """
     log.info("Updating transport zones")
-    url = TRANSPORT_ZONE_BASE_URL.format(hostname) + "/{}".format(transport_zone_id)
+    url = TRANSPORT_ZONE_BASE_URL.format(hostname) + f"/{transport_zone_id}"
     update_body = common._filter_kwargs(
         allowed_kwargs=create_params_for_transport_zones,
         default_dict={},
@@ -448,7 +449,7 @@ def delete(
 
     """
     log.info("Deleting transport zones for %s", transport_zone_id)
-    url = TRANSPORT_ZONE_BASE_URL.format(hostname) + "/{}".format(transport_zone_id)
+    url = TRANSPORT_ZONE_BASE_URL.format(hostname) + f"/{transport_zone_id}"
     delete_response = nsxt_request.call_api(
         method="delete",
         url=url,

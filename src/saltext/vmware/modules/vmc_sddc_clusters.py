@@ -2,6 +2,7 @@
 Salt execution module for Cluster management
 Provides methods to Retrieve, Create and Delete cluster in the target SDDC
 """
+
 import logging
 
 from saltext.vmware.modules import vmc_sddc

@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_dhcp_profiles state module
 """
+
 from unittest.mock import create_autospec
 from unittest.mock import patch
 
@@ -210,7 +211,7 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created DHCP Profile {}".format(dhcp_profile_id)
+    assert result["comment"] == f"Created DHCP Profile {dhcp_profile_id}"
     assert result["result"]
 
 
@@ -249,7 +250,7 @@ def test_present_to_update_when_module_returns_success_response(mocked_ok_respon
     assert result is not None
     assert result["changes"]["new"] == mocked_updated_dhcp_profile
     assert result["changes"]["old"] == mocked_ok_response
-    assert result["comment"] == "Updated DHCP Profile {}".format(dhcp_profile_id)
+    assert result["comment"] == f"Updated DHCP Profile {dhcp_profile_id}"
     assert result["result"]
 
 
@@ -345,7 +346,7 @@ def test_present_state_for_create_when_opts_test_is_true():
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State present will create DHCP Profile {}".format(dhcp_profile_id)
+    assert result["comment"] == f"State present will create DHCP Profile {dhcp_profile_id}"
     assert result["result"] is None
 
 
@@ -373,7 +374,7 @@ def test_present_state_for_update_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State present will update DHCP Profile {}".format(dhcp_profile_id)
+    assert result["comment"] == f"State present will update DHCP Profile {dhcp_profile_id}"
     assert result["result"] is None
 
 
@@ -406,7 +407,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_r
 
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response}
-    assert result["comment"] == "Deleted DHCP Profile {}".format(dhcp_profile_id)
+    assert result["comment"] == f"Deleted DHCP Profile {dhcp_profile_id}"
     assert result["result"]
 
 
@@ -431,7 +432,7 @@ def test_absent_state_when_object_to_delete_does_not_exists():
 
     assert result is not None
     assert result["changes"] == {}
-    assert result["comment"] == "No DHCP Profile found with Id {}".format(dhcp_profile_id)
+    assert result["comment"] == f"No DHCP Profile found with Id {dhcp_profile_id}"
     assert result["result"]
 
 
@@ -487,9 +488,10 @@ def test_absent_state_when_object_to_delete_doesn_not_exists_and_opts_test_mode_
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result[
-        "comment"
-    ] == "State absent will do nothing as no DHCP Profile found with Id {}".format(dhcp_profile_id)
+    assert (
+        result["comment"]
+        == f"State absent will do nothing as no DHCP Profile found with Id {dhcp_profile_id}"
+    )
     assert result["result"] is None
 
 
@@ -725,5 +727,5 @@ def test_present_when_get_by_id_returns_not_found_error(mocked_ok_response):
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created DHCP Profile {}".format(dhcp_profile_id)
+    assert result["comment"] == f"Created DHCP Profile {dhcp_profile_id}"
     assert result["result"]

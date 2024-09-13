@@ -21,6 +21,7 @@ Example usage :
     It is recommended to pass the VMC authentication details using Pillars rather than specifying as plain text in SLS
     files.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_state
@@ -168,12 +169,12 @@ def invited(
         if org_user:
             return vmc_state._create_state_response(
                 name=name,
-                comment="User {} is already part of the organization".format(username),
+                comment=f"User {username} is already part of the organization",
             )
         else:
             return vmc_state._create_state_response(
                 name=name,
-                comment="User {} would have been invited".format(username),
+                comment=f"User {username} would have been invited",
             )
 
     if not org_user:
@@ -209,7 +210,7 @@ def invited(
     else:
         return vmc_state._create_state_response(
             name=name,
-            comment="User {} is already part of the organization".format(username),
+            comment=f"User {username} is already part of the organization",
             result=True,
         )
 
@@ -296,7 +297,7 @@ def absent(
             log.info("vmc_org_user.absent is called with test option")
             return vmc_state._create_state_response(
                 name=name,
-                comment="Would have removed user with username {}".format(username),
+                comment=f"Would have removed user with username {username}",
             )
         else:
             removed_org_user = __salt__["vmc_org_users.remove"](
@@ -316,7 +317,7 @@ def absent(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Removed user {}".format(username),
+                comment=f"Removed user {username}",
                 old_state=org_user,
                 result=True,
             )
@@ -327,6 +328,6 @@ def absent(
         )
         return vmc_state._create_state_response(
             name=name,
-            comment="No user found with username {}".format(username),
+            comment=f"No user found with username {username}",
             result=True,
         )

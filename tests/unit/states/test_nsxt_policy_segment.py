@@ -1,6 +1,7 @@
 """
     Unit Tests for nsxt_policy_segment state
 """
+
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -52,7 +53,7 @@ def test_present_error_in_get_by_display_name():
         nsxt_policy_segment.__salt__,
         {"nsxt_policy_segment.get_by_display_name": MagicMock(return_value={"error": err_msg})},
     ):
-        ret["comment"] = "Failed to get segment from NSX-T Manager : {}".format(err_msg)
+        ret["comment"] = f"Failed to get segment from NSX-T Manager : {err_msg}"
         assert (
             nsxt_policy_segment.present(
                 name="create segment",
@@ -384,7 +385,7 @@ def test_absent_error_in_get_by_display_name():
         nsxt_policy_segment.__salt__,
         {"nsxt_policy_segment.get_by_display_name": MagicMock(return_value={"error": err_msg})},
     ):
-        ret["comment"] = "Failed to get the segment response : {}".format(err_msg)
+        ret["comment"] = f"Failed to get the segment response : {err_msg}"
         assert (
             nsxt_policy_segment.absent(
                 name="delete segment",
@@ -567,10 +568,10 @@ def test_absent():
         },
     ):
         with patch.dict(nsxt_policy_segment.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "Segment with display_name: {} and its sub-resources deleted successfully".format(
-                _mock_segment["display_name"]
+            ret["comment"] = (
+                "Segment with display_name: {} and its sub-resources deleted successfully".format(
+                    _mock_segment["display_name"]
+                )
             )
             ret["changes"]["new"] = {}
             ret["changes"]["old"] = _mock_segment

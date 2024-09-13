@@ -101,7 +101,7 @@ def test_present_state_to_create_new_transport_zone_with_error_in_get_call():
         transport_zone.__salt__,
         {"nsxt_transport_zone.get_by_display_name": MagicMock(return_value=err_json)},
     ):
-        ret["comment"] = "Failed to get the transport zones : {}".format(error_msg)
+        ret["comment"] = f"Failed to get the transport zones : {error_msg}"
         ret["result"] = False
 
         with patch.dict(transport_zone.__opts__, {"test": False}):
@@ -210,9 +210,9 @@ def test_present_state_to_create_new_transport_zone_with_error_from_execution_mo
             "nsxt_transport_zone.create": MagicMock(return_value=err_json),
         },
     ):
-        ret[
-            "comment"
-        ] = "Fail to create transport_zone : Http error occurred. Please provide correct credentials"
+        ret["comment"] = (
+            "Fail to create transport_zone : Http error occurred. Please provide correct credentials"
+        )
         ret["changes"] = {}
         ret["result"] = False
 
@@ -277,7 +277,7 @@ def test_present_state_to_create_new_transport_zone_when_same_transport_zone_alr
                     username=_mocked_username,
                     password=_mocked_password,
                     verify_ssl=False,
-                    **new_transport_zone
+                    **new_transport_zone,
                 )
                 == ret
             )
@@ -377,9 +377,9 @@ def test_present_state_to_update_transport_zone_when_error_from_update_call():
             "nsxt_transport_zone.update": MagicMock(return_value=err_json),
         },
     ):
-        ret[
-            "comment"
-        ] = "Fail to update transport_zone : Http error occurred. Please provide correct credentials"
+        ret["comment"] = (
+            "Fail to update transport_zone : Http error occurred. Please provide correct credentials"
+        )
         ret["changes"] = {}
         ret["result"] = False
 
@@ -454,9 +454,9 @@ def test_absent_state_error_when_get_transport_zone_call_returns_error():
         transport_zone.__salt__,
         {"nsxt_transport_zone.get_by_display_name": MagicMock(return_value=err_json)},
     ):
-        ret[
-            "comment"
-        ] = "Failed to get the transport zones : Http error occurred. Please provide correct credentials"
+        ret["comment"] = (
+            "Failed to get the transport zones : Http error occurred. Please provide correct credentials"
+        )
         ret["result"] = False
 
         with patch.dict(transport_zone.__opts__, {"test": False}):
@@ -504,9 +504,9 @@ def test_absent_state_error_when_delete_call_returns_error():
             "nsxt_transport_zone.delete": MagicMock(return_value=err_json),
         },
     ):
-        ret[
-            "comment"
-        ] = "Failed to delete the transport-zone : Http error occurred. Please provide correct credentials"
+        ret["comment"] = (
+            "Failed to delete the transport-zone : Http error occurred. Please provide correct credentials"
+        )
         ret["result"] = False
 
         with patch.dict(transport_zone.__opts__, {"test": False}):

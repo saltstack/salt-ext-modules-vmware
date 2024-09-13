@@ -1,6 +1,7 @@
 """
 Execution module to perform CRUD operations for NSX-T's Tier 0 Gateway
 """
+
 import logging
 
 from salt.exceptions import SaltInvocationError
@@ -2048,7 +2049,7 @@ def get_hierarchy(
         nsxt_tier0.get_hierarchy(
             hostname, username, password, tier0_id, cert, cert_common_name, verify_ssl, result
         )
-        log.info("Hierarchy result for tier 0 gateway: {}".format(result))
+        log.info(f"Hierarchy result for tier 0 gateway: {result}")
         return result
     except SaltInvocationError as e:
         return {"error": str(e)}

@@ -1,6 +1,7 @@
 """
     VMC API Request Module
 """
+
 import json
 import logging
 import os

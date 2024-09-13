@@ -63,7 +63,7 @@ def test_present_state_error_when_get_by_display_name_returns_error():
         nsxt_uplink_profiles.__salt__,
         {"nsxt_uplink_profiles.get_by_display_name": MagicMock(return_value={"error": err_msg})},
     ):
-        ret["comment"] = "Failed to get uplink profiles from NSX-T Manager : {}".format(err_msg)
+        ret["comment"] = f"Failed to get uplink profiles from NSX-T Manager : {err_msg}"
         assert (
             nsxt_uplink_profiles.present(
                 name="create uplink profile",
@@ -229,9 +229,9 @@ def test_present_state_when_nothing_to_update_in_the_existing_uplink_profile():
         },
     ):
         with patch.dict(nsxt_uplink_profiles.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "Uplink profile already exists with similar params. No action to perform"
+            ret["comment"] = (
+                "Uplink profile already exists with similar params. No action to perform"
+            )
             assert (
                 nsxt_uplink_profiles.present(
                     name="create uplink profile",
@@ -426,7 +426,7 @@ def test_absent_state_error_when_get_by_display_name_returns_error():
         nsxt_uplink_profiles.__salt__,
         {"nsxt_uplink_profiles.get_by_display_name": MagicMock(return_value={"error": err_msg})},
     ):
-        ret["comment"] = "Failed to get uplink profiles from NSX-T Manager : {}".format(err_msg)
+        ret["comment"] = f"Failed to get uplink profiles from NSX-T Manager : {err_msg}"
         assert (
             nsxt_uplink_profiles.absent(
                 name="delete uplink profile",
@@ -474,10 +474,10 @@ def test_absent_state_when_opts_test_is_true_during_create():
         {"nsxt_uplink_profiles.get_by_display_name": MagicMock(return_value={"results": []})},
     ):
         with patch.dict(nsxt_uplink_profiles.__opts__, {"test": True}):
-            ret[
-                "comment"
-            ] = "No uplink profile with display_name: {} found in NSX-T Manager".format(
-                _mock_uplink_profile["display_name"]
+            ret["comment"] = (
+                "No uplink profile with display_name: {} found in NSX-T Manager".format(
+                    _mock_uplink_profile["display_name"]
+                )
             )
             assert (
                 nsxt_uplink_profiles.absent(
@@ -526,10 +526,10 @@ def test_absent_state_when_no_uplink_profile_exists_with_given_display_name():
         {"nsxt_uplink_profiles.get_by_display_name": MagicMock(return_value={"results": []})},
     ):
         with patch.dict(nsxt_uplink_profiles.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "No uplink profile with display_name: {} found in NSX-T Manager".format(
-                _mock_uplink_profile["display_name"]
+            ret["comment"] = (
+                "No uplink profile with display_name: {} found in NSX-T Manager".format(
+                    _mock_uplink_profile["display_name"]
+                )
             )
             assert (
                 nsxt_uplink_profiles.absent(
@@ -557,7 +557,7 @@ def test_absent_error_when_delete_call_returns_error():
         },
     ):
         with patch.dict(nsxt_uplink_profiles.__opts__, {"test": False}):
-            ret["comment"] = "Failed to delete uplink profile : {}".format(err_msg)
+            ret["comment"] = f"Failed to delete uplink profile : {err_msg}"
             assert (
                 nsxt_uplink_profiles.absent(
                     name="delete uplink profile",

@@ -1,6 +1,7 @@
 """
 Tests for execution module of NSX-T Segment
 """
+
 from unittest.mock import patch
 
 import saltext.vmware.modules.nsxt_policy_segment as nsxt_policy_segment

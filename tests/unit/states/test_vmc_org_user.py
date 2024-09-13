@@ -91,7 +91,7 @@ def test_absent_state_to_remove_user_when_module_returns_success_response(mocked
 
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response["results"][0]}
-    assert result["comment"] == "Removed user {}".format(user_name)
+    assert result["comment"] == f"Removed user {user_name}"
     assert result["result"]
 
 
@@ -115,7 +115,7 @@ def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
 
     assert result is not None
     assert result["changes"] == {}
-    assert result["comment"] == "No user found with username {}".format(user_name)
+    assert result["comment"] == f"No user found with username {user_name}"
     assert result["result"]
 
 
@@ -140,7 +140,7 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "Would have removed user with username {}".format(user_name)
+    assert result["comment"] == f"Would have removed user with username {user_name}"
     assert result["result"] is None
 
 
@@ -167,7 +167,7 @@ def test_absent_state_when_object_to_delete_does_not_exists_and_opts_test_mode_i
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "No user found with username {}".format(user_name)
+    assert result["comment"] == f"No user found with username {user_name}"
     assert result["result"]
 
 
@@ -294,7 +294,7 @@ def test_invited_to_add_user_when_module_returns_success_response(mocked_ok_resp
     )
     mock_invite_response = create_autospec(vmc_org_users_exec.add, return_value=mocked_ok_response)
     user_name = mocked_ok_response["results"][0]["user"]["username"]
-    mocked_ok_response.update(message="Invited {} successfully".format(user_name))
+    mocked_ok_response.update(message=f"Invited {user_name} successfully")
 
     with patch.dict(
         vmc_org_user.__salt__,
@@ -314,7 +314,7 @@ def test_invited_to_add_user_when_module_returns_success_response(mocked_ok_resp
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Invited {} successfully".format(user_name)
+    assert result["comment"] == f"Invited {user_name} successfully"
     assert result["result"]
 
 
@@ -339,7 +339,7 @@ def test_invite_state_for_create_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "User {} would have been invited".format(user_name)
+    assert result["comment"] == f"User {user_name} would have been invited"
     assert result["result"] is None
 
 
@@ -367,7 +367,7 @@ def test_invite_state_during_create_should_correctly_pass_args(mocked_ok_respons
     )
     mock_invite_response = mocked_ok_response.copy()
     user_name = mocked_ok_response["results"][0]["user"]["username"]
-    mock_invite_response.update(message="Invited {} successfully".format(user_name))
+    mock_invite_response.update(message=f"Invited {user_name} successfully")
     common_actual_args = {
         "hostname": "hostname",
         "refresh_key": "refresh_key",
@@ -397,5 +397,5 @@ def test_invite_state_during_create_should_correctly_pass_args(mocked_ok_respons
     assert result is not None
     assert result["changes"]["old"] is None
     assert result["changes"]["new"] == mock_invite_response
-    assert result["comment"] == "Invited {} successfully".format(user_name)
+    assert result["comment"] == f"Invited {user_name} successfully"
     assert result["result"]

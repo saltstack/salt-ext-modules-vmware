@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_transport_node state module
 """
+
 import pytest
 
 _display_name = "Test_Create-State-Module-Transport-Node-IT01"
@@ -37,6 +38,7 @@ _node_deployment_info = {
     "resource_type": "EdgeNode",
     "display_name": "Check-Display",
 }
+
 
 # Creation of the transport nodes using the present state module and later deleting the same using absent call
 @pytest.mark.xfail(reason="no nsx test setup yet")

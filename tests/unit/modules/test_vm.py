@@ -220,18 +220,9 @@ def test_when_vm_list_is_given_a_cluster_name_and_datacenter_name_then_parent_sh
             cluster_name="anything not false/empty",
         )
 
-    if sys.version_info < (3, 8):
-        from pyVmomi import vim
-
-        expected_call = mock.call(
-            all=False, pathSet=["name", "config", "parent"], type=vim.VirtualMachine
-        )
-        assert fake_vmodl.query.PropertyCollector.PropertySpec.has_call(expected_call)
-    else:
-        assert (
-            "parent"
-            in fake_vmodl.query.PropertyCollector.PropertySpec.mock_calls[0].kwargs["pathSet"]
-        )
+    assert (
+        "parent" in fake_vmodl.query.PropertyCollector.PropertySpec.mock_calls[0].kwargs["pathSet"]
+    )
 
 
 def test_when_vm_list_is_given_a_datacenter_name_but_no_cluster_name_then_it_should_return_expected_vms_as_filtered_by_datacenter(
@@ -248,25 +239,19 @@ def test_when_vm_list_is_given_a_datacenter_name_but_no_cluster_name_then_it_sho
 
     assert actual_vm_names == expected_vm_names
 
-    if sys.version_info < (3, 8):
-        assert (
-            fake_service_instance.content.viewManager.CreateContainerView.mock_calls[0][1][0]
-            is fake_datacenter
-        )
-    else:
-        # Yes, these assertions are kind of gross - but we're dealing with pyvmomi and all that that entails. I don't think that there's really a great way to make these assertions.
-        assert (
-            fake_service_instance.content.viewManager.CreateContainerView.mock_calls[0].args[0]
-            is fake_datacenter
-        )
+    # Yes, these assertions are kind of gross - but we're dealing with pyvmomi and all that that entails. I don't think that there's really a great way to make these assertions.
+    assert (
+        fake_service_instance.content.viewManager.CreateContainerView.mock_calls[0].args[0]
+        is fake_datacenter
+    )
 
-        assert (
-            fake_vmodl.query.PropertyCollector.ObjectSpec.mock_calls[0].kwargs["obj"]
-            == fake_service_instance.content.viewManager.CreateContainerView.return_value
-        )
-        assert fake_vmodl.query.PropertyCollector.FilterSpec.mock_calls[0].kwargs["objectSet"] == [
-            fake_vmodl.query.PropertyCollector.ObjectSpec.return_value
-        ]
+    assert (
+        fake_vmodl.query.PropertyCollector.ObjectSpec.mock_calls[0].kwargs["obj"]
+        == fake_service_instance.content.viewManager.CreateContainerView.return_value
+    )
+    assert fake_vmodl.query.PropertyCollector.FilterSpec.mock_calls[0].kwargs["objectSet"] == [
+        fake_vmodl.query.PropertyCollector.ObjectSpec.return_value
+    ]
 
 
 def test_when_vm_is_not_found_then_get_mks_ticket_should_return_empty_data(fake_service_instance):

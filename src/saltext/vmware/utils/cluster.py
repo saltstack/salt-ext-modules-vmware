@@ -172,7 +172,7 @@ def delete_cluster(service_instance, cluster_name, datacenter_name):
     except vim.fault.NoPermission as exc:
         log.exception(exc)
         raise salt.exceptions.VMwareApiError(
-            "Not enough permissions. Required privilege: {}".format(exc.privilegeId)
+            f"Not enough permissions. Required privilege: {exc.privilegeId}"
         )
     except vim.fault.VimFault as exc:
         log.exception(exc)

@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_ip_blocks state module
 """
+
 from urllib.parse import urljoin
 
 import pytest
@@ -124,7 +125,7 @@ def test_nsxt_ip_blocks_state_module(nsxt_config, salt_call_cli):
     assert dict(changes)["old"] is None
     assert dict(changes)["new"]["display_name"] == display_name
     assert dict(changes)["new"]["description"] == description
-    assert comment == "Created IP Block {}".format(display_name)
+    assert comment == f"Created IP Block {display_name}"
 
     # Test present to update with identical fields
     changes, comment = _execute_present_state(
@@ -145,7 +146,7 @@ def test_nsxt_ip_blocks_state_module(nsxt_config, salt_call_cli):
     assert dict(changes)["old"]["cidr"] == cidr
     assert dict(changes)["new"]["description"] == updated_description
     assert dict(changes)["new"]["cidr"] == updated_cidr
-    assert comment == "Updated IP Block {}".format(display_name)
+    assert comment == f"Updated IP Block {display_name}"
 
     # Test absent to delete IP Address Block
     changes, comment = _execute_absent_state(
@@ -155,7 +156,7 @@ def test_nsxt_ip_blocks_state_module(nsxt_config, salt_call_cli):
     assert dict(changes)["new"] is None
     assert dict(changes)["old"]["display_name"] == display_name
     assert dict(changes)["old"]["description"] == updated_description
-    assert comment == "Deleted IP Block {}".format(display_name)
+    assert comment == f"Deleted IP Block {display_name}"
 
     # Test absent to delete non existing IP Address Block
     changes, comment = _execute_absent_state(
@@ -163,4 +164,4 @@ def test_nsxt_ip_blocks_state_module(nsxt_config, salt_call_cli):
     )
 
     assert not changes
-    assert comment == "No IP Address Block found with name {}".format(display_name)
+    assert comment == f"No IP Address Block found with name {display_name}"

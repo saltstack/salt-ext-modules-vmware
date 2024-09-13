@@ -197,7 +197,7 @@ def _get_service_instance(
             )
             raise salt.exceptions.CommandExecutionError(err_msg)
     else:
-        raise salt.exceptions.CommandExecutionError("Unsupported mechanism: '{}'".format(mechanism))
+        raise salt.exceptions.CommandExecutionError(f"Unsupported mechanism: '{mechanism}'")
 
     log.trace(
         "Connecting using the '%s' mechanism, with username '%s'",
@@ -641,7 +641,7 @@ def get_gssapi_token(principal, host, domain):
     if not HAS_GSSAPI:
         raise ImportError("The gssapi library is not imported.")
 
-    service = "{}/{}@{}".format(principal, host, domain)
+    service = f"{principal}/{host}@{domain}"
     log.debug("Retrieving gsspi token for service %s", service)
     service_name = gssapi.Name(service, gssapi.C_NT_USER_NAME)
     ctx = gssapi.InitContext(service_name)
@@ -1096,7 +1096,7 @@ def get_uplink_dvportgroup(dvs_ref):
     ]
     if not items:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "Uplink portgroup of DVS '{}' wasn't found".format(dvs_name)
+            f"Uplink portgroup of DVS '{dvs_name}' wasn't found"
         )
     return items[0]
 
@@ -1573,7 +1573,7 @@ def get_datastore_files(service_instance, directory, datastores, container_objec
     for datobj in datastore_objects:
         try:
             task = datobj.browser.SearchDatastore_Task(
-                datastorePath="[{}] {}".format(datobj.name, directory),
+                datastorePath=f"[{datobj.name}] {directory}",
                 searchSpec=browser_spec,
             )
         except vim.fault.NoPermission as exc:
@@ -1897,7 +1897,7 @@ def _get_scsi_address_to_lun_key_map(
         )
     if multipath_info.lun is None:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "No luns were retrieved from host '{}'".format(hostname)
+            f"No luns were retrieved from host '{hostname}'"
         )
     lun_key_by_scsi_addr = {}
     for l in multipath_info.lun:
@@ -2083,7 +2083,7 @@ def get_disk_partition_info(host_ref, disk_id, storage_system=None):
     )
     if not props.get("storageDeviceInfo.scsiLun"):
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "No devices were retrieved in host '{}'".format(hostname)
+            f"No devices were retrieved in host '{hostname}'"
         )
     log.trace(
         "[%s] Retrieved %s devices: %s",
@@ -2150,7 +2150,7 @@ def erase_disk_partitions(service_instance, host_ref, disk_id, hostname=None, st
     )
     if not results:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "Host's '{}' devices were not retrieved".format(hostname)
+            f"Host's '{hostname}' devices were not retrieved"
         )
     log.trace(
         "[%s] Retrieved %s devices: %s",
@@ -2230,12 +2230,12 @@ def get_diskgroups(host_ref, cache_disk_ids=None, get_all_disk_groups=False):
         raise salt.exceptions.VMwareRuntimeError(exc.msg)
     if not vsan_host_config:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "No host config found on host '{}'".format(hostname)
+            f"No host config found on host '{hostname}'"
         )
     vsan_storage_info = vsan_host_config.storageInfo
     if not vsan_storage_info:
         raise salt.exceptions.VMwareObjectRetrievalError(
-            "No vsan storage info found on host '{}'".format(hostname)
+            f"No vsan storage info found on host '{hostname}'"
         )
     vsan_disk_mappings = vsan_storage_info.diskMapping
     if not vsan_disk_mappings:
@@ -2463,7 +2463,7 @@ def get_proxy_target(service_instance):
                 "ESXi host '{}' was not found".format(details["esxi_host"])
             )
         reference = references[0]
-    log.trace("reference = {}".format(reference))
+    log.trace(f"reference = {reference}")
     return reference
 
 

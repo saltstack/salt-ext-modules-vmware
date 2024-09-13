@@ -36,15 +36,15 @@ def present(name):
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     dcs = __salt__["vmware_datacenter.list"]()
     if name in dcs:
-        ret["comment"] = "Datacenter {} is already present. No changes made.".format(name)
+        ret["comment"] = f"Datacenter {name} is already present. No changes made."
         ret["result"] = True
     elif __opts__["test"]:
-        ret["comment"] = "Datacenter {} will be created.".format(name)
+        ret["comment"] = f"Datacenter {name} will be created."
         ret["result"] = None
     else:
         dc = __salt__["vmware_datacenter.create"](name)
         if isinstance(dc, dict) and dc.get(name) is not False:
-            ret["comment"] = "Datacenter - {} created.".format(name)
+            ret["comment"] = f"Datacenter - {name} created."
             ret["changes"] = dc
             ret["result"] = True
 
@@ -67,15 +67,15 @@ def absent(name):
     ret = {"name": name, "result": None, "comment": "", "changes": {}}
     dcs = __salt__["vmware_datacenter.list"]()
     if name not in dcs:
-        ret["comment"] = "Datacenter {} does not exist. No changes made.".format(name)
+        ret["comment"] = f"Datacenter {name} does not exist. No changes made."
         ret["result"] = True
     elif __opts__["test"]:
-        ret["comment"] = "Datacenter {} will be deleted.".format(name)
+        ret["comment"] = f"Datacenter {name} will be deleted."
         ret["result"] = None
     else:
         dc = __salt__["vmware_datacenter.delete"](name)
         if isinstance(dc, dict) and dc.get(name) is not False:
-            ret["comment"] = "Datacenter - {} deleted.".format(name)
+            ret["comment"] = f"Datacenter - {name} deleted."
             ret["changes"] = dc
             ret["result"] = True
 

@@ -405,7 +405,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_r
 
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response}
-    assert result["comment"] == "Deleted SDDC {}".format(sddc_id)
+    assert result["comment"] == f"Deleted SDDC {sddc_id}"
     assert result["result"]
 
 
@@ -463,7 +463,7 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "State absent will delete SDDC with ID {}".format(sddc_id)
+    assert result["comment"] == f"State absent will delete SDDC with ID {sddc_id}"
     assert result["result"] is None
 
 
@@ -644,7 +644,7 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created SDDC {}".format(sddc_name)
+    assert result["comment"] == f"Created SDDC {sddc_name}"
     assert result["result"]
 
 
@@ -670,7 +670,7 @@ def test_present_state_for_create_when_opts_test_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result["comment"] == "SDDC {} would have been created".format(sddc_name)
+    assert result["comment"] == f"SDDC {sddc_name} would have been created"
     assert result["result"] is None
 
 

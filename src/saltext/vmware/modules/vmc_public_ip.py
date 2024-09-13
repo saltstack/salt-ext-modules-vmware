@@ -2,6 +2,7 @@
 Salt execution module for public IP
 Provides methods to Create, Update, Read and Delete public IP.
 """
+
 import json
 import logging
 import os

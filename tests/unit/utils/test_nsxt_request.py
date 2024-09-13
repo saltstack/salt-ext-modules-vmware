@@ -1,6 +1,7 @@
 """
 Unit test for nsxt_request util
 """
+
 import json
 from unittest import mock
 from unittest.mock import patch

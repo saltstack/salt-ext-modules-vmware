@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_sddc_cluster execution module
 """
+
 import json
 import os
 

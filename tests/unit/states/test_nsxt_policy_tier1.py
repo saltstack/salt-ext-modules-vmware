@@ -53,7 +53,7 @@ def test_present_error_in_get_by_display_name():
         nsxt_policy_tier1.__salt__,
         {"nsxt_policy_tier1.get_by_display_name": MagicMock(return_value={"error": err_msg})},
     ):
-        ret["comment"] = "Failed to get tier-1 gateways from NSX-T Manager : {}".format(err_msg)
+        ret["comment"] = f"Failed to get tier-1 gateways from NSX-T Manager : {err_msg}"
         assert (
             nsxt_policy_tier1.present(
                 name="create tier1",
@@ -185,10 +185,10 @@ def test_present_create_new_tier1_error_in_execution_logs():
         },
     ):
         with patch.dict(nsxt_policy_tier1.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
-                _err_msg, execution_logs
+            ret["comment"] = (
+                "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
+                    _err_msg, execution_logs
+                )
             )
             assert (
                 nsxt_policy_tier1.present(
@@ -283,10 +283,10 @@ def test_present_update_tier1_error_in_execution_logs():
         },
     ):
         with patch.dict(nsxt_policy_tier1.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
-                _err_msg, execution_logs
+            ret["comment"] = (
+                "Failed while creating tier1 gateway and sub-resources: {} \n Execution logs: {}".format(
+                    _err_msg, execution_logs
+                )
             )
             assert (
                 nsxt_policy_tier1.present(
@@ -317,9 +317,9 @@ def test_present_update_tier1_error_in_hierarchy_before_update():
         },
     ):
         with patch.dict(nsxt_policy_tier1.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "Failed while querying tier1 gateway and its sub-resources.: {}".format(_err_msg)
+            ret["comment"] = (
+                f"Failed while querying tier1 gateway and its sub-resources.: {_err_msg}"
+            )
             assert (
                 nsxt_policy_tier1.present(
                     name="update tier1",
@@ -351,9 +351,9 @@ def test_present_update_tier1_error_in_hierarchy_after_update():
         },
     ):
         with patch.dict(nsxt_policy_tier1.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "Failure while querying tier1 gateway and its sub-resources: {}".format(_err_msg)
+            ret["comment"] = (
+                f"Failure while querying tier1 gateway and its sub-resources: {_err_msg}"
+            )
             assert (
                 nsxt_policy_tier1.present(
                     name="update tier1",
@@ -396,7 +396,7 @@ def test_absent_error_in_get_by_display_name():
         nsxt_policy_tier1.__salt__,
         {"nsxt_policy_tier1.get_by_display_name": MagicMock(return_value={"error": err_msg})},
     ):
-        ret["comment"] = "Failed to get tier1 gateways from NSX-T Manager : {}".format(err_msg)
+        ret["comment"] = f"Failed to get tier1 gateways from NSX-T Manager : {err_msg}"
         assert (
             nsxt_policy_tier1.absent(
                 name="delete tier1",
@@ -556,9 +556,9 @@ def test_absent_with_error_in_get_hierarchy():
         },
     ):
         with patch.dict(nsxt_policy_tier1.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "Failure while querying tier1 gateway and its sub-resources: {}".format(_err_msg)
+            ret["comment"] = (
+                f"Failure while querying tier1 gateway and its sub-resources: {_err_msg}"
+            )
             assert (
                 nsxt_policy_tier1.absent(
                     name="delete tier1",
@@ -585,10 +585,10 @@ def test_absent():
         },
     ):
         with patch.dict(nsxt_policy_tier1.__opts__, {"test": False}):
-            ret[
-                "comment"
-            ] = "tier1 gateway with display_name: {} and its sub-resources deleted successfully".format(
-                _mocked_tier1["display_name"]
+            ret["comment"] = (
+                "tier1 gateway with display_name: {} and its sub-resources deleted successfully".format(
+                    _mocked_tier1["display_name"]
+                )
             )
             ret["changes"]["new"] = {}
             ret["changes"]["old"] = _mocked_tier1

@@ -51,9 +51,9 @@ def do_it(*, config_file):
         for cluster in dc.hostFolder.childEntity:
             config["datacenters"][dc.name][cluster.name] = {}
             for rule in cluster.configuration.rule:
-                config["datacenters"][dc.name][cluster.name][
-                    rule.name
-                ] = utils_cluster.drs_rule_info(rule)
+                config["datacenters"][dc.name][cluster.name][rule.name] = (
+                    utils_cluster.drs_rule_info(rule)
+                )
     hosts = si.content.rootFolder.childEntity[0].hostFolder.childEntity[0].host
     for host in hosts:
         config["esxi_host_name"] = host.name

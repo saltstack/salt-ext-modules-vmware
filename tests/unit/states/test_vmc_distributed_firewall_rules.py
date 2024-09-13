@@ -1,6 +1,7 @@
 """
     Unit tests for vmc_distributed_firewall_rules state module
 """
+
 from unittest.mock import create_autospec
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -229,7 +230,7 @@ def test_present_to_create_when_module_returns_success_response(mocked_ok_respon
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created distributed firewall rule {}".format(rule_id)
+    assert result["comment"] == f"Created distributed firewall rule {rule_id}"
     assert result["result"]
 
 
@@ -269,7 +270,7 @@ def test_present_to_update_when_module_returns_success_response(mocked_ok_respon
     assert result is not None
     assert result["changes"]["new"] == mocked_updated_distributed_firewall_rule
     assert result["changes"]["old"] == mocked_ok_response
-    assert result["comment"] == "Updated distributed firewall rule {}".format(rule_id)
+    assert result["comment"] == f"Updated distributed firewall rule {rule_id}"
     assert result["result"]
 
 
@@ -586,7 +587,7 @@ def test_absent_state_to_delete_when_module_returns_success_response(mocked_ok_r
 
     assert result is not None
     assert result["changes"] == {"new": None, "old": mocked_ok_response}
-    assert result["comment"] == "Deleted distributed firewall rule {}".format(rule_id)
+    assert result["comment"] == f"Deleted distributed firewall rule {rule_id}"
     assert result["result"]
 
 
@@ -613,7 +614,7 @@ def test_absent_state_when_object_to_delete_does_not_exists(mocked_ok_response):
 
     assert result is not None
     assert result["changes"] == {}
-    assert result["comment"] == "No distributed firewall rule found with ID {}".format(rule_id)
+    assert result["comment"] == f"No distributed firewall rule found with ID {rule_id}"
     assert result["result"]
 
 
@@ -642,9 +643,9 @@ def test_absent_state_to_delete_when_opts_test_mode_is_true(mocked_ok_response):
 
     assert result is not None
     assert len(result["changes"]) == 0
-    assert result[
-        "comment"
-    ] == "State absent will delete distributed firewall rule with ID {}".format(rule_id)
+    assert (
+        result["comment"] == f"State absent will delete distributed firewall rule with ID {rule_id}"
+    )
     assert result["result"] is None
 
 
@@ -779,5 +780,5 @@ def test_present_when_get_by_id_returns_not_found_error(mocked_ok_response):
     assert result is not None
     assert result["changes"]["new"] == mocked_ok_response
     assert result["changes"]["old"] is None
-    assert result["comment"] == "Created distributed firewall rule {}".format(rule_id)
+    assert result["comment"] == f"Created distributed firewall rule {rule_id}"
     assert result["result"]

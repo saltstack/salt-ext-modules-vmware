@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_ip_blocks module
 """
+
 from urllib.parse import urljoin
 
 import pytest
@@ -41,7 +42,7 @@ def _delete_ip_block(hostname, password, salt_call_cli, updated_ip_block_json, u
         password=password,
         verify_ssl=False,
         ip_block_id=updated_ip_block_json["id"],
-        **updated_ip_block_json
+        **updated_ip_block_json,
     ).json
 
 
@@ -54,7 +55,7 @@ def _update_ip_block(created_ip_block_json, hostname, password, salt_call_cli, u
         revision=created_ip_block_json["_revision"],
         ip_block_id=created_ip_block_json["id"],
         verify_ssl=False,
-        **created_ip_block_json
+        **created_ip_block_json,
     ).json
 
 
@@ -65,7 +66,7 @@ def _create_ip_block(hostname, password, request_data, salt_call_cli, username):
         username=username,
         password=password,
         verify_ssl=False,
-        **request_data
+        **request_data,
     ).json
 
 

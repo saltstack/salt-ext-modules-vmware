@@ -11,8 +11,9 @@ def patch_salt_globals_folder(vmware_conf):
     """
     Patch __opts__ and __pillar__
     """
-    with patch.object(folder, "__opts__", {}, create=True), patch.object(
-        folder, "__pillar__", vmware_conf, create=True
+    with (
+        patch.object(folder, "__opts__", {}, create=True),
+        patch.object(folder, "__pillar__", vmware_conf, create=True),
     ):
         yield
 

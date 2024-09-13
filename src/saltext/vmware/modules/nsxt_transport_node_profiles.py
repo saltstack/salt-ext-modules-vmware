@@ -1,6 +1,7 @@
 """
 Salt Module to perform CRUD operations for NSX-T transport node profiles
 """
+
 import logging
 
 from saltext.vmware.utils import common

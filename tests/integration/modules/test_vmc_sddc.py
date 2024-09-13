@@ -1,6 +1,7 @@
 """
     Integration Tests for vmc_sddc execution module
 """
+
 import json
 
 import pytest

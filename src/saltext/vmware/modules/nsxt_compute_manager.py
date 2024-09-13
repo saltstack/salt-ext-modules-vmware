@@ -1,6 +1,7 @@
 """
 Execution module for NSX-T compute manager registration and de-registration
 """
+
 import json
 import logging
 
@@ -89,7 +90,7 @@ def get(
     """
 
     url = BASE_URL.format(management_host=hostname)
-    log.info("Retrieving compute managers from NSX Manager {}".format(hostname))
+    log.info(f"Retrieving compute managers from NSX Manager {hostname}")
 
     params = common._filter_kwargs(
         allowed_kwargs=(

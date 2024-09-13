@@ -9,6 +9,7 @@ Add the following to the minion or master configuration file.
 
 Default is ``/var/log/salt/changes``.
 """
+
 import logging
 
 import salt.returners

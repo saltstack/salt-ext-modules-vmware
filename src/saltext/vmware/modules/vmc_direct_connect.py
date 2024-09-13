@@ -2,6 +2,7 @@
 Salt execution module for VMC Direct Connect
 Provides methods to Display Direct Connect Information of an SDDC.
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_constants

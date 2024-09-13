@@ -1,6 +1,7 @@
 """
     Integration Tests for nsxt_transport_node_profiles execution module
 """
+
 import json
 
 import pytest
@@ -280,7 +281,7 @@ def _create_transport_zone_using_nsxt_api(nsxt_config, display_name):
     payload = {
         "display_name": display_name,
         "host_switch_name": "test-host-switch-1",
-        "description": "Transport Zone: {}".format(display_name),
+        "description": f"Transport Zone: {display_name}",
         "transport_type": "OVERLAY",
     }
     headers = {"Accept": "application/json", "content-Type": "application/json"}

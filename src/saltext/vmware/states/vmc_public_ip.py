@@ -24,6 +24,7 @@ Example usage :
     files.
 
 """
+
 import logging
 
 from saltext.vmware.utils import vmc_state
@@ -127,7 +128,7 @@ def present(
 
             return vmc_state._create_state_response(
                 name=name,
-                comment="Updated public IP {}".format(public_ip_id),
+                comment=f"Updated public IP {public_ip_id}",
                 old_state=public_ip_response,
                 new_state=updated_public_ip,
                 result=True,
@@ -156,7 +157,7 @@ def present(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Created public IP {}".format(public_ip_id),
+            comment=f"Created public IP {public_ip_id}",
             new_state=created_public_ip,
             result=True,
         )
@@ -228,7 +229,7 @@ def absent(
         if public_ip_response:
             return vmc_state._create_state_response(
                 name=name,
-                comment="State absent will delete public IP with ID {}".format(public_ip_id),
+                comment=f"State absent will delete public IP with ID {public_ip_id}",
             )
         else:
             return vmc_state._create_state_response(
@@ -258,12 +259,12 @@ def absent(
 
         return vmc_state._create_state_response(
             name=name,
-            comment="Deleted public IP {}".format(public_ip_id),
+            comment=f"Deleted public IP {public_ip_id}",
             old_state=public_ip_response,
             result=True,
         )
     else:
         log.info("No public IP found with ID %s", public_ip_id)
         return vmc_state._create_state_response(
-            name=name, comment="No public IP found with ID {}".format(public_ip_id), result=True
+            name=name, comment=f"No public IP found with ID {public_ip_id}", result=True
         )

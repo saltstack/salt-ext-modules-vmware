@@ -136,10 +136,10 @@ def present(
 
     if "error" in get_licenses_result_after_apply:
         ret["result"] = False
-        ret[
-            "comment"
-        ] = "Failed to retrieve licenses after applying current license from NSX-T Manager : {}".format(
-            get_licenses_result_after_apply["error"]
+        ret["comment"] = (
+            "Failed to retrieve licenses after applying current license from NSX-T Manager : {}".format(
+                get_licenses_result_after_apply["error"]
+            )
         )
         return ret
 

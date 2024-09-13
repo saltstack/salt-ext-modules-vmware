@@ -1,6 +1,7 @@
 """
 State module for NSX-T compute manager registration and de-registration
 """
+
 import logging
 
 log = logging.getLogger(__name__)
@@ -191,9 +192,9 @@ def present(
         thumbprint = credential.get("thumbprint", None)
     else:
         ret["result"] = False
-        ret[
-            "comment"
-        ] = "Parameter credential must be of type dictionary. Please refer documentation"
+        ret["comment"] = (
+            "Parameter credential must be of type dictionary. Please refer documentation"
+        )
         return ret
 
     if existing_compute_manager is None:
@@ -219,10 +220,10 @@ def present(
             )
             return ret
         else:
-            ret[
-                "comment"
-            ] = "Compute manager {compute_manager_server} successfully registered with NSX-T".format(
-                compute_manager_server=compute_manager_server
+            ret["comment"] = (
+                "Compute manager {compute_manager_server} successfully registered with NSX-T".format(
+                    compute_manager_server=compute_manager_server
+                )
             )
             ret["changes"]["new"] = result
             return ret
@@ -255,17 +256,17 @@ def present(
             )
             if "error" in result:
                 ret["result"] = False
-                ret[
-                    "comment"
-                ] = "Failed to update existing registration of compute manager with NSX-T Manager : {}".format(
-                    result["error"]
+                ret["comment"] = (
+                    "Failed to update existing registration of compute manager with NSX-T Manager : {}".format(
+                        result["error"]
+                    )
                 )
                 return ret
             else:
-                ret[
-                    "comment"
-                ] = "Compute manager {compute_manager_server} registration successfully updated with NSX-T".format(
-                    compute_manager_server=compute_manager_server
+                ret["comment"] = (
+                    "Compute manager {compute_manager_server} registration successfully updated with NSX-T".format(
+                        compute_manager_server=compute_manager_server
+                    )
                 )
                 ret["changes"]["old"] = existing_compute_manager
                 ret["changes"]["new"] = result
@@ -391,10 +392,10 @@ def absent(
         )
         if "error" in result:
             ret["result"] = False
-            ret[
-                "comment"
-            ] = "Failed to remove registration of compute manager with NSX-T Manager : {}".format(
-                result["error"]
+            ret["comment"] = (
+                "Failed to remove registration of compute manager with NSX-T Manager : {}".format(
+                    result["error"]
+                )
             )
             return ret
         else:
