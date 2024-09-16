@@ -42,8 +42,8 @@ CI_RUN = (
 PIP_INSTALL_SILENT = CI_RUN is False
 SKIP_REQUIREMENTS_INSTALL = os.environ.get("SKIP_REQUIREMENTS_INSTALL", "0") == "1"
 EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
-COVERAGE_VERSION_REQUIREMENT = "coverage==6.5"  # 7.x dropped support for Py 3.7
 
+COVERAGE_REQUIREMENT = os.environ.get("COVERAGE_REQUIREMENT") or "coverage==7.5.1"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3006"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
@@ -59,9 +59,8 @@ os.chdir(str(REPO_ROOT))
 ARTIFACTS_DIR = REPO_ROOT / "artifacts"
 # Make sure the artifacts directory exists
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
-RUNTESTS_LOGFILE = ARTIFACTS_DIR / "runtests-{}.log".format(
-    datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
-)
+CUR_TIME = datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
+RUNTESTS_LOGFILE = ARTIFACTS_DIR / f"runtests-{CUR_TIME}.log"
 COVERAGE_REPORT_DB = REPO_ROOT / ".coverage"
 COVERAGE_REPORT_PROJECT = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-project.xml"
 COVERAGE_REPORT_TESTS = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-tests.xml"
@@ -74,7 +73,8 @@ def _get_session_python_version_info(session):
     except AttributeError:
         session_py_version = session.run_always(
             "python",
-            "-c" 'import sys; sys.stdout.write("{}.{}.{}".format(*sys.version_info))',
+            "-c",
+            'import sys; sys.stdout.write("{}.{}.{}".format(*sys.version_info))',
             silent=True,
             log=False,
         )
@@ -85,14 +85,14 @@ def _get_session_python_version_info(session):
 
 def _get_pydir(session):
     version_info = _get_session_python_version_info(session)
-    if version_info < (3, 7):
-        session.error("Only Python >= 3.7 is supported")
-    return "py{}.{}".format(*version_info)
+    if version_info < (3, 10):
+        session.error("Only Python >= 3.10 is supported")
+    return f"py{version_info[0]}.{version_info[1]}"
 
 
 def _install_requirements(
     session,
-    *passed_requirements,
+    *passed_requirements,  # pylint: disable=unused-argument
     install_coverage_requirements=True,
     install_test_requirements=True,
     install_source=False,
@@ -104,14 +104,12 @@ def _install_requirements(
         # Always have the wheel package installed
         session.install("--progress-bar=off", "wheel", silent=PIP_INSTALL_SILENT)
         if install_coverage_requirements:
-            session.install(
-                "--progress-bar=off", COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT
-            )
+            session.install("--progress-bar=off", COVERAGE_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
         if install_salt:
             session.install("--progress-bar=off", SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
-        if install_test_requirements and "tests" not in install_extras:
+        if install_test_requirements:
             install_extras.append("tests")
 
         if EXTRA_REQUIREMENTS_INSTALL:
@@ -131,11 +129,14 @@ def _install_requirements(
                 pkg += f"[{','.join(install_extras)}]"
 
             session.install("-e", pkg, silent=PIP_INSTALL_SILENT)
+        elif install_extras:
+            pkg = f".[{','.join(install_extras)}]"
+            session.install(pkg, silent=PIP_INSTALL_SILENT)
 
 
 @nox.session(python=PYTHON_VERSIONS)
 def tests(session):
-    _install_requirements(session, install_source=True, install_extras=["tests"])
+    _install_requirements(session, install_source=True)
 
     sitecustomize_dir = session.run("salt-factories", "--coverage", silent=True, log=False)
     python_path_env_var = os.environ.get("PYTHONPATH") or None
@@ -193,7 +194,46 @@ def tests(session):
                 continue
         else:
             args.append("tests/")
-    session.run("pytest", *args, env=env)
+    try:
+        session.run("coverage", "run", "-m", "pytest", *args, env=env)
+    finally:
+        # Always combine and generate the XML coverage report
+        try:
+            session.run("coverage", "combine")
+        except CommandFailed:
+            # Sometimes some of the coverage files are corrupt which would
+            # trigger a CommandFailed exception
+            pass
+        # Generate report for salt code coverage
+        session.run(
+            "coverage",
+            "xml",
+            "-o",
+            str(COVERAGE_REPORT_PROJECT),
+            "--omit=tests/*",
+            "--include=src/saltext/cassandra/*",
+        )
+        # Generate report for tests code coverage
+        session.run(
+            "coverage",
+            "xml",
+            "-o",
+            str(COVERAGE_REPORT_TESTS),
+            "--omit=src/saltext/cassandra/*",
+            "--include=tests/*",
+        )
+        try:
+            session.run("coverage", "report", "--show-missing", "--include=src/saltext/cassandra/*")
+            # If you also want to display the code coverage report on the CLI
+            # for the tests, comment the call above and uncomment the line below
+            # session.run(
+            #    "coverage", "report", "--show-missing",
+            #    "--include=src/saltext/cassandra/*,tests/*"
+            # )
+        finally:
+            # Move the coverage DB to artifacts/coverage in order for it to be archived by CI
+            if COVERAGE_REPORT_DB.exists():
+                shutil.move(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / COVERAGE_REPORT_DB.name))
 
 
 class Tee:
@@ -217,8 +257,13 @@ class Tee:
 
 
 def _lint(session, rcfile, flags, paths, tee_output=True):
-    requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "lint.txt"
-    _install_requirements(session, "-r", str(requirements_file.relative_to(REPO_ROOT)))
+    _install_requirements(
+        session,
+        install_salt=False,
+        install_coverage_requirements=False,
+        install_test_requirements=False,
+        install_extras=["dev", "tests"],
+    )
 
     if tee_output:
         session.run("pylint", "--version")
@@ -261,7 +306,7 @@ def _lint(session, rcfile, flags, paths, tee_output=True):
                 sys.stdout.flush()
                 if pylint_report_path:
                     # Write report
-                    with open(pylint_report_path, "w") as wfh:
+                    with open(pylint_report_path, "w", encoding="utf-8") as wfh:
                         wfh.write(contents)
                     session.log("Report file written to %r", pylint_report_path)
             stdout.close()
@@ -276,9 +321,7 @@ def _lint_pre_commit(session, rcfile, flags, paths):
     if "pre-commit" not in os.environ["VIRTUAL_ENV"]:
         session.error(
             "This should be running from within a pre-commit virtualenv and "
-            "'VIRTUAL_ENV'({}) does not appear to be a pre-commit virtualenv.".format(
-                os.environ["VIRTUAL_ENV"]
-            )
+            f"'VIRTUAL_ENV'({os.environ['VIRTUAL_ENV']}) does not appear to be a pre-commit virtualenv."
         )
 
     # Let's patch nox to make it run inside the pre-commit virtualenv
@@ -370,20 +413,70 @@ def docs(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
-    session.run("make", "linkcheck", "SPHINXOPTS=-Wn --keep-going", external=True)
-
-    ## Disabling till sphinx 7.3.0 is released with fix for divide by zero, i
-    ## see Sphinx https://github.com/sphinx-doc/sphinx/commit/bb74aec2b6aa1179868d83134013450c9ff9d4d6
-    ## session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
-
+    session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
+    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
-        with open(docs_coverage_file) as rfh:
+        with open(docs_coverage_file) as rfh:  # pylint: disable=unspecified-encoding
             contents = rfh.readlines()[2:]
             if contents:
                 session.error("\n" + "".join(contents))
-    session.run("make", "html", "SPHINXOPTS=-Wn --keep-going", external=True)
+    session.run("make", "html", "SPHINXOPTS=-W", external=True)
     os.chdir(str(REPO_ROOT))
+
+
+@nox.session(name="docs-html", python="3")
+@nox.parametrize("clean", [False, True])
+@nox.parametrize("include_api_docs", [False, True])
+def docs_html(session, clean, include_api_docs):
+    """
+    Build Sphinx HTML Documentation
+
+    TODO: Add option for `make linkcheck` and `make coverage`
+          calls via Sphinx. Ran into problems with two when
+          using Furo theme and latest Sphinx.
+    """
+    _install_requirements(
+        session,
+        install_coverage_requirements=False,
+        install_test_requirements=False,
+        install_source=True,
+        install_extras=["docs"],
+    )
+    if include_api_docs:
+        gen_api_docs(session)
+    build_dir = Path("docs", "_build", "html")
+    sphinxopts = "-Wn"
+    if clean:
+        sphinxopts += "E"
+    args = [sphinxopts, "--keep-going", "docs", str(build_dir)]
+    session.run("sphinx-build", *args, external=True)
+
+
+@nox.session(name="docs-dev", python="3")
+@nox.parametrize("clean", [False, True])
+def docs_dev(session, clean) -> None:
+    """
+    Build and serve the Sphinx HTML documentation, with live reloading on file changes, via sphinx-autobuild.
+
+    Note: Only use this in INTERACTIVE DEVELOPMENT MODE. This SHOULD NOT be called
+        in CI/CD pipelines, as it will hang.
+    """
+    _install_requirements(
+        session,
+        install_coverage_requirements=False,
+        install_test_requirements=False,
+        install_source=True,
+        install_extras=["docs", "docsauto"],
+    )
+
+    # Launching LIVE reloading Sphinx session
+    build_dir = Path("docs", "_build", "html")
+    args = ["--watch", ".", "--open-browser", "docs", str(build_dir)]
+    if clean and build_dir.exists():
+        shutil.rmtree(build_dir)
+
+    session.run("sphinx-autobuild", *args)
 
 
 @nox.session(name="docs-crosslink-info", python="3")
@@ -394,11 +487,12 @@ def docs_crosslink_info(session):
     requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "docs.txt"
     _install_requirements(
         session,
-        "-r",
-        str(requirements_file.relative_to(REPO_ROOT)),
+        ## DGM "-r",
+        ## DGM str(requirements_file.relative_to(REPO_ROOT)),
         install_coverage_requirements=False,
         install_test_requirements=False,
         install_source=True,
+        install_extras=["docs"],
     )
     os.chdir("docs/")
     intersphinx_mapping = json.loads(
@@ -410,20 +504,15 @@ def docs_crosslink_info(session):
             log=False,
         )
     )
+    intersphinx_mapping_list = ", ".join(list(intersphinx_mapping))
     try:
         mapping_entry = intersphinx_mapping[session.posargs[0]]
     except IndexError:
         session.error(
-            "You need to pass at least one argument whose value must be one of: {}".format(
-                ", ".join(list(intersphinx_mapping))
-            )
+            f"You need to pass at least one argument whose value must be one of: {intersphinx_mapping_list}"
         )
     except KeyError:
-        session.error(
-            "Only acceptable values for first argument are: {}".format(
-                ", ".join(list(intersphinx_mapping))
-            )
-        )
+        session.error(f"Only acceptable values for first argument are: {intersphinx_mapping_list}")
     session.run(
         "python", "-m", "sphinx.ext.intersphinx", mapping_entry[0].rstrip("/") + "/objects.inv"
     )
@@ -442,7 +531,10 @@ def gen_api_docs(session):
         install_source=True,
         install_extras=["docs"],
     )
-    shutil.rmtree("docs/ref")
+    try:
+        shutil.rmtree("docs/ref")
+    except FileNotFoundError:
+        pass
     session.run(
         "sphinx-apidoc",
         "--implicit-namespaces",
