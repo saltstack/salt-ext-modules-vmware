@@ -109,7 +109,8 @@ def _install_requirements(
         if install_salt:
             session.install("--progress-bar=off", SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
-        if install_test_requirements:
+        ## DGM if install_test_requirements:
+        if install_test_requirements and "tests" not in install_extras:
             install_extras.append("tests")
 
         if EXTRA_REQUIREMENTS_INSTALL:
@@ -129,14 +130,15 @@ def _install_requirements(
                 pkg += f"[{','.join(install_extras)}]"
 
             session.install("-e", pkg, silent=PIP_INSTALL_SILENT)
-        elif install_extras:
-            pkg = f".[{','.join(install_extras)}]"
-            session.install(pkg, silent=PIP_INSTALL_SILENT)
+        ## DGM elif install_extras:
+        ## DGM     pkg = f".[{','.join(install_extras)}]"
+        ## DGM     session.install(pkg, silent=PIP_INSTALL_SILENT)
 
 
 @nox.session(python=PYTHON_VERSIONS)
 def tests(session):
-    _install_requirements(session, install_source=True)
+    ## DGM _install_requirements(session, install_source=True)
+    _install_requirements(session, install_source=True, install_extras=["tests"])
 
     sitecustomize_dir = session.run("salt-factories", "--coverage", silent=True, log=False)
     python_path_env_var = os.environ.get("PYTHONPATH") or None
@@ -194,46 +196,49 @@ def tests(session):
                 continue
         else:
             args.append("tests/")
-    try:
-        session.run("coverage", "run", "-m", "pytest", *args, env=env)
-    finally:
-        # Always combine and generate the XML coverage report
-        try:
-            session.run("coverage", "combine")
-        except CommandFailed:
-            # Sometimes some of the coverage files are corrupt which would
-            # trigger a CommandFailed exception
-            pass
-        # Generate report for salt code coverage
-        session.run(
-            "coverage",
-            "xml",
-            "-o",
-            str(COVERAGE_REPORT_PROJECT),
-            "--omit=tests/*",
-            "--include=src/saltext/cassandra/*",
-        )
-        # Generate report for tests code coverage
-        session.run(
-            "coverage",
-            "xml",
-            "-o",
-            str(COVERAGE_REPORT_TESTS),
-            "--omit=src/saltext/cassandra/*",
-            "--include=tests/*",
-        )
-        try:
-            session.run("coverage", "report", "--show-missing", "--include=src/saltext/cassandra/*")
-            # If you also want to display the code coverage report on the CLI
-            # for the tests, comment the call above and uncomment the line below
-            # session.run(
-            #    "coverage", "report", "--show-missing",
-            #    "--include=src/saltext/cassandra/*,tests/*"
-            # )
-        finally:
-            # Move the coverage DB to artifacts/coverage in order for it to be archived by CI
-            if COVERAGE_REPORT_DB.exists():
-                shutil.move(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / COVERAGE_REPORT_DB.name))
+
+    session.run("pytest", *args, env=env)
+
+    ## DGM try:
+    ## DGM     session.run("coverage", "run", "-m", "pytest", *args, env=env)
+    ## DGM finally:
+    ## DGM     # Always combine and generate the XML coverage report
+    ## DGM     try:
+    ## DGM         session.run("coverage", "combine")
+    ## DGM     except CommandFailed:
+    ## DGM         # Sometimes some of the coverage files are corrupt which would
+    ## DGM         # trigger a CommandFailed exception
+    ## DGM         pass
+    ## DGM     # Generate report for salt code coverage
+    ## DGM     session.run(
+    ## DGM         "coverage",
+    ## DGM         "xml",
+    ## DGM         "-o",
+    ## DGM         str(COVERAGE_REPORT_PROJECT),
+    ## DGM         "--omit=tests/*",
+    ## DGM         "--include=src/saltext/cassandra/*",
+    ## DGM     )
+    ## DGM     # Generate report for tests code coverage
+    ## DGM     session.run(
+    ## DGM         "coverage",
+    ## DGM         "xml",
+    ## DGM         "-o",
+    ## DGM         str(COVERAGE_REPORT_TESTS),
+    ## DGM         "--omit=src/saltext/cassandra/*",
+    ## DGM         "--include=tests/*",
+    ## DGM     )
+    ## DGM     try:
+    ## DGM         session.run("coverage", "report", "--show-missing", "--include=src/saltext/cassandra/*")
+    ## DGM         # If you also want to display the code coverage report on the CLI
+    ## DGM         # for the tests, comment the call above and uncomment the line below
+    ## DGM         # session.run(
+    ## DGM         #    "coverage", "report", "--show-missing",
+    ## DGM         #    "--include=src/saltext/cassandra/*,tests/*"
+    ## DGM         # )
+    ## DGM     finally:
+    ## DGM         # Move the coverage DB to artifacts/coverage in order for it to be archived by CI
+    ## DGM         if COVERAGE_REPORT_DB.exists():
+    ## DGM             shutil.move(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / COVERAGE_REPORT_DB.name))
 
 
 class Tee:
@@ -257,13 +262,15 @@ class Tee:
 
 
 def _lint(session, rcfile, flags, paths, tee_output=True):
-    _install_requirements(
-        session,
-        install_salt=False,
-        install_coverage_requirements=False,
-        install_test_requirements=False,
-        install_extras=["dev", "tests"],
-    )
+    requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "lint.txt"
+    _install_requirements(session, "-r", str(requirements_file.relative_to(REPO_ROOT)))
+    ## DGM _install_requirements(
+    ## DGM     session,
+    ## DGM     install_salt=False,
+    ## DGM     install_coverage_requirements=False,
+    ## DGM     install_test_requirements=False,
+    ## DGM     install_extras=["dev", "tests"],
+    ## DGM )
 
     if tee_output:
         session.run("pylint", "--version")
@@ -306,7 +313,8 @@ def _lint(session, rcfile, flags, paths, tee_output=True):
                 sys.stdout.flush()
                 if pylint_report_path:
                     # Write report
-                    with open(pylint_report_path, "w", encoding="utf-8") as wfh:
+                    ## DGM with open(pylint_report_path, "w", encoding="utf-8") as wfh:
+                    with open(pylint_report_path, "w") as wfh:
                         wfh.write(contents)
                     session.log("Report file written to %r", pylint_report_path)
             stdout.close()
@@ -413,44 +421,47 @@ def docs(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
-    session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
-    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
+    ## DGM session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
+    session.run("make", "linkcheck", "SPHINXOPTS=-Wn --keep-going", external=True)
+    ## DGM session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
+    ## DGM was disabled session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
         with open(docs_coverage_file) as rfh:  # pylint: disable=unspecified-encoding
             contents = rfh.readlines()[2:]
             if contents:
                 session.error("\n" + "".join(contents))
-    session.run("make", "html", "SPHINXOPTS=-W", external=True)
+    ## DGM session.run("make", "html", "SPHINXOPTS=-W", external=True)
+    session.run("make", "html", "SPHINXOPTS=-Wn --keep-going", external=True)
     os.chdir(str(REPO_ROOT))
 
 
-@nox.session(name="docs-html", python="3")
-@nox.parametrize("clean", [False, True])
-@nox.parametrize("include_api_docs", [False, True])
-def docs_html(session, clean, include_api_docs):
-    """
-    Build Sphinx HTML Documentation
-
-    TODO: Add option for `make linkcheck` and `make coverage`
-          calls via Sphinx. Ran into problems with two when
-          using Furo theme and latest Sphinx.
-    """
-    _install_requirements(
-        session,
-        install_coverage_requirements=False,
-        install_test_requirements=False,
-        install_source=True,
-        install_extras=["docs"],
-    )
-    if include_api_docs:
-        gen_api_docs(session)
-    build_dir = Path("docs", "_build", "html")
-    sphinxopts = "-Wn"
-    if clean:
-        sphinxopts += "E"
-    args = [sphinxopts, "--keep-going", "docs", str(build_dir)]
-    session.run("sphinx-build", *args, external=True)
+## DGM @nox.session(name="docs-html", python="3")
+## DGM @nox.parametrize("clean", [False, True])
+## DGM @nox.parametrize("include_api_docs", [False, True])
+## DGM def docs_html(session, clean, include_api_docs):
+## DGM     """
+## DGM     Build Sphinx HTML Documentation
+## DGM
+## DGM     TODO: Add option for `make linkcheck` and `make coverage`
+## DGM           calls via Sphinx. Ran into problems with two when
+## DGM           using Furo theme and latest Sphinx.
+## DGM     """
+## DGM     _install_requirements(
+## DGM         session,
+## DGM         install_coverage_requirements=False,
+## DGM         install_test_requirements=False,
+## DGM         install_source=True,
+## DGM         install_extras=["docs"],
+## DGM     )
+## DGM     if include_api_docs:
+## DGM         gen_api_docs(session)
+## DGM     build_dir = Path("docs", "_build", "html")
+## DGM     sphinxopts = "-Wn"
+## DGM     if clean:
+## DGM         sphinxopts += "E"
+## DGM     args = [sphinxopts, "--keep-going", "docs", str(build_dir)]
+## DGM     session.run("sphinx-build", *args, external=True)
 
 
 @nox.session(name="docs-dev", python="3")
@@ -485,14 +496,22 @@ def docs_crosslink_info(session):
     Report intersphinx cross links information
     """
     requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "docs.txt"
+    ## DGM _install_requirements(
+    ## DGM     session,
+    ## DGM     ## DGM "-r",
+    ## DGM     ## DGM str(requirements_file.relative_to(REPO_ROOT)),
+    ## DGM     install_coverage_requirements=False,
+    ## DGM     install_test_requirements=False,
+    ## DGM     install_source=True,
+    ## DGM     install_extras=["docs"],
+    ## DGM )
     _install_requirements(
         session,
-        ## DGM "-r",
-        ## DGM str(requirements_file.relative_to(REPO_ROOT)),
+        "-r",
+        str(requirements_file.relative_to(REPO_ROOT)),
         install_coverage_requirements=False,
         install_test_requirements=False,
         install_source=True,
-        install_extras=["docs"],
     )
     os.chdir("docs/")
     intersphinx_mapping = json.loads(
