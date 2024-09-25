@@ -3134,13 +3134,74 @@ def get(
                 ret[h.name]["datastores"][store.name]["capacity"] = store.summary.capacity
                 ret[h.name]["datastores"][store.name]["free_space"] = store.summary.freeSpace
 
-            ret[h.name]["nics"] = {}
+            ret[h.name]["vnics"] = {}
             for nic in h.config.network.vnic:
-                ret[h.name]["nics"][nic.device] = {}
-                ret[h.name]["nics"][nic.device]["ip_address"] = nic.spec.ip.ipAddress
-                ret[h.name]["nics"][nic.device]["subnet_mask"] = nic.spec.ip.subnetMask
-                ret[h.name]["nics"][nic.device]["mac"] = nic.spec.mac
-                ret[h.name]["nics"][nic.device]["mtu"] = nic.spec.mtu
+                ret[h.name]["vnics"][nic.device] = {}
+                ret[h.name]["vnics"][nic.device]["ip_address"] = nic.spec.ip.ipAddress
+                ret[h.name]["vnics"][nic.device]["subnet_mask"] = nic.spec.ip.subnetMask
+                ret[h.name]["vnics"][nic.device]["mac"] = nic.spec.mac
+                ret[h.name]["vnics"][nic.device]["mtu"] = nic.spec.mtu
+                ret[h.name]["vnics"][nic.device]["portgroup"] = nic.spec.portgroup
+                if nic.spec.distributedVirtualPort:
+                    ret[h.name]["vnics"][nic.device][
+                        "distributed_virtual_portgroup"
+                    ] = nic.spec.distributedVirtualPort.portgroupKey
+                    ret[h.name]["vnics"][nic.device][
+                        "distributed_virtual_switch"
+                    ] = utils_vmware._get_dvs_by_uuid(
+                        service_instance, nic.spec.distributedVirtualPort.switchUuid
+                    ).config.name
+                else:
+                    ret[h.name]["vnics"][nic.device]["distributed_virtual_portgroup"] = None
+                    ret[h.name]["vnics"][nic.device]["distributed_virtual_switch"] = None
+
+            ret[h.name]["pnics"] = {}
+            for nic in h.config.network.pnic:
+                ret[h.name]["pnics"][nic.device] = {}
+                ret[h.name]["pnics"][nic.device]["mac"] = nic.mac
+                if nic.linkSpeed:
+                    ret[h.name]["pnics"][nic.device]["speed"] = nic.linkSpeed.speedMb
+                else:
+                    ret[h.name]["pnics"][nic.device]["speed"] = -1
+
+                if not h.configManager.networkSystem.capabilities.supportsNetworkHints:
+                    continue
+
+                # Add CDP/LLDP information
+                # TODO: Add LLDP information
+                ret[h.name]["pnics"][nic.device]["cdp"] = {}
+                for hint in h.configManager.networkSystem.QueryNetworkHint(nic.device):
+                    csp = hint.connectedSwitchPort
+                    if csp:
+                        ret[h.name]["pnics"][nic.device]["cdp"]["switch_id"] = csp.devId
+                        ret[h.name]["pnics"][nic.device]["cdp"]["system_name"] = csp.systemName
+                        ret[h.name]["pnics"][nic.device]["cdp"]["platform"] = csp.hardwarePlatform
+                        ret[h.name]["pnics"][nic.device]["cdp"]["ip_address"] = csp.address
+                        ret[h.name]["pnics"][nic.device]["cdp"]["port_id"] = csp.portId
+                        ret[h.name]["pnics"][nic.device]["cdp"]["vlan"] = csp.vlan
+
+            ret[h.name]["vswitches"] = {}
+            for vswitch in h.config.network.vswitch:
+                ret[h.name]["vswitches"][vswitch.name] = {}
+                ret[h.name]["vswitches"][vswitch.name]["mtu"] = vswitch.mtu
+                ret[h.name]["vswitches"][vswitch.name]["pnics"] = []
+                ret[h.name]["vswitches"][vswitch.name]["portgroups"] = []
+                for pnic in vswitch.pnic:
+                    ret[h.name]["vswitches"][vswitch.name]["pnics"].append(
+                        pnic.replace("key-vim.host.PhysicalNic-", "")
+                    )
+                for pg in vswitch.portgroup:
+                    ret[h.name]["vswitches"][vswitch.name]["portgroups"].append(
+                        pg.replace("key-vim.host.PortGroup-", "")
+                    )
+
+            ret[h.name]["portgroups"] = {}
+            for portgroup in h.config.network.portgroup:
+                ret[h.name]["portgroups"][portgroup.spec.name] = {}
+                ret[h.name]["portgroups"][portgroup.spec.name]["vlan_id"] = (portgroup.spec.vlanId,)
+                ret[h.name]["portgroups"][portgroup.spec.name][
+                    "switch_name"
+                ] = portgroup.spec.vswitchName
 
             ret[h.name]["cpu_model"] = h.summary.hardware.cpuModel
             ret[h.name]["num_cpu_cores"] = h.summary.hardware.numCpuCores
