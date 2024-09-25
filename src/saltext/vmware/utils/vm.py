@@ -652,6 +652,20 @@ def read_ovf_from_ova(ova_path):
         exit(f"Could not read file: {ova_path}")
 
 
+def get_disk_size(vm):
+    """
+    Returns total disk size in bytes from the virtual machine object.
+    vm
+        Virtual Machine Object from which to obtain disk size.
+    """
+    size = 0.0
+    for device in vm.config.hardware.device:
+        if isinstance(device, vim.vm.device.VirtualDisk):
+            size += device.capacityInBytes
+
+    return size
+
+
 def get_network(vm):
     """
     Returns network from a virtual machine object.
