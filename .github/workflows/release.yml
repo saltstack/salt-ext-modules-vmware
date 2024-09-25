@@ -32,5 +32,6 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         print-hash: true
+        skip-existing: true
         verbose: true
         verify-metadata: true

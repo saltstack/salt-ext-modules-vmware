@@ -171,6 +171,17 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
+    - name: Publish distribution 📦 to Test PyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository_url: https://test.pypi.org/legacy/
+        print-hash: true
+        skip-existing: true
+        verbose: true
+        verify-metadata: true
+
+
   Windows:
     runs-on: windows-latest
     needs: Pre-Commit
@@ -295,6 +306,17 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
+    - name: Publish distribution 📦 to Test PyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository_url: https://test.pypi.org/legacy/
+        print-hash: true
+        skip-existing: true
+        verbose: true
+        verify-metadata: true
+
+
   macOS:
     runs-on: macOS-latest
     needs: Pre-Commit
@@ -414,3 +436,13 @@ jobs:
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
+
+    - name: Publish distribution 📦 to Test PyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository_url: https://test.pypi.org/legacy/
+        print-hash: true
+        skip-existing: true
+        verbose: true
+        verify-metadata: true
