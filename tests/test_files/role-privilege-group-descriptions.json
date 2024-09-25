@@ -1,0 +1,412 @@
+[
+    {
+        "key": "System",
+        "label": "System",
+        "summary": "System"
+    },
+    {
+        "key": "Global",
+        "label": "Global",
+        "summary": "Global"
+    },
+    {
+        "key": "Folder",
+        "label": "Folder",
+        "summary": "Folder"
+    },
+    {
+        "key": "Datacenter",
+        "label": "Datacenter",
+        "summary": "Datacenter"
+    },
+    {
+        "key": "Datastore",
+        "label": "Datastore",
+        "summary": "Datastore"
+    },
+    {
+        "key": "Network",
+        "label": "Network",
+        "summary": "Networks"
+    },
+    {
+        "key": "DVSwitch",
+        "label": "Distributed switch",
+        "summary": "Distributed switch"
+    },
+    {
+        "key": "DVPortgroup",
+        "label": "dvPort group",
+        "summary": "dvPort groups"
+    },
+    {
+        "key": "Host",
+        "label": "Host",
+        "summary": "Host"
+    },
+    {
+        "key": "Host.Inventory",
+        "label": "Inventory",
+        "summary": "Host inventory"
+    },
+    {
+        "key": "Host.Hbr",
+        "label": "vSphere Replication",
+        "summary": "vSphere Replication operations"
+    },
+    {
+        "key": "Host.Config",
+        "label": "Configuration",
+        "summary": "Host configuration"
+    },
+    {
+        "key": "Host.Local",
+        "label": "Local operations",
+        "summary": "Host local operations"
+    },
+    {
+        "key": "Host.Cim",
+        "label": "CIM",
+        "summary": "CIM"
+    },
+    {
+        "key": "VirtualMachine",
+        "label": "Virtual machine",
+        "summary": "Virtual machine"
+    },
+    {
+        "key": "VirtualMachine.Inventory",
+        "label": "Edit Inventory",
+        "summary": "Edit the Virtual machine inventory"
+    },
+    {
+        "key": "VirtualMachine.Interact",
+        "label": "Interaction",
+        "summary": "Virtual machine interaction"
+    },
+    {
+        "key": "VirtualMachine.GuestOperations",
+        "label": "Guest operations",
+        "summary": "Operations in a virtual machine guest operating system"
+    },
+    {
+        "key": "VirtualMachine.Config",
+        "label": "Change Configuration",
+        "summary": "Virtual machine configuration"
+    },
+    {
+        "key": "VirtualMachine.State",
+        "label": "Snapshot management",
+        "summary": "Virtual machine snapshot management"
+    },
+    {
+        "key": "VirtualMachine.Hbr",
+        "label": "vSphere Replication",
+        "summary": "vSphere Replication configuration"
+    },
+    {
+        "key": "VirtualMachine.Provisioning",
+        "label": "Provisioning",
+        "summary": "Virtual machine provisioning"
+    },
+    {
+        "key": "VirtualMachine.Namespace",
+        "label": "Service configuration",
+        "summary": "Virtual machine service configuration"
+    },
+    {
+        "key": "Resource",
+        "label": "Resource",
+        "summary": "Resource allocation"
+    },
+    {
+        "key": "Alarm",
+        "label": "Alarms",
+        "summary": "Alarms"
+    },
+    {
+        "key": "Task",
+        "label": "Tasks",
+        "summary": "Tasks"
+    },
+    {
+        "key": "ScheduledTask",
+        "label": "Scheduled task",
+        "summary": "Scheduled task"
+    },
+    {
+        "key": "Sessions",
+        "label": "Sessions",
+        "summary": "Sessions"
+    },
+    {
+        "key": "Performance",
+        "label": "Performance",
+        "summary": "Performance"
+    },
+    {
+        "key": "Authorization",
+        "label": "Permissions",
+        "summary": "Permissions"
+    },
+    {
+        "key": "Extension",
+        "label": "Extension",
+        "summary": "Extensions"
+    },
+    {
+        "key": "VApp",
+        "label": "vApp",
+        "summary": "Privileges related to vApps"
+    },
+    {
+        "key": "Profile",
+        "label": "Host profile",
+        "summary": "Host profile"
+    },
+    {
+        "key": "EAM",
+        "label": "ESX Agent Manager",
+        "summary": "ESX Agent Manager"
+    },
+    {
+        "key": "StoragePod",
+        "label": "Datastore cluster",
+        "summary": "Datastore cluster"
+    },
+    {
+        "key": "Certificate",
+        "label": "Certificates",
+        "summary": "Certificates"
+    },
+    {
+        "key": "HealthUpdateProvider",
+        "label": "Health update provider",
+        "summary": "Health update provider"
+    },
+    {
+        "key": "ExternalStatsProvider",
+        "label": "External stats provider",
+        "summary": "External stats provider"
+    },
+    {
+        "key": "Cryptographer",
+        "label": "Cryptographic operations",
+        "summary": "Cryptographic operations"
+    },
+    {
+        "key": "TenantManager",
+        "label": "TenantManager",
+        "summary": "TenantManager"
+    },
+    {
+        "key": "HmsSession",
+        "label": "VRM session",
+        "summary": "Manage VRM user sessions"
+    },
+    {
+        "key": "InventoryService",
+        "label": "InventoryService",
+        "summary": "InventoryService"
+    },
+    {
+        "key": "InventoryService.Tagging",
+        "label": "Tagging",
+        "summary": "Tagging"
+    },
+    {
+        "key": "VcDr",
+        "label": "Site Recovery Manager",
+        "summary": "Site Recovery Manager"
+    },
+    {
+        "key": "VcDr.Diagnostics",
+        "label": "Diagnostics",
+        "summary": "Diagnostics Options"
+    },
+    {
+        "key": "Cns",
+        "label": "Cns",
+        "summary": "VMware Cns"
+    },
+    {
+        "key": "VcDr.PlaceholderDatastoreManager",
+        "label": "Placeholder Datastores",
+        "summary": "Placeholder datastores"
+    },
+    {
+        "key": "TrustedAdmin",
+        "label": "TrustedAdmin",
+        "summary": "TrustedAdmin"
+    },
+    {
+        "key": "ContentLibrary",
+        "label": "Content Library",
+        "summary": "Content Library"
+    },
+    {
+        "key": "VcDr.RecoveryHistoryManager",
+        "label": "Recovery History",
+        "summary": "Recovery history options"
+    },
+    {
+        "key": "VcDr.ProtectionProfile",
+        "label": "Protection Group",
+        "summary": "Protection Group"
+    },
+    {
+        "key": "VcDr.InventoryMapper",
+        "label": "Inventory Preferences",
+        "summary": "Inventory Preferences"
+    },
+    {
+        "key": "CertificateManagement",
+        "label": "CertificateManagement",
+        "summary": "CertificateManagement"
+    },
+    {
+        "key": "AutoDeploy",
+        "label": "AutoDeploy",
+        "summary": "Auto Deploy"
+    },
+    {
+        "key": "AutoDeploy.Host",
+        "label": "Host",
+        "summary": "Host"
+    },
+    {
+        "key": "VcIntegrity",
+        "label": "VMware vSphere Update Manager",
+        "summary": "VMware vSphere Update Manager"
+    },
+    {
+        "key": "VcIntegrity.Updates",
+        "label": "Manage Patches and Upgrades",
+        "summary": "Manage virtual machine and host software patches and upgrades"
+    },
+    {
+        "key": "VcDr.Autoprotect",
+        "label": "Automatic Protection",
+        "summary": "Automatic Protection"
+    },
+    {
+        "key": "VcDr.RecoveryProfile",
+        "label": "Recovery Plan",
+        "summary": "Recovery Plan"
+    },
+    {
+        "key": "TransferService",
+        "label": "TransferService",
+        "summary": "TransferService"
+    },
+    {
+        "key": "VcIntegrity.General",
+        "label": "Configure",
+        "summary": "General VMware vSphere Update Manager Configuration"
+    },
+    {
+        "key": "AutoDeploy.Rule",
+        "label": "Rule",
+        "summary": "Rule"
+    },
+    {
+        "key": "HmsReplication",
+        "label": "VRM replication",
+        "summary": "Manage replications"
+    },
+    {
+        "key": "Vsan",
+        "label": "vSAN",
+        "summary": "VMware vSAN"
+    },
+    {
+        "key": "Vsan.Cluster",
+        "label": "Cluster",
+        "summary": "vSphere Cluster"
+    },
+    {
+        "key": "AutoDeploy.RuleSet",
+        "label": "RuleSet",
+        "summary": "Rule sets"
+    },
+    {
+        "key": "HmsRemote",
+        "label": "VRM remote",
+        "summary": "Manage vSphere Replication Server connections and vSphere Replication Management Server pairings"
+    },
+    {
+        "key": "VirtualMachine.Replication",
+        "label": "SRM Protection",
+        "summary": "SRM Protection for Virtual machine"
+    },
+    {
+        "key": "VcDr.Internal",
+        "label": "Internal",
+        "summary": "Internal SRM use"
+    },
+    {
+        "key": "vService",
+        "label": "vService",
+        "summary": "vService management"
+    },
+    {
+        "key": "VcDr.OptionManager",
+        "label": "Advanced Settings",
+        "summary": "Advanced Settings"
+    },
+    {
+        "key": "VcDr.RemoteSite",
+        "label": "Remote Site",
+        "summary": "Remote Site"
+    },
+    {
+        "key": "GuestDataPublisher",
+        "label": "GuestDataPublisher",
+        "summary": "GuestDataPublisher"
+    },
+    {
+        "key": "Datastore.Replication",
+        "label": "Replication",
+        "summary": "Datastore replication"
+    },
+    {
+        "key": "HmsDiagnostics",
+        "label": "VRM diagnostics",
+        "summary": "Manage VRM and VR support bundles"
+    },
+    {
+        "key": "AutoDeploy.Profile",
+        "label": "Image Profile",
+        "summary": "Image Profile"
+    },
+    {
+        "key": "StorageProfile",
+        "label": "Profile-driven storage",
+        "summary": "Profile-driven storage"
+    },
+    {
+        "key": "VcIntegrity.Baseline",
+        "label": "Manage Baseline",
+        "summary": "Manage baselines"
+    },
+    {
+        "key": "StorageViews",
+        "label": "Storage views",
+        "summary": "Storage views"
+    },
+    {
+        "key": "HmsDatastoreMapper",
+        "label": "VRM datastore mapper",
+        "summary": "Manage datastore mappings"
+    },
+    {
+        "key": "VcIntegrity.FileUpload",
+        "label": "Upload file",
+        "summary": "Upload file"
+    },
+    {
+        "key": "VcDr.Storage",
+        "label": "Array Manager",
+        "summary": "Array Manager"
+    }
+]

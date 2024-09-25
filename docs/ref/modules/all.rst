@@ -32,6 +32,7 @@ Execution Modules
     saltext.vmware.modules.nsxt_transport_node_profiles
     saltext.vmware.modules.nsxt_transport_zone
     saltext.vmware.modules.nsxt_uplink_profiles
+    saltext.vmware.modules.roles
     saltext.vmware.modules.ssl_adapter
     saltext.vmware.modules.storage_policies
     saltext.vmware.modules.tag
