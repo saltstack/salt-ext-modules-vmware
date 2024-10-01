@@ -6,8 +6,10 @@ Nox configuration script
 """
 
 # pylint: disable=missing-module-docstring,import-error,protected-access,missing-function-docstring
+import contextlib
 import datetime
 import json
+import logging
 import os
 import pathlib
 import shutil
@@ -26,6 +28,8 @@ if __name__ == "__main__":
 import nox
 from nox.command import CommandFailed
 from nox.virtualenv import VirtualEnv
+
+log = logging.getLogger("extvmware-release")
 
 # Nox options
 #  Reuse existing virtualenvs
@@ -53,6 +57,12 @@ os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 # Global Path Definitions
 REPO_ROOT = pathlib.Path(__file__).resolve().parent
+
+# TBD DGM wondering about this VENV and why we had this in the first place
+# TBD DGM given this was initially classic packaging, wondering if forcing Py 3.10 now onedir ?
+TYPICAL_ENV = REPO_ROOT / "env" / "bin" / "python"
+VENV_PYTHON = pathlib.Path(os.environ.get("VMWARE_VENV_PATH", TYPICAL_ENV))
+
 # Change current directory to REPO_ROOT
 os.chdir(str(REPO_ROOT))
 
@@ -572,3 +582,273 @@ def review(session):
     """
     session.notify("docs")
     session.notify(f"tests-{session.python}")
+
+
+## TBD DGM Start of functions taken from tools/release.py
+
+####################
+# Helper Functions #
+####################
+
+
+def run_and_log_cmd(*cmd):
+    log.debug("Running command %r", cmd)
+    ret = subprocess.run(cmd, capture_output=True)
+    log.debug(f"git status return code: %r", ret.returncode)
+    log.debug(f"git status stdout: \n%s", ret.stdout.decode() or "<No stdout>")
+    log.debug(f"git status stderr: \n%s", ret.stderr.decode() or "<No stderr>")
+    return ret
+
+
+@contextlib.contextmanager
+def msg_wrap(msg):
+    print(f"{msg}...", end="")
+    sys.stdout.flush()
+    try:
+        yield
+    except:
+        print("FAIL")
+        log.exception("Inner command failed")
+        raise
+    else:
+        print("OK")
+
+
+@contextlib.contextmanager
+def make_archive(path):
+    try:
+        yield
+    finally:
+        run_and_log_cmd("tar", "-czf", path, "-C", os.getcwd(), ".")
+
+
+########################
+# End Helper Functions #
+########################
+
+
+###################
+# Check Functions #
+###################
+
+# These are to ensure that the system has the required bits to run the release
+
+
+def check_git_status():
+    with msg_wrap("Checking git status"):
+        ret = run_and_log_cmd("git", "-C", str(REPO_ROOT), "status", "--porcelain")
+        if ret.stdout and not DEBUG_FORCE:
+            exit("You currently have changes in your repo. Stash or otherwise clear your changes.")
+
+
+def check_gpg():
+    with msg_wrap("Checking gpg/gpg agent"):
+        with open("fnord.txt", "w") as f:
+            f.write("contents")
+        # We need a better way to gpg sign releases -- not just individuals
+        ret = run_and_log_cmd("gpg", "--armor", "--detach-sign", "fnord.txt")
+        if ret.returncode:
+            exit("Unable to use gpg --detach-sign. Check your gpg-agent and try again.")
+
+        ret = run_and_log_cmd("gpg", "--verify", "fnord.txt.asc", "fnord.txt")
+        if ret.returncode:
+            exit(
+                "Unable to verify gpg signature. Can you run `echo hello | gpg --armor --clear-sign | gpg --verify`?"
+            )
+
+
+#######################
+# End Check Functions #
+#######################
+
+
+#####################
+# Release Functions #
+#####################
+
+# These functions are for actually making changes that are part of the release.
+# These changes should not be really destructive, but users should still be
+# able to bail out with minimal changes to their systems!
+
+
+def ensure_venv_deps():
+    with msg_wrap("Ensuring build/release deps are installed in venv"):
+        run_and_log_cmd(
+            str(VENV_PYTHON), "-m", "pip", "install", "-e", f"{REPO_ROOT}[dev,tests,release]"
+        )
+
+
+def build_package(*, dist_dir):
+    with msg_wrap("Building the current package"):
+        run_and_log_cmd(
+            str(VENV_PYTHON),
+            "-m",
+            "pip",
+            "wheel",
+            "--wheel-dir",
+            str(dist_dir),
+            f"{REPO_ROOT}[dev,tests]",
+        )
+
+
+def twine_check_package(*, dist_dir, version):
+    with msg_wrap("Running twine check on saltext.vmware package"):
+        ret = run_and_log_cmd(
+            str(VENV_PYTHON.with_name("twine")),
+            "check",
+            str(dist_dir / f"saltext.vmware-{version}-py2.py3-none-any.whl"),
+        )
+        if f"PASSED" not in "".join(ret.stdout.decode().split("\n")):
+            exit("Twine check failed")
+
+
+@contextlib.contextmanager
+def tempdir_and_save_log_on_error():
+    with tempfile.TemporaryDirectory() as tempdir:
+        logfile = pathlib.Path(tempdir) / "release.log"
+        try:
+            yield tempdir
+        except:
+            with tempfile.NamedTemporaryFile(
+                delete=False, prefix="release_", suffix=".log"
+            ) as savelog:
+                savefile = pathlib.Path(savelog.name)
+            savefile.parent.mkdir(parents=True, exist_ok=True)
+            logfile.rename(savefile)
+            print("Failure detected - log saved to", str(savefile))
+
+
+def check_mod_version():
+    version_file = REPO_ROOT / "src" / "saltext" / "vmware" / "version.py"
+    with version_file.open() as f:
+        for line in f:
+            if line.startswith("__version__"):
+                p = ast.parse(line)
+                version = p.body[0].value.value
+    return version
+
+
+@nox.session(python="3")
+def build(session):
+    """
+    Build source and binary distributions based off the current commit author date UNIX timestamp.
+
+    The reason being, reproducible packages.
+
+    .. code-block: shell
+
+        git show -s --format=%at HEAD
+    """
+    ## DGM    shutil.rmtree("dist/", ignore_errors=True)
+    ## DGM    if SKIP_REQUIREMENTS_INSTALL is False:
+    ## DGM        session.install(
+    ## DGM            "--progress-bar=off",
+    ## DGM            "-r",
+    ## DGM            "requirements/build.txt",
+    ## DGM            silent=PIP_INSTALL_SILENT,
+    ## DGM        )
+    ## DGM
+    ## DGM    timestamp = session.run(
+    ## DGM        "git",
+    ## DGM        "show",
+    ## DGM        "-s",
+    ## DGM        "--format=%at",
+    ## DGM        "HEAD",
+    ## DGM        silent=True,
+    ## DGM        log=False,
+    ## DGM        stderr=None,
+    ## DGM    ).strip()
+    ## DGM    env = {"SOURCE_DATE_EPOCH": str(timestamp)}
+    ## DGM    session.run(
+    ## DGM        "python",
+    ## DGM        "-m",
+    ## DGM        "build",
+    ## DGM        "--sdist",
+    ## DGM        str(REPO_ROOT),
+    ## DGM        env=env,
+    ## DGM    )
+    ## DGM    # Recreate sdist to be reproducible
+    ## DGM    recompress = Recompress(timestamp)
+    ## DGM    for targz in REPO_ROOT.joinpath("dist").glob("*.tar.gz"):
+    ## DGM        session.log("Re-compressing %s...", targz.relative_to(REPO_ROOT))
+    ## DGM        recompress.recompress(targz)
+    ## DGM
+    ## DGM    sha256sum = shutil.which("sha256sum")
+    ## DGM    if sha256sum:
+    ## DGM        packages = [
+    ## DGM            str(pkg.relative_to(REPO_ROOT))
+    ## DGM            for pkg in REPO_ROOT.joinpath("dist").iterdir()
+    ## DGM        ]
+    ## DGM        session.run("sha256sum", *packages, external=True)
+    ## DGM    session.run("python", "-m", "twine", "check", "dist/*")
+
+    """
+    Actually cut a release. Use non_interactive to try and run in a one-shot
+    process. Might fail if lacking gpg-agent or something.
+
+    TBD DGM this is an initial attempt at creating using 'nox -e build' based off of tools/release.py
+    """
+    pwd = os.getcwd()
+    with tempdir_and_save_log_on_error() as tempdir:
+        dist_dir = pathlib.Path(tempdir) / "dist"
+        dist_dir.mkdir(parents=True, exist_ok=True)
+
+        os.chdir(tempdir)
+        log.setLevel(logging.DEBUG)
+        log.addHandler(logging.FileHandler("release.log"))
+
+        # None of these make system changes. Can totally bail out without
+        # screwing anything up here.
+        version = check_mod_version()
+        with make_archive(f"/tmp/saltext.vmware-build-{version}.tar.gz"):
+            print(f"Releasing version {version}")
+            ## DGM print(f"Path to venv python: {VENV_PYTHON}")
+            ## DGM check_python_env()
+            ## DGM check_pypirc()
+
+            check_git_status()
+
+            ## DGM check_gpg()
+
+            ## DGM print()
+            ## DGM print("***ACTUAL DEPLOY AHEAD!***")
+            ## DGM print()
+            ## DGM print(
+            ## DGM     "If your system is correctly configured, choosing to continue will result in a real live deploy of saltext.vmware! Are you ready?"
+            ## DGM )
+            ## DGM print()
+            ## DGM # Here's where we start to make changes!
+            ## DGM keep_going = (
+            ## DGM     non_interactive
+            ## DGM     or input(f"Continue to build and test saltext.vmware version {version}? [y/N]: ")
+            ## DGM     .lower()
+            ## DGM     .strip()
+            ## DGM     in YES
+            ## DGM )
+            ## DGM if not keep_going:
+            ## DGM     exit("Abort")
+
+            ensure_venv_deps()
+
+            ## DGM commit_changlog_entries(version=version)
+
+            build_package(dist_dir=dist_dir)
+            twine_check_package(dist_dir=dist_dir, version=version)
+
+            ## DGM test_package(tempdir=tempdir, dist_dir=dist_dir)
+            ## DGM prepare_deployment(dist_dir=dist_dir, version=version)
+            ## DGM really_deploy = input(
+            ## DGM     f'WARNING: This will really upload saltext.vmware version {version} to pypi. There is no going back from this point. \nEnter "deploy" without quotes to really deploy: '
+            ## DGM )
+            ## DGM if really_deploy != "deploy":
+            ## DGM     exit(f"Aborting version {version} deploy")
+            ## DGM deploy_to_test_pypi(dist_dir=dist_dir, version=version)
+            ## DGM deploy_to_real_pypi(dist_dir=dist_dir, version=version)
+            ## DGM tag_deployment(version=version)
+            ## DGM push_tag_to_salt(version=version)
+
+            ## DGM input(
+            ## DGM     f"<enter> to finish and cleanup - {tempdir} will be archived at /tmp/saltext.vmware-build-{version}.tar.gz"
+            ## DGM )
+
+    os.chdir(pwd)

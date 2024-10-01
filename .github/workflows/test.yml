@@ -448,7 +448,7 @@ jobs:
         nox -e build
 
     - name: Publish distribution 📦 to Test PyPI
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      if: github.event.pull_request.merged == true
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository_url: https://test.pypi.org/legacy/
