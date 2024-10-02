@@ -728,6 +728,132 @@ def check_mod_version():
     return version
 
 
+## DGM @nox.session(python="3")
+## DGM def build(session):
+## DGM     """
+## DGM     Build source and binary distributions based off the current commit author date UNIX timestamp.
+## DGM
+## DGM     The reason being, reproducible packages.
+## DGM
+## DGM     .. code-block: shell
+## DGM
+## DGM         git show -s --format=%at HEAD
+## DGM     """
+## DGM     ## DGM    shutil.rmtree("dist/", ignore_errors=True)
+## DGM     ## DGM    if SKIP_REQUIREMENTS_INSTALL is False:
+## DGM     ## DGM        session.install(
+## DGM     ## DGM            "--progress-bar=off",
+## DGM     ## DGM            "-r",
+## DGM     ## DGM            "requirements/build.txt",
+## DGM     ## DGM            silent=PIP_INSTALL_SILENT,
+## DGM     ## DGM        )
+## DGM     ## DGM
+## DGM     ## DGM    timestamp = session.run(
+## DGM     ## DGM        "git",
+## DGM     ## DGM        "show",
+## DGM     ## DGM        "-s",
+## DGM     ## DGM        "--format=%at",
+## DGM     ## DGM        "HEAD",
+## DGM     ## DGM        silent=True,
+## DGM     ## DGM        log=False,
+## DGM     ## DGM        stderr=None,
+## DGM     ## DGM    ).strip()
+## DGM     ## DGM    env = {"SOURCE_DATE_EPOCH": str(timestamp)}
+## DGM     ## DGM    session.run(
+## DGM     ## DGM        "python",
+## DGM     ## DGM        "-m",
+## DGM     ## DGM        "build",
+## DGM     ## DGM        "--sdist",
+## DGM     ## DGM        str(REPO_ROOT),
+## DGM     ## DGM        env=env,
+## DGM     ## DGM    )
+## DGM     ## DGM    # Recreate sdist to be reproducible
+## DGM     ## DGM    recompress = Recompress(timestamp)
+## DGM     ## DGM    for targz in REPO_ROOT.joinpath("dist").glob("*.tar.gz"):
+## DGM     ## DGM        session.log("Re-compressing %s...", targz.relative_to(REPO_ROOT))
+## DGM     ## DGM        recompress.recompress(targz)
+## DGM     ## DGM
+## DGM     ## DGM    sha256sum = shutil.which("sha256sum")
+## DGM     ## DGM    if sha256sum:
+## DGM     ## DGM        packages = [
+## DGM     ## DGM            str(pkg.relative_to(REPO_ROOT))
+## DGM     ## DGM            for pkg in REPO_ROOT.joinpath("dist").iterdir()
+## DGM     ## DGM        ]
+## DGM     ## DGM        session.run("sha256sum", *packages, external=True)
+## DGM     ## DGM    session.run("python", "-m", "twine", "check", "dist/*")
+## DGM
+## DGM     """
+## DGM     Actually cut a release. Use non_interactive to try and run in a one-shot
+## DGM     process. Might fail if lacking gpg-agent or something.
+## DGM
+## DGM     TBD DGM this is an initial attempt at creating using 'nox -e build' based off of tools/release.py
+## DGM     """
+## DGM     pwd = os.getcwd()
+## DGM     with tempdir_and_save_log_on_error() as tempdir:
+## DGM         dist_dir = pathlib.Path(tempdir) / "dist"
+## DGM         dist_dir.mkdir(parents=True, exist_ok=True)
+## DGM
+## DGM         os.chdir(tempdir)
+## DGM         log.setLevel(logging.DEBUG)
+## DGM         log.addHandler(logging.FileHandler("release.log"))
+## DGM
+## DGM         # None of these make system changes. Can totally bail out without
+## DGM         # screwing anything up here.
+## DGM         version = check_mod_version()
+## DGM         with make_archive(f"/tmp/saltext.vmware-build-{version}.tar.gz"):
+## DGM             print(f"Releasing version {version}")
+## DGM             ## DGM print(f"Path to venv python: {VENV_PYTHON}")
+## DGM             ## DGM check_python_env()
+## DGM             ## DGM check_pypirc()
+## DGM
+## DGM             check_git_status()
+## DGM
+## DGM             ## DGM check_gpg()
+## DGM
+## DGM             ## DGM print()
+## DGM             ## DGM print("***ACTUAL DEPLOY AHEAD!***")
+## DGM             ## DGM print()
+## DGM             ## DGM print(
+## DGM             ## DGM     "If your system is correctly configured, choosing to continue will result in a real live deploy of saltext.vmware! Are you ready?"
+## DGM             ## DGM )
+## DGM             ## DGM print()
+## DGM             ## DGM # Here's where we start to make changes!
+## DGM             ## DGM keep_going = (
+## DGM             ## DGM     non_interactive
+## DGM             ## DGM     or input(f"Continue to build and test saltext.vmware version {version}? [y/N]: ")
+## DGM             ## DGM     .lower()
+## DGM             ## DGM     .strip()
+## DGM             ## DGM     in YES
+## DGM             ## DGM )
+## DGM             ## DGM if not keep_going:
+## DGM             ## DGM     exit("Abort")
+## DGM
+## DGM             ensure_venv_deps()
+## DGM
+## DGM             ## DGM commit_changlog_entries(version=version)
+## DGM
+## DGM             build_package(dist_dir=dist_dir)
+## DGM             twine_check_package(dist_dir=dist_dir, version=version)
+## DGM
+## DGM             ## DGM test_package(tempdir=tempdir, dist_dir=dist_dir)
+## DGM             ## DGM prepare_deployment(dist_dir=dist_dir, version=version)
+## DGM             ## DGM really_deploy = input(
+## DGM             ## DGM     f'WARNING: This will really upload saltext.vmware version {version} to pypi. There is no going back from this point. \nEnter "deploy" without quotes to really deploy: '
+## DGM             ## DGM )
+## DGM             ## DGM if really_deploy != "deploy":
+## DGM             ## DGM     exit(f"Aborting version {version} deploy")
+## DGM             ## DGM deploy_to_test_pypi(dist_dir=dist_dir, version=version)
+## DGM             ## DGM deploy_to_real_pypi(dist_dir=dist_dir, version=version)
+## DGM             ## DGM tag_deployment(version=version)
+## DGM             ## DGM push_tag_to_salt(version=version)
+## DGM
+## DGM             ## DGM input(
+## DGM             ## DGM     f"<enter> to finish and cleanup - {tempdir} will be archived at /tmp/saltext.vmware-build-{version}.tar.gz"
+## DGM             ## DGM )
+## DGM
+## DGM     os.chdir(pwd)
+
+
 @nox.session(python="3")
 def build(session):
     """
@@ -739,116 +865,37 @@ def build(session):
 
         git show -s --format=%at HEAD
     """
-    ## DGM    shutil.rmtree("dist/", ignore_errors=True)
-    ## DGM    if SKIP_REQUIREMENTS_INSTALL is False:
-    ## DGM        session.install(
-    ## DGM            "--progress-bar=off",
-    ## DGM            "-r",
-    ## DGM            "requirements/build.txt",
-    ## DGM            silent=PIP_INSTALL_SILENT,
-    ## DGM        )
-    ## DGM
-    ## DGM    timestamp = session.run(
-    ## DGM        "git",
-    ## DGM        "show",
-    ## DGM        "-s",
-    ## DGM        "--format=%at",
-    ## DGM        "HEAD",
-    ## DGM        silent=True,
-    ## DGM        log=False,
-    ## DGM        stderr=None,
-    ## DGM    ).strip()
-    ## DGM    env = {"SOURCE_DATE_EPOCH": str(timestamp)}
-    ## DGM    session.run(
-    ## DGM        "python",
-    ## DGM        "-m",
-    ## DGM        "build",
-    ## DGM        "--sdist",
-    ## DGM        str(REPO_ROOT),
-    ## DGM        env=env,
-    ## DGM    )
-    ## DGM    # Recreate sdist to be reproducible
-    ## DGM    recompress = Recompress(timestamp)
-    ## DGM    for targz in REPO_ROOT.joinpath("dist").glob("*.tar.gz"):
-    ## DGM        session.log("Re-compressing %s...", targz.relative_to(REPO_ROOT))
-    ## DGM        recompress.recompress(targz)
-    ## DGM
-    ## DGM    sha256sum = shutil.which("sha256sum")
-    ## DGM    if sha256sum:
-    ## DGM        packages = [
-    ## DGM            str(pkg.relative_to(REPO_ROOT))
-    ## DGM            for pkg in REPO_ROOT.joinpath("dist").iterdir()
-    ## DGM        ]
-    ## DGM        session.run("sha256sum", *packages, external=True)
-    ## DGM    session.run("python", "-m", "twine", "check", "dist/*")
+    shutil.rmtree("dist/", ignore_errors=True)
+    session.install("--progress-bar=off", "-r", "requirements/build.txt", silent=PIP_INSTALL_SILENT)
 
-    """
-    Actually cut a release. Use non_interactive to try and run in a one-shot
-    process. Might fail if lacking gpg-agent or something.
+    timestamp = session.run(
+        "git",
+        "show",
+        "-s",
+        "--format=%at",
+        "HEAD",
+        silent=True,
+        log=False,
+        stderr=None,
+    ).strip()
+    env = {"SOURCE_DATE_EPOCH": str(timestamp)}
+    session.run(
+        "python",
+        "-m",
+        "build",
+        "--sdist",
+        "--wheel",
+        str(REPO_ROOT),
+        env=env,
+    )
+    # Recreate sdist to be reproducible
+    recompress = Recompress(timestamp)
+    for targz in REPO_ROOT.joinpath("dist").glob("*.tar.gz"):
+        session.log("Re-compressing %s...", targz.relative_to(REPO_ROOT))
+        recompress.recompress(targz)
 
-    TBD DGM this is an initial attempt at creating using 'nox -e build' based off of tools/release.py
-    """
-    pwd = os.getcwd()
-    with tempdir_and_save_log_on_error() as tempdir:
-        dist_dir = pathlib.Path(tempdir) / "dist"
-        dist_dir.mkdir(parents=True, exist_ok=True)
-
-        os.chdir(tempdir)
-        log.setLevel(logging.DEBUG)
-        log.addHandler(logging.FileHandler("release.log"))
-
-        # None of these make system changes. Can totally bail out without
-        # screwing anything up here.
-        version = check_mod_version()
-        with make_archive(f"/tmp/saltext.vmware-build-{version}.tar.gz"):
-            print(f"Releasing version {version}")
-            ## DGM print(f"Path to venv python: {VENV_PYTHON}")
-            ## DGM check_python_env()
-            ## DGM check_pypirc()
-
-            check_git_status()
-
-            ## DGM check_gpg()
-
-            ## DGM print()
-            ## DGM print("***ACTUAL DEPLOY AHEAD!***")
-            ## DGM print()
-            ## DGM print(
-            ## DGM     "If your system is correctly configured, choosing to continue will result in a real live deploy of saltext.vmware! Are you ready?"
-            ## DGM )
-            ## DGM print()
-            ## DGM # Here's where we start to make changes!
-            ## DGM keep_going = (
-            ## DGM     non_interactive
-            ## DGM     or input(f"Continue to build and test saltext.vmware version {version}? [y/N]: ")
-            ## DGM     .lower()
-            ## DGM     .strip()
-            ## DGM     in YES
-            ## DGM )
-            ## DGM if not keep_going:
-            ## DGM     exit("Abort")
-
-            ensure_venv_deps()
-
-            ## DGM commit_changlog_entries(version=version)
-
-            build_package(dist_dir=dist_dir)
-            twine_check_package(dist_dir=dist_dir, version=version)
-
-            ## DGM test_package(tempdir=tempdir, dist_dir=dist_dir)
-            ## DGM prepare_deployment(dist_dir=dist_dir, version=version)
-            ## DGM really_deploy = input(
-            ## DGM     f'WARNING: This will really upload saltext.vmware version {version} to pypi. There is no going back from this point. \nEnter "deploy" without quotes to really deploy: '
-            ## DGM )
-            ## DGM if really_deploy != "deploy":
-            ## DGM     exit(f"Aborting version {version} deploy")
-            ## DGM deploy_to_test_pypi(dist_dir=dist_dir, version=version)
-            ## DGM deploy_to_real_pypi(dist_dir=dist_dir, version=version)
-            ## DGM tag_deployment(version=version)
-            ## DGM push_tag_to_salt(version=version)
-
-            ## DGM input(
-            ## DGM     f"<enter> to finish and cleanup - {tempdir} will be archived at /tmp/saltext.vmware-build-{version}.tar.gz"
-            ## DGM )
-
-    os.chdir(pwd)
+    sha256sum = shutil.which("sha256sum")
+    if sha256sum:
+        packages = [str(pkg.relative_to(REPO_ROOT)) for pkg in REPO_ROOT.joinpath("dist").iterdir()]
+        session.run("sha256sum", *packages, external=True)
+    session.run("python", "-m", "twine", "check", "dist/*")

@@ -447,12 +447,25 @@ jobs:
       run: |
         nox -e build
 
-    - name: Publish distribution 📦 to Test PyPI
-      if: github.event.pull_request.merged == true
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository_url: https://test.pypi.org/legacy/
-        print-hash: true
-        skip-existing: true
-        verbose: true
-        verify-metadata: true
+  Publish:
+    ## Publish distribution 📦 to Test PyPI
+    needs: Build
+    on:
+      pull_request:
+        branches:
+          - main
+        types:
+          - closed
+
+    jobs:
+      if_merged:
+        if: github.event.pull_request.merged == true
+          runs-on: ubuntu-latest
+          steps:
+            - uses: pypa/gh-action-pypi-publish@release/v1
+              with:
+                repository_url: https://test.pypi.org/legacy/
+                print-hash: true
+                skip-existing: true
+                verbose: true
+                verify-metadata: true
