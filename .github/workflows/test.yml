@@ -450,6 +450,7 @@ jobs:
   Publish:
     ## Publish distribution 📦 to Test PyPI
     needs: Build
+    runs-on: ubuntu-latest
     on:
       pull_request:
         branches:
@@ -460,7 +461,6 @@ jobs:
     jobs:
       if_merged:
         if: github.event.pull_request.merged == true
-          runs-on: ubuntu-latest
           steps:
             - uses: pypa/gh-action-pypi-publish@release/v1
               with:
