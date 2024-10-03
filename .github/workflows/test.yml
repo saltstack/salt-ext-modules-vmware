@@ -446,26 +446,3 @@ jobs:
     - name: Build a binary wheel and a source tarball
       run: |
         nox -e build
-
-  Publish:
-    ## Publish distribution 📦 to Test PyPI
-    needs: Build
-    runs-on: ubuntu-latest
-    on:
-      pull_request:
-        branches:
-          - main
-        types:
-          - closed
-
-    jobs:
-      if_merged:
-        if: github.event.pull_request.merged == true
-        steps:
-          - uses: pypa/gh-action-pypi-publish@release/v1
-            with:
-              repository_url: https://test.pypi.org/legacy/
-              print-hash: true
-              skip-existing: true
-              verbose: true
-              verify-metadata: true
