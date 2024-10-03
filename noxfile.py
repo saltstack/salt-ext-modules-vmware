@@ -1,3 +1,6 @@
+# Copyright 2021-2024 VMware, Inc.
+# SPDX-License-Identifier: Apache-2.0
+#
 """
 noxfile
 ~~~~~~~
@@ -8,13 +11,21 @@ Nox configuration script
 # pylint: disable=missing-module-docstring,import-error,protected-access,missing-function-docstring
 import contextlib
 import datetime
+import gzip
 import json
 import logging
+import nox
 import os
 import pathlib
 import shutil
 import sys
+import tarfile
 import tempfile
+from nox.command import CommandFailed
+from nox.virtualenv import VirtualEnv
+
+log = logging.getLogger("extvmware-release")
+
 
 # fmt: off
 if __name__ == "__main__":
@@ -24,12 +35,6 @@ if __name__ == "__main__":
     sys.stderr.flush()
     exit(1)
 # fmt: on
-
-import nox
-from nox.command import CommandFailed
-from nox.virtualenv import VirtualEnv
-
-log = logging.getLogger("extvmware-release")
 
 # Nox options
 #  Reuse existing virtualenvs
@@ -852,6 +857,63 @@ def check_mod_version():
 ## DGM             ## DGM )
 ## DGM
 ## DGM     os.chdir(pwd)
+
+
+class Recompress:
+    """
+    Helper class to re-compress a ``.tag.gz`` file to make it reproducible.
+    """
+
+    def __init__(self, mtime):
+        self.mtime = int(mtime)
+
+    def tar_reset(self, tarinfo):
+        """
+        Reset user, group, mtime, and mode to create reproducible tar.
+        """
+        tarinfo.uid = tarinfo.gid = 0
+        tarinfo.uname = tarinfo.gname = "root"
+        tarinfo.mtime = self.mtime
+        if tarinfo.type == tarfile.DIRTYPE:
+            tarinfo.mode = 0o755
+        else:
+            tarinfo.mode = 0o644
+        if tarinfo.pax_headers:
+            raise ValueError(tarinfo.name, tarinfo.pax_headers)
+        return tarinfo
+
+    def recompress(self, targz):
+        """
+        Re-compress the passed path.
+        """
+        tempd = pathlib.Path(tempfile.mkdtemp()).resolve()
+        d_src = tempd.joinpath("src")
+        d_src.mkdir()
+        d_tar = tempd.joinpath(targz.stem)
+        d_targz = tempd.joinpath(targz.name)
+        with tarfile.open(d_tar, "w|") as wfile:
+            with tarfile.open(targz, "r:gz") as rfile:
+                rfile.extractall(d_src)  # nosec
+                extracted_dir = next(pathlib.Path(d_src).iterdir())
+                for name in sorted(extracted_dir.rglob("*")):
+                    wfile.add(
+                        str(name),
+                        filter=self.tar_reset,
+                        recursive=False,
+                        arcname=str(name.relative_to(d_src)),
+                    )
+
+        with open(d_tar, "rb") as rfh:
+            with gzip.GzipFile(
+                fileobj=open(d_targz, "wb"), mode="wb", filename="", mtime=self.mtime
+            ) as gz:
+                while True:
+                    chunk = rfh.read(1024)
+                    if not chunk:
+                        break
+                    gz.write(chunk)
+        targz.unlink()
+        shutil.move(str(d_targz), str(targz))
 
 
 @nox.session(python="3")
