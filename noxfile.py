@@ -1,3 +1,6 @@
+# Copyright 2021-2024 VMware, Inc.
+# SPDX-License-Identifier: Apache-2.0
+#
 """
 noxfile
 ~~~~~~~
@@ -6,13 +9,23 @@ Nox configuration script
 """
 
 # pylint: disable=missing-module-docstring,import-error,protected-access,missing-function-docstring
+import contextlib
 import datetime
+import gzip
 import json
+import logging
+import nox
 import os
 import pathlib
 import shutil
 import sys
+import tarfile
 import tempfile
+from nox.command import CommandFailed
+from nox.virtualenv import VirtualEnv
+
+log = logging.getLogger("extvmware-release")
+
 
 # fmt: off
 if __name__ == "__main__":
@@ -22,10 +35,6 @@ if __name__ == "__main__":
     sys.stderr.flush()
     exit(1)
 # fmt: on
-
-import nox
-from nox.command import CommandFailed
-from nox.virtualenv import VirtualEnv
 
 # Nox options
 #  Reuse existing virtualenvs
@@ -42,8 +51,8 @@ CI_RUN = (
 PIP_INSTALL_SILENT = CI_RUN is False
 SKIP_REQUIREMENTS_INSTALL = os.environ.get("SKIP_REQUIREMENTS_INSTALL", "0") == "1"
 EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
-COVERAGE_VERSION_REQUIREMENT = "coverage==6.5"  # 7.x dropped support for Py 3.7
 
+COVERAGE_REQUIREMENT = os.environ.get("COVERAGE_REQUIREMENT") or "coverage==7.5.1"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3006"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
@@ -53,15 +62,20 @@ os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 # Global Path Definitions
 REPO_ROOT = pathlib.Path(__file__).resolve().parent
+
+# TBD DGM wondering about this VENV and why we had this in the first place
+# TBD DGM given this was initially classic packaging, wondering if forcing Py 3.10 now onedir ?
+TYPICAL_ENV = REPO_ROOT / "env" / "bin" / "python"
+VENV_PYTHON = pathlib.Path(os.environ.get("VMWARE_VENV_PATH", TYPICAL_ENV))
+
 # Change current directory to REPO_ROOT
 os.chdir(str(REPO_ROOT))
 
 ARTIFACTS_DIR = REPO_ROOT / "artifacts"
 # Make sure the artifacts directory exists
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
-RUNTESTS_LOGFILE = ARTIFACTS_DIR / "runtests-{}.log".format(
-    datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
-)
+CUR_TIME = datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
+RUNTESTS_LOGFILE = ARTIFACTS_DIR / f"runtests-{CUR_TIME}.log"
 COVERAGE_REPORT_DB = REPO_ROOT / ".coverage"
 COVERAGE_REPORT_PROJECT = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-project.xml"
 COVERAGE_REPORT_TESTS = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-tests.xml"
@@ -74,7 +88,8 @@ def _get_session_python_version_info(session):
     except AttributeError:
         session_py_version = session.run_always(
             "python",
-            "-c" 'import sys; sys.stdout.write("{}.{}.{}".format(*sys.version_info))',
+            "-c",
+            'import sys; sys.stdout.write("{}.{}.{}".format(*sys.version_info))',
             silent=True,
             log=False,
         )
@@ -85,14 +100,14 @@ def _get_session_python_version_info(session):
 
 def _get_pydir(session):
     version_info = _get_session_python_version_info(session)
-    if version_info < (3, 7):
-        session.error("Only Python >= 3.7 is supported")
-    return "py{}.{}".format(*version_info)
+    if version_info < (3, 10):
+        session.error("Only Python >= 3.10 is supported")
+    return f"py{version_info[0]}.{version_info[1]}"
 
 
 def _install_requirements(
     session,
-    *passed_requirements,
+    *passed_requirements,  # pylint: disable=unused-argument
     install_coverage_requirements=True,
     install_test_requirements=True,
     install_source=False,
@@ -104,13 +119,12 @@ def _install_requirements(
         # Always have the wheel package installed
         session.install("--progress-bar=off", "wheel", silent=PIP_INSTALL_SILENT)
         if install_coverage_requirements:
-            session.install(
-                "--progress-bar=off", COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT
-            )
+            session.install("--progress-bar=off", COVERAGE_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
         if install_salt:
             session.install("--progress-bar=off", SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
+        ## DGM if install_test_requirements:
         if install_test_requirements and "tests" not in install_extras:
             install_extras.append("tests")
 
@@ -131,10 +145,14 @@ def _install_requirements(
                 pkg += f"[{','.join(install_extras)}]"
 
             session.install("-e", pkg, silent=PIP_INSTALL_SILENT)
+        ## DGM elif install_extras:
+        ## DGM     pkg = f".[{','.join(install_extras)}]"
+        ## DGM     session.install(pkg, silent=PIP_INSTALL_SILENT)
 
 
 @nox.session(python=PYTHON_VERSIONS)
 def tests(session):
+    ## DGM _install_requirements(session, install_source=True)
     _install_requirements(session, install_source=True, install_extras=["tests"])
 
     sitecustomize_dir = session.run("salt-factories", "--coverage", silent=True, log=False)
@@ -193,7 +211,49 @@ def tests(session):
                 continue
         else:
             args.append("tests/")
+
     session.run("pytest", *args, env=env)
+
+    ## DGM try:
+    ## DGM     session.run("coverage", "run", "-m", "pytest", *args, env=env)
+    ## DGM finally:
+    ## DGM     # Always combine and generate the XML coverage report
+    ## DGM     try:
+    ## DGM         session.run("coverage", "combine")
+    ## DGM     except CommandFailed:
+    ## DGM         # Sometimes some of the coverage files are corrupt which would
+    ## DGM         # trigger a CommandFailed exception
+    ## DGM         pass
+    ## DGM     # Generate report for salt code coverage
+    ## DGM     session.run(
+    ## DGM         "coverage",
+    ## DGM         "xml",
+    ## DGM         "-o",
+    ## DGM         str(COVERAGE_REPORT_PROJECT),
+    ## DGM         "--omit=tests/*",
+    ## DGM         "--include=src/saltext/cassandra/*",
+    ## DGM     )
+    ## DGM     # Generate report for tests code coverage
+    ## DGM     session.run(
+    ## DGM         "coverage",
+    ## DGM         "xml",
+    ## DGM         "-o",
+    ## DGM         str(COVERAGE_REPORT_TESTS),
+    ## DGM         "--omit=src/saltext/cassandra/*",
+    ## DGM         "--include=tests/*",
+    ## DGM     )
+    ## DGM     try:
+    ## DGM         session.run("coverage", "report", "--show-missing", "--include=src/saltext/cassandra/*")
+    ## DGM         # If you also want to display the code coverage report on the CLI
+    ## DGM         # for the tests, comment the call above and uncomment the line below
+    ## DGM         # session.run(
+    ## DGM         #    "coverage", "report", "--show-missing",
+    ## DGM         #    "--include=src/saltext/cassandra/*,tests/*"
+    ## DGM         # )
+    ## DGM     finally:
+    ## DGM         # Move the coverage DB to artifacts/coverage in order for it to be archived by CI
+    ## DGM         if COVERAGE_REPORT_DB.exists():
+    ## DGM             shutil.move(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / COVERAGE_REPORT_DB.name))
 
 
 class Tee:
@@ -219,6 +279,13 @@ class Tee:
 def _lint(session, rcfile, flags, paths, tee_output=True):
     requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "lint.txt"
     _install_requirements(session, "-r", str(requirements_file.relative_to(REPO_ROOT)))
+    ## DGM _install_requirements(
+    ## DGM     session,
+    ## DGM     install_salt=False,
+    ## DGM     install_coverage_requirements=False,
+    ## DGM     install_test_requirements=False,
+    ## DGM     install_extras=["dev", "tests"],
+    ## DGM )
 
     if tee_output:
         session.run("pylint", "--version")
@@ -261,6 +328,7 @@ def _lint(session, rcfile, flags, paths, tee_output=True):
                 sys.stdout.flush()
                 if pylint_report_path:
                     # Write report
+                    ## DGM with open(pylint_report_path, "w", encoding="utf-8") as wfh:
                     with open(pylint_report_path, "w") as wfh:
                         wfh.write(contents)
                     session.log("Report file written to %r", pylint_report_path)
@@ -276,9 +344,7 @@ def _lint_pre_commit(session, rcfile, flags, paths):
     if "pre-commit" not in os.environ["VIRTUAL_ENV"]:
         session.error(
             "This should be running from within a pre-commit virtualenv and "
-            "'VIRTUAL_ENV'({}) does not appear to be a pre-commit virtualenv.".format(
-                os.environ["VIRTUAL_ENV"]
-            )
+            f"'VIRTUAL_ENV'({os.environ['VIRTUAL_ENV']}) does not appear to be a pre-commit virtualenv."
         )
 
     # Let's patch nox to make it run inside the pre-commit virtualenv
@@ -370,20 +436,73 @@ def docs(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
+    ## DGM session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
     session.run("make", "linkcheck", "SPHINXOPTS=-Wn --keep-going", external=True)
-
-    ## Disabling till sphinx 7.3.0 is released with fix for divide by zero, i
-    ## see Sphinx https://github.com/sphinx-doc/sphinx/commit/bb74aec2b6aa1179868d83134013450c9ff9d4d6
-    ## session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
-
+    ## DGM session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
+    ## DGM was disabled session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
-        with open(docs_coverage_file) as rfh:
+        with open(docs_coverage_file) as rfh:  # pylint: disable=unspecified-encoding
             contents = rfh.readlines()[2:]
             if contents:
                 session.error("\n" + "".join(contents))
+    ## DGM session.run("make", "html", "SPHINXOPTS=-W", external=True)
     session.run("make", "html", "SPHINXOPTS=-Wn --keep-going", external=True)
     os.chdir(str(REPO_ROOT))
+
+
+## DGM @nox.session(name="docs-html", python="3")
+## DGM @nox.parametrize("clean", [False, True])
+## DGM @nox.parametrize("include_api_docs", [False, True])
+## DGM def docs_html(session, clean, include_api_docs):
+## DGM     """
+## DGM     Build Sphinx HTML Documentation
+## DGM
+## DGM     TODO: Add option for `make linkcheck` and `make coverage`
+## DGM           calls via Sphinx. Ran into problems with two when
+## DGM           using Furo theme and latest Sphinx.
+## DGM     """
+## DGM     _install_requirements(
+## DGM         session,
+## DGM         install_coverage_requirements=False,
+## DGM         install_test_requirements=False,
+## DGM         install_source=True,
+## DGM         install_extras=["docs"],
+## DGM     )
+## DGM     if include_api_docs:
+## DGM         gen_api_docs(session)
+## DGM     build_dir = Path("docs", "_build", "html")
+## DGM     sphinxopts = "-Wn"
+## DGM     if clean:
+## DGM         sphinxopts += "E"
+## DGM     args = [sphinxopts, "--keep-going", "docs", str(build_dir)]
+## DGM     session.run("sphinx-build", *args, external=True)
+
+
+@nox.session(name="docs-dev", python="3")
+@nox.parametrize("clean", [False, True])
+def docs_dev(session, clean) -> None:
+    """
+    Build and serve the Sphinx HTML documentation, with live reloading on file changes, via sphinx-autobuild.
+
+    Note: Only use this in INTERACTIVE DEVELOPMENT MODE. This SHOULD NOT be called
+        in CI/CD pipelines, as it will hang.
+    """
+    _install_requirements(
+        session,
+        install_coverage_requirements=False,
+        install_test_requirements=False,
+        install_source=True,
+        install_extras=["docs", "docsauto"],
+    )
+
+    # Launching LIVE reloading Sphinx session
+    build_dir = Path("docs", "_build", "html")
+    args = ["--watch", ".", "--open-browser", "docs", str(build_dir)]
+    if clean and build_dir.exists():
+        shutil.rmtree(build_dir)
+
+    session.run("sphinx-autobuild", *args)
 
 
 @nox.session(name="docs-crosslink-info", python="3")
@@ -392,6 +511,15 @@ def docs_crosslink_info(session):
     Report intersphinx cross links information
     """
     requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "docs.txt"
+    ## DGM _install_requirements(
+    ## DGM     session,
+    ## DGM     ## DGM "-r",
+    ## DGM     ## DGM str(requirements_file.relative_to(REPO_ROOT)),
+    ## DGM     install_coverage_requirements=False,
+    ## DGM     install_test_requirements=False,
+    ## DGM     install_source=True,
+    ## DGM     install_extras=["docs"],
+    ## DGM )
     _install_requirements(
         session,
         "-r",
@@ -410,20 +538,15 @@ def docs_crosslink_info(session):
             log=False,
         )
     )
+    intersphinx_mapping_list = ", ".join(list(intersphinx_mapping))
     try:
         mapping_entry = intersphinx_mapping[session.posargs[0]]
     except IndexError:
         session.error(
-            "You need to pass at least one argument whose value must be one of: {}".format(
-                ", ".join(list(intersphinx_mapping))
-            )
+            f"You need to pass at least one argument whose value must be one of: {intersphinx_mapping_list}"
         )
     except KeyError:
-        session.error(
-            "Only acceptable values for first argument are: {}".format(
-                ", ".join(list(intersphinx_mapping))
-            )
-        )
+        session.error(f"Only acceptable values for first argument are: {intersphinx_mapping_list}")
     session.run(
         "python", "-m", "sphinx.ext.intersphinx", mapping_entry[0].rstrip("/") + "/objects.inv"
     )
@@ -442,7 +565,10 @@ def gen_api_docs(session):
         install_source=True,
         install_extras=["docs"],
     )
-    shutil.rmtree("docs/ref")
+    try:
+        shutil.rmtree("docs/ref")
+    except FileNotFoundError:
+        pass
     session.run(
         "sphinx-apidoc",
         "--implicit-namespaces",
@@ -461,3 +587,377 @@ def review(session):
     """
     session.notify("docs")
     session.notify(f"tests-{session.python}")
+
+
+## TBD DGM Start of functions taken from tools/release.py
+
+####################
+# Helper Functions #
+####################
+
+
+def run_and_log_cmd(*cmd):
+    log.debug("Running command %r", cmd)
+    ret = subprocess.run(cmd, capture_output=True)
+    log.debug(f"git status return code: %r", ret.returncode)
+    log.debug(f"git status stdout: \n%s", ret.stdout.decode() or "<No stdout>")
+    log.debug(f"git status stderr: \n%s", ret.stderr.decode() or "<No stderr>")
+    return ret
+
+
+@contextlib.contextmanager
+def msg_wrap(msg):
+    print(f"{msg}...", end="")
+    sys.stdout.flush()
+    try:
+        yield
+    except:
+        print("FAIL")
+        log.exception("Inner command failed")
+        raise
+    else:
+        print("OK")
+
+
+@contextlib.contextmanager
+def make_archive(path):
+    try:
+        yield
+    finally:
+        run_and_log_cmd("tar", "-czf", path, "-C", os.getcwd(), ".")
+
+
+########################
+# End Helper Functions #
+########################
+
+
+###################
+# Check Functions #
+###################
+
+# These are to ensure that the system has the required bits to run the release
+
+
+def check_git_status():
+    with msg_wrap("Checking git status"):
+        ret = run_and_log_cmd("git", "-C", str(REPO_ROOT), "status", "--porcelain")
+        if ret.stdout and not DEBUG_FORCE:
+            exit("You currently have changes in your repo. Stash or otherwise clear your changes.")
+
+
+def check_gpg():
+    with msg_wrap("Checking gpg/gpg agent"):
+        with open("fnord.txt", "w") as f:
+            f.write("contents")
+        # We need a better way to gpg sign releases -- not just individuals
+        ret = run_and_log_cmd("gpg", "--armor", "--detach-sign", "fnord.txt")
+        if ret.returncode:
+            exit("Unable to use gpg --detach-sign. Check your gpg-agent and try again.")
+
+        ret = run_and_log_cmd("gpg", "--verify", "fnord.txt.asc", "fnord.txt")
+        if ret.returncode:
+            exit(
+                "Unable to verify gpg signature. Can you run `echo hello | gpg --armor --clear-sign | gpg --verify`?"
+            )
+
+
+#######################
+# End Check Functions #
+#######################
+
+
+#####################
+# Release Functions #
+#####################
+
+# These functions are for actually making changes that are part of the release.
+# These changes should not be really destructive, but users should still be
+# able to bail out with minimal changes to their systems!
+
+
+def ensure_venv_deps():
+    with msg_wrap("Ensuring build/release deps are installed in venv"):
+        run_and_log_cmd(
+            str(VENV_PYTHON), "-m", "pip", "install", "-e", f"{REPO_ROOT}[dev,tests,release]"
+        )
+
+
+def build_package(*, dist_dir):
+    with msg_wrap("Building the current package"):
+        run_and_log_cmd(
+            str(VENV_PYTHON),
+            "-m",
+            "pip",
+            "wheel",
+            "--wheel-dir",
+            str(dist_dir),
+            f"{REPO_ROOT}[dev,tests]",
+        )
+
+
+def twine_check_package(*, dist_dir, version):
+    with msg_wrap("Running twine check on saltext.vmware package"):
+        ret = run_and_log_cmd(
+            str(VENV_PYTHON.with_name("twine")),
+            "check",
+            str(dist_dir / f"saltext.vmware-{version}-py2.py3-none-any.whl"),
+        )
+        if f"PASSED" not in "".join(ret.stdout.decode().split("\n")):
+            exit("Twine check failed")
+
+
+@contextlib.contextmanager
+def tempdir_and_save_log_on_error():
+    with tempfile.TemporaryDirectory() as tempdir:
+        logfile = pathlib.Path(tempdir) / "release.log"
+        try:
+            yield tempdir
+        except:
+            with tempfile.NamedTemporaryFile(
+                delete=False, prefix="release_", suffix=".log"
+            ) as savelog:
+                savefile = pathlib.Path(savelog.name)
+            savefile.parent.mkdir(parents=True, exist_ok=True)
+            logfile.rename(savefile)
+            print("Failure detected - log saved to", str(savefile))
+
+
+def check_mod_version():
+    version_file = REPO_ROOT / "src" / "saltext" / "vmware" / "version.py"
+    with version_file.open() as f:
+        for line in f:
+            if line.startswith("__version__"):
+                p = ast.parse(line)
+                version = p.body[0].value.value
+    return version
+
+
+## DGM @nox.session(python="3")
+## DGM def build(session):
+## DGM     """
+## DGM     Build source and binary distributions based off the current commit author date UNIX timestamp.
+## DGM
+## DGM     The reason being, reproducible packages.
+## DGM
+## DGM     .. code-block: shell
+## DGM
+## DGM         git show -s --format=%at HEAD
+## DGM     """
+## DGM     ## DGM    shutil.rmtree("dist/", ignore_errors=True)
+## DGM     ## DGM    if SKIP_REQUIREMENTS_INSTALL is False:
+## DGM     ## DGM        session.install(
+## DGM     ## DGM            "--progress-bar=off",
+## DGM     ## DGM            "-r",
+## DGM     ## DGM            "requirements/build.txt",
+## DGM     ## DGM            silent=PIP_INSTALL_SILENT,
+## DGM     ## DGM        )
+## DGM     ## DGM
+## DGM     ## DGM    timestamp = session.run(
+## DGM     ## DGM        "git",
+## DGM     ## DGM        "show",
+## DGM     ## DGM        "-s",
+## DGM     ## DGM        "--format=%at",
+## DGM     ## DGM        "HEAD",
+## DGM     ## DGM        silent=True,
+## DGM     ## DGM        log=False,
+## DGM     ## DGM        stderr=None,
+## DGM     ## DGM    ).strip()
+## DGM     ## DGM    env = {"SOURCE_DATE_EPOCH": str(timestamp)}
+## DGM     ## DGM    session.run(
+## DGM     ## DGM        "python",
+## DGM     ## DGM        "-m",
+## DGM     ## DGM        "build",
+## DGM     ## DGM        "--sdist",
+## DGM     ## DGM        str(REPO_ROOT),
+## DGM     ## DGM        env=env,
+## DGM     ## DGM    )
+## DGM     ## DGM    # Recreate sdist to be reproducible
+## DGM     ## DGM    recompress = Recompress(timestamp)
+## DGM     ## DGM    for targz in REPO_ROOT.joinpath("dist").glob("*.tar.gz"):
+## DGM     ## DGM        session.log("Re-compressing %s...", targz.relative_to(REPO_ROOT))
+## DGM     ## DGM        recompress.recompress(targz)
+## DGM     ## DGM
+## DGM     ## DGM    sha256sum = shutil.which("sha256sum")
+## DGM     ## DGM    if sha256sum:
+## DGM     ## DGM        packages = [
+## DGM     ## DGM            str(pkg.relative_to(REPO_ROOT))
+## DGM     ## DGM            for pkg in REPO_ROOT.joinpath("dist").iterdir()
+## DGM     ## DGM        ]
+## DGM     ## DGM        session.run("sha256sum", *packages, external=True)
+## DGM     ## DGM    session.run("python", "-m", "twine", "check", "dist/*")
+## DGM
+## DGM     """
+## DGM     Actually cut a release. Use non_interactive to try and run in a one-shot
+## DGM     process. Might fail if lacking gpg-agent or something.
+## DGM
+## DGM     TBD DGM this is an initial attempt at creating using 'nox -e build' based off of tools/release.py
+## DGM     """
+## DGM     pwd = os.getcwd()
+## DGM     with tempdir_and_save_log_on_error() as tempdir:
+## DGM         dist_dir = pathlib.Path(tempdir) / "dist"
+## DGM         dist_dir.mkdir(parents=True, exist_ok=True)
+## DGM
+## DGM         os.chdir(tempdir)
+## DGM         log.setLevel(logging.DEBUG)
+## DGM         log.addHandler(logging.FileHandler("release.log"))
+## DGM
+## DGM         # None of these make system changes. Can totally bail out without
+## DGM         # screwing anything up here.
+## DGM         version = check_mod_version()
+## DGM         with make_archive(f"/tmp/saltext.vmware-build-{version}.tar.gz"):
+## DGM             print(f"Releasing version {version}")
+## DGM             ## DGM print(f"Path to venv python: {VENV_PYTHON}")
+## DGM             ## DGM check_python_env()
+## DGM             ## DGM check_pypirc()
+## DGM
+## DGM             check_git_status()
+## DGM
+## DGM             ## DGM check_gpg()
+## DGM
+## DGM             ## DGM print()
+## DGM             ## DGM print("***ACTUAL DEPLOY AHEAD!***")
+## DGM             ## DGM print()
+## DGM             ## DGM print(
+## DGM             ## DGM     "If your system is correctly configured, choosing to continue will result in a real live deploy of saltext.vmware! Are you ready?"
+## DGM             ## DGM )
+## DGM             ## DGM print()
+## DGM             ## DGM # Here's where we start to make changes!
+## DGM             ## DGM keep_going = (
+## DGM             ## DGM     non_interactive
+## DGM             ## DGM     or input(f"Continue to build and test saltext.vmware version {version}? [y/N]: ")
+## DGM             ## DGM     .lower()
+## DGM             ## DGM     .strip()
+## DGM             ## DGM     in YES
+## DGM             ## DGM )
+## DGM             ## DGM if not keep_going:
+## DGM             ## DGM     exit("Abort")
+## DGM
+## DGM             ensure_venv_deps()
+## DGM
+## DGM             ## DGM commit_changlog_entries(version=version)
+## DGM
+## DGM             build_package(dist_dir=dist_dir)
+## DGM             twine_check_package(dist_dir=dist_dir, version=version)
+## DGM
+## DGM             ## DGM test_package(tempdir=tempdir, dist_dir=dist_dir)
+## DGM             ## DGM prepare_deployment(dist_dir=dist_dir, version=version)
+## DGM             ## DGM really_deploy = input(
+## DGM             ## DGM     f'WARNING: This will really upload saltext.vmware version {version} to pypi. There is no going back from this point. \nEnter "deploy" without quotes to really deploy: '
+## DGM             ## DGM )
+## DGM             ## DGM if really_deploy != "deploy":
+## DGM             ## DGM     exit(f"Aborting version {version} deploy")
+## DGM             ## DGM deploy_to_test_pypi(dist_dir=dist_dir, version=version)
+## DGM             ## DGM deploy_to_real_pypi(dist_dir=dist_dir, version=version)
+## DGM             ## DGM tag_deployment(version=version)
+## DGM             ## DGM push_tag_to_salt(version=version)
+## DGM
+## DGM             ## DGM input(
+## DGM             ## DGM     f"<enter> to finish and cleanup - {tempdir} will be archived at /tmp/saltext.vmware-build-{version}.tar.gz"
+## DGM             ## DGM )
+## DGM
+## DGM     os.chdir(pwd)
+
+
+class Recompress:
+    """
+    Helper class to re-compress a ``.tag.gz`` file to make it reproducible.
+    """
+
+    def __init__(self, mtime):
+        self.mtime = int(mtime)
+
+    def tar_reset(self, tarinfo):
+        """
+        Reset user, group, mtime, and mode to create reproducible tar.
+        """
+        tarinfo.uid = tarinfo.gid = 0
+        tarinfo.uname = tarinfo.gname = "root"
+        tarinfo.mtime = self.mtime
+        if tarinfo.type == tarfile.DIRTYPE:
+            tarinfo.mode = 0o755
+        else:
+            tarinfo.mode = 0o644
+        if tarinfo.pax_headers:
+            raise ValueError(tarinfo.name, tarinfo.pax_headers)
+        return tarinfo
+
+    def recompress(self, targz):
+        """
+        Re-compress the passed path.
+        """
+        tempd = pathlib.Path(tempfile.mkdtemp()).resolve()
+        d_src = tempd.joinpath("src")
+        d_src.mkdir()
+        d_tar = tempd.joinpath(targz.stem)
+        d_targz = tempd.joinpath(targz.name)
+        with tarfile.open(d_tar, "w|") as wfile:
+            with tarfile.open(targz, "r:gz") as rfile:
+                rfile.extractall(d_src)  # nosec
+                extracted_dir = next(pathlib.Path(d_src).iterdir())
+                for name in sorted(extracted_dir.rglob("*")):
+                    wfile.add(
+                        str(name),
+                        filter=self.tar_reset,
+                        recursive=False,
+                        arcname=str(name.relative_to(d_src)),
+                    )
+
+        with open(d_tar, "rb") as rfh:
+            with gzip.GzipFile(
+                fileobj=open(d_targz, "wb"), mode="wb", filename="", mtime=self.mtime
+            ) as gz:
+                while True:
+                    chunk = rfh.read(1024)
+                    if not chunk:
+                        break
+                    gz.write(chunk)
+        targz.unlink()
+        shutil.move(str(d_targz), str(targz))
+
+
+@nox.session(python="3")
+def build(session):
+    """
+    Build source and binary distributions based off the current commit author date UNIX timestamp.
+
+    The reason being, reproducible packages.
+
+    .. code-block: shell
+
+        git show -s --format=%at HEAD
+    """
+    shutil.rmtree("dist/", ignore_errors=True)
+    session.install("--progress-bar=off", "-r", "requirements/build.txt", silent=PIP_INSTALL_SILENT)
+
+    timestamp = session.run(
+        "git",
+        "show",
+        "-s",
+        "--format=%at",
+        "HEAD",
+        silent=True,
+        log=False,
+        stderr=None,
+    ).strip()
+    env = {"SOURCE_DATE_EPOCH": str(timestamp)}
+    session.run(
+        "python",
+        "-m",
+        "build",
+        "--sdist",
+        "--wheel",
+        str(REPO_ROOT),
+        env=env,
+    )
+    # Recreate sdist to be reproducible
+    recompress = Recompress(timestamp)
+    for targz in REPO_ROOT.joinpath("dist").glob("*.tar.gz"):
+        session.log("Re-compressing %s...", targz.relative_to(REPO_ROOT))
+        recompress.recompress(targz)
+
+    sha256sum = shutil.which("sha256sum")
+    if sha256sum:
+        packages = [str(pkg.relative_to(REPO_ROOT)) for pkg in REPO_ROOT.joinpath("dist").iterdir()]
+        session.run("sha256sum", *packages, external=True)
+    session.run("python", "-m", "twine", "check", "dist/*")

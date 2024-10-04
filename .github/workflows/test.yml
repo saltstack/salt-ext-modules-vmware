@@ -171,6 +171,7 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
+
   Windows:
     runs-on: windows-latest
     needs: Pre-Commit
@@ -295,6 +296,7 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
+
   macOS:
     runs-on: macOS-latest
     needs: Pre-Commit
@@ -414,3 +416,33 @@ jobs:
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
+
+
+## DGM   Build:
+## DGM     runs-on: ubuntu-latest
+## DGM     environment: testing
+## DGM     permissions:
+## DGM       id-token: write
+## DGM     needs:
+## DGM       - macOS
+## DGM       - Windows
+## DGM       - Linux
+## DGM       - Docs
+## DGM
+## DGM     steps:
+## DGM     - uses: actions/checkout@v4
+## DGM       with:
+## DGM         fetch-depth: 0
+## DGM
+## DGM     - name: Set up Python
+## DGM       uses: actions/setup-python@v5
+## DGM       with:
+## DGM         python-version: "3.10"
+## DGM
+## DGM     - name: Install Nox
+## DGM       run: |
+## DGM         python -m pip install nox
+## DGM
+## DGM     - name: Build a binary wheel and a source tarball
+## DGM       run: |
+## DGM         nox -e build
