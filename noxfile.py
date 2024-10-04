@@ -643,11 +643,9 @@ def build(session):
     for targz in REPO_ROOT.joinpath("dist").glob("*.tar.gz"):
         session.log("Re-compressing %s...", targz.relative_to(REPO_ROOT))
         recompress.recompress(targz)
-        print(f"DGM saltext.vmware targz, '{targz}'", flush=True)
 
     sha256sum = shutil.which("sha256sum")
     if sha256sum:
         packages = [str(pkg.relative_to(REPO_ROOT)) for pkg in REPO_ROOT.joinpath("dist").iterdir()]
-        print(f"DGM sha256sum saltext.vmware packages, '{packages}'", flush=True)
         session.run("sha256sum", *packages, external=True)
     session.run("python", "-m", "twine", "check", "dist/*")
