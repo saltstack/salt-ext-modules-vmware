@@ -2,9 +2,8 @@
 name: Test PyPI Publish
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [prereleased]
 
 jobs:
   Publish:
