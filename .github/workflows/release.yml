@@ -2,7 +2,7 @@ name: Release
 
 on:
   release:
-    types: [published]
+    types: [released]
 
 jobs:
   Publish:
@@ -29,7 +29,6 @@ jobs:
         nox -e build
 
     - name: Publish package distributions to PyPI
-      if: github.event.release.released
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         print-hash: true
