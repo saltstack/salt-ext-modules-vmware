@@ -1696,7 +1696,7 @@ def vmotion_configured(
     the device VirtualNic that VMotion will use.
 
     name
-        Name of the state.  (DGM this could have been returned from name of function)
+        Name of the state.
 
     enabled
         Ensures whether or not VMotion should be enabled on a host as a boolean
@@ -1740,11 +1740,8 @@ def vmotion_configured(
         )
 
         # returns a list of host names with enabled or nota
-        log.debug(f"DGM vmotion_configured response_list '{response_list}'")
         for host in response_list:
             current_vmotion_enabled = host.get("VMotion_Enabled")
-
-            # DGM work in progress - pausing while helping with 3006 RC1
 
             # Configure VMotion Enabled state, if changed.
             if enabled != current_vmotion_enabled:
@@ -1752,8 +1749,6 @@ def vmotion_configured(
                 if not __opts__["test"]:
                     # Enable VMotion if enabled=True
                     if enabled is True:
-                        ## response = __salt__[esxi_cmd]("vmotion_enable", device=device).get(host)
-                        # DGM work to be done for set_vmotion
                         response = __salt__["vmware_esxi.vmotion_enable"](device=device).get(host)
                         error = response.get("Error")
                         if error:
@@ -1761,8 +1756,6 @@ def vmotion_configured(
                             return ret
                     # Disable VMotion if enabled=False
                     else:
-                        ## response = __salt__[esxi_cmd]("vmotion_disable").get(host)
-                        # DGM work to be done for set_vmotion
                         response = __salt__["vmware_esxi.vmotion_disable"]().get(host)
                         error = response.get("Error")
                         if error:
