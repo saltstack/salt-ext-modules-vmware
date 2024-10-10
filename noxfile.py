@@ -62,8 +62,6 @@ os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 # Global Path Definitions
 REPO_ROOT = pathlib.Path(__file__).resolve().parent
 
-# TBD DGM wondering about this VENV and why we had this in the first place
-# TBD DGM given this was initially classic packaging, wondering if forcing Py 3.10 now onedir ?
 TYPICAL_ENV = REPO_ROOT / "env" / "bin" / "python"
 VENV_PYTHON = pathlib.Path(os.environ.get("VMWARE_VENV_PATH", TYPICAL_ENV))
 
@@ -123,7 +121,6 @@ def _install_requirements(
         if install_salt:
             session.install("--progress-bar=off", SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
 
-        ## DGM if install_test_requirements:
         if install_test_requirements and "tests" not in install_extras:
             install_extras.append("tests")
 
@@ -144,14 +141,10 @@ def _install_requirements(
                 pkg += f"[{','.join(install_extras)}]"
 
             session.install("-e", pkg, silent=PIP_INSTALL_SILENT)
-        ## DGM elif install_extras:
-        ## DGM     pkg = f".[{','.join(install_extras)}]"
-        ## DGM     session.install(pkg, silent=PIP_INSTALL_SILENT)
 
 
 @nox.session(python=PYTHON_VERSIONS)
 def tests(session):
-    ## DGM _install_requirements(session, install_source=True)
     _install_requirements(session, install_source=True, install_extras=["tests"])
 
     sitecustomize_dir = session.run("salt-factories", "--coverage", silent=True, log=False)
@@ -237,13 +230,6 @@ class Tee:
 def _lint(session, rcfile, flags, paths, tee_output=True):
     requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "lint.txt"
     _install_requirements(session, "-r", str(requirements_file.relative_to(REPO_ROOT)))
-    ## DGM _install_requirements(
-    ## DGM     session,
-    ## DGM     install_salt=False,
-    ## DGM     install_coverage_requirements=False,
-    ## DGM     install_test_requirements=False,
-    ## DGM     install_extras=["dev", "tests"],
-    ## DGM )
 
     if tee_output:
         session.run("pylint", "--version")
@@ -286,7 +272,6 @@ def _lint(session, rcfile, flags, paths, tee_output=True):
                 sys.stdout.flush()
                 if pylint_report_path:
                     # Write report
-                    ## DGM with open(pylint_report_path, "w", encoding="utf-8") as wfh:
                     with open(pylint_report_path, "w") as wfh:
                         wfh.write(contents)
                     session.log("Report file written to %r", pylint_report_path)
@@ -394,47 +379,15 @@ def docs(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
-    ## DGM session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
     session.run("make", "linkcheck", "SPHINXOPTS=-Wn --keep-going", external=True)
-    ## DGM session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
-    ## DGM was disabled session.run("make", "coverage", "SPHINXOPTS=-Wn --keep-going", external=True)
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
         with open(docs_coverage_file) as rfh:  # pylint: disable=unspecified-encoding
             contents = rfh.readlines()[2:]
             if contents:
                 session.error("\n" + "".join(contents))
-    ## DGM session.run("make", "html", "SPHINXOPTS=-W", external=True)
     session.run("make", "html", "SPHINXOPTS=-Wn --keep-going", external=True)
     os.chdir(str(REPO_ROOT))
-
-
-## DGM @nox.session(name="docs-html", python="3")
-## DGM @nox.parametrize("clean", [False, True])
-## DGM @nox.parametrize("include_api_docs", [False, True])
-## DGM def docs_html(session, clean, include_api_docs):
-## DGM     """
-## DGM     Build Sphinx HTML Documentation
-## DGM
-## DGM     TODO: Add option for `make linkcheck` and `make coverage`
-## DGM           calls via Sphinx. Ran into problems with two when
-## DGM           using Furo theme and latest Sphinx.
-## DGM     """
-## DGM     _install_requirements(
-## DGM         session,
-## DGM         install_coverage_requirements=False,
-## DGM         install_test_requirements=False,
-## DGM         install_source=True,
-## DGM         install_extras=["docs"],
-## DGM     )
-## DGM     if include_api_docs:
-## DGM         gen_api_docs(session)
-## DGM     build_dir = Path("docs", "_build", "html")
-## DGM     sphinxopts = "-Wn"
-## DGM     if clean:
-## DGM         sphinxopts += "E"
-## DGM     args = [sphinxopts, "--keep-going", "docs", str(build_dir)]
-## DGM     session.run("sphinx-build", *args, external=True)
 
 
 @nox.session(name="docs-dev", python="3")
@@ -469,15 +422,6 @@ def docs_crosslink_info(session):
     Report intersphinx cross links information
     """
     requirements_file = REPO_ROOT / "requirements" / _get_pydir(session) / "docs.txt"
-    ## DGM _install_requirements(
-    ## DGM     session,
-    ## DGM     ## DGM "-r",
-    ## DGM     ## DGM str(requirements_file.relative_to(REPO_ROOT)),
-    ## DGM     install_coverage_requirements=False,
-    ## DGM     install_test_requirements=False,
-    ## DGM     install_source=True,
-    ## DGM     install_extras=["docs"],
-    ## DGM )
     _install_requirements(
         session,
         "-r",
